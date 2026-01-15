@@ -5,6 +5,8 @@
 Free & open source map components for Angular 18+. Zero config, one command setup.
 Built on MapLibre GL, styled with SCSS, inspired by shadcn/ui.
 
+[GitHub Repository](https://github.com/juanvieiraprado99/ng-mapcn) | [Report Bug](https://github.com/juanvieiraprado99/ng-mapcn/issues)
+
 ## Features
 
 - 🎨 **Theme-aware** — Automatically adapts to light/dark mode
