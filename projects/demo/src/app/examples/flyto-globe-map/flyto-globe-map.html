@@ -1,0 +1,36 @@
+<div class="demo-container">
+  <h1>Fly To Globe Map Example</h1>
+  <p class="description">Mapa em modo globo com exemplo de Fly To para Mairinque, SP</p>
+  
+  <div class="controls-section">
+    <button 
+      type="button" 
+      class="fly-to-button"
+      (click)="flyToMairinque()"
+    >
+      Fly to Mairinque, SP
+    </button>
+    <div class="info-box">
+      <h3>Mairinque, SP</h3>
+      <p>Coordenadas: {{ mairinqueCoordinates[0] }}, {{ mairinqueCoordinates[1] }}</p>
+      <p>Zoom: {{ mairinqueZoom }}</p>
+    </div>
+  </div>
+
+  <div class="map-wrapper">
+    <ng-map
+      [mapId]="mapId"
+      [center]="[0, 0]"
+      [zoom]="2"
+      [projection]="{ type: 'globe' }"
+      (mapReady)="onMapReady($event)"
+    ></ng-map>
+    <ng-map-controls
+      [mapId]="mapId"
+      [position]="'top-right'"
+      [showZoom]="true"
+      [showCompass]="true"
+      [showFullscreen]="true"
+    ></ng-map-controls>
+  </div>
+</div>

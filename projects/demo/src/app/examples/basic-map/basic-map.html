@@ -1,0 +1,16 @@
+<div class="demo-container">
+  <h1>Basic Map Example</h1>
+  <div class="map-wrapper">
+    <ng-map
+      [mapId]="mapId"
+      [center]="[0, 0]"
+      [zoom]="2"
+      (mapReady)="onMapReady($event)"
+    ></ng-map>
+    <ng-map-controls
+      [mapId]="mapId"
+      [position]="'top-right'"
+      [showZoom]="true"
+    ></ng-map-controls>
+  </div>
+</div>

@@ -1,0 +1,102 @@
+@import '../../styles/index';
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  position: relative;
+}
+
+.ng-map-container {
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 400px;
+  position: relative;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  background-color: var(--background);
+
+  // Ensure MapLibre map fills container
+  ::ng-deep .maplibregl-map {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 400px !important;
+    position: relative;
+  }
+
+  // Style MapLibre controls with shadcn/ui theme using light-dark()
+  ::ng-deep .maplibregl-ctrl {
+    background-color: light-dark(#ffffff, #1e293b);
+    border: 1px solid light-dark(#e5e7eb, #334155);
+    box-shadow: light-dark(
+      0 4px 6px -1px rgb(0 0 0 / 0.1),
+      0 2px 4px -2px rgb(0 0 0 / 0.1),
+      0 4px 6px -1px rgb(0 0 0 / 0.3),
+      0 2px 4px -2px rgb(0 0 0 / 0.3)
+    );
+    transition: all $transition-base;
+
+    &:hover {
+      box-shadow: light-dark(
+        0 10px 15px -3px rgb(0 0 0 / 0.1),
+        0 4px 6px -4px rgb(0 0 0 / 0.1),
+        0 10px 15px -3px rgb(0 0 0 / 0.3),
+        0 4px 6px -4px rgb(0 0 0 / 0.3)
+      );
+    }
+  }
+
+  ::ng-deep .maplibregl-ctrl button {
+    background-color: transparent;
+    color: light-dark(#0f172a, #f8fafc);
+    border: none;
+    padding: $spacing-sm;
+    cursor: pointer;
+    transition: all $transition-fast;
+    border-radius: $radius-sm;
+
+    &:hover {
+      background-color: light-dark(#f1f5f9, #334155);
+      color: light-dark(#0f172a, #f8fafc);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  // Attribution control styles removed for custom styling
+
+  // Popup styles removed for custom styling
+
+  // Ensure canvas is visible
+  ::ng-deep .maplibregl-canvas-container {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  ::ng-deep canvas.maplibregl-canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+  }
+
+  // Style tooltips to ensure theme support
+  ::ng-deep .ng-tooltip {
+    // Inverted colors: dark background in light theme, light background in dark theme
+    background-color: light-dark(
+      var(--popover-foreground, #0f172a),
+      var(--popover-foreground, #f8fafc)
+    );
+    color: light-dark(var(--popover, #ffffff), var(--popover, #1e293b));
+    border-color: light-dark(var(--border, #e5e7eb), var(--border, #334155));
+  }
+}

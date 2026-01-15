@@ -1,0 +1,66 @@
+<div class="demo-container">
+  <h1>Route Planning Example</h1>
+  <p class="description">Múltiplas rotas usando OSRM API com tempo de percurso e distância</p>
+  <div class="map-wrapper">
+    <ng-map
+      [mapId]="mapId"
+      [center]="mapCenter"
+      [zoom]="mapZoom"
+      (mapReady)="onMapReady($event)"
+    ></ng-map>
+    <ng-map-controls
+      [mapId]="mapId"
+      [position]="'top-right'"
+      [showZoom]="true"
+    ></ng-map-controls>
+    <ng-route-planning
+      [mapId]="mapId"
+      [start]="start"
+      [end]="end"
+      [selectedRouteIndex]="selectedIndex"
+      (routesLoaded)="onRoutesLoaded($event)"
+      (routeSelected)="onRouteSelected($event)"
+      (loadingChange)="onLoadingChange($any($event))"
+    ></ng-route-planning>
+
+    @if (routes.length > 0) {
+    <div class="route-panel">
+      <div class="route-panel-header">
+        <h3>Route Options</h3>
+        <p class="route-count">{{ routes.length }} route{{ routes.length > 1 ? 's' : '' }} found</p>
+      </div>
+      <div class="route-list">
+        @for (route of routes; track $index) {
+        <button
+          type="button"
+          class="route-button"
+          [class.active]="$index === selectedIndex"
+          (click)="selectRoute($index)"
+        >
+          <div class="route-info">
+            <div class="route-time">
+              <span class="icon">⏱</span>
+              <span class="value">{{ formatDuration(route.duration) }}</span>
+            </div>
+            <div class="route-distance">
+              <span class="icon">🛣</span>
+              <span class="value">{{ formatDistance(route.distance) }}</span>
+            </div>
+          </div>
+          @if ($index === 0) {
+          <span class="fastest-badge">Fastest</span>
+          }
+        </button>
+        }
+      </div>
+    </div>
+    } @if (isLoading) {
+    <div class="loading-overlay">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Calculating routes...</p>
+      </div>
+    </div>
+    }
+  </div>
+</div>

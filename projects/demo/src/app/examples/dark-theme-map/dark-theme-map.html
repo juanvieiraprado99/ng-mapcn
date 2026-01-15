@@ -1,0 +1,18 @@
+<div class="demo-container dark-theme">
+  <h1>Dark Theme Map Example</h1>
+  <p class="description">Mapa com tema escuro aplicado</p>
+  <div class="map-wrapper">
+    <ng-map
+      [mapId]="mapId"
+      [center]="[0, 0]"
+      [zoom]="2"
+      [theme]="'dark'"
+      (mapReady)="onMapReady($event)"
+    ></ng-map>
+    <ng-map-controls
+      [mapId]="mapId"
+      [position]="'top-right'"
+      [showZoom]="true"
+    ></ng-map-controls>
+  </div>
+</div>

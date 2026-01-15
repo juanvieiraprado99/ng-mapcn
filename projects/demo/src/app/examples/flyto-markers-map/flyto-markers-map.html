@@ -1,0 +1,36 @@
+<div class="demo-container">
+  <h1>Fly To Markers Example</h1>
+  <p class="description">Clique em um marcador para fazer o mapa voar até sua localização</p>
+  <div class="map-wrapper">
+    <ng-map
+      [mapId]="mapId"
+      [center]="[-47.0, -23.0]"
+      [zoom]="5"
+      (mapReady)="onMapReady($event)"
+    ></ng-map>
+    <ng-map-controls
+      [mapId]="mapId"
+      [position]="'top-right'"
+      [showZoom]="true"
+    ></ng-map-controls>
+    @for (marker of markers; track marker.id) {
+    <ng-marker
+      [mapId]="mapId"
+      [config]="marker"
+      (markerClick)="onMarkerClick($event, marker)"
+    ></ng-marker>
+    }
+  </div>
+
+  <div class="info-box">
+    <h2>Recursos Demonstrados:</h2>
+    <ul>
+      <li>Múltiplos marcadores em diferentes cidades brasileiras</li>
+      <li>Clique em qualquer marcador para fazer o mapa voar até sua localização</li>
+      <li>Animação suave de fly to com duração de 1.5 segundos</li>
+      <li>Zoom automático para nível 14 ao fazer fly to</li>
+      <li>Popups informativos em cada marcador</li>
+    </ul>
+    <p>Clique em qualquer marcador no mapa para ver a animação de fly to em ação.</p>
+  </div>
+</div>

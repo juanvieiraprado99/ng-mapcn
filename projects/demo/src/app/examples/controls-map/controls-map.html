@@ -1,0 +1,20 @@
+<div class="demo-container">
+  <h1>All Controls Map Example</h1>
+  <p class="description">Mapa com todos os controles disponíveis</p>
+  <div class="map-wrapper">
+    <ng-map
+      [mapId]="mapId"
+      [center]="[-74.5, 40]"
+      [zoom]="10"
+      (mapReady)="onMapReady($event)"
+    ></ng-map>
+    <ng-map-controls
+      [mapId]="mapId"
+      [position]="'top-right'"
+      [showZoom]="true"
+      [showCompass]="true"
+      [showLocate]="true"
+      [showFullscreen]="true"
+    ></ng-map-controls>
+  </div>
+</div>

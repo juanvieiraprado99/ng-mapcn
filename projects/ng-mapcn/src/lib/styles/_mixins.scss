@@ -1,0 +1,162 @@
+// ============================================
+// Mixins - shadcn/ui inspired
+// ============================================
+
+@mixin theme-light {
+  --background: #{$background};
+  --foreground: #{$foreground};
+  --card: #{$card};
+  --card-foreground: #{$card-foreground};
+  --popover: #{$popover};
+  --popover-foreground: #{$popover-foreground};
+  --primary: #{$primary};
+  --primary-foreground: #{$primary-foreground};
+  --secondary: #{$secondary};
+  --secondary-foreground: #{$secondary-foreground};
+  --muted: #{$muted};
+  --muted-foreground: #{$muted-foreground};
+  --accent: #{$accent};
+  --accent-foreground: #{$accent-foreground};
+  --destructive: #{$destructive};
+  --destructive-foreground: #{$destructive-foreground};
+  --border: #{$border};
+  --input: #{$input};
+  --ring: #{$ring};
+}
+
+@mixin theme-dark {
+  --background: #{$background-dark};
+  --foreground: #{$foreground-dark};
+  --card: #{$card-dark};
+  --card-foreground: #{$card-foreground-dark};
+  --popover: #{$popover-dark};
+  --popover-foreground: #{$popover-foreground-dark};
+  --primary: #{$primary-dark};
+  --primary-foreground: #{$primary-foreground-dark};
+  --secondary: #{$secondary-dark};
+  --secondary-foreground: #{$secondary-foreground-dark};
+  --muted: #{$muted-dark};
+  --muted-foreground: #{$muted-foreground-dark};
+  --accent: #{$accent-dark};
+  --accent-foreground: #{$accent-foreground-dark};
+  --destructive: #{$destructive-dark};
+  --destructive-foreground: #{$destructive-foreground-dark};
+  --border: #{$border-dark};
+  --input: #{$input-dark};
+  --ring: #{$ring-dark};
+}
+
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-md;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all $transition-base;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  
+  &:disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}
+
+@mixin button-variant-primary {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  
+  &:hover:not(:disabled) {
+    background-color: hsl(221.2 83.2% 53.3% / 0.9);
+  }
+  
+  &:active:not(:disabled) {
+    background-color: hsl(221.2 83.2% 53.3% / 0.8);
+  }
+}
+
+@mixin button-variant-secondary {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+  
+  &:hover:not(:disabled) {
+    background-color: hsl(210 40% 96.1% / 0.8);
+  }
+  
+  &:active:not(:disabled) {
+    background-color: hsl(210 40% 96.1% / 0.7);
+  }
+}
+
+@mixin button-variant-ghost {
+  background-color: transparent;
+  color: var(--foreground);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+}
+
+@mixin card {
+  background-color: var(--card);
+  color: var(--card-foreground);
+  border-radius: $radius-lg;
+  border: 1px solid var(--border);
+  box-shadow: $shadow-sm;
+}
+
+@mixin popover {
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  border-radius: $radius-md;
+  border: 1px solid var(--border);
+  box-shadow: $shadow-lg;
+  padding: $spacing-md;
+}
+
+@mixin tooltip {
+  background-color: var(--popover-foreground);
+  color: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  box-shadow: light-dark(
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1),
+    0 10px 15px -3px rgba(0, 0, 0, 0.3),
+    0 4px 6px -4px rgba(0, 0, 0, 0.3)
+  );
+  z-index: $z-tooltip;
+  font-family: $font-sans;
+}
+
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@mixin map-control {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: $map-control-border-radius;
+  box-shadow: $shadow-md;
+  backdrop-filter: blur(8px);
+  transition: all $transition-base;
+  
+  &:hover {
+    box-shadow: $shadow-lg;
+  }
+}

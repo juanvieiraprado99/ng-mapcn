@@ -1,0 +1,37 @@
+@if (isLoading()) {
+<div class="ng-route-planning-loading">
+  <div class="ng-loading-spinner"></div>
+</div>
+} @if (error()) {
+<div class="ng-route-planning-error">
+  <p>{{ error() }}</p>
+</div>
+} @for (routeConfig of routeConfigs(); track routeConfig.id; let i = $index) {
+<ng-route
+  [mapId]="mapId()"
+  [config]="routeConfig"
+  (routeClick)="selectRoute(getRouteIndex(routeConfig.id || ''))"
+></ng-route>
+} @if (start()) {
+<ng-marker
+  [mapId]="mapId()"
+  [config]="{
+    id: 'route-start',
+    position: [start().lng, start().lat],
+    color: '#10b981',
+    size: 'medium',
+    popup: start().name ? { title: start().name, content: 'Start point' } : undefined
+  }"
+></ng-marker>
+} @if (end()) {
+<ng-marker
+  [mapId]="mapId()"
+  [config]="{
+    id: 'route-end',
+    position: [end().lng, end().lat],
+    color: '#ef4444',
+    size: 'medium',
+    popup: end().name ? { title: end().name, content: 'End point' } : undefined
+  }"
+></ng-marker>
+}

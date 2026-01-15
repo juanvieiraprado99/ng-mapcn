@@ -1,0 +1,110 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
+
+.app-container {
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  header {
+    padding: 1rem 2rem;
+    background-color: var(--background, #fff);
+    border-bottom: 1px solid var(--border, #e5e7eb);
+    flex-shrink: 0;
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .theme-toggle-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      padding: 0;
+      border: 1px solid var(--border, #e5e7eb);
+      border-radius: 0.375rem;
+      background-color: var(--secondary, #f1f5f9);
+      color: var(--foreground, #0f172a);
+      cursor: pointer;
+      transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
+
+      .theme-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        stroke: currentColor;
+      }
+
+      &:hover {
+        background-color: var(--accent, #f1f5f9);
+        color: var(--accent-foreground, #0f172a);
+        border-color: var(--border, #e5e7eb);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--primary, #3b82f6);
+        outline-offset: 2px;
+      }
+    }
+
+    .examples-nav {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+
+      .nav-link {
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        text-decoration: none;
+        color: var(--foreground, #0f172a);
+        background-color: var(--secondary, #f1f5f9);
+        border: 1px solid var(--border, #e5e7eb);
+        transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 0.875rem;
+        font-weight: 500;
+
+        &:hover {
+          background-color: var(--accent, #f1f5f9);
+          color: var(--accent-foreground, #0f172a);
+        }
+
+        &.active {
+          background-color: var(--primary, #3b82f6);
+          color: var(--primary-foreground, #ffffff);
+          border-color: var(--primary, #3b82f6);
+        }
+      }
+    }
+  }
+
+  main {
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+  }
+}

@@ -1,0 +1,11 @@
+<div class="ng-map-controls" [class]="getPositionClass()">
+  <button
+    type="button"
+    class="ng-map-control-button ng-locate-button"
+    (click)="onLocate()"
+    [attr.aria-label]="config()?.locateLabel || 'Locate me'"
+    title="Locate me"
+  >
+    <img class="ng-locate-image" [src]="getLocateImagePath()" alt="Locate me" />
+  </button>
+</div>

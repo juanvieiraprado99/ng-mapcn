@@ -1,0 +1,50 @@
+.ng-route-planning-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+}
+
+.ng-loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ng-route-planning-error {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  font-size: 0.875rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ng-route-planning-loading {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .ng-route-planning-error {
+    background-color: #7f1d1d;
+    color: #fecaca;
+  }
+}

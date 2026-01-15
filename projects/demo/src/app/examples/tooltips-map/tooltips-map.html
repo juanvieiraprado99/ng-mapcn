@@ -1,0 +1,32 @@
+<div class="demo-container">
+  <h1>Tooltips Map Example</h1>
+  <p class="description">
+    Mapa demonstrando tooltips customizados em markers. Passe o mouse sobre os markers para ver os tooltips.
+  </p>
+  <div class="info-box">
+    <h3>Recursos demonstrados:</h3>
+    <ul>
+      <li>Tooltip habilitado/desabilitado com a propriedade <code>enabled</code></li>
+      <li>Diferentes âncoras: <code>top</code>, <code>bottom</code>, <code>left</code>, <code>right</code>, <code>top-left</code>, <code>bottom-right</code></li>
+      <li>Offset customizado (número ou array <code>[x, y]</code>)</li>
+      <li>Tooltip que aparece no hover (<code>showOnHover: true</code>)</li>
+      <li>Marker sem tooltip</li>
+    </ul>
+  </div>
+  <div class="map-wrapper">
+    <ng-map
+      [mapId]="mapId"
+      [center]="[20, 20]"
+      [zoom]="2"
+      (mapReady)="onMapReady($event)"
+    ></ng-map>
+    <ng-map-controls
+      [mapId]="mapId"
+      [position]="'top-right'"
+      [showZoom]="true"
+    ></ng-map-controls>
+    @for (marker of markers; track marker.id) {
+    <ng-marker [mapId]="mapId" [config]="marker"></ng-marker>
+    }
+  </div>
+</div>

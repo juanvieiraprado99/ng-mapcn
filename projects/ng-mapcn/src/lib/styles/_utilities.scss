@@ -1,0 +1,225 @@
+// ============================================
+// Utilities - shadcn/ui inspired
+// ============================================
+
+@import './variables';
+@import './mixins';
+
+// Theme utilities
+.theme-light {
+  @include theme-light;
+}
+
+.theme-dark {
+  @include theme-dark;
+}
+
+// Map container
+.ng-map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: $radius-lg;
+  overflow: hidden;
+
+  .maplibregl-map {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// Map controls container
+.ng-map-controls,
+.ng-map-controls {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: $map-control-gap;
+  z-index: $z-fixed;
+
+  &.ng-controls-top-left,
+  &.ng-controls-top-left {
+    top: $spacing-md;
+    left: $spacing-md;
+  }
+
+  &.ng-controls-top-right,
+  &.ng-controls-top-right {
+    top: $spacing-md;
+    right: $spacing-md;
+  }
+
+  &.ng-controls-bottom-left,
+  &.ng-controls-bottom-left {
+    bottom: $spacing-md;
+    left: $spacing-md;
+  }
+
+  &.ng-controls-bottom-right,
+  &.ng-controls-bottom-right {
+    bottom: $spacing-md;
+    right: $spacing-md;
+  }
+}
+
+// Map control button
+.ng-map-control-button,
+.ng-map-control-button {
+  @include button-base;
+  width: $map-control-size;
+  height: $map-control-size;
+  padding: $map-control-padding;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: light-dark(#ffffff, #1e293b);
+  border: 1px solid light-dark(#e5e7eb, #334155);
+  border-radius: $map-control-border-radius;
+  box-shadow: light-dark(
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1),
+    0 4px 6px -1px rgb(0 0 0 / 0.3),
+    0 2px 4px -2px rgb(0 0 0 / 0.3)
+  );
+  backdrop-filter: blur(8px);
+  color: light-dark(#0f172a, #f8fafc);
+  transition: all $transition-base;
+
+  &:hover:not(:disabled) {
+    background-color: light-dark(#f1f5f9, #334155);
+    color: light-dark(#0f172a, #f8fafc);
+    box-shadow: light-dark(
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1),
+      0 10px 15px -3px rgb(0 0 0 / 0.3),
+      0 4px 6px -4px rgb(0 0 0 / 0.3)
+    );
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke: currentColor;
+  }
+}
+
+// Marker styles - following MapLibre and mapcn.dev patterns
+.ng-marker {
+  display: block;
+  border: 2px solid light-dark(#ffffff, #1e293b);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform $transition-base, box-shadow $transition-base;
+  box-shadow: light-dark(0 2px 4px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.3));
+
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: light-dark(0 4px 8px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.4));
+    z-index: $z-popover;
+  }
+
+  // Ensure marker is visible
+  position: relative;
+
+  // Custom icon support
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+  }
+}
+
+// Popup styles - Removed for custom styling
+
+// Tooltip styles
+.ng-tooltip {
+  @include tooltip;
+  position: absolute;
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1070;
+  max-width: 200px;
+  word-wrap: break-word;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  // Animation for tooltip entry (only when visible)
+  &.ng-tooltip-visible {
+    animation: tooltipEnter 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  // Respect user's motion preferences
+  @media (prefers-reduced-motion: reduce) {
+    transition: opacity 0.1s ease, visibility 0.1s ease;
+    animation: none;
+  }
+}
+
+// Tooltip enter animation
+@keyframes tooltipEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-2px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Route/Path styles
+.ng-route {
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  transition: stroke-width $transition-base;
+
+  &:hover {
+    stroke-width: 4;
+  }
+}
+
+// Loading spinner
+.ng-loading {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Utility classes
+.ng-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

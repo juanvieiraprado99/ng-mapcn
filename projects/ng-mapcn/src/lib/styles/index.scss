@@ -1,0 +1,24 @@
+// ============================================
+// Main Styles Entry Point
+// ============================================
+
+@import './variables';
+@import './mixins';
+@import './utilities';
+
+// Global theme setup
+:root {
+  color-scheme: light dark; // Enable light-dark() CSS function
+  @include theme-light;
+}
+
+[data-theme='dark'],
+.dark {
+  @include theme-dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    @include theme-dark;
+  }
+}
