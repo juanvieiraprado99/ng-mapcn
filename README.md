@@ -162,47 +162,22 @@ Draw routes/paths on your map.
 
 ### Control Components
 
-#### ZoomControl
+#### MapControlsComponent
+
+Adiciona os controles nativos do MapLibre ao mapa (zoom, bússola, geolocalização, tela cheia).
 
 ```html
-<ng-zoom-control
+<ng-map-controls
   [mapId]="'my-map'"
-  position="top-right"
-  (zoomIn)="onZoomIn()"
-  (zoomOut)="onZoomOut()"
-></ng-zoom-control>
+  [position]="'top-right'"
+  [showZoom]="true"
+  [showCompass]="true"
+  [showLocate]="true"
+  [showFullscreen]="true"
+></ng-map-controls>
 ```
 
-#### CompassControl
-
-```html
-<ng-compass-control
-  [mapId]="'my-map'"
-  position="top-right"
-  (resetNorth)="onResetNorth()"
-></ng-compass-control>
-```
-
-#### LocateControl
-
-```html
-<ng-locate-control
-  [mapId]="'my-map'"
-  position="top-right"
-  [config]="{ watchPosition: true }"
-  (locate)="onLocate($event)"
-></ng-locate-control>
-```
-
-#### FullscreenControl
-
-```html
-<ng-fullscreen-control
-  [mapId]="'my-map'"
-  position="top-right"
-  (fullscreenChange)="onFullscreenChange($event)"
-></ng-fullscreen-control>
-```
+**Inputs:** `mapId`, `position`, `showZoom`, `showCompass`, `showLocate`, `showFullscreen`, `visualizePitch`, `visualizeRoll`.
 
 ## Services
 
@@ -305,7 +280,7 @@ See the `projects/demo` directory for complete examples.
 - `MapConfig` - Map configuration
 - `MarkerConfig` - Marker configuration
 - `RouteConfig` - Route configuration
-- `ControlConfig` - Control configuration
+- `ControlPosition` - Control position on the map
 - `ThemeConfig` - Theme configuration
 
 See the source code for detailed interface definitions.

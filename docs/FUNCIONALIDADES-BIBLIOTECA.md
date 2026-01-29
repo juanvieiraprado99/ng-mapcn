@@ -81,7 +81,7 @@ Ou seja: **ng-mapcn** é o equivalente em Angular do mapcn — mapas bonitos e s
 - **Localizar** (geolocalização do usuário, opção de acompanhamento contínuo).
 - **Tela cheia.**
 
-Todos posicionáveis (top-left, top-right, bottom-left, bottom-right) e opcionalmente agrupados em um único componente `ng-map-controls`.
+Todos posicionáveis (top-left, top-right, bottom-left, bottom-right) e adicionados via um único componente `ng-map-controls`, que utiliza os controles nativos do MapLibre (NavigationControl, GeolocateControl, FullscreenControl).
 
 ---
 
@@ -190,18 +190,20 @@ Todos posicionáveis (top-left, top-right, bottom-left, bottom-right) e opcional
 
 ---
 
-### 3.5 Controles (Zoom, Compass, Locate, Fullscreen)
+### 3.5 Controles (MapControlsComponent)
 
-Cada controle é um componente que recebe `mapId` e `position` e emite eventos quando relevante.
+**MapControlsComponent (`ng-map-controls`):** Adiciona ao mapa os controles nativos do MapLibre (NavigationControl, GeolocateControl, FullscreenControl), conforme os inputs ativados. O componente não renderiza UI própria; os controles são injetados pelo MapLibre dentro do container do mapa.
 
-- **ZoomControl (`ng-zoom-control`):** Botões zoom in/out. Outputs: `zoomIn`, `zoomOut`.
-- **CompassControl (`ng-compass-control`):** Bússola que reflete a rotação do mapa; botão reseta o norte. Output: `resetNorth`.
-- **LocateControl (`ng-locate-control`):** Geolocalização; opção de acompanhar posição (`watchPosition`). Outputs: `locate`, `locateError`.
-- **FullscreenControl (`ng-fullscreen-control`):** Entrar/sair de tela cheia do container do mapa. Output: `fullscreenChange`.
+**Inputs:**
 
-**MapControlsComponent (`ng-map-controls`):** Agrupa zoom, bússola, localizar e tela cheia em um único bloco, com inputs para mostrar/ocultar cada um e configs específicas (ZoomControlConfig, CompassControlConfig, etc.).
-
-**Posições:** `'top-left'` | `'top-right'` | `'bottom-left'` | `'bottom-right'`.
+- `mapId` — ID do mapa (default: `'default-map'`).
+- `position` — Posição dos controles: `'top-left'` | `'top-right'` | `'bottom-left'` | `'bottom-right'` (default: `'top-right'`).
+- `showZoom` — Exibir botões de zoom (default: `true`).
+- `showCompass` — Exibir bússola / resetar norte (default: `false`).
+- `showLocate` — Exibir controle de geolocalização (default: `false`).
+- `showFullscreen` — Exibir controle de tela cheia (default: `false`).
+- `visualizePitch` — Visualizar pitch no controle de navegação (default: `false`).
+- `visualizeRoll` — Visualizar roll no controle de navegação (default: `false`).
 
 ---
 
@@ -278,7 +280,7 @@ Usado pelo `RoutePlanningComponent`; pode ser usado diretamente para integraçõ
 - **PopupConfig** — title, content, anchor, offset, closeButton, closeOnClick, maxWidth.
 - **TooltipConfig** — text, anchor, offset, showOnHover.
 - **RouteConfig** — coordinates, color, width, dashed, stops, osrmData, etc.
-- **ControlConfig / ControlPosition** — position, visible, className; posições dos controles.
+- **ControlPosition** — Posição dos controles: `'top-left'` | `'top-right'` | `'bottom-left'` | `'bottom-right'`.
 - **ThemeConfig / ThemeMode** — mode, detectSystemPreference, storageKey, onThemeChange.
 - **OsrmRouteData** — coordinates, duration, distance.
 - **OsrmRouteOptions** — profile, alternatives, overview, geometries, serverUrl.

@@ -59,7 +59,11 @@ import { MapComponent, ZoomControlComponent } from 'ng-mapcn';
         [zoom]="2"
         (mapReady)="onMapReady($event)"
       ></ng-map>
-      <ng-zoom-control [mapId]="'my-map'" position="top-right"></ng-zoom-control>
+      <ng-map-controls
+        [mapId]="'my-map'"
+        [position]="'top-right'"
+        [showZoom]="true"
+      ></ng-map-controls>
     </div>
   `,
 })
@@ -124,11 +128,7 @@ Draw routes/paths on your map.
 
 ### Control Components
 
-- **ng-zoom-control** — Zoom in/out
-- **ng-compass-control** — Reset north
-- **ng-locate-control** — Geolocation
-- **ng-fullscreen-control** — Fullscreen toggle
-- **ng-map-controls** — All controls in one component
+- **ng-map-controls** — Adiciona os controles nativos do MapLibre ao mapa (zoom, bússola, geolocalização, tela cheia). Inputs: `mapId`, `position`, `showZoom`, `showCompass`, `showLocate`, `showFullscreen`.
 
 ## Services
 

@@ -34,7 +34,7 @@ Este documento descreve os exemplos disponíveis na aplicação demo (`projects/
 
 **Arquivos:** `projects/demo/src/app/examples/controls-map/`
 
-**O que demonstra:** Mapa com todos os controles disponíveis: zoom, bússola, localizar (geolocalização) e tela cheia.
+**O que demonstra:** Mapa com todos os controles disponíveis (zoom, bússola, localizar e tela cheia), usando os controles nativos do MapLibre adicionados via `ng-map-controls`.
 
 **Componentes usados:** `MapComponent`, `MapControlsComponent`
 

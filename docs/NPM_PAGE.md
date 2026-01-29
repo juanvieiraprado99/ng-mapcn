@@ -10,7 +10,7 @@ Este documento simula como a biblioteca **ng-mapcn** apareceria na página do [n
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | **Nome**       | `ng-mapcn`                                                                                                                      |
 | **Descrição**  | Beautiful maps for Angular, made simple. MapLibre GL components for Angular 18+ with theme-aware styling inspired by shadcn/ui. |
-| **Versão**     | 18.0.0-beta.1                                                                                                                   |
+| **Versão**     | 18.0.0-beta.2                                                                                                                   |
 | **Instalação** | `npm install ng-mapcn maplibre-gl`                                                                                              |
 
 ### Links exibidos
@@ -88,12 +88,12 @@ Or import in your global styles:
 
 ```typescript
 import { Component } from '@angular/core';
-import { MapComponent, ZoomControlComponent } from 'ng-mapcn';
+import { MapComponent, MapControlsComponent } from 'ng-mapcn';
 
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [MapComponent, ZoomControlComponent],
+  imports: [MapComponent, MapControlsComponent],
   template: `
     <div style="width: 100%; height: 400px;">
       <ng-map
@@ -102,7 +102,11 @@ import { MapComponent, ZoomControlComponent } from 'ng-mapcn';
         [zoom]="2"
         (mapReady)="onMapReady($event)"
       ></ng-map>
-      <ng-zoom-control [mapId]="'my-map'" position="top-right"></ng-zoom-control>
+      <ng-map-controls
+        [mapId]="'my-map'"
+        [position]="'top-right'"
+        [showZoom]="true"
+      ></ng-map-controls>
     </div>
   `,
 })
@@ -167,11 +171,7 @@ Draw routes/paths on your map.
 
 ### Control Components
 
-- **ng-zoom-control** — Zoom in/out
-- **ng-compass-control** — Reset north
-- **ng-locate-control** — Geolocation
-- **ng-fullscreen-control** — Fullscreen toggle
-- **ng-map-controls** — All controls in one component
+- **ng-map-controls** — Adiciona os controles nativos do MapLibre ao mapa (zoom, bússola, geolocalização, tela cheia). Inputs: `mapId`, `position`, `showZoom`, `showCompass`, `showLocate`, `showFullscreen`.
 
 ## Services
 
@@ -217,7 +217,7 @@ MIT © [Juan Prado](https://github.com/juanvieiraprado99)
    npm publish
    ```
 
-   Para publicar como **beta** (já que a versão é `18.0.0-beta.1`):
+   Para publicar como **beta** (já que a versão é `18.0.0-beta.2`):
 
    ```bash
    npm publish --tag beta
@@ -239,4 +239,4 @@ MIT © [Juan Prado](https://github.com/juanvieiraprado99)
 
 ### Atualizar versão antes de publicar
 
-No `projects/ng-mapcn/package.json` altere o campo `version` (ex.: `18.0.0-beta.2`, `18.0.0`, etc.). O build usa esse arquivo; o `package.json` em `dist/ng-mapcn` é gerado a partir dele.
+No `projects/ng-mapcn/package.json` altere o campo `version` (ex.: `18.0.0-beta.3`, `18.0.0`, etc.). O build usa esse arquivo; o `package.json` em `dist/ng-mapcn` é gerado a partir dele.
