@@ -3,9 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { OsrmResponse, OsrmRouteData, OsrmRouteOptions } from '../models/osrm.interface';
 
-/**
- * Service for interacting with OSRM (Open Source Routing Machine) API
- */
 @Injectable({
   providedIn: 'root'
 })
@@ -33,7 +30,6 @@ export class OsrmService {
     const geometries = options.geometries || 'geojson';
     const serverUrl = options.serverUrl || this.defaultServerUrl;
 
-    // Build OSRM API URL
     const coordinates = `${start.lng},${start.lat};${end.lng},${end.lat}`;
     const url = `${serverUrl}/route/v1/${profile}/${coordinates}`;
     
@@ -62,7 +58,6 @@ export class OsrmService {
         throw new Error('No routes found');
       }
 
-      // Transform OSRM response to OsrmRouteData[]
       const routes: OsrmRouteData[] = response.routes.map((route) => ({
         coordinates: route.geometry.coordinates,
         duration: route.duration,
@@ -75,11 +70,6 @@ export class OsrmService {
     }
   }
 
-  /**
-   * Format duration in seconds to human-readable string
-   * @param seconds Duration in seconds
-   * @returns Formatted string (e.g., "1h 30m" or "45 min")
-   */
   formatDuration(seconds: number): string {
     const mins = Math.round(seconds / 60);
     if (mins < 60) {
@@ -90,11 +80,6 @@ export class OsrmService {
     return remainingMins > 0 ? `${hours}h ${remainingMins}m` : `${hours}h`;
   }
 
-  /**
-   * Format distance in meters to human-readable string
-   * @param meters Distance in meters
-   * @returns Formatted string (e.g., "45.2 km" or "500 m")
-   */
   formatDistance(meters: number): string {
     if (meters < 1000) {
       return `${Math.round(meters)} m`;

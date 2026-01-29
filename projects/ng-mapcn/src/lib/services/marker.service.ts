@@ -2,19 +2,13 @@ import { Injectable } from '@angular/core';
 import { LngLatLike, Map as MapLibreMap, Marker, Offset, Popup } from 'maplibre-gl';
 import { MarkerConfig, PopupConfig, TooltipConfig } from '../models';
 
-/**
- * Service for managing map markers
- */
 @Injectable({
   providedIn: 'root',
 })
 export class MarkerService {
-  private markers = new globalThis.Map<string, globalThis.Map<string, Marker>>(); // mapId -> markerId -> Marker
-  private tooltips = new globalThis.Map<string, globalThis.Map<string, HTMLElement>>(); // mapId -> markerId -> TooltipElement
+  private markers = new globalThis.Map<string, globalThis.Map<string, Marker>>();
+  private tooltips = new globalThis.Map<string, globalThis.Map<string, HTMLElement>>();
 
-  /**
-   * Add a marker to a map
-   */
   addMarker(mapId: string, config: MarkerConfig, map: MapLibreMap): Marker | null {
     if (!map) {
       return null;
@@ -43,10 +37,7 @@ export class MarkerService {
 
       marker.addTo(map);
 
-      // Wait for marker to be fully rendered before attaching popup
-      // This ensures the marker element is in the DOM and can be positioned correctly
       if (config.popup) {
-        // Use requestAnimationFrame to ensure marker is rendered
         requestAnimationFrame(() => {
           this.attachPopup(marker, config.popup!, map);
         });
@@ -67,9 +58,6 @@ export class MarkerService {
     }
   }
 
-  /**
-   * Remove a marker from a map
-   */
   removeMarker(mapId: string, markerId: string): void {
     const mapMarkers = this.markers.get(mapId);
     if (mapMarkers) {
@@ -83,9 +71,6 @@ export class MarkerService {
     this.removeTooltip(mapId, markerId);
   }
 
-  /**
-   * Remove all markers from a map
-   */
   removeAllMarkers(mapId: string): void {
     const mapMarkers = this.markers.get(mapId);
     if (mapMarkers) {
@@ -98,16 +83,10 @@ export class MarkerService {
     this.removeAllTooltips(mapId);
   }
 
-  /**
-   * Get a marker by ID
-   */
   getMarker(mapId: string, markerId: string): Marker | undefined {
     return this.markers.get(mapId)?.get(markerId);
   }
 
-  /**
-   * Get all markers for a map
-   */
   getAllMarkers(mapId: string): Marker[] {
     const mapMarkers = this.markers.get(mapId);
     if (!mapMarkers) {
@@ -116,9 +95,6 @@ export class MarkerService {
     return Array.from(mapMarkers.values());
   }
 
-  /**
-   * Update marker position
-   */
   updateMarkerPosition(mapId: string, markerId: string, position: LngLatLike): void {
     const marker = this.getMarker(mapId, markerId);
     if (marker) {
@@ -126,9 +102,6 @@ export class MarkerService {
     }
   }
 
-  /**
-   * Create marker element
-   */
   private createMarkerElement(config: MarkerConfig): HTMLElement {
     const el = document.createElement('div');
     el.className = 'ng-marker';
@@ -137,14 +110,12 @@ export class MarkerService {
       el.classList.add(config.className);
     }
 
-    // Custom icon
     if (config.icon) {
-      // Apply size even when using custom icon
       const size = config.size || 'medium';
       const sizeMap = {
-        small: '1rem', // 16px
-        medium: '1.25rem', // 20px
-        large: '1.5rem', // 24px
+        small: '1rem',
+        medium: '1.25rem',
+        large: '1.5rem',
       };
 
       el.style.display = 'block';
@@ -157,43 +128,35 @@ export class MarkerService {
         el.appendChild(config.icon);
       }
     } else {
-      // Default marker - simple circle following MapLibre and mapcn.dev patterns
       const size = config.size || 'medium';
       const sizeMap = {
-        small: '1rem', // 16px
-        medium: '1.25rem', // 20px
-        large: '1.5rem', // 24px
+        small: '1rem',
+        medium: '1.25rem',
+        large: '1.5rem',
       };
 
       const isDark = this.isDarkTheme();
-      const markerColor = config.color || (isDark ? '#60a5fa' : '#3b82f6'); // Primary blue
-      const borderColor = isDark ? '#1e293b' : '#ffffff'; // White border for light, dark for dark
+      const markerColor = config.color || (isDark ? '#60a5fa' : '#3b82f6');
+      const borderColor = isDark ? '#1e293b' : '#ffffff';
 
-      // Apply base styles - circle shape
       el.style.display = 'block';
       el.style.width = sizeMap[size];
       el.style.height = sizeMap[size];
       el.style.backgroundColor = markerColor;
-      el.style.borderRadius = '50%'; // Simple circle
+      el.style.borderRadius = '50%';
       el.style.border = `2px solid ${borderColor}`;
       el.style.cursor = 'pointer';
       el.style.boxShadow = isDark ? '0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.15)';
-
-      // No inner dot needed for simple circle marker
     }
 
     return el;
   }
 
-  /**
-   * Check if dark theme is active
-   */
   private isDarkTheme(): boolean {
     if (typeof window === 'undefined' || typeof document === 'undefined') {
       return false;
     }
 
-    // Check for dark class or data-theme attribute
     const html = document.documentElement;
     return (
       html.classList.contains('dark') ||
@@ -203,16 +166,11 @@ export class MarkerService {
     );
   }
 
-  /**
-   * Attach popup to marker
-   * Following MapLibre best practices and React example pattern
-   */
   private attachPopup(marker: Marker, config: PopupConfig, map: MapLibreMap): void {
     const defaultOffset = 16;
 
     const maxWidth = config.maxWidth === undefined ? 'none' : config.maxWidth;
 
-    // Get marker coordinates first to ensure popup is positioned correctly
     const markerLngLat = marker.getLngLat();
 
     const popup = new Popup({
@@ -237,54 +195,38 @@ export class MarkerService {
 
     content += '</div>';
 
-    // Set content before attaching to marker
     popup.setHTML(content);
 
-    // Set coordinates explicitly BEFORE attaching to marker
-    // This ensures popup has coordinates when it's associated with the marker
     if (markerLngLat) {
       popup.setLngLat(markerLngLat);
     }
 
-    // Attach popup to marker - this associates the popup with the marker
-    // MapLibre will automatically use the marker's coordinates when popup opens
-    // But we've already set them above to ensure correct initial positioning
     marker.setPopup(popup);
 
-    // Ensure popup uses marker's current coordinates when it opens
-    // This is a safety measure to ensure correct positioning
     const updatePopupPosition = () => {
       const currentLngLat = marker.getLngLat();
       if (currentLngLat) {
-        // Always update position when popup opens, even if already set
         popup.setLngLat(currentLngLat);
       }
     };
 
-    // Update popup position when it opens - this ensures correct positioning
     popup.on('open', () => {
-      // Use requestAnimationFrame for better timing
       requestAnimationFrame(() => {
         updatePopupPosition();
       });
     });
 
-    // Also update when map moves to keep popup aligned with marker
     map.on('move', () => {
       if (popup.isOpen()) {
         updatePopupPosition();
       }
     });
 
-    // Listen to marker's move event to update popup position if marker moves
     marker.on('dragend', () => {
       updatePopupPosition();
     });
   }
 
-  /**
-   * Attach tooltip to marker
-   */
   private attachTooltip(
     mapId: string,
     markerId: string,
@@ -355,9 +297,6 @@ export class MarkerService {
     this.tooltips.get(mapId)!.set(markerId, tooltipElement);
   }
 
-  /**
-   * Update tooltip position based on marker position and anchor
-   */
   private updateTooltipPosition(
     tooltipElement: HTMLElement,
     markerElement: HTMLElement,
@@ -377,23 +316,19 @@ export class MarkerService {
     let offsetX = 0;
     let offsetY = 0;
 
-    // Handle Offset type from MapLibre (can be number, PointLike [x, y], or object with anchor-specific offsets)
     if (typeof offset === 'number') {
       offsetX = offset;
       offsetY = offset;
     } else if (Array.isArray(offset) && offset.length >= 2) {
-      // PointLike: [number, number]
       offsetX = offset[0];
       offsetY = offset[1];
     } else if (offset && typeof offset === 'object' && !Array.isArray(offset)) {
-      // Object with anchor-specific offsets: { top?: [x, y], bottom?: [x, y], ... }
       const offsetObj = offset as Record<string, [number, number] | undefined>;
       const anchorOffset = offsetObj[anchor];
       if (anchorOffset && Array.isArray(anchorOffset) && anchorOffset.length >= 2) {
         offsetX = anchorOffset[0];
         offsetY = anchorOffset[1];
       } else {
-        // Fallback: try to find any anchor offset or use default
         const firstOffset = Object.values(offsetObj).find(
           (val) => Array.isArray(val) && val.length >= 2
         );
@@ -458,9 +393,6 @@ export class MarkerService {
     tooltipElement.style.top = `${top}px`;
   }
 
-  /**
-   * Remove tooltip for a marker
-   */
   private removeTooltip(mapId: string, markerId: string): void {
     const mapTooltips = this.tooltips.get(mapId);
     if (mapTooltips) {
@@ -472,9 +404,6 @@ export class MarkerService {
     }
   }
 
-  /**
-   * Remove all tooltips for a map
-   */
   private removeAllTooltips(mapId: string): void {
     const mapTooltips = this.tooltips.get(mapId);
     if (mapTooltips) {
@@ -556,7 +485,6 @@ export class MarkerService {
       marker.addTo(map);
 
       if (config.popup) {
-        // Wait for marker to be fully rendered before attaching popup
         requestAnimationFrame(() => {
           this.attachPopup(marker, config.popup!, map);
         });
