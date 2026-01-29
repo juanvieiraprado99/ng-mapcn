@@ -4,9 +4,6 @@ import { MarkerConfig } from '../../models/marker-config.interface';
 import { MapService } from '../../services/map.service';
 import { MarkerService } from '../../services/marker.service';
 
-/**
- * Marker component for adding markers to maps
- */
 @Component({
   selector: 'ng-marker',
   standalone: true,
@@ -28,14 +25,12 @@ export class MarkerComponent {
   private mapReadyHandler: (() => void) | null = null;
 
   constructor() {
-    // Watch for map and config changes
     effect(() => {
       const config = this.config();
       const mapId = this.mapId();
       const mapSignal = this.mapService.getMapSignal(mapId);
       const map = mapSignal();
 
-      // Clean up previous marker if config or mapId changed
       if (this.marker) {
         this.removeMarker();
       }
@@ -54,9 +49,6 @@ export class MarkerComponent {
     });
   }
 
-  /**
-   * Attempt to add marker to map, handling timing issues
-   */
   private attemptAddMarker(map: MapLibreMap, config: MarkerConfig): void {
     if (!config || this.marker) {
       return;
@@ -94,9 +86,6 @@ export class MarkerComponent {
     this.addMarker(map);
   }
 
-  /**
-   * Add marker to map (called when map is fully ready)
-   */
   private addMarker(map: MapLibreMap): void {
     const config = this.config();
     const mapId = this.mapId();
@@ -138,9 +127,6 @@ export class MarkerComponent {
     }
   }
 
-  /**
-   * Get marker instance
-   */
   getMarker(): Marker | null {
     return this.marker;
   }
