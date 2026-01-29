@@ -1,12 +1,7 @@
-// ============================================
-// Main Styles Entry Point
-// ============================================
-
 @import './variables';
 @import './mixins';
 @import './utilities';
 
-// Global theme setup
 :root {
   color-scheme: light dark; // Enable light-dark() CSS function
   @include theme-light;
