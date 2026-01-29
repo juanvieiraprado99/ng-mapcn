@@ -18,7 +18,6 @@
   overflow: hidden;
   background-color: var(--background);
 
-  // Ensure MapLibre map fills container
   ::ng-deep .maplibregl-map {
     width: 100% !important;
     height: 100% !important;
@@ -27,7 +26,6 @@
     position: relative;
   }
 
-  // Style MapLibre controls with shadcn/ui theme using light-dark()
   ::ng-deep .maplibregl-ctrl {
     background-color: light-dark(#ffffff, #1e293b);
     border: 1px solid light-dark(#e5e7eb, #334155);
@@ -89,9 +87,7 @@
     display: block;
   }
 
-  // Style tooltips to ensure theme support
   ::ng-deep .ng-tooltip {
-    // Inverted colors: dark background in light theme, light background in dark theme
     background-color: light-dark(
       var(--popover-foreground, #0f172a),
       var(--popover-foreground, #f8fafc)

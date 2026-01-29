@@ -22,10 +22,6 @@ import { MapService } from '../../services/map.service';
 import { ThemeService } from '../../services/theme.service';
 import { getDarkMapStyle, getLightMapStyle } from '../../styles/map-styles';
 
-/**
- * Map component using MapLibre GL
- * Following Angular 18 best practices and MapLibre GL JS documentation
- */
 @Component({
   selector: 'ng-map',
   standalone: true,
@@ -71,7 +67,6 @@ export class MapComponent implements AfterViewInit {
   private zoomEndHandler?: (e: MapEventType['zoomend']) => void;
 
   constructor() {
-    // Set initial theme
     effect(
       () => {
         const theme = this.theme();
@@ -80,7 +75,6 @@ export class MapComponent implements AfterViewInit {
       { allowSignalWrites: true }
     );
 
-    // Watch for theme changes when in auto mode
     effect(() => {
       const currentTheme = this.themeService.theme();
       const theme = this.theme();
@@ -89,7 +83,6 @@ export class MapComponent implements AfterViewInit {
       }
     });
 
-    // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
       this.destroyMap();
     });
@@ -101,10 +94,6 @@ export class MapComponent implements AfterViewInit {
     }, 0);
   }
 
-  /**
-   * Initialize the map
-   * Following MapLibre GL JS best practices: wait for style.load, then load, then resize
-   */
   private initializeMap(): void {
     const containerRef = this.mapContainer();
     if (!containerRef?.nativeElement) {
@@ -182,26 +171,18 @@ export class MapComponent implements AfterViewInit {
         this.checkMapFullyReady();
       };
 
-      this.errorHandler = (e: any) => {
-        // Error handler for map errors
-      };
+      this.errorHandler = () => {};
 
-      this.dataHandler = (e: any) => {
-        // Data handler for source loading
-      };
+      this.dataHandler = () => {};
 
       this.map.on('styledata', this.styleDataHandler);
       this.map.on('load', this.loadHandler);
       this.map.on('error', this.errorHandler);
       this.map.on('data', this.dataHandler);
-    } catch (error) {
-      // Error initializing map
+    } catch {
     }
   }
 
-  /**
-   * Clear style timeout
-   */
   private clearStyleTimeout(): void {
     if (this.styleTimeoutRef) {
       clearTimeout(this.styleTimeoutRef);
@@ -209,9 +190,6 @@ export class MapComponent implements AfterViewInit {
     }
   }
 
-  /**
-   * Check if map is fully ready and finalize initialization
-   */
   private checkMapFullyReady(): void {
     if (!this.map) {
       return;
@@ -240,9 +218,6 @@ export class MapComponent implements AfterViewInit {
     this.setupEventHandlers();
   }
 
-  /**
-   * Get valid center coordinates
-   */
   private getValidCenter(): [number, number] {
     const centerInput = this.center();
     const config = this.config();
@@ -279,9 +254,6 @@ export class MapComponent implements AfterViewInit {
     return [validLng, validLat];
   }
 
-  /**
-   * Get valid zoom level
-   */
   private getValidZoom(): number {
     const zoom = this.zoom() ?? this.config()?.zoom ?? 2;
 
@@ -292,9 +264,6 @@ export class MapComponent implements AfterViewInit {
     return Math.max(0, Math.min(22, zoom));
   }
 
-  /**
-   * Get valid pitch value
-   */
   private getValidPitch(): number | undefined {
     const pitch = this.config()?.pitch;
     if (pitch === undefined || pitch === null) {
@@ -306,9 +275,6 @@ export class MapComponent implements AfterViewInit {
     return Math.max(0, Math.min(60, pitch));
   }
 
-  /**
-   * Get valid bearing value
-   */
   private getValidBearing(): number | undefined {
     const bearing = this.config()?.bearing;
     if (bearing === undefined || bearing === null) {
@@ -323,9 +289,6 @@ export class MapComponent implements AfterViewInit {
     return normalized;
   }
 
-  /**
-   * Get valid minZoom value
-   */
   private getValidMinZoom(): number | undefined {
     const minZoom = this.config()?.minZoom;
     if (minZoom === undefined || minZoom === null) {
@@ -337,9 +300,6 @@ export class MapComponent implements AfterViewInit {
     return Math.max(0, Math.min(22, minZoom));
   }
 
-  /**
-   * Get valid maxZoom value
-   */
   private getValidMaxZoom(): number | undefined {
     const maxZoom = this.config()?.maxZoom;
     if (maxZoom === undefined || maxZoom === null) {
@@ -351,9 +311,6 @@ export class MapComponent implements AfterViewInit {
     return Math.max(0, Math.min(22, maxZoom));
   }
 
-  /**
-   * Check if map is ready for interactions
-   */
   private checkMapReady(): boolean {
     if (!this.map) {
       return false;
@@ -367,9 +324,6 @@ export class MapComponent implements AfterViewInit {
     }
   }
 
-  /**
-   * Enable or disable map interactions
-   */
   private setMapInteractions(enabled: boolean): void {
     if (!this.map) {
       return;
@@ -409,15 +363,10 @@ export class MapComponent implements AfterViewInit {
         this.map.doubleClickZoom.disable();
         this.map.touchZoomRotate.disable();
       }
-    } catch (error) {
-      // Error setting map interactions
+    } catch {
     }
   }
 
-  /**
-   * Set up event handlers
-   * Only set up handlers after map is fully loaded and ready
-   */
   private setupEventHandlers(): void {
     if (!this.map || !this.isMapReady) {
       return;
@@ -432,9 +381,7 @@ export class MapComponent implements AfterViewInit {
         if (this.checkMapReady()) {
           this.mapClick.emit(e);
         }
-      } catch (error) {
-        // Error handling click event
-      }
+      } catch {}
     };
 
     this.moveHandler = (e: MapEventType['move']) => {
@@ -442,8 +389,7 @@ export class MapComponent implements AfterViewInit {
         if (this.checkMapReady()) {
           this.mapMove.emit(e);
         }
-      } catch (error) {
-        // Error handling move event
+      } catch {
       }
     };
 
@@ -452,8 +398,7 @@ export class MapComponent implements AfterViewInit {
         if (this.checkMapReady()) {
           this.mapMoveEnd.emit(e);
         }
-      } catch (error) {
-        // Error handling moveend event
+      } catch {
       }
     };
 
@@ -462,8 +407,7 @@ export class MapComponent implements AfterViewInit {
         if (this.checkMapReady()) {
           this.mapZoom.emit(e);
         }
-      } catch (error) {
-        // Error handling zoom event
+      } catch {
       }
     };
 
@@ -472,8 +416,7 @@ export class MapComponent implements AfterViewInit {
         if (this.checkMapReady()) {
           this.mapZoomEnd.emit(e);
         }
-      } catch (error) {
-        // Error handling zoomend event
+      } catch {
       }
     };
 
@@ -484,11 +427,6 @@ export class MapComponent implements AfterViewInit {
     this.map.on('zoomend', this.zoomEndHandler);
   }
 
-  /**
-   * Get map style based on current theme
-   * Returns custom style if provided, otherwise returns theme-based style
-   * Priority: styles.light/dark > style input > config.style > theme-based style
-   */
   private getMapStyle(): string | StyleSpecification {
     const currentTheme = this.themeService.getTheme();
     const styles = this.styles();
@@ -521,9 +459,6 @@ export class MapComponent implements AfterViewInit {
     return currentTheme === 'dark' ? getDarkMapStyle() : getLightMapStyle();
   }
 
-  /**
-   * Update map theme
-   */
   private updateMapTheme(theme: 'light' | 'dark'): void {
     if (!this.map) {
       return;
@@ -563,9 +498,6 @@ export class MapComponent implements AfterViewInit {
     }
   }
 
-  /**
-   * Destroy the map
-   */
   private destroyMap(): void {
     this.clearStyleTimeout();
 
@@ -574,77 +506,67 @@ export class MapComponent implements AfterViewInit {
         if (this.styleDataHandler && this.map) {
           try {
             this.map.off('styledata', this.styleDataHandler);
-          } catch (e) {
-            // Ignore errors if map is already being destroyed
+          } catch {
           }
           this.styleDataHandler = undefined;
         }
         if (this.loadHandler && this.map) {
           try {
             this.map.off('load', this.loadHandler);
-          } catch (e) {
-            // Ignore errors if map is already being destroyed
+          } catch {
           }
           this.loadHandler = undefined;
         }
         if (this.errorHandler && this.map) {
           try {
             this.map.off('error', this.errorHandler);
-          } catch (e) {
-            // Ignore errors if map is already being destroyed
+          } catch {
           }
           this.errorHandler = undefined;
         }
         if (this.dataHandler && this.map) {
           try {
             this.map.off('data', this.dataHandler);
-          } catch (e) {
-            // Ignore errors if map is already being destroyed
+          } catch {
           }
           this.dataHandler = undefined;
         }
         if (this.clickHandler && this.map) {
           try {
             this.map.off('click', this.clickHandler);
-          } catch (e) {
-            // Ignore errors if map is already being destroyed
+          } catch {
           }
           this.clickHandler = undefined;
         }
         if (this.moveHandler && this.map) {
           try {
             this.map.off('move', this.moveHandler);
-          } catch (e) {
-            // Ignore errors if map is already being destroyed
+          } catch {
           }
           this.moveHandler = undefined;
         }
         if (this.moveEndHandler && this.map) {
           try {
             this.map.off('moveend', this.moveEndHandler);
-          } catch (e) {
-            // Ignore errors if map is already being destroyed
+          } catch {
           }
           this.moveEndHandler = undefined;
         }
         if (this.zoomHandler && this.map) {
           try {
             this.map.off('zoom', this.zoomHandler);
-          } catch (e) {
-            // Ignore errors if map is already being destroyed
+          } catch {
           }
           this.zoomHandler = undefined;
         }
         if (this.zoomEndHandler && this.map) {
           try {
             this.map.off('zoomend', this.zoomEndHandler);
-          } catch (e) {
-            // Ignore errors if map is already being destroyed
+          } catch {
           }
           this.zoomEndHandler = undefined;
         }
-      } catch (error) {
-        // Error removing event listeners
+      } catch {
       }
 
       this.isMapReady = false;
@@ -659,9 +581,6 @@ export class MapComponent implements AfterViewInit {
     this.currentStyleRef = null;
   }
 
-  /**
-   * Get the map instance
-   */
   getMap(): MapLibreMap | null {
     return this.map;
   }
