@@ -1,63 +1,152 @@
-# NgMapcn
+# ng-mapcn
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.0.
+**Beautiful maps for Angular, made simple.**
 
-## Code scaffolding
+Inspired by [mapcn](https://www.mapcn.dev/) (React). Free & open source map components for Angular 18+. Zero config, one command setup. Built on MapLibre GL, styled with SCSS, inspired by shadcn/ui.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+[GitHub Repository](https://github.com/juanvieiraprado99/ng-mapcn) | [Report Bug](https://github.com/juanvieiraprado99/ng-mapcn/issues)
 
-```bash
-ng generate component component-name
-```
+## Features
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+- 🎨 **Theme-aware** — Automatically adapts to light/dark mode
+- 🎯 **Zero config** — Works out of the box with sensible defaults
+- 📦 **shadcn/ui compatible** — Uses the same patterns and styling conventions
+- 🗺️ **MapLibre GL powered** — Full access to MapLibre's powerful mapping capabilities
+- 🧩 **Composable** — Build complex map UIs with simple, declarative components
+- 📍 **Markers & Popups** — Rich marker system with popups, tooltips, and labels
+- 🛤️ **Routes** — Draw routes and paths on your maps
+- 🎮 **Controls** — Zoom, compass, locate, and fullscreen controls
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the library, run:
-
-```bash
-ng build ng-mapcn
-```
-
-This command will compile your project, and the build artifacts will be placed in the `dist/` directory.
-
-### Publishing the Library
-
-Once the project is built, you can publish your library by following these steps:
-
-1. Navigate to the `dist` directory:
-   ```bash
-   cd dist/ng-mapcn
-   ```
-
-2. Run the `npm publish` command to publish your library to the npm registry:
-   ```bash
-   npm publish
-   ```
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+## Installation
 
 ```bash
-ng test
+npm install ng-mapcn maplibre-gl
 ```
 
-## Running end-to-end tests
+## Quick Start
 
-For end-to-end (e2e) testing, run:
+### 1. Import the CSS
 
-```bash
-ng e2e
+Add MapLibre CSS to your `angular.json`:
+
+```json
+{
+  "styles": ["node_modules/maplibre-gl/dist/maplibre-gl.css"]
+}
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Or import in your global styles:
 
-## Additional Resources
+```scss
+@import 'maplibre-gl/dist/maplibre-gl.css';
+```
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+### 2. Use the Components
+
+```typescript
+import { Component } from '@angular/core';
+import { MapComponent, ZoomControlComponent } from 'ng-mapcn';
+
+@Component({
+  selector: 'app-map',
+  standalone: true,
+  imports: [MapComponent, ZoomControlComponent],
+  template: `
+    <div style="width: 100%; height: 400px;">
+      <ng-map
+        [mapId]="'my-map'"
+        [center]="[0, 0]"
+        [zoom]="2"
+        (mapReady)="onMapReady($event)"
+      ></ng-map>
+      <ng-zoom-control [mapId]="'my-map'" position="top-right"></ng-zoom-control>
+    </div>
+  `,
+})
+export class MapComponent {
+  onMapReady(map: any) {
+    console.log('Map ready!', map);
+  }
+}
+```
+
+## Components
+
+### MapComponent
+
+The main map component.
+
+```html
+<ng-map
+  [mapId]="'my-map'"
+  [center]="[lng, lat]"
+  [zoom]="10"
+  [style]="'https://demotiles.maplibre.org/style.json'"
+  [theme]="'auto'"
+  (mapReady)="onMapReady($event)"
+  (mapClick)="onMapClick($event)"
+></ng-map>
+```
+
+**Inputs:** `mapId`, `center`, `zoom`, `style`, `theme`, `config`  
+**Outputs:** `mapReady`, `mapClick`, `mapMove`, `mapZoom`
+
+### MarkerComponent
+
+Add markers with popups and tooltips.
+
+```html
+<ng-marker
+  [mapId]="'my-map'"
+  [config]="{
+    position: [-74.5, 40],
+    popup: { title: 'New York', content: 'The Big Apple' },
+    color: '#3b82f6'
+  }"
+  (markerClick)="onMarkerClick($event)"
+></ng-marker>
+```
+
+### RouteComponent
+
+Draw routes/paths on your map.
+
+```html
+<ng-route
+  [mapId]="'my-map'"
+  [config]="{
+    coordinates: [[-74.5, 40], [-73.5, 41]],
+    color: '#3b82f6',
+    width: 3
+  }"
+></ng-route>
+```
+
+### Control Components
+
+- **ng-zoom-control** — Zoom in/out
+- **ng-compass-control** — Reset north
+- **ng-locate-control** — Geolocation
+- **ng-fullscreen-control** — Fullscreen toggle
+- **ng-map-controls** — All controls in one component
+
+## Services
+
+- **MapService** — `flyTo()`, `getCenter()`, `zoomIn()`, `fitBounds()`, etc.
+- **ThemeService** — `setTheme()`, `toggleTheme()`, `getTheme()`
+- **MarkerService** — Add/remove markers programmatically
+- **OsrmService** — Route planning via OSRM API
+
+## Styling
+
+The library uses SCSS with CSS variables for theming. Override variables to match your design system.
+
+## License
+
+MIT © [Juan Prado](https://github.com/juanvieiraprado99)
+
+## Credits
+
+- Inspired by [mapcn](https://www.mapcn.dev/) (React)
+- Built with [MapLibre GL](https://maplibre.org/)
+- Styling inspired by [shadcn/ui](https://ui.shadcn.com/)

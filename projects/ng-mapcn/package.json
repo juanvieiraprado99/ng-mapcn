@@ -1,13 +1,33 @@
 {
   "name": "ng-mapcn",
-  "version": "18.0.0-beta.0",
+  "version": "18.0.0-beta.1",
+  "description": "Beautiful maps for Angular, made simple. MapLibre GL components for Angular 18+ with theme-aware styling inspired by shadcn/ui.",
+  "keywords": [
+    "angular",
+    "angular-18",
+    "map",
+    "maplibre",
+    "maplibre-gl",
+    "map-components",
+    "shadcn",
+    "theme-aware",
+    "markers",
+    "routes",
+    "geolocation"
+  ],
+  "author": "Juan Prado <https://github.com/juanvieiraprado99>",
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/juanvieiraprado99/ng-mapcn.git"
+    "url": "git+https://github.com/juanvieiraprado99/ng-mapcn.git"
   },
   "homepage": "https://github.com/juanvieiraprado99/ng-mapcn#readme",
   "bugs": {
     "url": "https://github.com/juanvieiraprado99/ng-mapcn/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
   "peerDependencies": {
     "@angular/common": "^18.2.14",
