@@ -22,94 +22,14 @@
   }
 }
 
-.ng-map-controls,
-.ng-map-controls {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  gap: $map-control-gap;
-  z-index: $z-fixed;
-
-  &.ng-controls-top-left,
-  &.ng-controls-top-left {
-    top: $spacing-md;
-    left: $spacing-md;
-  }
-
-  &.ng-controls-top-right,
-  &.ng-controls-top-right {
-    top: $spacing-md;
-    right: $spacing-md;
-  }
-
-  &.ng-controls-bottom-left,
-  &.ng-controls-bottom-left {
-    bottom: $spacing-md;
-    left: $spacing-md;
-  }
-
-  &.ng-controls-bottom-right,
-  &.ng-controls-bottom-right {
-    bottom: $spacing-md;
-    right: $spacing-md;
-  }
-}
-
-.ng-map-control-button,
-.ng-map-control-button {
-  @include button-base;
-  width: $map-control-size;
-  height: $map-control-size;
-  padding: $map-control-padding;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: light-dark(#ffffff, #1e293b);
-  border: 1px solid light-dark(#e5e7eb, #334155);
-  border-radius: $map-control-border-radius;
-  box-shadow: light-dark(
-    0 4px 6px -1px rgb(0 0 0 / 0.1),
-    0 2px 4px -2px rgb(0 0 0 / 0.1),
-    0 4px 6px -1px rgb(0 0 0 / 0.3),
-    0 2px 4px -2px rgb(0 0 0 / 0.3)
-  );
-  backdrop-filter: blur(8px);
-  color: light-dark(#0f172a, #f8fafc);
-  transition: all $transition-base;
-
-  &:hover:not(:disabled) {
-    background-color: light-dark(#f1f5f9, #334155);
-    color: light-dark(#0f172a, #f8fafc);
-    box-shadow: light-dark(
-      0 10px 15px -3px rgb(0 0 0 / 0.1),
-      0 4px 6px -4px rgb(0 0 0 / 0.1),
-      0 10px 15px -3px rgb(0 0 0 / 0.3),
-      0 4px 6px -4px rgb(0 0 0 / 0.3)
-    );
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.95);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  svg {
-    width: 1.25rem;
-    height: 1.25rem;
-    stroke: currentColor;
-  }
-}
-
 .ng-marker {
   display: block;
   border: 2px solid light-dark(#ffffff, #1e293b);
   border-radius: 50%;
   cursor: pointer;
-  transition: transform $transition-base, box-shadow $transition-base;
+  transition:
+    transform $transition-base,
+    box-shadow $transition-base;
   box-shadow: light-dark(0 2px 4px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.3));
   position: relative;
 
@@ -134,7 +54,8 @@
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+  transition:
+    opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
     visibility 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 1070;
   max-width: 200px;
@@ -147,7 +68,9 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    transition: opacity 0.1s ease, visibility 0.1s ease;
+    transition:
+      opacity 0.1s ease,
+      visibility 0.1s ease;
     animation: none;
   }
 }
