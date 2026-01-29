@@ -17,10 +17,6 @@ import { OsrmService } from '../../services/osrm.service';
 import { MarkerComponent } from '../marker/marker.component';
 import { RouteComponent } from '../route/route.component';
 
-/**
- * Component for route planning with OSRM integration
- * Displays multiple route options and allows selection
- */
 @Component({
   selector: 'ng-route-planning',
   standalone: true,
@@ -75,7 +71,6 @@ export class RoutePlanningComponent {
       return config;
     });
 
-    // Sort: selected route last (rendered on top)
     const sorted = [...newConfigs];
     sorted.sort((a, b) => {
       const aIndex = this.getRouteIndex(a.id!);
@@ -89,7 +84,6 @@ export class RoutePlanningComponent {
   });
 
   constructor() {
-    // Watch for map ready and start/end changes - fetch routes when available
     effect(
       () => {
         const mapId = this.mapId();
@@ -98,17 +92,14 @@ export class RoutePlanningComponent {
         const mapSignal = this.mapService.getMapSignal(mapId);
         const map = mapSignal();
 
-        // Use untracked to read signals without creating dependencies
         const routes = untracked(() => this.routes());
         const isLoading = untracked(() => this.isLoading());
 
         if (map && start && end && routes.length === 0 && !isLoading && !this.isFetching) {
-          // Create a key to track start/end changes
           const startEndKey = `${start.lng},${start.lat}-${end.lng},${end.lat}`;
 
           if (this.lastStartEnd !== startEndKey) {
             this.lastStartEnd = startEndKey;
-            // Use setTimeout to avoid running during component construction
             setTimeout(() => {
               const currentRoutes = untracked(() => this.routes());
               const currentLoading = untracked(() => this.isLoading());
@@ -122,7 +113,6 @@ export class RoutePlanningComponent {
       { allowSignalWrites: true }
     );
 
-    // Watch for start/end changes to refetch routes (only when routes already exist)
     effect(
       () => {
         const start = this.start();
@@ -132,11 +122,9 @@ export class RoutePlanningComponent {
           return;
         }
 
-        // Use untracked to read routes without creating dependency
         const routes = untracked(() => this.routes());
         const startEndKey = `${start.lng},${start.lat}-${end.lng},${end.lat}`;
 
-        // Only refetch if routes exist and start/end actually changed
         if (routes.length > 0 && this.lastStartEnd !== null && this.lastStartEnd !== startEndKey && !this.isFetching) {
           this.lastStartEnd = startEndKey;
           this.fetchRoutes();
@@ -145,18 +133,13 @@ export class RoutePlanningComponent {
       { allowSignalWrites: true }
     );
 
-    // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
       this.routes.set([]);
       this.lastStartEnd = null;
     });
   }
 
-  /**
-   * Fetch routes from OSRM API
-   */
   async fetchRoutes(): Promise<void> {
-    // Prevent concurrent requests
     if (this.isFetching) {
       return;
     }
@@ -192,9 +175,6 @@ export class RoutePlanningComponent {
     }
   }
 
-  /**
-   * Select a route by index
-   */
   selectRoute(index: number): void {
     const routes = this.routes();
     if (index < 0 || index >= routes.length) {
@@ -208,10 +188,6 @@ export class RoutePlanningComponent {
     });
   }
 
-
-  /**
-   * Get route index from route ID
-   */
   getRouteIndex(routeId: string | undefined): number {
     if (!routeId) return 0;
     const match = routeId.match(/osrm-route-(\d+)/);
@@ -225,9 +201,6 @@ export class RoutePlanningComponent {
     return this.osrmService.formatDuration(seconds);
   }
 
-  /**
-   * Format distance using OsrmService
-   */
   formatDistance(meters: number): string {
     return this.osrmService.formatDistance(meters);
   }

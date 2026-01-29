@@ -11,9 +11,6 @@ import { RouteConfig } from '../../models';
 import { MapService } from '../../services/map.service';
 import { MarkerService } from '../../services/marker.service';
 
-/**
- * Route component for drawing routes/paths on maps
- */
 @Component({
   selector: 'ng-route',
   standalone: true,
@@ -45,7 +42,6 @@ export class RouteComponent {
   private previousConfig: RouteConfig | undefined = undefined;
 
   constructor() {
-    // Watch for both map and config availability
     effect(() => {
       const config = this.config();
       const mapId = this.mapId();
@@ -59,13 +55,11 @@ export class RouteComponent {
       const newSourceId = `route-source-${config.id || Date.now()}`;
       const newLayerId = `route-layer-${config.id || Date.now()}`;
 
-      // Initialize IDs on first config
       if (!this.sourceId || !this.layerId) {
         this.sourceId = newSourceId;
         this.layerId = newLayerId;
       }
 
-      // Check if IDs changed - if so, we need to remove old and add new
       if (this.routeAdded && (newSourceId !== this.sourceId || newLayerId !== this.layerId)) {
         if (map) {
           this.removeRoute();
@@ -96,7 +90,6 @@ export class RouteComponent {
           }
         }
       } else if (map && config && !this.routeAdded && !this.mapReadyHandler) {
-        // Try to add route when both map and config are available
         setTimeout(() => {
           if (!this.routeAdded && !this.mapReadyHandler) {
             this.attemptAddRoute(map);
@@ -136,8 +129,7 @@ export class RouteComponent {
         try {
           map.off('load', this.mapReadyHandler);
           map.off('styledata', this.mapReadyHandler);
-        } catch (error) {
-          // Ignore errors if map is already being destroyed
+        } catch {
         }
       }
       this.mapReadyHandler = null;
@@ -149,8 +141,7 @@ export class RouteComponent {
       if (map && this.styleDataHandler) {
         try {
           map.off('styledata', this.styleDataHandler);
-        } catch (error) {
-          // Ignore errors if map is already being destroyed
+        } catch {
         }
       }
       this.styleDataHandler = null;
@@ -169,7 +160,6 @@ export class RouteComponent {
 
     let styleChangeDebounceTimeout: any = null;
     this.styleDataHandler = () => {
-      // Debounce style change events to avoid premature removal
       if (styleChangeDebounceTimeout) {
         clearTimeout(styleChangeDebounceTimeout);
       }
@@ -204,10 +194,6 @@ export class RouteComponent {
     return Boolean(map.loaded() && map.isStyleLoaded());
   }
 
-  /**
-   * Set up periodic check if route hasn't been added
-   * This acts as a fallback mechanism in case event listeners don't fire
-   */
   private setupPeriodicCheck(): void {
     if (this.periodicCheckTimeout) {
       clearTimeout(this.periodicCheckTimeout);
@@ -267,9 +253,6 @@ export class RouteComponent {
     }, delay);
   }
 
-  /**
-   * Attempt to add route to map, handling timing issues
-   */
   private attemptAddRoute(map: MapLibreMap): void {
     if (this.isAddingRoute) {
       return;
@@ -308,7 +291,6 @@ export class RouteComponent {
               this.mapReadyHandler = null;
               this.addRoute(map);
             } else if (!map.loaded()) {
-              // Still need to wait for full load
               const loadHandler = () => {
                 const config = this.config();
                 if (this.isMapFullyReady(map) && !this.routeAdded && config) {
@@ -322,7 +304,6 @@ export class RouteComponent {
         };
         map.once('styledata', this.mapReadyHandler);
       } else if (!map.loaded()) {
-        // Style is loaded, just wait for full load
         this.mapReadyHandler = () => {
           const config = this.config();
           if (this.isMapFullyReady(map) && !this.routeAdded && config) {
@@ -332,7 +313,6 @@ export class RouteComponent {
         };
         map.once('load', this.mapReadyHandler);
       } else {
-        // Map should be ready, but double-check and add route
         setTimeout(() => {
           const config = this.config();
           if (this.isMapFullyReady(map) && !this.routeAdded && config) {
@@ -343,13 +323,9 @@ export class RouteComponent {
       return;
     }
 
-    // Map is ready, add route
     this.addRoute(map);
   }
 
-  /**
-   * Add route to map (called when map is fully ready)
-   */
   private async addRoute(map: MapLibreMap): Promise<void> {
     if (this.isAddingRoute) {
       return;
@@ -365,7 +341,6 @@ export class RouteComponent {
       return;
     }
 
-    // Set lock to prevent concurrent additions
     this.isAddingRoute = true;
 
     try {
@@ -375,7 +350,6 @@ export class RouteComponent {
         return;
       }
 
-      // Create GeoJSON feature - convert coordinates to Position[]
       const coordinates: [number, number][] = config.coordinates.map((coord: any) => {
         if (Array.isArray(coord)) {
           return coord as [number, number];
@@ -473,7 +447,6 @@ export class RouteComponent {
             });
           });
 
-          // Change cursor on hover
           map.on('mouseenter', this.layerId, () => {
             map.getCanvas().style.cursor = 'pointer';
           });
@@ -531,8 +504,7 @@ export class RouteComponent {
               try {
                 map.off('styledata', this.mapReadyHandler);
                 map.off('load', this.mapReadyHandler);
-              } catch (e) {
-                // Ignore errors
+              } catch {
               }
               this.mapReadyHandler = null;
             }
@@ -570,10 +542,8 @@ export class RouteComponent {
       return;
     }
 
-    // Remove existing stop markers
     this.removeStopMarkers();
 
-    // Create markers for each stop
     const routeColor = config.color || '#3b82f6';
     const mapId = this.mapId();
     config.stops!.forEach((stop, index) => {
@@ -599,16 +569,12 @@ export class RouteComponent {
     this.stopMarkers.forEach((marker) => {
       try {
         marker.remove();
-      } catch (error) {
-        // Ignore errors if marker is already removed
+      } catch {
       }
     });
     this.stopMarkers = [];
   }
 
-  /**
-   * Update route properties when config changes
-   */
   private updateRouteProperties(map: MapLibreMap): void {
     const config = this.config();
     if (!config || !this.routeAdded || !map.getLayer(this.layerId)) {
@@ -636,7 +602,6 @@ export class RouteComponent {
       const actualOpacity = map.getPaintProperty(this.layerId, 'line-opacity');
 
       if (actualColor !== color || actualWidth !== width || actualOpacity !== opacity) {
-        // Paint properties may not have been set correctly
       }
 
       if (config.dashed) {
@@ -690,18 +655,13 @@ export class RouteComponent {
       if (isSelected) {
         try {
           map.moveLayer(this.layerId);
-        } catch (error) {
-          // If moving layer fails, it's not critical - the color/width should still be visible
+        } catch {
         }
       }
-    } catch (error) {
-      // Error updating route properties
+    } catch {
     }
   }
 
-  /**
-   * Schedule integrity check after route is added
-   */
   private scheduleIntegrityCheck(map: MapLibreMap): void {
     if (this.integrityCheckTimeout) {
       clearTimeout(this.integrityCheckTimeout);
@@ -726,9 +686,6 @@ export class RouteComponent {
     }, 200);
   }
 
-  /**
-   * Remove route from map
-   */
   private removeRoute(): void {
     const mapId = this.mapId();
     const map = this.mapService.getMap(mapId);
@@ -736,7 +693,6 @@ export class RouteComponent {
       return;
     }
 
-    // Remove stop markers
     this.removeStopMarkers();
 
     if (map.getLayer(this.layerId)) {
