@@ -3,9 +3,6 @@ import { Map as MapLibreMap } from 'maplibre-gl';
 import { ControlPosition, LocateControlConfig } from '../../models';
 import { MapService } from '../../services/map.service';
 
-/**
- * Locate control component
- */
 @Component({
   selector: 'ng-locate-control',
   standalone: true,
@@ -27,7 +24,6 @@ export class LocateControlComponent {
   private map: MapLibreMap | null = null;
 
   constructor() {
-    // Watch for map availability
     effect(() => {
       const mapId = this.mapId();
       const mapSignal = this.mapService.getMapSignal(mapId);
@@ -37,15 +33,11 @@ export class LocateControlComponent {
       }
     });
 
-    // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
       this.stopWatching();
     });
   }
 
-  /**
-   * Handle locate
-   */
   onLocate(): void {
     if (!navigator.geolocation) {
       return;
@@ -73,9 +65,6 @@ export class LocateControlComponent {
     }
   }
 
-  /**
-   * Start watching position
-   */
   private startWatching(options: PositionOptions): void {
     this.stopWatching();
 
@@ -90,9 +79,6 @@ export class LocateControlComponent {
     );
   }
 
-  /**
-   * Stop watching position
-   */
   private stopWatching(): void {
     if (this.watchId !== null) {
       navigator.geolocation.clearWatch(this.watchId);
@@ -100,9 +86,6 @@ export class LocateControlComponent {
     }
   }
 
-  /**
-   * Handle location success
-   */
   private handleLocationSuccess(position: GeolocationPosition): void {
     const { longitude, latitude } = position.coords;
     const mapId = this.mapId();
@@ -111,23 +94,14 @@ export class LocateControlComponent {
     this.locate.emit(position);
   }
 
-  /**
-   * Handle location error
-   */
   private handleLocationError(error: GeolocationPositionError): void {
     this.locateError.emit(error);
   }
 
-  /**
-   * Get position class
-   */
   getPositionClass(): string {
     return `ng-controls-${this.position()}`;
   }
 
-  /**
-   * Get locate image path
-   */
   getLocateImagePath(): string {
     return this.config()?.locateImagePath || '/locateme.png';
   }

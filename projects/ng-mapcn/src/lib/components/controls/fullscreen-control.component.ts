@@ -10,9 +10,6 @@ import {
 import { ControlPosition, FullscreenControlConfig } from '../../models';
 import { MapService } from '../../services/map.service';
 
-/**
- * Fullscreen control component
- */
 @Component({
   selector: 'ng-fullscreen-control',
   standalone: true,
@@ -36,13 +33,11 @@ export class FullscreenControlComponent {
   private fullscreenElement: HTMLElement | null = null;
 
   constructor() {
-    // Listen for fullscreen changes
     document.addEventListener('fullscreenchange', this.handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', this.handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', this.handleFullscreenChange);
     document.addEventListener('MSFullscreenChange', this.handleFullscreenChange);
 
-    // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
       document.removeEventListener('fullscreenchange', this.handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', this.handleFullscreenChange);
@@ -51,9 +46,6 @@ export class FullscreenControlComponent {
     });
   }
 
-  /**
-   * Handle fullscreen toggle
-   */
   onToggleFullscreen(): void {
     if (!this.isFullscreenSupported()) {
       return;
@@ -66,9 +58,6 @@ export class FullscreenControlComponent {
     }
   }
 
-  /**
-   * Enter fullscreen
-   */
   private enterFullscreen(): void {
     const mapId = this.mapId();
     const map = this.mapService.getMap(mapId);
@@ -86,18 +75,12 @@ export class FullscreenControlComponent {
       return;
     }
 
-    // Find common ancestor element that contains both map and controls
     const commonAncestor = this.findCommonAncestor(mapContainer, controlsElement);
-
-    // Use common ancestor if found, otherwise fallback to map container
     const elementToFullscreen = commonAncestor || mapContainer;
     this.fullscreenElement = elementToFullscreen;
 
-    // Request fullscreen on the common ancestor or map container
     if (elementToFullscreen.requestFullscreen) {
-      elementToFullscreen.requestFullscreen().catch((error) => {
-        // Error entering fullscreen
-      });
+      elementToFullscreen.requestFullscreen().catch(() => {});
     } else if ((elementToFullscreen as any).webkitRequestFullscreen) {
       (elementToFullscreen as any).webkitRequestFullscreen();
     } else if ((elementToFullscreen as any).mozRequestFullScreen) {
@@ -107,20 +90,14 @@ export class FullscreenControlComponent {
     }
   }
 
-  /**
-   * Exit fullscreen
-   */
   private exitFullscreen(): void {
-    // Only exit if the fullscreen element is in fullscreen
     const currentFullscreenElement = this.getFullscreenElement();
     if (currentFullscreenElement !== this.fullscreenElement) {
       return;
     }
 
     if (document.exitFullscreen) {
-      document.exitFullscreen().catch((error) => {
-        // Error exiting fullscreen
-      });
+      document.exitFullscreen().catch(() => {});
     } else if ((document as any).webkitExitFullscreen) {
       (document as any).webkitExitFullscreen();
     } else if ((document as any).mozCancelFullScreen) {
@@ -130,9 +107,6 @@ export class FullscreenControlComponent {
     }
   }
 
-  /**
-   * Check if fullscreen is supported
-   */
   private isFullscreenSupported(): boolean {
     return !!(
       document.fullscreenEnabled ||
@@ -142,9 +116,6 @@ export class FullscreenControlComponent {
     );
   }
 
-  /**
-   * Get the current fullscreen element
-   */
   private getFullscreenElement(): HTMLElement | null {
     return (document.fullscreenElement ||
       (document as any).webkitFullscreenElement ||
@@ -152,9 +123,6 @@ export class FullscreenControlComponent {
       (document as any).msFullscreenElement) as HTMLElement | null;
   }
 
-  /**
-   * Handle fullscreen change
-   */
   private handleFullscreenChange = (): void => {
     if (!this.fullscreenElement) {
       const mapId = this.mapId();
@@ -169,11 +137,9 @@ export class FullscreenControlComponent {
       }
     }
 
-    // Check if the fullscreen element is in fullscreen
     const currentFullscreenElement = this.getFullscreenElement();
     this.isFullscreen = currentFullscreenElement === this.fullscreenElement;
 
-    // If fullscreen was exited, clear the element reference
     if (!this.isFullscreen) {
       this.fullscreenElement = null;
     }
@@ -181,16 +147,10 @@ export class FullscreenControlComponent {
     this.fullscreenChange.emit(this.isFullscreen);
   };
 
-  /**
-   * Get position class
-   */
   getPositionClass(): string {
     return `ng-controls-${this.position()}`;
   }
 
-  /**
-   * Check if currently in fullscreen
-   */
   getIsFullscreen(): boolean {
     if (!this.fullscreenElement) {
       const mapId = this.mapId();
@@ -205,18 +165,13 @@ export class FullscreenControlComponent {
       }
     }
 
-    // Check if the fullscreen element is in fullscreen
     const currentFullscreenElement = this.getFullscreenElement();
     this.isFullscreen = currentFullscreenElement === this.fullscreenElement;
 
     return this.isFullscreen;
   }
 
-  /**
-   * Find common ancestor element between two elements
-   */
   private findCommonAncestor(element1: HTMLElement, element2: HTMLElement): HTMLElement | null {
-    // Collect all ancestors of element1
     const ancestors1: HTMLElement[] = [];
     let current: HTMLElement | null = element1;
     while (current) {
@@ -224,7 +179,6 @@ export class FullscreenControlComponent {
       current = current.parentElement;
     }
 
-    // Check if element2 or any of its ancestors is in ancestors1
     current = element2;
     while (current) {
       if (ancestors1.includes(current)) {

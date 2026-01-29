@@ -3,9 +3,6 @@ import { Map as MapLibreMap } from 'maplibre-gl';
 import { CompassControlConfig, ControlPosition } from '../../models';
 import { MapService } from '../../services/map.service';
 
-/**
- * Compass control component
- */
 @Component({
   selector: 'ng-compass-control',
   standalone: true,
@@ -26,11 +23,9 @@ export class CompassControlComponent {
   private rotateHandler: (() => void) | null = null;
   private rotateEndHandler: (() => void) | null = null;
 
-  // Compass rotation in degrees (negative of map bearing to always point north)
   compassRotation: number = 0;
 
   constructor() {
-    // Watch for map availability
     effect(() => {
       const mapId = this.mapId();
       const mapSignal = this.mapService.getMapSignal(mapId);
@@ -42,15 +37,11 @@ export class CompassControlComponent {
       }
     });
 
-    // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
       this.removeRotationListeners();
     });
   }
 
-  /**
-   * Setup rotation listeners for the map
-   */
   private setupRotationListeners(): void {
     if (!this.map) {
       return;
@@ -58,7 +49,6 @@ export class CompassControlComponent {
 
     this.removeRotationListeners();
 
-    // Listen to rotation events
     this.rotateHandler = () => {
       this.updateCompassRotation();
     };
@@ -71,9 +61,6 @@ export class CompassControlComponent {
     this.map.on('rotateend', this.rotateEndHandler);
   }
 
-  /**
-   * Remove rotation listeners
-   */
   private removeRotationListeners(): void {
     if (this.map) {
       if (this.rotateHandler) {
@@ -87,49 +74,29 @@ export class CompassControlComponent {
     }
   }
 
-  /**
-   * Update compass rotation based on map bearing
-   */
   private updateCompassRotation(): void {
     if (!this.map) {
       return;
     }
 
-    // Get current bearing (rotation) of the map
     const bearing = this.map.getBearing();
-
-    // Compass rotates in opposite direction to always point north
-    // If map rotates 45° clockwise, compass rotates -45° (counter-clockwise)
     this.compassRotation = -bearing;
   }
 
-  /**
-   * Get compass rotation style
-   */
   getCompassRotationStyle(): string {
     return `transform: rotate(${this.compassRotation}deg);`;
   }
 
-  /**
-   * Handle reset north
-   */
   onResetNorth(): void {
     const mapId = this.mapId();
     this.mapService.resetNorth(mapId);
     this.resetNorth.emit();
-    // Rotation will update automatically via event listener
   }
 
-  /**
-   * Get position class
-   */
   getPositionClass(): string {
     return `ng-controls-${this.position()}`;
   }
 
-  /**
-   * Get compass image path
-   */
   getCompassImagePath(): string {
     return this.config()?.compassImagePath || '/compass.png';
   }

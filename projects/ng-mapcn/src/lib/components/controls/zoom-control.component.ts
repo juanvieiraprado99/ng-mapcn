@@ -2,9 +2,6 @@ import { Component, inject, input, output } from '@angular/core';
 import { ControlPosition, ZoomControlConfig } from '../../models';
 import { MapService } from '../../services/map.service';
 
-/**
- * Zoom control component
- */
 @Component({
   selector: 'ng-zoom-control',
   standalone: true,
@@ -22,27 +19,18 @@ export class ZoomControlComponent {
 
   private mapService = inject(MapService);
 
-  /**
-   * Handle zoom in
-   */
   onZoomIn(): void {
     const mapId = this.mapId();
     this.mapService.zoomIn(mapId);
     this.zoomIn.emit();
   }
 
-  /**
-   * Handle zoom out
-   */
   onZoomOut(): void {
     const mapId = this.mapId();
     this.mapService.zoomOut(mapId);
     this.zoomOut.emit();
   }
 
-  /**
-   * Get position class
-   */
   getPositionClass(): string {
     return `ng-controls-${this.position()}`;
   }

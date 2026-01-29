@@ -19,10 +19,6 @@ import {
 } from '../../models';
 import { MapService } from '../../services/map.service';
 
-/**
- * Unified map controls component
- * Consolidates zoom, compass, locate, and fullscreen controls into a single component
- */
 @Component({
   selector: 'ng-map-controls',
   standalone: true,
@@ -36,19 +32,16 @@ export class MapControlsComponent {
   mapId = input<string>('default-map');
   position = input<ControlPosition>('top-right');
 
-  // Show/hide individual controls
   showZoom = input<boolean>(true);
   showCompass = input<boolean>(false);
   showLocate = input<boolean>(false);
   showFullscreen = input<boolean>(false);
 
-  // Individual control configurations
   zoomConfig = input<ZoomControlConfig>();
   compassConfig = input<CompassControlConfig>();
   locateConfig = input<LocateControlConfig>();
   fullscreenConfig = input<FullscreenControlConfig>();
 
-  // Output events
   zoomIn = output<void>();
   zoomOut = output<void>();
   resetNorth = output<void>();
@@ -56,7 +49,6 @@ export class MapControlsComponent {
   locateError = output<GeolocationPositionError>();
   fullscreenChange = output<boolean>();
 
-  // Computed position class
   positionClass = computed(() => `ng-controls-${this.position()}`);
 
   private mapService = inject(MapService);
@@ -69,11 +61,9 @@ export class MapControlsComponent {
   private compassRotateHandler: (() => void) | null = null;
   private compassRotateEndHandler: (() => void) | null = null;
 
-  // Compass rotation in degrees (negative of map bearing to always point north)
   compassRotation: number = 0;
 
   constructor() {
-    // Watch for map availability to setup compass rotation
     effect(() => {
       const mapId = this.mapId();
       const showCompass = this.showCompass();
@@ -88,7 +78,6 @@ export class MapControlsComponent {
       }
     });
 
-    // Watch for showFullscreen changes to setup/teardown listeners
     let fullscreenListenersAdded = false;
     effect(() => {
       const showFullscreen = this.showFullscreen();
@@ -107,15 +96,9 @@ export class MapControlsComponent {
       }
     });
 
-    // Cleanup on destroy
     this.destroyRef.onDestroy(() => {
-      // Stop watching location if active
       this.stopWatching();
-
-      // Remove compass rotation listeners
       this.removeCompassRotationListeners();
-
-      // Remove fullscreen listeners
       document.removeEventListener('fullscreenchange', this.handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', this.handleFullscreenChange);
       document.removeEventListener('mozfullscreenchange', this.handleFullscreenChange);
@@ -123,38 +106,22 @@ export class MapControlsComponent {
     });
   }
 
-  /**
-   * Get position class for styling
-   */
   getPositionClass(): string {
     return this.positionClass();
   }
 
-  // ========== Zoom Control Methods ==========
-
-  /**
-   * Handle zoom in
-   */
   onZoomIn(): void {
     const mapId = this.mapId();
     this.mapService.zoomIn(mapId);
     this.zoomIn.emit();
   }
 
-  /**
-   * Handle zoom out
-   */
   onZoomOut(): void {
     const mapId = this.mapId();
     this.mapService.zoomOut(mapId);
     this.zoomOut.emit();
   }
 
-  // ========== Compass Control Methods ==========
-
-  /**
-   * Setup compass rotation listeners for the map
-   */
   private setupCompassRotationListeners(): void {
     const showCompass = this.showCompass();
     if (!this.map || !showCompass) {
@@ -163,7 +130,6 @@ export class MapControlsComponent {
 
     this.removeCompassRotationListeners();
 
-    // Listen to rotation events
     this.compassRotateHandler = () => {
       this.updateCompassRotation();
     };
@@ -176,9 +142,6 @@ export class MapControlsComponent {
     this.map.on('rotateend', this.compassRotateEndHandler);
   }
 
-  /**
-   * Remove compass rotation listeners
-   */
   private removeCompassRotationListeners(): void {
     if (this.map) {
       if (this.compassRotateHandler) {
@@ -192,58 +155,33 @@ export class MapControlsComponent {
     }
   }
 
-  /**
-   * Update compass rotation based on map bearing
-   */
   private updateCompassRotation(): void {
     if (!this.map) {
       return;
     }
 
-    // Get current bearing (rotation) of the map
     const bearing = this.map.getBearing();
-
-    // Compass rotates in opposite direction to always point north
-    // If map rotates 45° clockwise, compass rotates -45° (counter-clockwise)
     this.compassRotation = -bearing;
   }
 
-  /**
-   * Get compass rotation style
-   */
   getCompassRotationStyle(): string {
     return `transform: rotate(${this.compassRotation}deg);`;
   }
 
-  /**
-   * Get compass image path
-   */
   getCompassImagePath(): string {
     return this.compassConfig()?.compassImagePath || '/compass.png';
   }
 
-  /**
-   * Get locate image path
-   */
   getLocateImagePath(): string {
     return this.locateConfig()?.locateImagePath || '/locateme.png';
   }
 
-  /**
-   * Handle reset north
-   */
   onResetNorth(): void {
     const mapId = this.mapId();
     this.mapService.resetNorth(mapId);
     this.resetNorth.emit();
-    // Rotation will update automatically via event listener
   }
 
-  // ========== Locate Control Methods ==========
-
-  /**
-   * Handle locate
-   */
   onLocate(): void {
     if (!navigator.geolocation) {
       return;
@@ -271,9 +209,6 @@ export class MapControlsComponent {
     }
   }
 
-  /**
-   * Start watching position
-   */
   private startWatching(options: PositionOptions): void {
     this.stopWatching();
 
@@ -288,9 +223,6 @@ export class MapControlsComponent {
     );
   }
 
-  /**
-   * Stop watching position
-   */
   private stopWatching(): void {
     if (this.watchId !== null) {
       navigator.geolocation.clearWatch(this.watchId);
@@ -298,9 +230,6 @@ export class MapControlsComponent {
     }
   }
 
-  /**
-   * Handle location success
-   */
   private handleLocationSuccess(position: GeolocationPosition): void {
     const { longitude, latitude } = position.coords;
     const mapId = this.mapId();
@@ -309,18 +238,10 @@ export class MapControlsComponent {
     this.locate.emit(position);
   }
 
-  /**
-   * Handle location error
-   */
   private handleLocationError(error: GeolocationPositionError): void {
     this.locateError.emit(error);
   }
 
-  // ========== Fullscreen Control Methods ==========
-
-  /**
-   * Handle fullscreen toggle
-   */
   onToggleFullscreen(): void {
     if (!this.isFullscreenSupported()) {
       return;
@@ -333,9 +254,6 @@ export class MapControlsComponent {
     }
   }
 
-  /**
-   * Enter fullscreen
-   */
   private enterFullscreen(): void {
     const mapId = this.mapId();
     const map = this.mapService.getMap(mapId);
@@ -354,14 +272,11 @@ export class MapControlsComponent {
     }
 
     const commonAncestor = this.findCommonAncestor(mapContainer, controlsElement);
-
     const elementToFullscreen = commonAncestor || mapContainer;
     this.fullscreenElement = elementToFullscreen;
 
     if (elementToFullscreen.requestFullscreen) {
-      elementToFullscreen.requestFullscreen().catch((error) => {
-        // Error entering fullscreen
-      });
+      elementToFullscreen.requestFullscreen().catch(() => {});
     } else if ((elementToFullscreen as any).webkitRequestFullscreen) {
       (elementToFullscreen as any).webkitRequestFullscreen();
     } else if ((elementToFullscreen as any).mozRequestFullScreen) {
@@ -371,20 +286,14 @@ export class MapControlsComponent {
     }
   }
 
-  /**
-   * Exit fullscreen
-   */
   private exitFullscreen(): void {
-    // Only exit if the fullscreen element is in fullscreen
     const currentFullscreenElement = this.getFullscreenElement();
     if (currentFullscreenElement !== this.fullscreenElement) {
       return;
     }
 
     if (document.exitFullscreen) {
-      document.exitFullscreen().catch((error) => {
-        // Error exiting fullscreen
-      });
+      document.exitFullscreen().catch(() => {});
     } else if ((document as any).webkitExitFullscreen) {
       (document as any).webkitExitFullscreen();
     } else if ((document as any).mozCancelFullScreen) {
@@ -394,9 +303,6 @@ export class MapControlsComponent {
     }
   }
 
-  /**
-   * Check if fullscreen is supported
-   */
   private isFullscreenSupported(): boolean {
     return !!(
       document.fullscreenEnabled ||
@@ -406,9 +312,6 @@ export class MapControlsComponent {
     );
   }
 
-  /**
-   * Get the current fullscreen element
-   */
   private getFullscreenElement(): HTMLElement | null {
     return (document.fullscreenElement ||
       (document as any).webkitFullscreenElement ||
@@ -416,9 +319,6 @@ export class MapControlsComponent {
       (document as any).msFullscreenElement) as HTMLElement | null;
   }
 
-  /**
-   * Handle fullscreen change
-   */
   private handleFullscreenChange = (): void => {
     if (!this.fullscreenElement) {
       const mapId = this.mapId();
@@ -433,11 +333,9 @@ export class MapControlsComponent {
       }
     }
 
-    // Check if the fullscreen element is in fullscreen
     const currentFullscreenElement = this.getFullscreenElement();
     this.isFullscreen = currentFullscreenElement === this.fullscreenElement;
 
-    // If fullscreen was exited, clear the element reference
     if (!this.isFullscreen) {
       this.fullscreenElement = null;
     }
@@ -445,9 +343,6 @@ export class MapControlsComponent {
     this.fullscreenChange.emit(this.isFullscreen);
   };
 
-  /**
-   * Check if currently in fullscreen
-   */
   getIsFullscreen(): boolean {
     if (!this.fullscreenElement) {
       const mapId = this.mapId();
@@ -462,18 +357,13 @@ export class MapControlsComponent {
       }
     }
 
-    // Check if the fullscreen element is in fullscreen
     const currentFullscreenElement = this.getFullscreenElement();
     this.isFullscreen = currentFullscreenElement === this.fullscreenElement;
 
     return this.isFullscreen;
   }
 
-  /**
-   * Find common ancestor element between two elements
-   */
   private findCommonAncestor(element1: HTMLElement, element2: HTMLElement): HTMLElement | null {
-    // Collect all ancestors of element1
     const ancestors1: HTMLElement[] = [];
     let current: HTMLElement | null = element1;
     while (current) {
@@ -481,7 +371,6 @@ export class MapControlsComponent {
       current = current.parentElement;
     }
 
-    // Check if element2 or any of its ancestors is in ancestors1
     current = element2;
     while (current) {
       if (ancestors1.includes(current)) {
