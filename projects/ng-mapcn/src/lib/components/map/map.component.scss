@@ -27,39 +27,45 @@
   }
 
   ::ng-deep .maplibregl-ctrl {
-    background-color: light-dark(#ffffff, #1e293b);
-    border: 1px solid light-dark(#e5e7eb, #334155);
-    box-shadow: light-dark(
-      0 4px 6px -1px rgb(0 0 0 / 0.1),
-      0 2px 4px -2px rgb(0 0 0 / 0.1),
-      0 4px 6px -1px rgb(0 0 0 / 0.3),
-      0 2px 4px -2px rgb(0 0 0 / 0.3)
-    );
     transition: all $transition-base;
+  }
+
+  &.theme-light ::ng-deep .maplibregl-ctrl {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    box-shadow:
+      0 4px 6px -1px rgb(0 0 0 / 0.3),
+      0 2px 4px -2px rgb(0 0 0 / 0.3);
 
     &:hover {
-      box-shadow: light-dark(
-        0 10px 15px -3px rgb(0 0 0 / 0.1),
-        0 4px 6px -4px rgb(0 0 0 / 0.1),
+      box-shadow:
         0 10px 15px -3px rgb(0 0 0 / 0.3),
-        0 4px 6px -4px rgb(0 0 0 / 0.3)
-      );
+        0 4px 6px -4px rgb(0 0 0 / 0.3);
+    }
+  }
+
+  &.theme-dark ::ng-deep .maplibregl-ctrl,
+  &.dark ::ng-deep .maplibregl-ctrl {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow:
+      0 4px 6px -1px rgb(0 0 0 / 0.1),
+      0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+    &:hover {
+      box-shadow:
+        0 10px 15px -3px rgb(0 0 0 / 0.1),
+        0 4px 6px -4px rgb(0 0 0 / 0.1);
     }
   }
 
   ::ng-deep .maplibregl-ctrl button {
     background-color: transparent;
-    color: light-dark(#0f172a, #f8fafc);
     border: none;
     padding: $spacing-sm;
     cursor: pointer;
     transition: all $transition-fast;
     border-radius: $radius-sm;
-
-    &:hover {
-      background-color: light-dark(#f1f5f9, #334155);
-      color: light-dark(#0f172a, #f8fafc);
-    }
 
     &:active {
       transform: scale(0.95);
@@ -71,7 +77,74 @@
     }
   }
 
-  // Attribution control styles removed for custom styling
+  &.theme-light ::ng-deep .maplibregl-ctrl button {
+    color: #f8fafc;
+
+    .maplibregl-ctrl-icon {
+      filter: brightness(0) invert(1);
+    }
+
+    &:hover {
+      background-color: #334155;
+      color: #f8fafc;
+    }
+  }
+
+  &.theme-dark ::ng-deep .maplibregl-ctrl button,
+  &.dark ::ng-deep .maplibregl-ctrl button {
+    color: #0f172a;
+
+    .maplibregl-ctrl-icon {
+      filter: none;
+    }
+
+    &:hover {
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+  }
+
+  // Attribution control (© CARTO, OpenStreetMap, etc.)
+  &.theme-light ::ng-deep .maplibregl-ctrl.maplibregl-ctrl-attrib {
+    color: #f8fafc;
+
+    a {
+      color: #e2e8f0;
+    }
+
+    a:hover {
+      color: #f8fafc;
+    }
+
+    .maplibregl-ctrl-attrib-button {
+      filter: brightness(0) invert(1);
+    }
+
+    &.maplibregl-compact::after {
+      filter: brightness(0) invert(1);
+    }
+  }
+
+  &.theme-dark ::ng-deep .maplibregl-ctrl.maplibregl-ctrl-attrib,
+  &.dark ::ng-deep .maplibregl-ctrl.maplibregl-ctrl-attrib {
+    color: #0f172a;
+
+    a {
+      color: #334155;
+    }
+
+    a:hover {
+      color: #0f172a;
+    }
+
+    .maplibregl-ctrl-attrib-button {
+      filter: none;
+    }
+
+    &.maplibregl-compact::after {
+      filter: none;
+    }
+  }
 
   // Popup styles removed for custom styling
 

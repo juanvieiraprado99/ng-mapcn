@@ -20,8 +20,10 @@ Inspired by [mapcn](https://www.mapcn.dev/) (React). Free & open source map comp
 ## Installation
 
 ```bash
-npm install ng-mapcn maplibre-gl
+npm install ng-mapcn
 ```
+
+MapLibre GL is included as a dependency, so you don't need to install it separately.
 
 ## Quick Start
 
