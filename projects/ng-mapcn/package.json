@@ -1,6 +1,6 @@
 {
   "name": "ng-mapcn",
-  "version": "18.0.0-beta.3",
+  "version": "18.0.0-beta.4",
   "description": "Beautiful maps for Angular, made simple. MapLibre GL components for Angular 18+ with theme-aware styling inspired by shadcn/ui.",
   "keywords": [
     "angular",

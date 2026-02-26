@@ -146,7 +146,45 @@
     }
   }
 
-  // Popup styles removed for custom styling
+  // Popup (balloon) – theme-aware for readability
+  &.theme-light ::ng-deep .maplibregl-popup.ng-popup-wrapper {
+    .maplibregl-popup-content {
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    }
+    .ng-popup-container {
+      background-color: #1e293b;
+      color: #f8fafc;
+    }
+    .ng-popup-header {
+      color: #f8fafc;
+      font-weight: 600;
+    }
+    .ng-popup-content {
+      color: #e2e8f0;
+    }
+  }
+
+  &.theme-dark ::ng-deep .maplibregl-popup.ng-popup-wrapper,
+  &.dark ::ng-deep .maplibregl-popup.ng-popup-wrapper {
+    .maplibregl-popup-content {
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+    .ng-popup-container {
+      background-color: #ffffff;
+      color: #0f172a;
+    }
+    .ng-popup-header {
+      color: #0f172a;
+      font-weight: 600;
+    }
+    .ng-popup-content {
+      color: #334155;
+    }
+  }
 
   // Ensure canvas is visible
   ::ng-deep .maplibregl-canvas-container {

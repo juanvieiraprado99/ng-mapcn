@@ -66,11 +66,15 @@ export class MapComponent implements AfterViewInit {
   private zoomHandler?: (e: MapEventType['zoom']) => void;
   private zoomEndHandler?: (e: MapEventType['zoomend']) => void;
 
+  private dataThemeObserver: MutationObserver | null = null;
+
   constructor() {
     effect(
       () => {
         const theme = this.theme();
-        this.themeService.setTheme(theme);
+        if (theme !== 'auto') {
+          this.themeService.setTheme(theme);
+        }
       },
       { allowSignalWrites: true }
     );
@@ -84,6 +88,7 @@ export class MapComponent implements AfterViewInit {
     });
 
     this.destroyRef.onDestroy(() => {
+      this.destroyDataThemeObserver();
       this.destroyMap();
     });
   }
@@ -213,9 +218,44 @@ export class MapComponent implements AfterViewInit {
     if (this.map) {
       this.mapReady.emit(this.map);
     }
-    this.updateMapTheme(this.themeService.getTheme());
+
+    const effectiveTheme =
+      this.theme() === 'auto'
+        ? this.getThemeFromDocument()
+        : this.themeService.getTheme();
+    this.updateMapTheme(effectiveTheme);
+
+    if (this.theme() === 'auto' && typeof document !== 'undefined') {
+      this.observeDataTheme();
+    }
 
     this.setupEventHandlers();
+  }
+
+  private getThemeFromDocument(): 'light' | 'dark' {
+    if (typeof document === 'undefined') return 'light';
+    const value = document.documentElement.getAttribute('data-theme');
+    return value === 'dark' ? 'dark' : 'light';
+  }
+
+  private observeDataTheme(): void {
+    if (typeof document === 'undefined') return;
+    this.destroyDataThemeObserver();
+    this.dataThemeObserver = new MutationObserver(() => {
+      if (this.theme() !== 'auto' || !this.map || !this.isMapReady) return;
+      this.updateMapTheme(this.getThemeFromDocument());
+    });
+    this.dataThemeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+  }
+
+  private destroyDataThemeObserver(): void {
+    if (this.dataThemeObserver) {
+      this.dataThemeObserver.disconnect();
+      this.dataThemeObserver = null;
+    }
   }
 
   private getValidCenter(): [number, number] {
