@@ -20,6 +20,26 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Remove local ng-mapcn dependency (not present in CI)
+        run: |
+          node -e "
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          delete pkg.dependencies['ng-mapcn'];
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+          if (lock.packages && lock.packages['']) {
+            delete lock.packages[''].dependencies['ng-mapcn'];
+          }
+          if (lock.dependencies && lock.dependencies['ng-mapcn']) {
+            delete lock.dependencies['ng-mapcn'];
+          }
+          if (lock.packages && lock.packages['node_modules/ng-mapcn']) {
+            delete lock.packages['node_modules/ng-mapcn'];
+          }
+          fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2));
+          "
+
       - name: Install dependencies
         run: npm ci
 
