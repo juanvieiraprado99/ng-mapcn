@@ -40,8 +40,10 @@ jobs:
           fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2));
           "
 
+      # After stripping `ng-mapcn`, lock + package can drift; `npm install` reconciles
+      # (stricter npm versions also require peer deps like @emnapi/* to be present in the lockfile).
       - name: Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Build library
         run: npm run build:lib:prod

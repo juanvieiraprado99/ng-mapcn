@@ -43,6 +43,8 @@
     "@angular-devkit/build-angular": "^21.2.7",
     "@angular/cli": "^21.2.7",
     "@angular/compiler-cli": "^21.2.9",
+    "@emnapi/core": "1.10.0",
+    "@emnapi/runtime": "1.10.0",
     "@types/jasmine": "~5.1.0",
     "jasmine-core": "~5.1.0",
     "karma": "~6.4.0",
