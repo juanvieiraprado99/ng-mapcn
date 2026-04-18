@@ -1,10 +1,10 @@
 {
   "name": "ng-mapcn",
-  "version": "18.0.0-beta.4",
-  "description": "Beautiful maps for Angular, made simple. MapLibre GL components for Angular 18+ with theme-aware styling inspired by shadcn/ui.",
+  "version": "21.0.0-beta.5",
+  "description": "Beautiful maps for Angular, made simple. MapLibre GL components for Angular 21+ with theme-aware styling inspired by shadcn/ui.",
   "keywords": [
     "angular",
-    "angular-18",
+    "angular-21",
     "map",
     "maplibre",
     "maplibre-gl",
@@ -30,8 +30,8 @@
     "npm": ">=9.0.0"
   },
   "peerDependencies": {
-    "@angular/common": "^18.2.14",
-    "@angular/core": "^18.2.14"
+    "@angular/common": "^21.2.9",
+    "@angular/core": "^21.2.9"
   },
   "dependencies": {
     "tslib": "^2.3.0",

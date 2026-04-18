@@ -3,6 +3,7 @@
  */
 
 export * from './map-config.interface';
+export * from './map-viewport.interface';
 export * from './marker-config.interface';
 export * from './route-config.interface';
 export * from './control-config.interface';

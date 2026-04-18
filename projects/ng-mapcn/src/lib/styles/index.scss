@@ -1,19 +1,21 @@
-@import './variables';
-@import './mixins';
-@import './utilities';
+@use './variables' as *;
+@use './mixins' as *;
+@use './utilities' as *;
 
+// Default: light theme on :root
 :root {
-  color-scheme: light dark; // Enable light-dark() CSS function
   @include theme-light;
 }
 
-[data-theme='dark'],
-.dark {
+// Dark theme via .dark class (primary) or data-theme attribute (compat)
+.dark,
+[data-theme='dark'] {
   @include theme-dark;
 }
 
+// System dark preference fallback (when no class is set)
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
+  :root:not(.light):not([data-theme='light']) {
     @include theme-dark;
   }
 }

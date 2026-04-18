@@ -1,0 +1,55 @@
+// ng-mapcn — Global Stylesheet
+//
+// Import this file in your application's global styles to activate:
+//   - Theme CSS custom properties (light + dark via .dark class or prefers-color-scheme)
+//   - Utility classes used by MapLibre popup/tooltip DOM elements
+//
+// Angular CLI (styles.scss or angular.json):
+//   @use 'ng-mapcn/styles' as *;
+//
+// Vite / standalone SCSS:
+//   @use 'node_modules/ng-mapcn/styles' as *;
+
+@use 'src/lib/styles/variables' as *;
+@use 'src/lib/styles/mixins' as *;
+@use 'src/lib/styles/utilities' as *;
+
+// ── Theme tokens ──────────────────────────────────────────────────────────────
+
+:root {
+  @include theme-light;
+}
+
+.dark,
+[data-theme='dark'] {
+  @include theme-dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not([data-theme='light']) {
+    @include theme-dark;
+  }
+}
+
+// ── MapLibre global overrides ─────────────────────────────────────────────────
+
+.maplibregl-map {
+  font-family: inherit;
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 11px;
+}
+
+// Reset popup defaults so our custom card takes full control
+.maplibregl-popup-content {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  max-width: none !important;
+}
+
+.maplibregl-popup-tip {
+  display: none !important;
+}

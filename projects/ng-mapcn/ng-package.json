@@ -6,5 +6,9 @@
   },
   "allowedNonPeerDependencies": [
     "maplibre-gl"
+  ],
+  "assets": [
+    "styles.scss",
+    "src/lib/styles/**/*.scss"
   ]
 }

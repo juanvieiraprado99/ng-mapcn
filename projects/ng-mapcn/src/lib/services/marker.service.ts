@@ -2,6 +2,11 @@ import { Injectable } from '@angular/core';
 import { LngLatLike, Map as MapLibreMap, Marker, Offset, Popup } from 'maplibre-gl';
 import { MarkerConfig, PopupConfig, TooltipConfig } from '../models';
 
+/**
+ * @deprecated Legacy service used by the old <ng-marker> and <ng-route> components.
+ * New code should use <ng-map-marker> with MarkerContextService and
+ * the dedicated popup/tooltip components instead.
+ */
 @Injectable({
   providedIn: 'root',
 })
@@ -123,7 +128,13 @@ export class MarkerService {
       el.style.height = sizeMap[size];
 
       if (typeof config.icon === 'string') {
-        el.innerHTML = `<img src="${config.icon}" alt="Marker" style="width: 100%; height: 100%; object-fit: contain;" />`;
+        const img = document.createElement('img');
+        img.src = config.icon;
+        img.alt = 'Marker';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'contain';
+        el.appendChild(img);
       } else {
         el.appendChild(config.icon);
       }
@@ -210,17 +221,23 @@ export class MarkerService {
       }
     };
 
+    const onMapMove = () => {
+      if (popup.isOpen()) {
+        updatePopupPosition();
+      }
+    };
+
     popup.on('open', () => {
       requestAnimationFrame(() => {
         updatePopupPosition();
       });
     });
 
-    map.on('move', () => {
-      if (popup.isOpen()) {
-        updatePopupPosition();
-      }
+    popup.on('close', () => {
+      map.off('move', onMapMove);
     });
+
+    map.on('move', onMapMove);
 
     marker.on('dragend', () => {
       updatePopupPosition();
@@ -432,72 +449,37 @@ export class MarkerService {
     map: MapLibreMap,
     color: string = '#3b82f6'
   ): Marker | null {
-    if (!map || !stop) {
-      return null;
-    }
-
-    const markerId = `stop-${mapId}-${number}`;
-
-    const el = document.createElement('div');
-    el.className = 'ng-marker ng-stop-marker';
+    if (!map || !stop) return null;
 
     const isDark = this.isDarkTheme();
     const borderColor = isDark ? '#1e293b' : '#ffffff';
 
-    el.style.display = 'flex';
-    el.style.alignItems = 'center';
-    el.style.justifyContent = 'center';
-    el.style.width = '1.5rem';
-    el.style.height = '1.5rem';
-    el.style.backgroundColor = color;
-    el.style.borderRadius = '50%';
-    el.style.border = `2px solid ${borderColor}`;
-    el.style.cursor = 'pointer';
-    el.style.boxShadow = isDark ? '0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.15)';
-    el.style.fontSize = '0.75rem';
-    el.style.fontWeight = '600';
-    el.style.color = '#ffffff';
-    el.style.lineHeight = '1';
-    el.style.userSelect = 'none';
-
+    const el = document.createElement('div');
+    el.className = 'ng-stop-marker';
+    Object.assign(el.style, {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '1.5rem',
+      height: '1.5rem',
+      backgroundColor: color,
+      borderRadius: '50%',
+      border: `2px solid ${borderColor}`,
+      cursor: 'pointer',
+      boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.15)',
+      fontSize: '0.75rem',
+      fontWeight: '600',
+      color: '#ffffff',
+      lineHeight: '1',
+      userSelect: 'none',
+    });
     el.textContent = number.toString();
 
-    const config: MarkerConfig = {
-      id: markerId,
+    return this.addMarker(mapId, {
+      id: `stop-${mapId}-${number}`,
       position: [stop.lng, stop.lat],
-      color: color,
-      size: 'medium',
-      popup: stop.name
-        ? {
-            title: stop.name,
-            content: `Stop ${number}`,
-          }
-        : undefined,
-    };
-
-    try {
-      const marker = new Marker({
-        element: el,
-        anchor: 'center',
-        draggable: false,
-      }).setLngLat([stop.lng, stop.lat]);
-
-      marker.addTo(map);
-
-      if (config.popup) {
-        requestAnimationFrame(() => {
-          this.attachPopup(marker, config.popup!, map);
-        });
-      }
-
-      if (!this.markers.has(mapId)) {
-        this.markers.set(mapId, new globalThis.Map());
-      }
-      this.markers.get(mapId)!.set(markerId, marker);
-
-      return marker;
-    } catch (error) {
-      return null;
-    }
+      icon: el,
+      popup: stop.name ? { title: stop.name, content: `Stop ${number}` } : undefined,
+    }, map);
   }
 }

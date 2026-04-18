@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
@@ -11,6 +12,7 @@ import {
 } from '@angular/core';
 import { OsrmRouteData, OsrmRouteOptions } from '../../models/osrm.interface';
 import { RouteConfig } from '../../models/route-config.interface';
+import { MapContextService } from '../../services/map-context.service';
 import { MapService } from '../../services/map.service';
 import { MarkerService } from '../../services/marker.service';
 import { OsrmService } from '../../services/osrm.service';
@@ -19,10 +21,10 @@ import { RouteComponent } from '../route/route.component';
 
 @Component({
   selector: 'ng-route-planning',
-  standalone: true,
   imports: [RouteComponent, MarkerComponent],
   templateUrl: './route-planning.component.html',
   styleUrl: './route-planning.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RoutePlanningComponent {
   start = input.required<{ lng: number; lat: number; name?: string }>();
@@ -39,10 +41,12 @@ export class RoutePlanningComponent {
   isLoading = signal<boolean>(false);
   error = signal<string | null>(null);
 
-  private mapService = inject(MapService);
-  private osrmService = inject(OsrmService);
-  private markerService = inject(MarkerService);
-  private destroyRef = inject(DestroyRef);
+  private readonly mapService = inject(MapService);
+  private readonly osrmService = inject(OsrmService);
+  private readonly markerService = inject(MarkerService);
+  private readonly destroyRef = inject(DestroyRef);
+  /** Optional — present when component is a child of <ng-map> */
+  private readonly mapCtx = inject(MapContextService, { optional: true });
   private lastStartEnd: string | null = null;
   private isFetching = false;
 

@@ -24,6 +24,13 @@ export class OsrmService {
     end: { lng: number; lat: number },
     options: OsrmRouteOptions = {}
   ): Promise<OsrmRouteData[]> {
+    if (start.lng < -180 || start.lng > 180 || start.lat < -90 || start.lat > 90) {
+      throw new Error(`Invalid start coordinates: lng=${start.lng}, lat=${start.lat}`);
+    }
+    if (end.lng < -180 || end.lng > 180 || end.lat < -90 || end.lat > 90) {
+      throw new Error(`Invalid end coordinates: lng=${end.lng}, lat=${end.lat}`);
+    }
+
     const profile = options.profile || this.defaultProfile;
     const alternatives = options.alternatives !== false; // Default to true
     const overview = options.overview || 'full';
@@ -45,29 +52,21 @@ export class OsrmService {
 
     const fullUrl = `${url}?${queryString}`;
 
-    try {
-      const response = await firstValueFrom(
-        this.http.get<OsrmResponse>(fullUrl)
-      );
+    const response = await firstValueFrom(this.http.get<OsrmResponse>(fullUrl));
 
-      if (response.code !== 'Ok') {
-        throw new Error(`OSRM API error: ${response.message || response.code}`);
-      }
-
-      if (!response.routes || response.routes.length === 0) {
-        throw new Error('No routes found');
-      }
-
-      const routes: OsrmRouteData[] = response.routes.map((route) => ({
-        coordinates: route.geometry.coordinates,
-        duration: route.duration,
-        distance: route.distance
-      }));
-
-      return routes;
-    } catch (error) {
-      throw error;
+    if (response.code !== 'Ok') {
+      throw new Error(`OSRM API error: ${response.message || response.code}`);
     }
+
+    if (!response.routes || response.routes.length === 0) {
+      throw new Error('No routes found');
+    }
+
+    return response.routes.map((route) => ({
+      coordinates: route.geometry.coordinates,
+      duration: route.duration,
+      distance: route.distance,
+    }));
   }
 
   formatDuration(seconds: number): string {

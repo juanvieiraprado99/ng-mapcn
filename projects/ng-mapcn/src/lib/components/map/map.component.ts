@@ -1,144 +1,137 @@
 import {
-  AfterViewInit,
+  afterNextRender,
+  ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
-  ElementRef,
   effect,
+  ElementRef,
   inject,
   input,
   output,
+  signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import {
-  MapEventType,
   Map as MapLibreMap,
   MapMouseEvent,
   MapOptions,
   ProjectionSpecification,
   StyleSpecification,
 } from 'maplibre-gl';
-import { MapConfig, MapStylesConfig } from '../../models';
+import { MapContextService } from '../../services/map-context.service';
 import { MapService } from '../../services/map.service';
 import { ThemeService } from '../../services/theme.service';
+import { MapConfig, MapStylesConfig, MapViewport } from '../../models';
 import { getDarkMapStyle, getLightMapStyle } from '../../styles/map-styles';
 
 @Component({
   selector: 'ng-map',
-  standalone: true,
-  imports: [],
   templateUrl: './map.component.html',
   styleUrl: './map.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [MapContextService],
 })
-export class MapComponent implements AfterViewInit {
-  mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
+export class MapComponent {
+  private readonly container = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
 
-  config = input<MapConfig>();
-  center = input<[number, number]>([0, 0]);
-  zoom = input<number>(2);
-  style = input<string | any>('https://demotiles.maplibre.org/style.json');
-  styles = input<MapStylesConfig>();
-  projection = input<ProjectionSpecification>();
-  theme = input<'light' | 'dark' | 'auto'>('auto');
-  mapId = input<string>('default-map');
+  // Inputs
+  readonly config = input<MapConfig>();
+  readonly center = input<[number, number]>([0, 0]);
+  readonly zoom = input<number>(2);
+  readonly styles = input<MapStylesConfig>();
+  readonly projection = input<ProjectionSpecification>();
+  readonly theme = input<'light' | 'dark' | 'auto'>('auto');
+  readonly mapId = input<string>('default-map');
+  readonly loading = input(false);
+  readonly viewport = input<Partial<MapViewport> | undefined>(undefined);
 
-  mapReady = output<MapLibreMap>();
-  mapClick = output<MapMouseEvent>();
-  mapMove = output<MapEventType['move']>();
-  mapMoveEnd = output<MapEventType['moveend']>();
-  mapZoom = output<MapEventType['zoom']>();
-  mapZoomEnd = output<MapEventType['zoomend']>();
+  // Outputs
+  readonly viewportChange = output<MapViewport>();
+  readonly mapReady = output<MapLibreMap>();
+  readonly mapClick = output<MapMouseEvent>();
+  readonly mapError = output<Error>();
 
-  private map: MapLibreMap | null = null;
-  private mapService = inject(MapService);
-  private themeService = inject(ThemeService);
-  private destroyRef = inject(DestroyRef);
-  private isMapReady = false;
+  // Internal state exposed to template
+  protected readonly mapInstance = signal<MapLibreMap | null>(null);
+  private readonly loadedFlag = signal(false);
+  private readonly styleLoadedFlag = signal(false);
+  protected readonly isLoaded = computed(
+    () => this.loadedFlag() && this.styleLoadedFlag()
+  );
+
+  private readonly ctx = inject(MapContextService);
+  private readonly mapService = inject(MapService);
+  private readonly themeService = inject(ThemeService);
+  private readonly destroyRef = inject(DestroyRef);
+
   private styleTimeoutRef: ReturnType<typeof setTimeout> | null = null;
-  private currentStyleRef: string | StyleSpecification | null = null;
-
-  private styleDataHandler?: () => void;
-  private loadHandler?: () => void;
-  private errorHandler?: (e: any) => void;
-  private dataHandler?: (e: any) => void;
-  private clickHandler?: (e: MapMouseEvent) => void;
-  private moveHandler?: (e: MapEventType['move']) => void;
-  private moveEndHandler?: (e: MapEventType['moveend']) => void;
-  private zoomHandler?: (e: MapEventType['zoom']) => void;
-  private zoomEndHandler?: (e: MapEventType['zoomend']) => void;
-
-  private dataThemeObserver: MutationObserver | null = null;
+  private internalUpdate = false;
 
   constructor() {
-    effect(
-      () => {
-        const theme = this.theme();
-        if (theme !== 'auto') {
-          this.themeService.setTheme(theme);
-        }
-      },
-      { allowSignalWrites: true }
-    );
+    afterNextRender(() => this.initializeMap());
 
+    // Theme sync — reacts to ThemeService.theme() or explicit theme input
     effect(() => {
-      const currentTheme = this.themeService.theme();
-      const theme = this.theme();
-      if (this.map && theme === 'auto' && this.isMapReady) {
-        this.updateMapTheme(currentTheme);
-      }
+      const map = this.mapInstance();
+      if (!map) return;
+      const resolved =
+        this.theme() === 'auto'
+          ? this.themeService.theme()
+          : (this.theme() as 'light' | 'dark');
+      untracked(() => this.updateMapTheme(resolved));
     });
 
-    this.destroyRef.onDestroy(() => {
-      this.destroyDataThemeObserver();
-      this.destroyMap();
+    // Controlled viewport sync
+    effect(() => {
+      const map = this.mapInstance();
+      const vp = this.viewport();
+      if (!map || !vp) return;
+      this.internalUpdate = true;
+      map.jumpTo({
+        ...(vp.center !== undefined && { center: vp.center }),
+        ...(vp.zoom !== undefined && { zoom: vp.zoom }),
+        ...(vp.bearing !== undefined && { bearing: vp.bearing }),
+        ...(vp.pitch !== undefined && { pitch: vp.pitch }),
+      });
+      setTimeout(() => (this.internalUpdate = false), 0);
     });
-  }
 
-  ngAfterViewInit(): void {
-    setTimeout(() => {
-      this.initializeMap();
-    }, 0);
+    this.destroyRef.onDestroy(() => this.destroyMap());
   }
 
   private initializeMap(): void {
-    const containerRef = this.mapContainer();
-    if (!containerRef?.nativeElement) {
-      return;
-    }
+    const container = this.container()?.nativeElement;
+    if (!container) return;
 
-    const container = containerRef.nativeElement;
-
-    const width =
-      container.offsetWidth || container.clientWidth || container.getBoundingClientRect().width;
-    const height =
-      container.offsetHeight || container.clientHeight || container.getBoundingClientRect().height;
-
-    if (!width || !height || width === 0 || height === 0) {
-      setTimeout(() => {
-        this.initializeMap();
-      }, 100);
+    const w = container.offsetWidth || container.getBoundingClientRect().width;
+    const h = container.offsetHeight || container.getBoundingClientRect().height;
+    if (!w || !h) {
+      setTimeout(() => this.initializeMap(), 100);
       return;
     }
 
     const config = this.config();
-    const validCenter = this.getValidCenter();
-    const validZoom = this.getValidZoom();
-    const validMinZoom = this.getValidMinZoom();
-    const validMaxZoom = this.getValidMaxZoom();
-    const validPitch = this.getValidPitch();
-    const validBearing = this.getValidBearing();
+    const resolvedTheme =
+      this.theme() === 'auto'
+        ? this.themeService.getTheme()
+        : (this.theme() as 'light' | 'dark');
 
-    const initialStyle = this.getMapStyle();
-    this.currentStyleRef = initialStyle;
+    const minZoom = this.getValidMinZoom();
+    const maxZoom = this.getValidMaxZoom();
+    const pitch = this.getValidPitch();
+    const bearing = this.getValidBearing();
 
     const options: MapOptions = {
-      container: container,
-      style: initialStyle,
-      center: validCenter,
-      zoom: validZoom,
-      ...(validMinZoom !== undefined && { minZoom: validMinZoom }),
-      ...(validMaxZoom !== undefined && { maxZoom: validMaxZoom }),
-      ...(validPitch !== undefined && { pitch: validPitch }),
-      ...(validBearing !== undefined && { bearing: validBearing }),
+      container,
+      style: this.getMapStyle(resolvedTheme),
+      center: this.getValidCenter(),
+      zoom: this.getValidZoom(),
+      ...(minZoom !== undefined && { minZoom }),
+      ...(maxZoom !== undefined && { maxZoom }),
+      ...(pitch !== undefined && { pitch }),
+      ...(bearing !== undefined && { bearing }),
       doubleClickZoom: config?.doubleClickZoom ?? true,
       dragRotate: config?.dragRotate ?? true,
       dragPan: config?.dragPan ?? true,
@@ -147,45 +140,70 @@ export class MapComponent implements AfterViewInit {
       touchZoomRotate: config?.touchZoomRotate ?? true,
       boxZoom: config?.boxZoom ?? true,
       renderWorldCopies: false,
-      attributionControl: {
-        compact: true,
-      },
+      attributionControl: { compact: true },
     };
 
     try {
-      this.map = new MapLibreMap(options);
-      this.isMapReady = false;
+      const map = new MapLibreMap(options);
 
-      const mapId = this.mapId();
-      this.mapService.registerMap(mapId, this.map);
+      map.on('load', () => {
+        this.loadedFlag.set(true);
+        this.ctx.setLoadedFlag(true);
+        this.mapReady.emit(map);
+      });
 
-      this.setMapInteractions(false);
-
-      this.styleDataHandler = () => {
+      map.on('styledata', () => {
         this.clearStyleTimeout();
         this.styleTimeoutRef = setTimeout(() => {
-          const projection = this.projection() || this.config()?.projection;
-          if (projection && this.map) {
-            this.map.setProjection(projection);
-          }
-          this.checkMapFullyReady();
-        }, 150);
-      };
+          const proj = this.projection() ?? this.config()?.projection;
+          if (proj) map.setProjection(proj);
+          this.styleLoadedFlag.set(true);
+          this.ctx.setStyleLoadedFlag(true);
+        }, 100);
+      });
 
-      this.loadHandler = () => {
-        this.checkMapFullyReady();
-      };
+      map.on('move', () => {
+        if (this.internalUpdate) return;
+        const c = map.getCenter();
+        this.viewportChange.emit({
+          center: [c.lng, c.lat],
+          zoom: map.getZoom(),
+          bearing: map.getBearing(),
+          pitch: map.getPitch(),
+        });
+      });
 
-      this.errorHandler = () => {};
+      map.on('click', (e) => this.mapClick.emit(e));
+      map.on('error', (e) =>
+        this.mapError.emit(
+          e.error instanceof Error ? e.error : new Error(String(e.error))
+        )
+      );
 
-      this.dataHandler = () => {};
-
-      this.map.on('styledata', this.styleDataHandler);
-      this.map.on('load', this.loadHandler);
-      this.map.on('error', this.errorHandler);
-      this.map.on('data', this.dataHandler);
-    } catch {
+      this.mapInstance.set(map);
+      this.ctx.setMap(map);
+      // Keep MapService registration for backward compatibility / external escape hatch
+      this.mapService.registerMap(this.mapId(), map);
+    } catch (e) {
+      this.mapError.emit(e instanceof Error ? e : new Error(String(e)));
     }
+  }
+
+  private getMapStyle(theme: 'light' | 'dark'): string | StyleSpecification {
+    const s = this.styles() ?? this.config()?.styles;
+    if (s) {
+      const themed = theme === 'dark' ? s.dark : s.light;
+      if (themed) return themed;
+    }
+    return theme === 'dark' ? getDarkMapStyle() : getLightMapStyle();
+  }
+
+  private updateMapTheme(theme: 'light' | 'dark'): void {
+    const map = this.mapInstance();
+    if (!map) return;
+    this.styleLoadedFlag.set(false);
+    this.ctx.setStyleLoadedFlag(false);
+    map.setStyle(this.getMapStyle(theme), { diff: true });
   }
 
   private clearStyleTimeout(): void {
@@ -195,433 +213,67 @@ export class MapComponent implements AfterViewInit {
     }
   }
 
-  private checkMapFullyReady(): void {
-    if (!this.map) {
-      return;
+  private destroyMap(): void {
+    this.clearStyleTimeout();
+    const map = this.mapInstance();
+    if (map) {
+      try {
+        map.remove();
+      } catch {}
     }
-
-    if (!this.checkMapReady()) {
-      setTimeout(() => {
-        this.checkMapFullyReady();
-      }, 50);
-      return;
-    }
-
-    if (this.isMapReady) {
-      return;
-    }
-
-    this.isMapReady = true;
-
-    this.setMapInteractions(true);
-
-    if (this.map) {
-      this.mapReady.emit(this.map);
-    }
-
-    const effectiveTheme =
-      this.theme() === 'auto'
-        ? this.getThemeFromDocument()
-        : this.themeService.getTheme();
-    this.updateMapTheme(effectiveTheme);
-
-    if (this.theme() === 'auto' && typeof document !== 'undefined') {
-      this.observeDataTheme();
-    }
-
-    this.setupEventHandlers();
+    this.mapService.unregisterMap(this.mapId());
+    this.mapInstance.set(null);
+    this.ctx.reset();
   }
 
-  private getThemeFromDocument(): 'light' | 'dark' {
-    if (typeof document === 'undefined') return 'light';
-    const value = document.documentElement.getAttribute('data-theme');
-    return value === 'dark' ? 'dark' : 'light';
+  /** Escape hatch — direct access to the MapLibre instance */
+  getMap(): MapLibreMap | null {
+    return this.mapInstance();
   }
 
-  private observeDataTheme(): void {
-    if (typeof document === 'undefined') return;
-    this.destroyDataThemeObserver();
-    this.dataThemeObserver = new MutationObserver(() => {
-      if (this.theme() !== 'auto' || !this.map || !this.isMapReady) return;
-      this.updateMapTheme(this.getThemeFromDocument());
-    });
-    this.dataThemeObserver.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme'],
-    });
-  }
-
-  private destroyDataThemeObserver(): void {
-    if (this.dataThemeObserver) {
-      this.dataThemeObserver.disconnect();
-      this.dataThemeObserver = null;
-    }
-  }
+  // ── Validation helpers ────────────────────────────────────────────────────
 
   private getValidCenter(): [number, number] {
-    const centerInput = this.center();
-    const config = this.config();
-    let center: [number, number] | undefined = undefined;
-
-    if (centerInput && Array.isArray(centerInput) && centerInput.length === 2) {
-      center = centerInput as [number, number];
-    } else if (
-      config?.center &&
-      Array.isArray(config.center) &&
-      config.center.length === 2
-    ) {
-      center = config.center as [number, number];
-    } else {
-      return [0, 0];
-    }
-
+    const c = this.center();
+    const cfg = this.config()?.center;
+    let center: [number, number] | undefined;
+    if (Array.isArray(c) && c.length === 2) center = c as [number, number];
+    else if (Array.isArray(cfg) && cfg.length === 2) center = cfg as [number, number];
+    else return [0, 0];
     const [lng, lat] = center;
-
-    if (
-      typeof lng !== 'number' ||
-      typeof lat !== 'number' ||
-      isNaN(lng) ||
-      isNaN(lat) ||
-      !isFinite(lng) ||
-      !isFinite(lat)
-    ) {
-      return [0, 0];
-    }
-
-    const validLng = Math.max(-180, Math.min(180, lng));
-    const validLat = Math.max(-90, Math.min(90, lat));
-
-    return [validLng, validLat];
+    if (!isFinite(lng) || !isFinite(lat)) return [0, 0];
+    return [Math.max(-180, Math.min(180, lng)), Math.max(-90, Math.min(90, lat))];
   }
 
   private getValidZoom(): number {
-    const zoom = this.zoom() ?? this.config()?.zoom ?? 2;
-
-    if (typeof zoom !== 'number' || isNaN(zoom) || !isFinite(zoom)) {
-      return 2;
-    }
-
-    return Math.max(0, Math.min(22, zoom));
+    const z = this.zoom() ?? this.config()?.zoom ?? 2;
+    return isFinite(z) ? Math.max(0, Math.min(22, z)) : 2;
   }
 
   private getValidPitch(): number | undefined {
-    const pitch = this.config()?.pitch;
-    if (pitch === undefined || pitch === null) {
-      return undefined;
-    }
-    if (typeof pitch !== 'number' || isNaN(pitch) || !isFinite(pitch)) {
-      return undefined;
-    }
-    return Math.max(0, Math.min(60, pitch));
+    const p = this.config()?.pitch;
+    if (p == null || !isFinite(p)) return undefined;
+    return Math.max(0, Math.min(60, p));
   }
 
   private getValidBearing(): number | undefined {
-    const bearing = this.config()?.bearing;
-    if (bearing === undefined || bearing === null) {
-      return undefined;
-    }
-    if (typeof bearing !== 'number' || isNaN(bearing) || !isFinite(bearing)) {
-      return undefined;
-    }
-    let normalized = bearing % 360;
-    if (normalized > 180) normalized -= 360;
-    if (normalized < -180) normalized += 360;
-    return normalized;
+    const b = this.config()?.bearing;
+    if (b == null || !isFinite(b)) return undefined;
+    let n = b % 360;
+    if (n > 180) n -= 360;
+    if (n < -180) n += 360;
+    return n;
   }
 
   private getValidMinZoom(): number | undefined {
-    const minZoom = this.config()?.minZoom;
-    if (minZoom === undefined || minZoom === null) {
-      return undefined;
-    }
-    if (typeof minZoom !== 'number' || isNaN(minZoom) || !isFinite(minZoom)) {
-      return undefined;
-    }
-    return Math.max(0, Math.min(22, minZoom));
+    const z = this.config()?.minZoom;
+    if (z == null || !isFinite(z)) return undefined;
+    return Math.max(0, Math.min(22, z));
   }
 
   private getValidMaxZoom(): number | undefined {
-    const maxZoom = this.config()?.maxZoom;
-    if (maxZoom === undefined || maxZoom === null) {
-      return undefined;
-    }
-    if (typeof maxZoom !== 'number' || isNaN(maxZoom) || !isFinite(maxZoom)) {
-      return undefined;
-    }
-    return Math.max(0, Math.min(22, maxZoom));
-  }
-
-  private checkMapReady(): boolean {
-    if (!this.map) {
-      return false;
-    }
-    try {
-      const isStyleLoaded = this.map.isStyleLoaded();
-      const isLoaded = this.map.loaded();
-      return Boolean(isStyleLoaded) && Boolean(isLoaded);
-    } catch {
-      return false;
-    }
-  }
-
-  private setMapInteractions(enabled: boolean): void {
-    if (!this.map) {
-      return;
-    }
-
-    const config = this.config();
-
-    try {
-      if (enabled) {
-        if (config?.boxZoom ?? true) {
-          this.map.boxZoom.enable();
-        }
-        if (config?.scrollZoom ?? true) {
-          this.map.scrollZoom.enable();
-        }
-        if (config?.dragPan ?? true) {
-          this.map.dragPan.enable();
-        }
-        if (config?.dragRotate ?? true) {
-          this.map.dragRotate.enable();
-        }
-        if (config?.keyboard ?? true) {
-          this.map.keyboard.enable();
-        }
-        if (config?.doubleClickZoom ?? true) {
-          this.map.doubleClickZoom.enable();
-        }
-        if (config?.touchZoomRotate ?? true) {
-          this.map.touchZoomRotate.enable();
-        }
-      } else {
-        this.map.boxZoom.disable();
-        this.map.scrollZoom.disable();
-        this.map.dragPan.disable();
-        this.map.dragRotate.disable();
-        this.map.keyboard.disable();
-        this.map.doubleClickZoom.disable();
-        this.map.touchZoomRotate.disable();
-      }
-    } catch {
-    }
-  }
-
-  private setupEventHandlers(): void {
-    if (!this.map || !this.isMapReady) {
-      return;
-    }
-
-    if (!this.checkMapReady()) {
-      return;
-    }
-
-    this.clickHandler = (e: MapMouseEvent) => {
-      try {
-        if (this.checkMapReady()) {
-          this.mapClick.emit(e);
-        }
-      } catch {}
-    };
-
-    this.moveHandler = (e: MapEventType['move']) => {
-      try {
-        if (this.checkMapReady()) {
-          this.mapMove.emit(e);
-        }
-      } catch {
-      }
-    };
-
-    this.moveEndHandler = (e: MapEventType['moveend']) => {
-      try {
-        if (this.checkMapReady()) {
-          this.mapMoveEnd.emit(e);
-        }
-      } catch {
-      }
-    };
-
-    this.zoomHandler = (e: MapEventType['zoom']) => {
-      try {
-        if (this.checkMapReady()) {
-          this.mapZoom.emit(e);
-        }
-      } catch {
-      }
-    };
-
-    this.zoomEndHandler = (e: MapEventType['zoomend']) => {
-      try {
-        if (this.checkMapReady()) {
-          this.mapZoomEnd.emit(e);
-        }
-      } catch {
-      }
-    };
-
-    this.map.on('click', this.clickHandler);
-    this.map.on('move', this.moveHandler);
-    this.map.on('moveend', this.moveEndHandler);
-    this.map.on('zoom', this.zoomHandler);
-    this.map.on('zoomend', this.zoomEndHandler);
-  }
-
-  private getMapStyle(): string | StyleSpecification {
-    const currentTheme = this.themeService.getTheme();
-    const styles = this.styles();
-    const style = this.style();
-    const config = this.config();
-
-    if (styles) {
-      const themeStyle = currentTheme === 'dark' ? styles.dark : styles.light;
-      if (themeStyle) {
-        return themeStyle;
-      }
-    }
-
-    if (config?.styles) {
-      const themeStyle =
-        currentTheme === 'dark' ? config.styles.dark : config.styles.light;
-      if (themeStyle) {
-        return themeStyle;
-      }
-    }
-
-    if (style && style !== 'https://demotiles.maplibre.org/style.json') {
-      return style;
-    }
-
-    if (config?.style) {
-      return config.style;
-    }
-
-    return currentTheme === 'dark' ? getDarkMapStyle() : getLightMapStyle();
-  }
-
-  private updateMapTheme(theme: 'light' | 'dark'): void {
-    if (!this.map) {
-      return;
-    }
-
-    const containerRef = this.mapContainer();
-    if (!containerRef) {
-      return;
-    }
-
-    const container = containerRef.nativeElement;
-    container.classList.remove('theme-light', 'theme-dark', 'dark');
-
-    if (theme === 'dark') {
-      container.classList.add('theme-dark', 'dark');
-    } else {
-      container.classList.add('theme-light');
-    }
-
-    const newStyle = this.getMapStyle();
-
-    if (this.currentStyleRef !== newStyle) {
-      this.currentStyleRef = newStyle;
-
-      this.map.setStyle(newStyle, { diff: true });
-
-      this.map.once('styledata', () => {
-        this.clearStyleTimeout();
-        this.styleTimeoutRef = setTimeout(() => {
-          const projection = this.projection() || this.config()?.projection;
-          if (projection) {
-            this.map?.setProjection(projection);
-          }
-          this.checkMapFullyReady();
-        }, 150);
-      });
-    }
-  }
-
-  private destroyMap(): void {
-    this.clearStyleTimeout();
-
-    if (this.map) {
-      try {
-        if (this.styleDataHandler && this.map) {
-          try {
-            this.map.off('styledata', this.styleDataHandler);
-          } catch {
-          }
-          this.styleDataHandler = undefined;
-        }
-        if (this.loadHandler && this.map) {
-          try {
-            this.map.off('load', this.loadHandler);
-          } catch {
-          }
-          this.loadHandler = undefined;
-        }
-        if (this.errorHandler && this.map) {
-          try {
-            this.map.off('error', this.errorHandler);
-          } catch {
-          }
-          this.errorHandler = undefined;
-        }
-        if (this.dataHandler && this.map) {
-          try {
-            this.map.off('data', this.dataHandler);
-          } catch {
-          }
-          this.dataHandler = undefined;
-        }
-        if (this.clickHandler && this.map) {
-          try {
-            this.map.off('click', this.clickHandler);
-          } catch {
-          }
-          this.clickHandler = undefined;
-        }
-        if (this.moveHandler && this.map) {
-          try {
-            this.map.off('move', this.moveHandler);
-          } catch {
-          }
-          this.moveHandler = undefined;
-        }
-        if (this.moveEndHandler && this.map) {
-          try {
-            this.map.off('moveend', this.moveEndHandler);
-          } catch {
-          }
-          this.moveEndHandler = undefined;
-        }
-        if (this.zoomHandler && this.map) {
-          try {
-            this.map.off('zoom', this.zoomHandler);
-          } catch {
-          }
-          this.zoomHandler = undefined;
-        }
-        if (this.zoomEndHandler && this.map) {
-          try {
-            this.map.off('zoomend', this.zoomEndHandler);
-          } catch {
-          }
-          this.zoomEndHandler = undefined;
-        }
-      } catch {
-      }
-
-      this.isMapReady = false;
-
-      const mapToRemove = this.map;
-      this.map = null;
-
-      const mapId = this.mapId();
-      this.mapService.unregisterMap(mapId);
-    }
-
-    this.currentStyleRef = null;
-  }
-
-  getMap(): MapLibreMap | null {
-    return this.map;
+    const z = this.config()?.maxZoom;
+    if (z == null || !isFinite(z)) return undefined;
+    return Math.max(0, Math.min(22, z));
   }
 }

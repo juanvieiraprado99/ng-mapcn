@@ -1,118 +1,73 @@
-@import './variables';
-@import './mixins';
+@use './variables' as *;
+@use './mixins' as *;
 
-.theme-light {
-  @include theme-light;
+// ── Theme class helpers (for apps that need explicit classes) ─────────────────
+
+.theme-light { @include theme-light; }
+.theme-dark  { @include theme-dark;  }
+
+// ── Popup card (used by ng-marker-popup and ng-map-popup) ─────────────────────
+
+.ng-popup-card {
+  @include card;
+  padding: $spacing-md;
+  min-width: 180px;
+  max-width: 320px;
+  animation: ng-popup-enter 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @media (prefers-reduced-motion: reduce) { animation: none; }
 }
 
-.theme-dark {
-  @include theme-dark;
-}
+// ── Tooltip pill (used by ng-marker-tooltip) ──────────────────────────────────
 
-.ng-map-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  border-radius: $radius-lg;
-  overflow: hidden;
-
-  .maplibregl-map {
-    width: 100%;
-    height: 100%;
-  }
-}
-
-.ng-marker {
-  display: block;
-  border: 2px solid light-dark(#ffffff, #1e293b);
-  border-radius: 50%;
-  cursor: pointer;
-  transition:
-    transform $transition-base,
-    box-shadow $transition-base;
-  box-shadow: light-dark(0 2px 4px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.3));
-  position: relative;
-
-  &:hover {
-    transform: scale(1.1);
-    box-shadow: light-dark(0 4px 8px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.4));
-    z-index: $z-popover;
-  }
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: 50%;
-  }
-}
-
-.ng-tooltip {
+.ng-tooltip-pill {
   @include tooltip;
+  animation: ng-tooltip-enter 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+// ── Marker label (used by ng-marker-label) ────────────────────────────────────
+
+.ng-marker-label {
   position: absolute;
-  pointer-events: none;
+  left: 50%;
+  transform: translateX(-50%);
   white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-    visibility 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 1070;
-  max-width: 200px;
-  word-wrap: break-word;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm, #{$radius-sm});
+  background: var(--background, #fff);
+  color: var(--foreground, #111);
+  border: 1px solid var(--border, #e2e8f0);
+  box-shadow: $shadow-sm;
+  pointer-events: none;
 
-  &.ng-tooltip-visible {
-    animation: tooltipEnter 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition:
-      opacity 0.1s ease,
-      visibility 0.1s ease;
-    animation: none;
-  }
+  &--top    { bottom: calc(100% + 6px); }
+  &--bottom { top:    calc(100% + 6px); }
 }
 
-@keyframes tooltipEnter {
-  from {
-    opacity: 0;
-    transform: translateY(-2px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
+// ── Default marker dot (when no ng-marker-content is used) ───────────────────
 
-.ng-route {
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
-  transition: stroke-width $transition-base;
+.maplibregl-marker > div:empty {
+  width: 16px;
+  height: 16px;
+  background: var(--primary, #4285f4);
+  border-radius: 50%;
+  border: 2px solid var(--background, #fff);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.25);
+  cursor: pointer;
+  transition: transform $transition-fast, box-shadow $transition-fast;
 
   &:hover {
-    stroke-width: 4;
+    transform: scale(1.15);
+    box-shadow: 0 4px 8px rgb(0 0 0 / 0.35);
   }
 }
 
-.ng-loading {
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  border: 2px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+// ── Generic utility ───────────────────────────────────────────────────────────
 
 .ng-sr-only {
   position: absolute;
@@ -124,4 +79,21 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+// ── Keyframes ─────────────────────────────────────────────────────────────────
+
+@keyframes ng-popup-enter {
+  from { opacity: 0; transform: translateY(4px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+@keyframes ng-tooltip-enter {
+  from { opacity: 0; transform: translateY(-2px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+@keyframes ng-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }

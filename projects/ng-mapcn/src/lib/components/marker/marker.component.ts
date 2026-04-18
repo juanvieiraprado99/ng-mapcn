@@ -6,10 +6,7 @@ import { MarkerService } from '../../services/marker.service';
 
 @Component({
   selector: 'ng-marker',
-  standalone: true,
-  imports: [],
   template: '',
-  styles: [],
 })
 export class MarkerComponent {
   config = input.required<MarkerConfig>();

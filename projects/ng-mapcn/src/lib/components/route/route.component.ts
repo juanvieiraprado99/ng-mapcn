@@ -1,28 +1,18 @@
-import {
-  Component,
-  DestroyRef,
-  effect,
-  inject,
-  input,
-  output,
-} from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, output } from '@angular/core';
 import { GeoJSONSource, Map as MapLibreMap, Marker } from 'maplibre-gl';
-import { RouteConfig } from '../../models';
+import { RouteClickEvent, RouteConfig } from '../../models';
 import { MapService } from '../../services/map.service';
 import { MarkerService } from '../../services/marker.service';
 
 @Component({
   selector: 'ng-route',
-  standalone: true,
-  imports: [],
   template: '',
-  styles: [],
 })
 export class RouteComponent {
   config = input.required<RouteConfig>();
   mapId = input<string>('default-map');
 
-  routeClick = output<any>();
+  routeClick = output<RouteClickEvent>();
 
   private mapService = inject(MapService);
   private markerService = inject(MarkerService);
@@ -129,8 +119,7 @@ export class RouteComponent {
         try {
           map.off('load', this.mapReadyHandler);
           map.off('styledata', this.mapReadyHandler);
-        } catch {
-        }
+        } catch {}
       }
       this.mapReadyHandler = null;
     }
@@ -141,8 +130,7 @@ export class RouteComponent {
       if (map && this.styleDataHandler) {
         try {
           map.off('styledata', this.styleDataHandler);
-        } catch {
-        }
+        } catch {}
       }
       this.styleDataHandler = null;
     }
@@ -243,7 +231,6 @@ export class RouteComponent {
     this.retryCount++;
     const delay = Math.min(100 * Math.pow(2, this.retryCount - 1), 2000);
 
-
     this.retryTimeout = setTimeout(() => {
       const config = this.config();
       if (!this.routeAdded && config) {
@@ -259,17 +246,11 @@ export class RouteComponent {
     }
 
     const config = this.config();
-    if (
-      !config ||
-      !config.coordinates ||
-      config.coordinates.length < 2 ||
-      this.routeAdded
-    ) {
+    if (!config || !config.coordinates || config.coordinates.length < 2 || this.routeAdded) {
       return;
     }
 
     if (!this.isMapFullyReady(map)) {
-
       this.setupPeriodicCheck();
 
       if (this.mapReadyHandler) {
@@ -332,12 +313,7 @@ export class RouteComponent {
     }
 
     const config = this.config();
-    if (
-      !config ||
-      !config.coordinates ||
-      config.coordinates.length < 2 ||
-      this.routeAdded
-    ) {
+    if (!config || !config.coordinates || config.coordinates.length < 2 || this.routeAdded) {
       return;
     }
 
@@ -350,18 +326,7 @@ export class RouteComponent {
         return;
       }
 
-      const coordinates: [number, number][] = config.coordinates.map((coord: any) => {
-        if (Array.isArray(coord)) {
-          return coord as [number, number];
-        } else if (typeof coord === 'object' && coord !== null) {
-          if ('lng' in coord && 'lat' in coord) {
-            return [coord.lng, coord.lat];
-          } else if ('lon' in coord && 'lat' in coord) {
-            return [coord.lon, coord.lat];
-          }
-        }
-        return [0, 0];
-      });
+      const coordinates = this.normalizeCoordinates(config.coordinates);
 
       const geojson = {
         type: 'Feature' as const,
@@ -440,11 +405,8 @@ export class RouteComponent {
             return;
           }
 
-          map.on('click', this.layerId, (e: any) => {
-            this.routeClick.emit({
-              event: e,
-              config: config,
-            });
+          map.on('click', this.layerId, (e) => {
+            this.routeClick.emit({ event: e, config });
           });
 
           map.on('mouseenter', this.layerId, () => {
@@ -504,8 +466,7 @@ export class RouteComponent {
               try {
                 map.off('styledata', this.mapReadyHandler);
                 map.off('load', this.mapReadyHandler);
-              } catch {
-              }
+              } catch {}
               this.mapReadyHandler = null;
             }
 
@@ -552,14 +513,13 @@ export class RouteComponent {
         stop,
         index + 1, // Number starts at 1
         map,
-        routeColor
+        routeColor,
       );
 
       if (marker) {
         this.stopMarkers.push(marker);
       }
     });
-
   }
 
   /**
@@ -569,8 +529,7 @@ export class RouteComponent {
     this.stopMarkers.forEach((marker) => {
       try {
         marker.remove();
-      } catch {
-      }
+      } catch {}
     });
     this.stopMarkers = [];
   }
@@ -622,18 +581,7 @@ export class RouteComponent {
       }
 
       if (config.coordinates && config.coordinates.length >= 2) {
-        const coordinates: [number, number][] = config.coordinates.map((coord: any) => {
-          if (Array.isArray(coord)) {
-            return coord as [number, number];
-          } else if (typeof coord === 'object' && coord !== null) {
-            if ('lng' in coord && 'lat' in coord) {
-              return [coord.lng, coord.lat];
-            } else if ('lon' in coord && 'lat' in coord) {
-              return [coord.lon, coord.lat];
-            }
-          }
-          return [0, 0];
-        });
+        const coordinates = this.normalizeCoordinates(config.coordinates);
 
         const source = map.getSource(this.sourceId) as GeoJSONSource;
         if (source) {
@@ -651,15 +599,13 @@ export class RouteComponent {
         }
       }
 
-      const isSelected = color === '#6366f1' && opacity === 1 && width >= 6;
+      const isSelected = config.selected ?? false;
       if (isSelected) {
         try {
           map.moveLayer(this.layerId);
-        } catch {
-        }
+        } catch {}
       }
-    } catch {
-    }
+    } catch {}
   }
 
   private scheduleIntegrityCheck(map: MapLibreMap): void {
@@ -704,5 +650,17 @@ export class RouteComponent {
     }
 
     this.routeAdded = false;
+  }
+
+  private normalizeCoordinates(coords: RouteConfig['coordinates']): [number, number][] {
+    return coords.map((coord) => {
+      if (Array.isArray(coord)) return coord as [number, number];
+      if (typeof coord === 'object' && coord !== null) {
+        if ('lng' in coord && 'lat' in coord) return [coord.lng, coord.lat];
+        if ('lon' in coord && 'lat' in coord)
+          return [(coord as { lon: number; lat: number }).lon, coord.lat];
+      }
+      return [0, 0];
+    });
   }
 }

@@ -1,0 +1,80 @@
+<div class="ng-controls" [class]="positionClass()">
+  <div class="ng-control-group">
+
+    @if (showZoom()) {
+      <button class="ng-control-btn" type="button" title="Zoom in" (click)="zoomIn()">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+      <button class="ng-control-btn ng-control-btn--divider" type="button" title="Zoom out" (click)="zoomOut()">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+    }
+
+    @if (showCompass()) {
+      <button
+        class="ng-control-btn"
+        [class.ng-control-btn--divider]="showZoom()"
+        type="button"
+        title="Reset north"
+        (click)="resetNorthPitch()"
+      >
+        <svg #compassSvg viewBox="0 0 24 24" width="20" height="20" style="transform-style: preserve-3d;">
+          <path d="M12 2L16 12H12V2Z" fill="#ef4444"/>
+          <path d="M12 2L8 12H12V2Z" fill="#fca5a5"/>
+          <path d="M12 22L16 12H12V22Z" fill="currentColor" opacity="0.4"/>
+          <path d="M12 22L8 12H12V22Z" fill="currentColor" opacity="0.2"/>
+        </svg>
+      </button>
+    }
+
+    @if (showLocate()) {
+      <button
+        class="ng-control-btn"
+        [class.ng-control-btn--divider]="showZoom() || showCompass()"
+        [disabled]="locating()"
+        type="button"
+        title="My location"
+        (click)="locate()"
+      >
+        @if (locating()) {
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" class="ng-spinner">
+            <circle cx="12" cy="12" r="10" opacity="0.25"/>
+            <path d="M12 2a10 10 0 0 1 10 10"/>
+          </svg>
+        } @else {
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>
+            <path d="M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M16.95 7.05l2.83-2.83M4.22 19.78l2.83-2.83"/>
+          </svg>
+        }
+      </button>
+    }
+
+    @if (showFullscreen()) {
+      <button
+        class="ng-control-btn"
+        [class.ng-control-btn--divider]="showZoom() || showCompass() || showLocate()"
+        type="button"
+        title="Toggle fullscreen"
+        (click)="toggleFullscreen()"
+      >
+        @if (isFullscreen()) {
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+          </svg>
+        } @else {
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+          </svg>
+        }
+      </button>
+    }
+
+  </div>
+</div>

@@ -82,7 +82,7 @@ export interface MarkerConfig {
   className?: string;
   
   /** Custom data associated with marker */
-  data?: any;
+  data?: Record<string, unknown>;
   
   /** Whether marker is visible */
   visible?: boolean;

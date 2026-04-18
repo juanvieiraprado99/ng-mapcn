@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute",
+      "Bash(npm install *)",
+      "Bash(node_modules/.bin/ng build *)",
+      "Bash(npm pack *)",
+      "Bash(npm i *)",
+      "Bash(node_modules/.bin/ng serve *)",
+      "Bash(npm view *)",
+      "mcp__plugin_context-mode_context-mode__ctx_stats",
+      "mcp__plugin_context-mode_context-mode__ctx_execute_file"
+    ]
+  }
+}

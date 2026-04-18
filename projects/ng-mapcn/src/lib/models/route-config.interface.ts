@@ -1,5 +1,10 @@
-import { LngLatLike } from 'maplibre-gl';
+import { LngLatLike, MapMouseEvent } from 'maplibre-gl';
 import { RouteStop, OsrmRouteData } from './osrm.interface';
+
+export interface RouteClickEvent {
+  event: MapMouseEvent;
+  config: RouteConfig;
+}
 
 /**
  * Configuration for map routes/paths
@@ -36,7 +41,7 @@ export interface RouteConfig {
   visible?: boolean;
   
   /** Custom data associated with route */
-  data?: any;
+  data?: Record<string, unknown>;
   
   /** Whether to show direction arrows */
   showArrows?: boolean;
@@ -52,4 +57,7 @@ export interface RouteConfig {
   
   /** OSRM route data (duration, distance) */
   osrmData?: OsrmRouteData;
+
+  /** Whether this route is in selected state (controls z-order elevation) */
+  selected?: boolean;
 }

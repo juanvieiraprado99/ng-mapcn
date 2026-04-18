@@ -1,0 +1,81 @@
+:host {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  display: block;
+}
+
+// ── Positioning ───────────────────────────────────────────────────────────────
+
+.ng-controls {
+  position: absolute;
+  pointer-events: all;
+
+  &--top-right    { top: 10px; right: 10px; }
+  &--top-left     { top: 10px; left: 10px; }
+  &--bottom-right { bottom: 32px; right: 10px; }
+  &--bottom-left  { bottom: 32px; left: 10px; }
+}
+
+// ── Control group ─────────────────────────────────────────────────────────────
+
+.ng-control-group {
+  display: flex;
+  flex-direction: column;
+  background: var(--background, #fff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-md, 6px);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+}
+
+// ── Control button ────────────────────────────────────────────────────────────
+
+.ng-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--foreground, #1a1a1a);
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--accent, #f1f5f9);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ring, #3b82f6);
+    outline-offset: -2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--divider {
+    border-top: 1px solid var(--border, #e2e8f0);
+  }
+
+  svg {
+    display: block;
+    flex-shrink: 0;
+  }
+}
+
+// ── Spinner animation ─────────────────────────────────────────────────────────
+
+.ng-spinner {
+  animation: ng-ctrl-spin 0.8s linear infinite;
+}
+
+@keyframes ng-ctrl-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}

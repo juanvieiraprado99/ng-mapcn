@@ -1,209 +1,56 @@
-@import '../../styles/index';
+// Component-specific styles only.
+// Global theme tokens and utility classes (ng-tooltip-pill, ng-popup-card, etc.)
+// are provided by the library's public stylesheet — import it in your app's
+// global styles.scss:
+//   @use 'ng-mapcn/styles' as *;
+
+@use '../../styles/variables' as *;
 
 :host {
   display: block;
+  position: relative;
   width: 100%;
   height: 100%;
-  min-height: 400px;
-  position: relative;
-}
-
-.ng-map-container {
-  width: 100%;
-  height: 100%;
-  min-width: 100%;
-  min-height: 400px;
-  position: relative;
-  border-radius: $radius-lg;
   overflow: hidden;
-  background-color: var(--background);
+}
 
-  ::ng-deep .maplibregl-map {
-    width: 100% !important;
-    height: 100% !important;
-    min-width: 100% !important;
-    min-height: 400px !important;
-    position: relative;
-  }
+// ── MapLibre canvas ───────────────────────────────────────────────────────────
 
-  ::ng-deep .maplibregl-ctrl {
-    transition: all $transition-base;
-  }
+.ng-map-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
 
-  &.theme-light ::ng-deep .maplibregl-ctrl {
-    background-color: #1e293b;
-    border: 1px solid #334155;
-    box-shadow:
-      0 4px 6px -1px rgb(0 0 0 / 0.3),
-      0 2px 4px -2px rgb(0 0 0 / 0.3);
+// ── Loading overlay ───────────────────────────────────────────────────────────
 
-    &:hover {
-      box-shadow:
-        0 10px 15px -3px rgb(0 0 0 / 0.3),
-        0 4px 6px -4px rgb(0 0 0 / 0.3);
-    }
-  }
+.ng-map-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--background, #fff);
 
-  &.theme-dark ::ng-deep .maplibregl-ctrl,
-  &.dark ::ng-deep .maplibregl-ctrl {
-    background-color: #ffffff;
-    border: 1px solid #e5e7eb;
-    box-shadow:
-      0 4px 6px -1px rgb(0 0 0 / 0.1),
-      0 2px 4px -2px rgb(0 0 0 / 0.1);
+  &__dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted-foreground, #888);
+    opacity: 0.6;
+    animation: ng-map-pulse 1.2s ease-in-out infinite;
 
-    &:hover {
-      box-shadow:
-        0 10px 15px -3px rgb(0 0 0 / 0.1),
-        0 4px 6px -4px rgb(0 0 0 / 0.1);
-    }
-  }
-
-  ::ng-deep .maplibregl-ctrl button {
-    background-color: transparent;
-    border: none;
-    padding: $spacing-sm;
-    cursor: pointer;
-    transition: all $transition-fast;
-    border-radius: $radius-sm;
-
-    &:active {
-      transform: scale(0.95);
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-
-  &.theme-light ::ng-deep .maplibregl-ctrl button {
-    color: #f8fafc;
-
-    .maplibregl-ctrl-icon {
-      filter: brightness(0) invert(1);
-    }
-
-    &:hover {
-      background-color: #334155;
-      color: #f8fafc;
-    }
-  }
-
-  &.theme-dark ::ng-deep .maplibregl-ctrl button,
-  &.dark ::ng-deep .maplibregl-ctrl button {
-    color: #0f172a;
-
-    .maplibregl-ctrl-icon {
-      filter: none;
-    }
-
-    &:hover {
-      background-color: #f1f5f9;
-      color: #0f172a;
-    }
-  }
-
-  // Attribution control (© CARTO, OpenStreetMap, etc.)
-  &.theme-light ::ng-deep .maplibregl-ctrl.maplibregl-ctrl-attrib {
-    color: #f8fafc;
-
-    a {
-      color: #e2e8f0;
-    }
-
-    a:hover {
-      color: #f8fafc;
-    }
-
-    .maplibregl-ctrl-attrib-button {
-      filter: brightness(0) invert(1);
-    }
-
-    &.maplibregl-compact::after {
-      filter: brightness(0) invert(1);
-    }
-  }
-
-  &.theme-dark ::ng-deep .maplibregl-ctrl.maplibregl-ctrl-attrib,
-  &.dark ::ng-deep .maplibregl-ctrl.maplibregl-ctrl-attrib {
-    color: #0f172a;
-
-    a {
-      color: #334155;
-    }
-
-    a:hover {
-      color: #0f172a;
-    }
-
-    .maplibregl-ctrl-attrib-button {
-      filter: none;
-    }
-
-    &.maplibregl-compact::after {
-      filter: none;
-    }
-  }
-
-  // Popup (balloon) – theme-aware for readability
-  &.theme-light ::ng-deep .maplibregl-popup.ng-popup-wrapper {
-    .maplibregl-popup-content {
-      background-color: #1e293b;
-      border: 1px solid #334155;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-    }
-    .ng-popup-container {
-      background-color: #1e293b;
-      color: #f8fafc;
-    }
-    .ng-popup-header {
-      color: #f8fafc;
-      font-weight: 600;
-    }
-    .ng-popup-content {
-      color: #e2e8f0;
-    }
-  }
-
-  &.theme-dark ::ng-deep .maplibregl-popup.ng-popup-wrapper,
-  &.dark ::ng-deep .maplibregl-popup.ng-popup-wrapper {
-    .maplibregl-popup-content {
-      background-color: #ffffff;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    }
-    .ng-popup-container {
-      background-color: #ffffff;
-      color: #0f172a;
-    }
-    .ng-popup-header {
-      color: #0f172a;
-      font-weight: 600;
-    }
-    .ng-popup-content {
-      color: #334155;
-    }
-  }
-
-  // Ensure canvas is visible
-  ::ng-deep .maplibregl-canvas-container {
-    width: 100% !important;
-    height: 100% !important;
-  }
-
-  ::ng-deep canvas.maplibregl-canvas {
-    width: 100% !important;
-    height: 100% !important;
-    display: block;
-  }
-
-  ::ng-deep .ng-tooltip {
-    background-color: light-dark(
-      var(--popover-foreground, #0f172a),
-      var(--popover-foreground, #f8fafc)
-    );
-    color: light-dark(var(--popover, #ffffff), var(--popover, #1e293b));
-    border-color: light-dark(var(--border, #e5e7eb), var(--border, #334155));
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.4s; }
   }
 }
+
+@keyframes ng-map-pulse {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40%           { opacity: 1;   transform: scale(1); }
+}
+

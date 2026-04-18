@@ -1,1 +1,13 @@
-<div #mapContainer class="ng-map-container"></div>
+<div #mapContainer class="ng-map-canvas"></div>
+
+@if (!isLoaded() || loading()) {
+  <div class="ng-map-loader" role="status" aria-label="Loading map">
+    <span class="ng-map-loader__dot"></span>
+    <span class="ng-map-loader__dot"></span>
+    <span class="ng-map-loader__dot"></span>
+  </div>
+}
+
+@if (mapInstance()) {
+  <ng-content />
+}

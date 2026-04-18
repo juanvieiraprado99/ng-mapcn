@@ -7,11 +7,11 @@
     "build": "ng build",
     "build:lib": "ng build ng-mapcn",
     "build:lib:prod": "ng build ng-mapcn --configuration production",
-    "publish:lib": "ng build ng-mapcn --configuration production && cd dist/ng-mapcn && npm publish",
+    "publish:lib": "ng build ng-mapcn --configuration production && cd dist/ng-mapcn && npm publish --tag beta --access public",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "build-ui-dev": "ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-18.0.0-beta.4.tgz -f && ng serve demo",
-    "build-ui-dev-clean": "powershell -Command \"if (Test-Path .angular) { Remove-Item -Recurse -Force .angular }; if (Test-Path dist) { Remove-Item -Recurse -Force dist }\" && ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-18.0.0-beta.4.tgz -f && ng serve demo"
+    "build-ui-dev": "ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-21.0.0-beta.5.tgz -f && ng serve demo",
+    "build-ui-dev-clean": "powershell -Command \"if (Test-Path .angular) { Remove-Item -Recurse -Force .angular }; if (Test-Path dist) { Remove-Item -Recurse -Force dist }\" && ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-21.0.0-beta.5.tgz -f && ng serve demo"
   },
   "prettier": {
     "printWidth": 100,
@@ -27,22 +27,22 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/common": "^18.2.14",
-    "@angular/compiler": "^18.2.14",
-    "@angular/core": "^18.2.14",
-    "@angular/forms": "^18.2.14",
-    "@angular/platform-browser": "^18.2.14",
-    "@angular/router": "^18.2.14",
+    "@angular/common": "^21.2.9",
+    "@angular/compiler": "^21.2.9",
+    "@angular/core": "^21.2.9",
+    "@angular/forms": "^21.2.9",
+    "@angular/platform-browser": "^21.2.9",
+    "@angular/router": "^21.2.9",
     "maplibre-gl": "^5.16.0",
-    "ng-mapcn": "file:dist/ng-mapcn/ng-mapcn-18.0.0-beta.4.tgz",
+    "ng-mapcn": "file:dist/ng-mapcn/ng-mapcn-21.0.0-beta.5.tgz",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.14.10"
+    "zone.js": "~0.16.1"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^18.2.21",
-    "@angular/cli": "^18.2.21",
-    "@angular/compiler-cli": "^18.2.14",
+    "@angular-devkit/build-angular": "^21.2.7",
+    "@angular/cli": "^21.2.7",
+    "@angular/compiler-cli": "^21.2.9",
     "@types/jasmine": "~5.1.0",
     "jasmine-core": "~5.1.0",
     "karma": "~6.4.0",
@@ -50,7 +50,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "ng-packagr": "^18.2.1",
-    "typescript": "~5.5.4"
+    "ng-packagr": "^21.2.3",
+    "typescript": "~5.9.3"
   }
 }

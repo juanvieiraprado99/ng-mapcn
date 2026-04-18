@@ -1,4 +1,7 @@
-/* Import MapLibre CSS */
+/* ng-mapcn global styles: theme tokens + utility classes for MapLibre DOM */
+@use '../../../projects/ng-mapcn/src/lib/styles/index' as *;
+
+/* MapLibre CSS (plain CSS @import, passed through by Sass) */
 @import 'maplibre-gl/dist/maplibre-gl.css';
 
 /* Global styles */
