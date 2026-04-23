@@ -2,7 +2,7 @@
 
 **Beautiful maps for Angular, made simple.**
 
-Free & open source map components for Angular 18+. Zero config, one command setup.
+Free & open source map components for Angular 21+. Zero config, one command setup.
 Built on MapLibre GL, styled with SCSS, inspired by shadcn/ui.
 
 [GitHub Repository](https://github.com/juanvieiraprado99/ng-mapcn) | [Report Bug](https://github.com/juanvieiraprado99/ng-mapcn/issues)
@@ -46,12 +46,12 @@ Or import in your global styles:
 
 ```typescript
 import { Component } from '@angular/core';
-import { MapComponent, ZoomControlComponent } from 'ng-mapcn';
+import { MapComponent, MapControlsComponent } from 'ng-mapcn';
 
 @Component({
-  selector: 'app-map',
+  selector: 'app-my-map',
   standalone: true,
-  imports: [MapComponent, ZoomControlComponent],
+  imports: [MapComponent, MapControlsComponent],
   template: `
     <div style="width: 100%; height: 400px;">
       <ng-map
@@ -60,11 +60,11 @@ import { MapComponent, ZoomControlComponent } from 'ng-mapcn';
         [zoom]="2"
         (mapReady)="onMapReady($event)"
       ></ng-map>
-      <ng-zoom-control [mapId]="'my-map'" position="top-right"></ng-zoom-control>
+      <ng-map-controls [mapId]="'my-map'" [showZoom]="true" [showLocate]="true"></ng-map-controls>
     </div>
   `,
 })
-export class MapComponent {
+export class MyMapComponent {
   onMapReady(map: any) {
     console.log('Map ready!', map);
   }
@@ -243,29 +243,39 @@ if (map) {
 
 ## Styling
 
-The library uses SCSS with CSS variables for theming, inspired by shadcn/ui.
+The library uses SCSS with CSS custom properties for theming, inspired by shadcn/ui.
+Import the library styles in your `angular.json` or global stylesheet:
+
+```json
+{ "styles": ["node_modules/ng-mapcn/styles.scss"] }
+```
 
 ### Theme Variables
 
-The library provides CSS variables that adapt to light/dark mode:
+CSS variables are defined using `oklch` and automatically switch between light and dark:
 
 ```scss
-:root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(222.2 84% 4.9%);
-  --primary: hsl(221.2 83.2% 53.3%);
-  // ... more variables
-}
+/* light (default) */
+--background:   oklch(99% 0 0);
+--foreground:   oklch(15% 0.02 240);
+--primary:      oklch(55% 0.2 240);
+--border:       oklch(92% 0.005 240);
+
+/* dark (.dark class or data-theme="dark") */
+--background:   oklch(15% 0.02 240);
+--foreground:   oklch(97% 0.005 240);
+--primary:      oklch(65% 0.2 240);
+--border:       oklch(30% 0.02 240);
 ```
 
 ### Custom Styling
 
-You can customize the appearance by overriding CSS variables:
+Override any variable on `:root` to apply your own brand colors:
 
 ```scss
 :root {
-  --primary: #your-color;
-  --border-radius: 0.5rem;
+  --primary: oklch(55% 0.22 150); /* green */
+  --radius-md: 0.25rem;           /* sharper corners */
 }
 ```
 
