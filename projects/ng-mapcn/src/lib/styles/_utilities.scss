@@ -67,6 +67,13 @@
   }
 }
 
+// ── MapLibre Popup (dark mode text color fix) ─────────────────────────────────
+
+.dark .maplibregl-popup-content,
+[data-theme='dark'] .maplibregl-popup-content {
+  color: #111111;
+}
+
 // ── Generic utility ───────────────────────────────────────────────────────────
 
 .ng-sr-only {
