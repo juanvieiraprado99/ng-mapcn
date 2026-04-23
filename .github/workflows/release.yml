@@ -36,40 +36,89 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Get commit messages since last release
+      - name: Build categorized changelog
         id: changelog
         if: steps.tag-check.outputs.exists == 'false'
         run: |
           VERSION=${{ steps.package-version.outputs.version }}
-
-          # Get the last tag
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
           if [ -z "$LAST_TAG" ]; then
-            # No previous tags, get all commits
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" | head -50)
+            RAW=$(git log --pretty=format:"%s|||%h" | head -50)
           else
-            # Get commits since last tag
-            CHANGELOG=$(git log "$LAST_TAG"..HEAD --pretty=format:"- %s (%h)")
+            RAW=$(git log "$LAST_TAG"..HEAD --pretty=format:"%s|||%h")
           fi
 
-          # Escape newlines for multiline output
-          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
+          BODY=$(python3 - "$VERSION" <<'PYEOF'
+import sys, re
 
-          echo "changelog=$CHANGELOG" >> $GITHUB_OUTPUT
+version = sys.argv[1]
+
+raw = sys.stdin.read().strip()
+
+categories = {
+    "feat":     ("✨ New Features",              []),
+    "fix":      ("🐛 Bug Fixes",                 []),
+    "docs":     ("📝 Documentation",             []),
+    "refactor": ("♻️ Refactoring & Performance", []),
+    "perf":     ("♻️ Refactoring & Performance", []),
+    "ci":       ("⚙️ CI/CD",                     []),
+    "build":    ("⚙️ CI/CD",                     []),
+    "chore":    ("🔧 Chores & Maintenance",      []),
+    "style":    ("🔧 Chores & Maintenance",      []),
+    "test":     ("🔧 Chores & Maintenance",      []),
+}
+other = ("📌 Other Changes", [])
+
+for line in raw.splitlines():
+    if "|||" not in line:
+        continue
+    subject, sha = line.rsplit("|||", 1)
+    subject = subject.strip()
+    sha = sha.strip()
+    match = re.match(r'^(\w+)(?:\([^)]+\))?!?:\s*(.+)', subject)
+    if match:
+        prefix = match.group(1).lower()
+        description = match.group(2)
+        entry = f"- {description} (`{sha}`)"
+        if prefix in categories:
+            categories[prefix][1].append(entry)
+        else:
+            other[1].append(f"- {subject} (`{sha}`)")
+    else:
+        other[1].append(f"- {subject} (`{sha}`)")
+
+lines = [f"## 🚀 ng-mapcn v{version}", ""]
+
+seen_titles = set()
+for key, (title, entries) in categories.items():
+    if entries and title not in seen_titles:
+        seen_titles.add(title)
+        lines.append(f"### {title}")
+        lines.extend(entries)
+        lines.append("")
+
+if other[1]:
+    lines.append(f"### {other[0]}")
+    lines.extend(other[1])
+    lines.append("")
+
+lines.append(f"> 📦 Install: \`npm install ng-mapcn@{version}\`")
+
+print("\n".join(lines))
+PYEOF
+          )
+
+          # Write to a temp file to avoid multiline env issues
+          echo "$BODY" > /tmp/release_body.md
+          echo "body_file=/tmp/release_body.md" >> $GITHUB_OUTPUT
 
       - name: Create Release
         if: steps.tag-check.outputs.exists == 'false'
         uses: ncipollo/release-action@v1
         with:
           tag: v${{ steps.package-version.outputs.version }}
-          name: Release ${{ steps.package-version.outputs.version }}
-          body: |
-            ## Version ${{ steps.package-version.outputs.version }}
-
-            ### Changes
-            ${{ steps.changelog.outputs.changelog }}
+          name: v${{ steps.package-version.outputs.version }}
+          bodyFile: ${{ steps.changelog.outputs.body_file }}
           draft: false
           prerelease: ${{ contains(steps.package-version.outputs.version, 'beta') || contains(steps.package-version.outputs.version, 'alpha') || contains(steps.package-version.outputs.version, 'rc') }}
