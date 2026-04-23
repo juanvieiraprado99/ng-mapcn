@@ -10,8 +10,8 @@
     "publish:lib": "ng build ng-mapcn --configuration production && cd dist/ng-mapcn && npm publish --tag beta --access public",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "build-ui-dev": "ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-21.0.0-beta.5.tgz -f && ng serve demo",
-    "build-ui-dev-clean": "powershell -Command \"if (Test-Path .angular) { Remove-Item -Recurse -Force .angular }; if (Test-Path dist) { Remove-Item -Recurse -Force dist }\" && ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-21.0.0-beta.5.tgz -f && ng serve demo"
+    "build-ui-dev": "node -e \"const v = require('./projects/ng-mapcn/package.json').version; require('child_process').execSync('ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-' + v + '.tgz -f && ng serve demo', { stdio: 'inherit' })\"",
+    "build-ui-dev-clean": "node -e \"const v = require('./projects/ng-mapcn/package.json').version; const { execSync } = require('child_process'); const fs = require('fs'); if (process.platform === 'win32') { try { execSync('powershell -Command \\\"if (Test-Path .angular) { Remove-Item -Recurse -Force .angular }; if (Test-Path dist) { Remove-Item -Recurse -Force dist }\\\"', { stdio: 'inherit' }); } catch(e) {} } else { try { execSync('rm -rf .angular dist', { stdio: 'inherit' }); } catch(e) {} } execSync('ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-' + v + '.tgz -f && ng serve demo', { stdio: 'inherit' })\""
   },
   "prettier": {
     "printWidth": 100,
