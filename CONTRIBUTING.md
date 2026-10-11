@@ -82,8 +82,9 @@ npm run format:check  # verify formatting without writing
 Unit tests run on [Vitest](https://vitest.dev) through the Angular CLI (`@angular/build:unit-test`) with jsdom.
 
 ```bash
-npm test               # library + demo tests
+npm test               # library + schematics + demo tests
 npm run test:lib       # library only
+npm run test:schematics  # builds the schematics, then tests ng-add / map with SchematicTestRunner
 npm run test:demo      # demo only (needs `npm run install:lib` first)
 npm run test:coverage  # library with coverage, written to coverage/ng-mapcn
 ng test ng-mapcn       # watch mode
