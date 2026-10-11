@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://ng-mapcn.vercel.app/docs
+    about: Guides, API reference and examples
+  - name: Report a security vulnerability
+    url: https://github.com/juanvieiraprado99/ng-mapcn/security/policy
+    about: Please report vulnerabilities privately, not as issues

@@ -1,0 +1,37 @@
+name: Feature request
+description: Suggest a new component, input or capability
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do, and what is getting in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-api
+    attributes:
+      label: Proposed API
+      description: How would you like to use it? Sketch the inputs, outputs or component usage.
+      placeholder: |
+        <ng-map>
+          <ng-map-example [option]="value" (changed)="onChanged($event)" />
+        </ng-map>
+    validations:
+      required: true
+  - type: input
+    id: mapcn-parity
+    attributes:
+      label: mapcn equivalent
+      description: Link to the equivalent mapcn component or docs, if any.
+      placeholder: https://mapcn.dev/docs/...
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
