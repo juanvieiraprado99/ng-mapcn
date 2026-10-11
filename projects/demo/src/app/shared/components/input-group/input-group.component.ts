@@ -8,7 +8,6 @@ import {
   input,
   ViewEncapsulation,
 } from '@angular/core';
-
 import type { ClassValue } from 'clsx';
 
 import { mergeClasses } from '@/shared/utils/merge-classes';

@@ -1,5 +1,6 @@
-import { computed, InjectionToken, isSignal, Provider, Signal } from '@angular/core';
-import { MapStylesConfig } from '../styles/map-styles';
+import { computed, InjectionToken, isSignal, type Provider, type Signal } from '@angular/core';
+
+import { type MapStylesConfig } from '../styles/map-styles';
 
 /**
  * App-wide basemap default. Every `ng-map` without an explicit `styles` input

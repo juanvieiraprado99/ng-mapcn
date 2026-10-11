@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import { MapComponent, MapMarkerComponent, MarkerContentComponent } from 'ng-mapcn';
+
 import { ExampleCardComponent } from '../../../shared/example-card';
 
 const DESTINATIONS = [

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCheck, lucideCopy } from '@ng-icons/lucide';
+
 import { ZardButtonComponent } from '@/shared/components/button';
 
 /** mapcn `CodeCopyButton`. */

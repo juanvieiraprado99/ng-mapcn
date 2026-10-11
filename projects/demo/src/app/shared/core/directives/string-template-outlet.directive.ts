@@ -1,13 +1,13 @@
 import {
   Directive,
+  effect,
+  type EffectRef,
   type EmbeddedViewRef,
   inject,
   input,
   type OnDestroy,
   TemplateRef,
   ViewContainerRef,
-  effect,
-  type EffectRef,
 } from '@angular/core';
 
 export function isTemplateRef<C = unknown>(value: unknown): value is TemplateRef<C> {

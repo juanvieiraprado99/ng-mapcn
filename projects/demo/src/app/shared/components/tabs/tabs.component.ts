@@ -20,7 +20,6 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideChevronDown,
@@ -29,7 +28,7 @@ import {
   lucideChevronUp,
 } from '@ng-icons/lucide';
 import clsx from 'clsx';
-import { debounceTime, fromEvent, merge, map, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged, fromEvent, map, merge } from 'rxjs';
 import { twMerge } from 'tailwind-merge';
 
 import { ZardButtonComponent } from '@/shared/components/button';

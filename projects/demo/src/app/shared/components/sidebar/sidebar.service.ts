@@ -2,7 +2,6 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { computed, inject, Injectable, PLATFORM_ID, REQUEST, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-
 import { map, of } from 'rxjs';
 
 import {

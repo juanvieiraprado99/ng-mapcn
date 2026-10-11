@@ -1,5 +1,5 @@
 import { computed, Injectable, signal } from '@angular/core';
-import { Map as MapLibreMap } from 'maplibre-gl';
+import { type Map as MapLibreMap } from 'maplibre-gl';
 
 @Injectable()
 export class MapContextService {

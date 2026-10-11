@@ -9,8 +9,10 @@ import {
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideClock, lucideMapPin, lucidePhone, lucideSearch } from '@ng-icons/lucide';
+
 import { ZardInputComponent } from '@/shared/components/input';
 import { ZardSidebarImports } from '@/shared/components/sidebar';
+
 import type { Store } from '../data';
 
 @Component({

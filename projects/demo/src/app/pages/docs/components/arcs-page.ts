@@ -2,14 +2,15 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import type { ExpressionSpecification } from 'maplibre-gl';
 import {
   MapArcComponent,
-  MapArcDatum,
-  MapArcEvent,
+  type MapArcDatum,
+  type MapArcEvent,
   MapComponent,
   MapMarkerComponent,
   MapPopupComponent,
   MarkerContentComponent,
   MarkerLabelComponent,
 } from 'ng-mapcn';
+
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
 

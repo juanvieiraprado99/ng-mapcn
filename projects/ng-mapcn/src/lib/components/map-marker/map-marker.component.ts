@@ -8,7 +8,8 @@ import {
   output,
   untracked,
 } from '@angular/core';
-import { Marker, MarkerOptions, Point, PointLike } from 'maplibre-gl';
+import { Marker, type MarkerOptions, Point, type PointLike } from 'maplibre-gl';
+
 import { MapContextService } from '../../services/map-context.service';
 import { MarkerContextService } from './marker-context.service';
 

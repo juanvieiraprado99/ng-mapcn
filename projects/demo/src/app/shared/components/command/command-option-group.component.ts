@@ -8,12 +8,11 @@ import {
   signal,
   ViewEncapsulation,
 } from '@angular/core';
-
 import type { ClassValue } from 'clsx';
 
-import { ZardCommandOptionComponent } from '@/shared/components/command/command-option.component';
 import { ZardCommandComponent } from '@/shared/components/command/command.component';
 import { commandGroupVariants } from '@/shared/components/command/command.variants';
+import { ZardCommandOptionComponent } from '@/shared/components/command/command-option.component';
 import { mergeClasses } from '@/shared/utils/merge-classes';
 
 export abstract class ZardCommandOptionGroup {

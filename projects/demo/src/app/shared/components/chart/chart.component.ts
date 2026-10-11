@@ -21,7 +21,6 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
-
 import type { ClassValue } from 'clsx';
 import type { EChartsOption } from 'echarts';
 import type { ECElementEvent, EChartsType } from 'echarts/core';
@@ -30,19 +29,6 @@ import { NgxEchartsDirective } from 'ngx-echarts';
 import { EDarkModes, ZardDarkMode } from '@/shared/services/dark-mode';
 import { mergeClasses } from '@/shared/utils/merge-classes';
 
-import { resolveChartChrome, resolveChartColors, resolveCssColor } from './chart-colors.util';
-import { ZARD_CHART, type ZardChartHost } from './chart-context';
-import { ZardChartLegendComponent } from './chart-legend.component';
-import {
-  buildChartOption,
-  buildLegendEntries,
-  deepMerge,
-  normalizeSeries,
-  resolveOptionColors,
-  type ZardChartBuildContext,
-} from './chart-option.builder';
-import { renderChartToSvg, type ZardEchartsSsrApi } from './chart-ssr.util';
-import { ZardChartTooltipComponent } from './chart-tooltip.component';
 import type {
   ZardChartConfig,
   ZardChartDatum,
@@ -57,6 +43,19 @@ import type {
   ZardChartType,
 } from './chart.types';
 import { chartCanvasVariants, chartVariants } from './chart.variants';
+import { resolveChartChrome, resolveChartColors, resolveCssColor } from './chart-colors.util';
+import { ZARD_CHART, type ZardChartHost } from './chart-context';
+import { ZardChartLegendComponent } from './chart-legend.component';
+import {
+  buildChartOption,
+  buildLegendEntries,
+  deepMerge,
+  normalizeSeries,
+  resolveOptionColors,
+  type ZardChartBuildContext,
+} from './chart-option.builder';
+import { renderChartToSvg, type ZardEchartsSsrApi } from './chart-ssr.util';
+import { ZardChartTooltipComponent } from './chart-tooltip.component';
 
 /**
  * `numberAttribute` answers `NaN` for anything it cannot read — `undefined`, `null`, or a

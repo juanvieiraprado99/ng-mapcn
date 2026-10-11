@@ -10,6 +10,7 @@ import {
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronLeft, lucideChevronRight } from '@ng-icons/lucide';
+
 import { DocsTocComponent, type TocItem } from '@/layout/docs-toc';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { docsNeighbours } from '@/shared/site-navigation';

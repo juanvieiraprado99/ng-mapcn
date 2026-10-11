@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import {
-  ClusterPointClickEvent,
+  type ClusterPointClickEvent,
   MapClusterLayerComponent,
   MapComponent,
 } from 'ng-mapcn';
+
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
 

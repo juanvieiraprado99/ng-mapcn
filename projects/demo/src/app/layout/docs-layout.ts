@@ -1,6 +1,7 @@
 import { ViewportScroller } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+
 import { DocsSidebarComponent } from './docs-sidebar';
 
 /**

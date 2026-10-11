@@ -5,6 +5,7 @@ import {
   MarkerContentComponent,
   MarkerTooltipComponent,
 } from 'ng-mapcn';
+
 import { ExampleCardComponent } from '../../../shared/example-card';
 
 const ANALYTICS_DATA = [

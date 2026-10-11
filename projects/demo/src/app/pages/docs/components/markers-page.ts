@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import {
   MapComponent,
   MapMarkerComponent,
@@ -8,9 +8,11 @@ import {
   MarkerLabelComponent,
   MarkerTooltipComponent,
 } from 'ng-mapcn';
+
+import { ZardButtonComponent } from '@/shared/components/button';
+
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
-import { ZardButtonComponent } from '@/shared/components/button';
 
 const BASIC_CODE = `import { Component } from '@angular/core';
 import {

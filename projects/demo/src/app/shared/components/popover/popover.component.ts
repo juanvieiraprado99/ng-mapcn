@@ -32,7 +32,6 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-
 import type { ClassValue } from 'clsx';
 import { filter, type Subscription } from 'rxjs';
 

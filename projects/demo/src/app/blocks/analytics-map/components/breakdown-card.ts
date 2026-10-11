@@ -1,6 +1,8 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+
 import { ZardCardComponent } from '@/shared/components/card';
+
 import type { BreakdownRow } from '../data';
 
 @Component({

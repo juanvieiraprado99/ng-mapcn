@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import { GITHUB_URL } from '@/shared/site-navigation';
+
 import { LogoComponent } from './logo';
 
 interface FooterLink {

@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideInfo } from '@ng-icons/lucide';
+
 import { BLOCKS } from '@/blocks/registry';
 import { FooterComponent } from '@/layout/footer';
 import { PageHeaderImports } from '@/shared/page-header';
+
 import { BlockDisplayComponent } from './block-display';
 
 /** mapcn `/blocks`: the gallery of ready-made map blocks. */

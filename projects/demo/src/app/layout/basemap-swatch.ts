@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+
 import type { BasemapId } from '@/shared/basemap.service';
 
 interface Palette {

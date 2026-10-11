@@ -15,7 +15,9 @@ import {
 } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { filter } from 'rxjs';
+
 import { siteNavigation } from '@/shared/site-navigation';
+
 import { BasemapPickerCompactComponent } from './basemap-picker-compact';
 
 /**

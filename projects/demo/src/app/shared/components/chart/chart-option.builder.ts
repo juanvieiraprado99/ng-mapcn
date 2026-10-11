@@ -1,12 +1,5 @@
 import type { EChartsOption } from 'echarts';
 
-import { buildArcLabels, resolveRadius } from './chart-arc-label.util';
-import { paletteColor, withAlpha } from './chart-colors.util';
-import {
-  buildTooltipHtml,
-  type ZardChartTooltipContext,
-  type ZardChartTooltipParam,
-} from './chart-tooltip.formatter';
 import type {
   ZardChartChromeColors,
   ZardChartConfig,
@@ -20,6 +13,13 @@ import type {
   ZardChartStackOffset,
   ZardChartType,
 } from './chart.types';
+import { buildArcLabels, resolveRadius } from './chart-arc-label.util';
+import { paletteColor, withAlpha } from './chart-colors.util';
+import {
+  buildTooltipHtml,
+  type ZardChartTooltipContext,
+  type ZardChartTooltipParam,
+} from './chart-tooltip.formatter';
 
 /** Bars keep shadcn's default corner radius unless a series overrides it. */
 const DEFAULT_BAR_RADIUS = 4;

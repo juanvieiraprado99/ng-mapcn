@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import type { StyleSpecification } from 'maplibre-gl';
-import { MapComponent, MapStylesConfig } from 'ng-mapcn';
+import { MapComponent, type MapStylesConfig } from 'ng-mapcn';
+
 import { BasemapService } from '../../../shared/basemap.service';
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';

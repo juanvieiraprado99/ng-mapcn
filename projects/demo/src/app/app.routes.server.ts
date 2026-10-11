@@ -1,4 +1,5 @@
-import { RenderMode, ServerRoute } from '@angular/ssr';
+import { RenderMode, type ServerRoute } from '@angular/ssr';
+
 import { BLOCKS } from './blocks/registry';
 
 export const serverRoutes: ServerRoute[] = [

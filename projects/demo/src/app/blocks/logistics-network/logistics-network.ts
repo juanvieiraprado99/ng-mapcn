@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+
 import { ZardSidebarImports } from '@/shared/components/sidebar';
+
 import { FilterSidebarComponent } from './components/filter-sidebar';
 import { NetworkMapComponent } from './components/network-map';
 import { hubs, routes } from './data';

@@ -27,15 +27,14 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-
 import { filter, map, of, Subject, switchMap, tap, timer } from 'rxjs';
 
-import { TOOLTIP_POSITIONS_MAP } from '@/shared/components/tooltip/tooltip-positions';
 import {
   tooltipPositionVariants,
   tooltipVariants,
   type ZardTooltipPositionVariants,
 } from '@/shared/components/tooltip/tooltip.variants';
+import { TOOLTIP_POSITIONS_MAP } from '@/shared/components/tooltip/tooltip-positions';
 import { ZardIdDirective } from '@/shared/core';
 import { ZardStringTemplateOutletDirective } from '@/shared/core/directives/string-template-outlet.directive';
 import { mergeClasses } from '@/shared/utils/merge-classes';

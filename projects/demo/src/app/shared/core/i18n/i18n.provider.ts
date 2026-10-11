@@ -1,5 +1,5 @@
-import { makeEnvironmentProviders } from '@angular/core';
 import type { EnvironmentProviders } from '@angular/core';
+import { makeEnvironmentProviders } from '@angular/core';
 
 import { DEFAULT_LOCALE } from './i18n.constants';
 import { ZARD_I18N, ZARD_LOCALE } from './i18n.tokens';

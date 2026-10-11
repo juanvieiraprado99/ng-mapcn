@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MapComponent, MapControlsComponent } from 'ng-mapcn';
+
 import { CodeBlockComponent } from '../../shared/code-block';
 import { DocsImports } from '../../shared/docs';
 import { InstallCommandComponent } from '../../shared/install-command';

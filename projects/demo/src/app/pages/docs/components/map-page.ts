@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -5,13 +6,12 @@ import {
   effect,
   signal,
 } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import {
   MapComponent,
   MapGeoJSONComponent,
-  MapViewport,
-  MapStylesConfig,
+  type MapStylesConfig,
+  type MapViewport,
 } from 'ng-mapcn';
 
 type StyleKey = 'default' | 'openstreetmap' | 'openstreetmap3d';

@@ -9,13 +9,14 @@ import {
   output,
 } from '@angular/core';
 import {
-  FillLayerSpecification,
-  GeoJSONSource,
-  LineLayerSpecification,
-  MapLayerMouseEvent,
+  type FillLayerSpecification,
+  type GeoJSONSource,
+  type LineLayerSpecification,
+  type MapLayerMouseEvent,
 } from 'maplibre-gl';
+
 import { MapContextService } from '../../services/map-context.service';
-import { MapGeoJSONEvent, mergeHoverPaint, nextId } from '../../utils/map-utils';
+import { type MapGeoJSONEvent, mergeHoverPaint, nextId } from '../../utils/map-utils';
 
 export type MapGeoJSONData =
   GeoJSON.FeatureCollection | GeoJSON.Feature | GeoJSON.Geometry | string;

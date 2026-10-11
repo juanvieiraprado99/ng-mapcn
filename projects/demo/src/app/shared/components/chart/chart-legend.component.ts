@@ -6,13 +6,11 @@ import {
   input,
   ViewEncapsulation,
 } from '@angular/core';
-
 import { NgIcon } from '@ng-icons/core';
 import type { ClassValue } from 'clsx';
 
 import { mergeClasses } from '@/shared/utils/merge-classes';
 
-import { ZARD_CHART } from './chart-context';
 import type { ZardChartLegendEntry } from './chart.types';
 import {
   chartLegendItemVariants,
@@ -20,6 +18,7 @@ import {
   chartLegendVariants,
   type ZardChartLegendAlignVariants,
 } from './chart.variants';
+import { ZARD_CHART } from './chart-context';
 
 /**
  * The only declarative child that renders real DOM. ECharts' own legend cannot reproduce the

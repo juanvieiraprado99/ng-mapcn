@@ -4,11 +4,13 @@ import {
   MapComponent,
   MapControlsComponent,
   MapGeoJSONComponent,
-  MapPopupComponent,
   type MapGeoJSONEvent,
+  MapPopupComponent,
 } from 'ng-mapcn';
+
 import { ZardDarkMode } from '@/shared/services/dark-mode';
-import { mapConfig, visitorsByCountry, type Theme } from './data';
+
+import { mapConfig, type Theme, visitorsByCountry } from './data';
 import { injectWorldData } from './world-data';
 
 // WebGL paint can't read CSS variables, so we build a concrete value→color

@@ -12,7 +12,6 @@ import {
   output,
   ViewEncapsulation,
 } from '@angular/core';
-
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideX } from '@ng-icons/lucide';
 import type { ClassValue } from 'clsx';

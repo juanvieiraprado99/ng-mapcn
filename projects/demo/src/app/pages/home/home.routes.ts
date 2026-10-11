@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { type Routes } from '@angular/router';
+
 import { basemapProviders } from '@/shared/basemap.providers';
 import { SITE_DESCRIPTION } from '@/shared/seo/site';
 

@@ -39,15 +39,12 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { type ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronDown, lucideChevronUp } from '@ng-icons/lucide';
 import type { ClassValue } from 'clsx';
 import { filter } from 'rxjs';
 
 import { ZardBadgeComponent } from '@/shared/components/badge';
-import { ZardSelectGroupComponent } from '@/shared/components/select/select-group.component';
-import { ZardSelectItemComponent } from '@/shared/components/select/select-item.component';
 import {
   selectContentVariants,
   selectScrollButtonVariants,
@@ -57,6 +54,8 @@ import {
   type ZardSelectAlignVariants,
   type ZardSelectPositionVariants,
 } from '@/shared/components/select/select.variants';
+import { ZardSelectGroupComponent } from '@/shared/components/select/select-group.component';
+import { ZardSelectItemComponent } from '@/shared/components/select/select-item.component';
 import { mergeClasses } from '@/shared/utils/merge-classes';
 
 type OnTouchedType = () => void;

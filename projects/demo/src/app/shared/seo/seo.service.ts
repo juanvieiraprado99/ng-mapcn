@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { inject, Injectable } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
+
 import { type Breadcrumb, JsonLdService } from './json-ld.service';
 import {
   SITE_DESCRIPTION,

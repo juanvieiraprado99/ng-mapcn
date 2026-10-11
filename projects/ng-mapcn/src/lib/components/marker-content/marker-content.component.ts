@@ -1,13 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  EmbeddedViewRef,
-  TemplateRef,
-  ViewContainerRef,
   effect,
+  type EmbeddedViewRef,
   inject,
+  type TemplateRef,
   viewChild,
+  ViewContainerRef,
 } from '@angular/core';
+
 import { MarkerContextService } from '../map-marker/marker-context.service';
 
 @Component({

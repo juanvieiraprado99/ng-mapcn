@@ -19,7 +19,9 @@ import {
   MarkerContentComponent,
   MarkerTooltipComponent,
 } from 'ng-mapcn';
+
 import { ZardSidebarImports } from '@/shared/components/sidebar';
+
 import type { Store } from '../data';
 
 /** Flies to the selected store (mapcn `FlyToSelected`, through `MapContextService`). */

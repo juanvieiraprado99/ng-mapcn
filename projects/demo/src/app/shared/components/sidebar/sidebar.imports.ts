@@ -1,4 +1,11 @@
 import {
+  ZardSidebarComponent,
+  ZardSidebarInsetComponent,
+  ZardSidebarProviderComponent,
+  ZardSidebarRailComponent,
+  ZardSidebarTriggerComponent,
+} from '@/shared/components/sidebar/sidebar.component';
+import {
   ZardSidebarMenuActionComponent,
   ZardSidebarMenuBadgeComponent,
   ZardSidebarMenuButtonComponent,
@@ -20,13 +27,6 @@ import {
   ZardSidebarInputDirective,
   ZardSidebarSeparatorComponent,
 } from '@/shared/components/sidebar/sidebar-primitives.component';
-import {
-  ZardSidebarComponent,
-  ZardSidebarInsetComponent,
-  ZardSidebarProviderComponent,
-  ZardSidebarRailComponent,
-  ZardSidebarTriggerComponent,
-} from '@/shared/components/sidebar/sidebar.component';
 
 export const ZardSidebarImports = [
   ZardSidebarProviderComponent,

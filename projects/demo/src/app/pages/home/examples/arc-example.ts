@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
   MapArcComponent,
-  MapArcDatum,
+  type MapArcDatum,
   MapComponent,
   MapMarkerComponent,
   MarkerContentComponent,
   MarkerLabelComponent,
 } from 'ng-mapcn';
+
 import { ExampleCardComponent } from '../../../shared/example-card';
 
 const HUB = { name: 'London', lng: -0.1276, lat: 51.5074 };

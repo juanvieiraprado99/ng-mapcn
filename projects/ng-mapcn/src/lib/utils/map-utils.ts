@@ -1,4 +1,4 @@
-import { Map as MapLibreMap, MapMouseEvent } from 'maplibre-gl';
+import { type Map as MapLibreMap, type MapMouseEvent } from 'maplibre-gl';
 
 /** Current viewport state of a map (mapcn `MapViewport`). */
 export interface MapViewport {

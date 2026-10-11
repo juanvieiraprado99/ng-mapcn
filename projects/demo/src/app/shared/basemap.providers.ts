@@ -1,5 +1,6 @@
-import { inject, Provider } from '@angular/core';
+import { inject, type Provider } from '@angular/core';
 import { provideMapStyles } from 'ng-mapcn';
+
 import { BasemapService } from './basemap.service';
 
 /**

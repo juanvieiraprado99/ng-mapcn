@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MapComponent, MapControlsComponent, MapGeoJSONComponent } from 'ng-mapcn';
+
 import { EdgeNodeMarkerComponent } from './components/edge-node-marker';
 import { StatusSidebarComponent } from './components/status-sidebar';
 import { edgeNodes, mapView, WORLD_GEOJSON } from './data';

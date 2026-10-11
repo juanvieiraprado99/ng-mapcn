@@ -1,5 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { DestroyRef, DOCUMENT, effect, inject, Injectable, PLATFORM_ID } from '@angular/core';
+
 import { EDarkModes, ZardDarkMode } from '@/shared/services/dark-mode';
 
 /** localStorage key shared with ZardDarkMode and the pre-paint script in `index.html`. */

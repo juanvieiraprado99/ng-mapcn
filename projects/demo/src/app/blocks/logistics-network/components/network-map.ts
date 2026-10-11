@@ -2,16 +2,18 @@ import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import {
   MapArcComponent,
+  type MapArcDatum,
   MapComponent,
   MapControlsComponent,
   MapMarkerComponent,
   MarkerContentComponent,
   MarkerTooltipComponent,
-  type MapArcDatum,
 } from 'ng-mapcn';
+
 import { ZardSeparatorComponent } from '@/shared/components/separator';
 import { ZardSidebarImports } from '@/shared/components/sidebar';
-import { modeConfig, regionLabels, statusConfig, type Hub, type Route } from '../data';
+
+import { type Hub, modeConfig, regionLabels, type Route, statusConfig } from '../data';
 
 @Component({
   selector: 'app-network-map',

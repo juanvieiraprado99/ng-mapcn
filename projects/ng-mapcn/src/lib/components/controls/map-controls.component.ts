@@ -1,9 +1,10 @@
+import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
   computed,
   effect,
+  type ElementRef,
   inject,
   input,
   output,
@@ -11,8 +12,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { Map as MapLibreMap } from 'maplibre-gl';
+import { type Map as MapLibreMap } from 'maplibre-gl';
+
 import { MapContextService } from '../../services/map-context.service';
 
 @Component({

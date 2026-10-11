@@ -6,7 +6,6 @@ import {
   input,
   ViewEncapsulation,
 } from '@angular/core';
-
 import type { ClassValue } from 'clsx';
 
 import { separatorVariants } from '@/shared/components/separator/separator.variants';

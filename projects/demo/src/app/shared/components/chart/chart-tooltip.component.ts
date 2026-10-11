@@ -6,7 +6,6 @@ import {
   numberAttribute,
   ViewEncapsulation,
 } from '@angular/core';
-
 import type { ClassValue } from 'clsx';
 
 import type { ZardChartTooltipIndicator, ZardChartTooltipTrigger } from './chart.types';

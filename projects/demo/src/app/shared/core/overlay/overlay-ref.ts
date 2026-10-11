@@ -2,8 +2,7 @@ import type { OverlayRef } from '@angular/cdk/overlay';
 import { isPlatformBrowser } from '@angular/common';
 import { EventEmitter, signal } from '@angular/core';
 import { outputToObservable } from '@angular/core/rxjs-interop';
-
-import { filter, takeUntil, type Observable } from 'rxjs';
+import { filter, type Observable, takeUntil } from 'rxjs';
 
 import { isTopmostOverlay, popOverlay, pushOverlay } from './overlay-stack';
 

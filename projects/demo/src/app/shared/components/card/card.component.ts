@@ -8,7 +8,6 @@ import {
   viewChild,
   ViewEncapsulation,
 } from '@angular/core';
-
 import type { ClassValue } from 'clsx';
 
 import { ZardButtonComponent } from '@/shared/components/button/button.component';

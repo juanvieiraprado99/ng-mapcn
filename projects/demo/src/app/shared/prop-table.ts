@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+
 import { ZardTableImports } from '@/shared/components/table';
 
 export interface PropRow {

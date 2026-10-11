@@ -1,5 +1,7 @@
-import { Routes } from '@angular/router';
+import { type Routes } from '@angular/router';
+
 import { basemapProviders } from '@/shared/basemap.providers';
+
 import { DocsLayoutComponent } from '../../layout/docs-layout';
 
 export const DOCS_ROUTES: Routes = [

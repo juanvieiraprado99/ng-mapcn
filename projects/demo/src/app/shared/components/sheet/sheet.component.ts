@@ -19,24 +19,16 @@ import {
   signal,
   type TemplateRef,
   untracked,
-  ViewContainerRef,
   viewChild,
+  ViewContainerRef,
   ViewEncapsulation,
 } from '@angular/core';
-
 import type { ClassValue } from 'clsx';
 import { filter } from 'rxjs';
 
 import { ZardStringTemplateOutletDirective } from '@/shared/core';
 import { mergeClasses } from '@/shared/utils/merge-classes';
 
-import { nextSheetId, ZardSheetHost } from './sheet-host';
-import {
-  SHEET_DURATION,
-  ZardSheetPanelComponent,
-  type ZardSheetSide,
-  type ZardSheetSize,
-} from './sheet-panel.component';
 import {
   SHEET_BACKDROP_CLASSES,
   sheetDescriptionVariants,
@@ -44,6 +36,13 @@ import {
   sheetHeaderVariants,
   sheetTitleVariants,
 } from './sheet.variants';
+import { nextSheetId, ZardSheetHost } from './sheet-host';
+import {
+  SHEET_DURATION,
+  ZardSheetPanelComponent,
+  type ZardSheetSide,
+  type ZardSheetSize,
+} from './sheet-panel.component';
 
 const ESCAPE_KEYS = ['Escape', 'Esc'];
 

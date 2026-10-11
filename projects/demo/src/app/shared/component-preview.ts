@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+
 import { ZardButtonComponent } from '@/shared/components/button';
+
 import { CodeCopyButtonComponent } from './code-copy-button';
 import { CodeSurfaceComponent } from './code-surface';
 import type { CodeLang } from './highlighter';

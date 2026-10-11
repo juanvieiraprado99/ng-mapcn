@@ -8,6 +8,7 @@ import {
   type Type,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import { BLOCK_COMPONENTS, findBlock } from '@/blocks/registry';
 
 /**

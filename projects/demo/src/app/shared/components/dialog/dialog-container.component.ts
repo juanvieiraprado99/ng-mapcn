@@ -24,22 +24,21 @@ import {
   type ViewContainerRef,
   ViewEncapsulation,
 } from '@angular/core';
-
 import { NgIcon } from '@ng-icons/core';
 import type { ClassValue } from 'clsx';
 
 import { ZardButtonComponent } from '@/shared/components/button/button.component';
 import { noopFn } from '@/shared/utils/noop';
 
-import { ZardDialogHost } from './dialog-host';
-import { DIALOG_DURATION, ZardDialogPanelComponent } from './dialog-panel.component';
-import type { ZardDialogRef } from './dialog-ref';
 import {
   ZardDialogDescriptionComponent,
   ZardDialogFooterComponent,
   ZardDialogHeaderComponent,
   ZardDialogTitleComponent,
 } from './dialog.component';
+import { ZardDialogHost } from './dialog-host';
+import { DIALOG_DURATION, ZardDialogPanelComponent } from './dialog-panel.component';
+import type { ZardDialogRef } from './dialog-ref';
 
 export type OnClickCallback<T> = (instance: T) => false | void | object;
 

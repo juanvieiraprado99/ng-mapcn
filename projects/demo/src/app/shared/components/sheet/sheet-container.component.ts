@@ -24,16 +24,12 @@ import {
   type ViewContainerRef,
   ViewEncapsulation,
 } from '@angular/core';
-
 import { NgIcon } from '@ng-icons/core';
 import type { ClassValue } from 'clsx';
 
 import { ZardButtonComponent } from '@/shared/components/button/button.component';
 import { noopFn } from '@/shared/utils/noop';
 
-import { ZardSheetHost } from './sheet-host';
-import { SHEET_DURATION, ZardSheetPanelComponent } from './sheet-panel.component';
-import type { ZardSheetRef } from './sheet-ref';
 import {
   ZardSheetDescriptionComponent,
   ZardSheetFooterComponent,
@@ -41,6 +37,9 @@ import {
   ZardSheetTitleComponent,
 } from './sheet.component';
 import type { ZardSheetVariants } from './sheet.variants';
+import { ZardSheetHost } from './sheet-host';
+import { SHEET_DURATION, ZardSheetPanelComponent } from './sheet-panel.component';
+import type { ZardSheetRef } from './sheet-ref';
 
 export type OnClickCallback<T> = (instance: T) => false | void | object;
 

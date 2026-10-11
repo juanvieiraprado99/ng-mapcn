@@ -9,12 +9,17 @@ import {
   output,
   untracked,
 } from '@angular/core';
-import { GeoJSONSource, LineLayerSpecification, MapLayerMouseEvent } from 'maplibre-gl';
+import {
+  type GeoJSONSource,
+  type LineLayerSpecification,
+  type MapLayerMouseEvent,
+} from 'maplibre-gl';
+
 import { MapContextService } from '../../services/map-context.service';
 import {
   buildArcCoordinates,
-  MapArcDatum,
-  MapArcEvent,
+  type MapArcDatum,
+  type MapArcEvent,
   mergeHoverPaint,
   nextId,
 } from '../../utils/map-utils';

@@ -2,8 +2,10 @@ import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideNetwork, lucidePlane, lucideTruck } from '@ng-icons/lucide';
+
 import { ZardSidebarImports } from '@/shared/components/sidebar';
-import { regionLabels, statusConfig, type Hub, type Route } from '../data';
+
+import { type Hub, regionLabels, type Route, statusConfig } from '../data';
 
 const regionIcons: Record<Hub['region'], string> = {
   west: 'W',

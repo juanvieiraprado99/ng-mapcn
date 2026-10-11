@@ -19,19 +19,16 @@ import {
   signal,
   type TemplateRef,
   untracked,
-  ViewContainerRef,
   viewChild,
+  ViewContainerRef,
   ViewEncapsulation,
 } from '@angular/core';
-
 import type { ClassValue } from 'clsx';
 import { filter } from 'rxjs';
 
 import { ZardStringTemplateOutletDirective } from '@/shared/core';
 import { mergeClasses } from '@/shared/utils/merge-classes';
 
-import { nextDialogId, ZardDialogHost } from './dialog-host';
-import { DIALOG_DURATION, ZardDialogPanelComponent } from './dialog-panel.component';
 import {
   DIALOG_BACKDROP_CLASSES,
   dialogDescriptionVariants,
@@ -39,6 +36,8 @@ import {
   dialogHeaderVariants,
   dialogTitleVariants,
 } from './dialog.variants';
+import { nextDialogId, ZardDialogHost } from './dialog-host';
+import { DIALOG_DURATION, ZardDialogPanelComponent } from './dialog-panel.component';
 
 const ESCAPE_KEYS = ['Escape', 'Esc'];
 

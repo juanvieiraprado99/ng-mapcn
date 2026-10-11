@@ -15,7 +15,6 @@ import {
   type TemplateRef,
   ViewEncapsulation,
 } from '@angular/core';
-
 import type { ClassValue } from 'clsx';
 
 import { ZardSidebarService } from '@/shared/components/sidebar/sidebar.service';

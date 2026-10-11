@@ -1,25 +1,27 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import {
-  ApplicationConfig,
+  type ApplicationConfig,
   inject,
   provideAppInitializer,
   provideZonelessChangeDetection,
 } from '@angular/core';
 import {
-  Routes,
-  TitleStrategy,
-  provideRouter,
-  withComponentInputBinding,
-  withInMemoryScrolling,
-} from '@angular/router';
-import {
   provideClientHydration,
   withEventReplay,
   withNoIncrementalHydration,
 } from '@angular/platform-browser';
+import {
+  provideRouter,
+  type Routes,
+  TitleStrategy,
+  withComponentInputBinding,
+  withInMemoryScrolling,
+} from '@angular/router';
+
 import { provideZard } from '@/shared/core/provider/providezard';
 import { ThemeService } from '@/shared/theme.service';
 import { SiteTitleStrategy } from '@/shared/title-strategy';
+
 import { MainLayoutComponent } from './layout/main-layout';
 
 // Every route is lazy: nothing here may import `ng-mapcn`, or maplibre-gl
