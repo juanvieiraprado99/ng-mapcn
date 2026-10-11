@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { docsNavigation } from '@/shared/site-navigation';
 
+import { docsNavigation } from '@/shared/site-navigation';
 
 /**
  * mapcn `DocsSidebar` — a non-collapsible shadcn `Sidebar`; the classes below

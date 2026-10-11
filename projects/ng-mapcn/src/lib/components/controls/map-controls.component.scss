@@ -12,10 +12,22 @@
   position: absolute;
   pointer-events: all;
 
-  &--top-right    { top: 10px; right: 10px; }
-  &--top-left     { top: 10px; left: 10px; }
-  &--bottom-right { bottom: 32px; right: 10px; }
-  &--bottom-left  { bottom: 32px; left: 10px; }
+  &--top-right {
+    top: 10px;
+    right: 10px;
+  }
+  &--top-left {
+    top: 10px;
+    left: 10px;
+  }
+  &--bottom-right {
+    bottom: 32px;
+    right: 10px;
+  }
+  &--bottom-left {
+    bottom: 32px;
+    left: 10px;
+  }
 }
 
 // ── Control group ─────────────────────────────────────────────────────────────
@@ -26,7 +38,9 @@
   background: var(--background, #fff);
   border: 1px solid var(--border, #e2e8f0);
   border-radius: var(--radius-md, 6px);
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 1px 3px 0 rgb(0 0 0 / 0.1),
+    0 1px 2px -1px rgb(0 0 0 / 0.1);
   overflow: hidden;
 }
 
@@ -76,6 +90,10 @@
 }
 
 @keyframes ng-ctrl-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

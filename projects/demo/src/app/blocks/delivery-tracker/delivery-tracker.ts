@@ -22,19 +22,21 @@ import {
   MapRouteComponent,
   MarkerContentComponent,
 } from 'ng-mapcn';
+
 import { ZardBadgeComponent } from '@/shared/components/badge';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardCardComponent } from '@/shared/components/card';
 import { ZardDarkMode } from '@/shared/services/dark-mode';
+
 import {
   buildRouteUrl,
   deliveryMeals,
   dropoff,
   mapView,
+  type OsrmRouteData,
   pickup,
   progressFraction,
   routeStyle,
-  type OsrmRouteData,
 } from './data';
 import { splitRoute } from './route-progress';
 

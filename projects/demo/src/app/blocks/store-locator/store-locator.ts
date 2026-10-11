@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+
 import { ZardSidebarImports } from '@/shared/components/sidebar';
+
 import { LocatorMapComponent } from './components/locator-map';
 import { StoreListComponent } from './components/store-list';
 import { MAP_CENTER, stores } from './data';

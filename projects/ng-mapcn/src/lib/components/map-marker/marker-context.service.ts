@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { Marker } from 'maplibre-gl';
+import { type Marker } from 'maplibre-gl';
 
 @Injectable()
 export class MarkerContextService {

@@ -175,7 +175,9 @@ export class ZardDarkMode {
       return false;
     }
 
-    return currentTheme === EDarkModes.DARK || (currentTheme === EDarkModes.SYSTEM && this.systemDark());
+    return (
+      currentTheme === EDarkModes.DARK || (currentTheme === EDarkModes.SYSTEM && this.systemDark())
+    );
   }
 
   private handleSystemChanges(addListener = true): void {

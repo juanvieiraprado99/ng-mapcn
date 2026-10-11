@@ -1,18 +1,19 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  EmbeddedViewRef,
-  TemplateRef,
-  ViewContainerRef,
   effect,
+  type EmbeddedViewRef,
   inject,
   input,
   NgZone,
   output,
+  type TemplateRef,
   untracked,
   viewChild,
+  ViewContainerRef,
 } from '@angular/core';
-import { Offset, Popup } from 'maplibre-gl';
+import { type Offset, Popup } from 'maplibre-gl';
+
 import { MapContextService } from '../../services/map-context.service';
 
 /**

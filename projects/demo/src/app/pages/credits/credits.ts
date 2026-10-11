@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+
 import { FooterComponent } from '@/layout/footer';
 import { ZardBadgeComponent } from '@/shared/components/badge';
 import { ZardButtonComponent } from '@/shared/components/button';
@@ -99,8 +100,7 @@ export class CreditsComponent {
     {
       name: 'Carto',
       role: 'Basemaps',
-      description:
-        'The free light and dark basemaps used by default — no API key required.',
+      description: 'The free light and dark basemaps used by default — no API key required.',
       url: 'https://carto.com',
     },
   ];

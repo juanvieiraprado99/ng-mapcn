@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideExternalLink } from '@ng-icons/lucide';
+
 import { type BasemapProvider, BasemapService } from '@/shared/basemap.service';
 import { ZardInputComponent } from '@/shared/components/input';
+
 import { BasemapSwatchComponent } from './basemap-swatch';
 
 /**

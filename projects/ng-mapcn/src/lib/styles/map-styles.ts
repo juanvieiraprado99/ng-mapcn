@@ -1,4 +1,4 @@
-import { StyleSpecification } from 'maplibre-gl';
+import { type StyleSpecification } from 'maplibre-gl';
 
 /**
  * Per-theme basemap overrides (mapcn `styles` prop). A theme left undefined

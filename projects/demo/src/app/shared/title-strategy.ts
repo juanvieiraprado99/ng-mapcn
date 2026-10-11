@@ -1,5 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, RouterStateSnapshot, TitleStrategy } from '@angular/router';
+import {
+  type ActivatedRouteSnapshot,
+  type RouterStateSnapshot,
+  TitleStrategy,
+} from '@angular/router';
+
 import { type RouteSeo, SeoService } from '@/shared/seo/seo.service';
 
 /**

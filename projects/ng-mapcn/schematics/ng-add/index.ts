@@ -1,9 +1,9 @@
 import {
-  Rule,
-  SchematicContext,
-  Tree,
   chain,
+  type Rule,
   schematic,
+  type SchematicContext,
+  type Tree,
 } from '@angular-devkit/schematics';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 

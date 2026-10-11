@@ -7,6 +7,7 @@ import {
   MarkerContentComponent,
   MarkerTooltipComponent,
 } from 'ng-mapcn';
+
 import { BreakdownCardComponent } from './components/breakdown-card';
 import { OverviewCardComponent } from './components/overview-card';
 import { browsersRows, countriesRows, locations, referrersRows, visitedPagesRows } from './data';

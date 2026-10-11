@@ -1,5 +1,5 @@
-import { computed, inject, Injectable, LOCALE_ID, signal } from '@angular/core';
 import type { Signal } from '@angular/core';
+import { computed, inject, Injectable, LOCALE_ID, signal } from '@angular/core';
 
 import { DEFAULT_LOCALE } from './i18n.constants';
 import { ZARD_I18N, ZARD_LOCALE } from './i18n.tokens';
@@ -49,8 +49,11 @@ export class ZardI18nService {
 
   setTranslation(translation: Partial<ZardI18nInterface>): void {
     this.state.update(
-      current =>
-        deepMerge(current as Record<string, unknown>, translation as Record<string, unknown>) as ZardI18nInterface,
+      (current) =>
+        deepMerge(
+          current as Record<string, unknown>,
+          translation as Record<string, unknown>,
+        ) as ZardI18nInterface,
     );
   }
 

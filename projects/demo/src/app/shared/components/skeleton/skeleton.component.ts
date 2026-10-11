@@ -1,5 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, input, ViewEncapsulation } from '@angular/core';
-
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  ViewEncapsulation,
+} from '@angular/core';
 import type { ClassValue } from 'clsx';
 
 import { mergeClasses } from '@/shared/utils/merge-classes';
@@ -8,9 +13,7 @@ import { skeletonVariants } from './skeleton.variants';
 
 @Component({
   selector: 'z-skeleton',
-  template: `
-    <div data-slot="skeleton" [class]="classes()"></div>
-  `,
+  template: ` <div data-slot="skeleton" [class]="classes()"></div> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {

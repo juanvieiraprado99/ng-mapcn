@@ -1,4 +1,5 @@
 import type { ResolveFn, Routes } from '@angular/router';
+
 import { findBlock } from '@/blocks/registry';
 import { basemapProviders } from '@/shared/basemap.providers';
 import { provideZardCharts } from '@/shared/components/chart';

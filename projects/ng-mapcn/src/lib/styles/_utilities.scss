@@ -3,8 +3,12 @@
 
 // ── Theme class helpers (for apps that need explicit classes) ─────────────────
 
-.theme-light { @include theme-light; }
-.theme-dark  { @include theme-dark;  }
+.theme-light {
+  @include theme-light;
+}
+.theme-dark {
+  @include theme-dark;
+}
 
 // ── Popup card (used by ng-marker-popup and ng-map-popup) ─────────────────────
 
@@ -15,7 +19,9 @@
   max-width: 320px;
   animation: ng-popup-enter 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
-  @media (prefers-reduced-motion: reduce) { animation: none; }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 // ── Popup close button (ng-map-popup [closeButton]) ───────────────────────────
@@ -48,7 +54,9 @@
   @include tooltip;
   animation: ng-tooltip-enter 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 
-  @media (prefers-reduced-motion: reduce) { animation: none; }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 // ── Marker label (used by ng-marker-label) ────────────────────────────────────
@@ -69,8 +77,12 @@
   box-shadow: $shadow-sm;
   pointer-events: none;
 
-  &--top    { bottom: calc(100% + 6px); }
-  &--bottom { top:    calc(100% + 6px); }
+  &--top {
+    bottom: calc(100% + 6px);
+  }
+  &--bottom {
+    top: calc(100% + 6px);
+  }
 }
 
 // ── Marker content wrapper + default icon (ng-marker-content) ────────────────
@@ -86,7 +98,9 @@
   background: #3b82f6;
   border-radius: 50%;
   border: 2px solid #fff;
-  box-shadow: 0 4px 6px rgb(0 0 0 / 0.1), 0 2px 4px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 4px 6px rgb(0 0 0 / 0.1),
+    0 2px 4px rgb(0 0 0 / 0.1);
 }
 
 // ── Default marker dot (when no ng-marker-content is used) ───────────────────
@@ -99,7 +113,9 @@
   border: 2px solid var(--background, #fff);
   box-shadow: 0 2px 4px rgb(0 0 0 / 0.25);
   cursor: pointer;
-  transition: transform $transition-fast, box-shadow $transition-fast;
+  transition:
+    transform $transition-fast,
+    box-shadow $transition-fast;
 
   &:hover {
     transform: scale(1.15);
@@ -131,16 +147,32 @@
 // ── Keyframes ─────────────────────────────────────────────────────────────────
 
 @keyframes ng-popup-enter {
-  from { opacity: 0; transform: translateY(4px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes ng-tooltip-enter {
-  from { opacity: 0; transform: translateY(-2px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+  from {
+    opacity: 0;
+    transform: translateY(-2px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes ng-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

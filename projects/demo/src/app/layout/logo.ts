@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideMapPin } from '@ng-icons/lucide';
 import type { ClassValue } from 'clsx';
+
 import { mergeClasses } from '@/shared/utils/merge-classes';
 
 /** Wordmark: map pin + "ng-mapcn" (mapcn `Logo`). */

@@ -14,15 +14,7 @@ npm install
 npm run build-ui-dev
 ```
 
-On a fresh clone, `npm install` fails because the demo depends on `file:dist/ng-mapcn/ng-mapcn-<version>.tgz`, which only exists after the first library build. Install once without that dependency, then restore the manifest:
-
-```bash
-npm pkg delete dependencies.ng-mapcn && npm install
-git checkout package.json package-lock.json
-npm run build-ui-dev
-```
-
-`build-ui-dev` builds the library, packs it, installs the `.tgz` into the workspace and serves the demo app. The demo consumes `ng-mapcn` as a local `.tgz` from `dist/`, so **rerun it after every library change**.
+`build-ui-dev` builds the library, packs it, installs the `.tgz` into the workspace and serves the demo app. The demo consumes `ng-mapcn` as a local `.tgz` from `dist/`, so **rerun it after every library change**. The tarball is installed without saving it to `package.json`, so after any `npm install` run `npm run install:lib` (or `build-ui-dev`) to put the local library back.
 
 If builds look stale, use the clean variant, which clears `.angular` and `dist` first:
 
@@ -39,15 +31,15 @@ This is an Angular library workspace with two projects:
 
 Inside `projects/ng-mapcn/src/lib/`:
 
-| Path | Purpose |
-|---|---|
-| `components/map/` | Map host: MapLibre init, theme-driven `setStyle`, `blank` style, controlled `viewport`, loader overlay |
-| `components/map-marker/` + `marker-content/`, `marker-popup/`, `marker-tooltip/`, `marker-label/` | Marker created once and reconciled by diffed setters; content projected into the marker element |
-| `components/map-route/`, `map-geojson/`, `map-arc/`, `map-cluster-layer/` | Imperative layer components with empty templates |
-| `services/map-context.service.ts` | `map`, `isLoaded`, `resolvedTheme` signals, provided by `<ng-map>` |
-| `services/theme.service.ts` | Watches the `dark`/`light` class on `<html>`, with a `prefers-color-scheme` fallback |
-| `utils/map-utils.ts` | `nextId`, `getViewport`, `mergeHoverPaint`, `buildArcCoordinates`, shared types |
-| `styles/` | SCSS tokens/utilities and `map-styles.ts` (Carto defaults + `blankMapStyle`) |
+| Path                                                                                              | Purpose                                                                                                |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `components/map/`                                                                                 | Map host: MapLibre init, theme-driven `setStyle`, `blank` style, controlled `viewport`, loader overlay |
+| `components/map-marker/` + `marker-content/`, `marker-popup/`, `marker-tooltip/`, `marker-label/` | Marker created once and reconciled by diffed setters; content projected into the marker element        |
+| `components/map-route/`, `map-geojson/`, `map-arc/`, `map-cluster-layer/`                         | Imperative layer components with empty templates                                                       |
+| `services/map-context.service.ts`                                                                 | `map`, `isLoaded`, `resolvedTheme` signals, provided by `<ng-map>`                                     |
+| `services/theme.service.ts`                                                                       | Watches the `dark`/`light` class on `<html>`, with a `prefers-color-scheme` fallback                   |
+| `utils/map-utils.ts`                                                                              | `nextId`, `getViewport`, `mergeHoverPaint`, `buildArcCoordinates`, shared types                        |
+| `styles/`                                                                                         | SCSS tokens/utilities and `map-styles.ts` (Carto defaults + `blankMapStyle`)                           |
 
 The library is also distributed by schematics (`ng add ng-mapcn`). `scripts/sync-schematic-files.mjs` mirrors `src/lib/**` into `schematics/map/files/`. That folder is generated and git-ignored, so never edit it by hand.
 
@@ -69,6 +61,22 @@ These come from the mapcn port plan. Do not violate them.
 - Formatting follows the Prettier config in `package.json` (100 columns, single quotes).
 - After changing the public API, run `npm run generate:llms` to regenerate `llms.txt` and `llms-full.txt`.
 
+## Linting and formatting
+
+ESLint (with angular-eslint) checks the code and Prettier formats it.
+
+```bash
+npm run lint          # report lint problems
+npm run lint:fix      # autofix what can be fixed
+npm run format        # format everything with Prettier
+npm run format:check  # verify formatting without writing
+```
+
+- Git hooks (husky) are installed automatically by `npm install`. On commit, lint-staged lints and formats the staged files, and commitlint checks that the message follows Conventional Commits.
+- CI repeats the lint, format and commit message checks on every pull request.
+- To hide the mechanical formatting commits from `git blame`, run `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
+- On Windows, LF line endings are enforced by `.gitattributes`, so no extra Git setup is needed.
+
 ## Commits
 
 We use [Conventional Commits](https://www.conventionalcommits.org/). The GitHub Actions release workflow parses commit messages to generate categorized release notes, so clear messages produce informative releases.
@@ -77,18 +85,18 @@ We use [Conventional Commits](https://www.conventionalcommits.org/). The GitHub 
 <type>[optional scope]: <short description>
 ```
 
-| Type | When to use |
-|---|---|
-| `feat` | New feature or component |
-| `fix` | Bug fix |
-| `docs` | Documentation changes |
+| Type       | When to use                           |
+| ---------- | ------------------------------------- |
+| `feat`     | New feature or component              |
+| `fix`      | Bug fix                               |
+| `docs`     | Documentation changes                 |
 | `refactor` | Code refactoring (no behavior change) |
-| `perf` | Performance improvement |
-| `style` | Formatting, missing semicolons, etc. |
-| `test` | Adding or fixing tests |
-| `build` | Build system or dependency changes |
-| `ci` | CI/CD configuration changes |
-| `chore` | Miscellaneous maintenance tasks |
+| `perf`     | Performance improvement               |
+| `style`    | Formatting, missing semicolons, etc.  |
+| `test`     | Adding or fixing tests                |
+| `build`    | Build system or dependency changes    |
+| `ci`       | CI/CD configuration changes           |
+| `chore`    | Miscellaneous maintenance tasks       |
 
 Examples: `feat(marker): add support for custom SVG icons`, `fix(popup): ensure readable text in dark mode`.
 
@@ -98,7 +106,7 @@ Examples: `feat(marker): add support for custom SVG icons`, `fix(popup): ensure 
 - Write the PR title in Conventional Commit form.
 - Link the issue in the description (`Closes #N`).
 - Check your change in the demo in both light and dark themes.
-- Run `npm run build:lib:prod` and `npm test` before opening the PR.
+- Run `npm run lint`, `npm run build:lib:prod` and `npm test` before opening the PR.
 
 ## Reporting bugs and security issues
 

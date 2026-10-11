@@ -1,5 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, Directive, input, ViewEncapsulation } from '@angular/core';
-
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  Directive,
+  input,
+  ViewEncapsulation,
+} from '@angular/core';
 import type { ClassValue } from 'clsx';
 
 import { separatorVariants } from '@/shared/components/separator/separator.variants';
@@ -17,9 +23,7 @@ import { mergeClasses } from '@/shared/utils/merge-classes';
 
 @Component({
   selector: 'z-sidebar-header, [z-sidebar-header]',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
@@ -37,9 +41,7 @@ export class ZardSidebarHeaderComponent {
 
 @Component({
   selector: 'z-sidebar-footer, [z-sidebar-footer]',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
@@ -57,9 +59,7 @@ export class ZardSidebarFooterComponent {
 
 @Component({
   selector: 'z-sidebar-content, [z-sidebar-content]',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
@@ -121,9 +121,7 @@ export class ZardSidebarInputDirective {}
 
 @Component({
   selector: 'z-sidebar-group, [z-sidebar-group]',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
@@ -141,9 +139,7 @@ export class ZardSidebarGroupComponent {
 
 @Component({
   selector: 'z-sidebar-group-label, [z-sidebar-group-label]',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
@@ -156,14 +152,14 @@ export class ZardSidebarGroupComponent {
 export class ZardSidebarGroupLabelComponent {
   readonly class = input<ClassValue>('');
 
-  protected readonly classes = computed(() => mergeClasses(sidebarGroupLabelVariants(), this.class()));
+  protected readonly classes = computed(() =>
+    mergeClasses(sidebarGroupLabelVariants(), this.class()),
+  );
 }
 
 @Component({
   selector: 'button[z-sidebar-group-action]',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
@@ -177,14 +173,14 @@ export class ZardSidebarGroupLabelComponent {
 export class ZardSidebarGroupActionComponent {
   readonly class = input<ClassValue>('');
 
-  protected readonly classes = computed(() => mergeClasses(sidebarGroupActionVariants(), this.class()));
+  protected readonly classes = computed(() =>
+    mergeClasses(sidebarGroupActionVariants(), this.class()),
+  );
 }
 
 @Component({
   selector: 'z-sidebar-group-content, [z-sidebar-group-content]',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
@@ -197,5 +193,7 @@ export class ZardSidebarGroupActionComponent {
 export class ZardSidebarGroupContentComponent {
   readonly class = input<ClassValue>('');
 
-  protected readonly classes = computed(() => mergeClasses(sidebarGroupContentVariants(), this.class()));
+  protected readonly classes = computed(() =>
+    mergeClasses(sidebarGroupContentVariants(), this.class()),
+  );
 }

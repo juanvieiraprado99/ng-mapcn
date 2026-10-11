@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import type { ClassValue } from 'clsx';
+
 import type { CodeLang } from '@/shared/highlighter';
 import { mergeClasses } from '@/shared/utils/merge-classes';
 

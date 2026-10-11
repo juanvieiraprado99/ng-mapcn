@@ -19,19 +19,16 @@ import {
   signal,
   type TemplateRef,
   untracked,
-  ViewContainerRef,
   viewChild,
+  ViewContainerRef,
   ViewEncapsulation,
 } from '@angular/core';
-
 import type { ClassValue } from 'clsx';
 import { filter } from 'rxjs';
 
 import { ZardStringTemplateOutletDirective } from '@/shared/core';
 import { mergeClasses } from '@/shared/utils/merge-classes';
 
-import { nextDialogId, ZardDialogHost } from './dialog-host';
-import { DIALOG_DURATION, ZardDialogPanelComponent } from './dialog-panel.component';
 import {
   DIALOG_BACKDROP_CLASSES,
   dialogDescriptionVariants,
@@ -39,6 +36,8 @@ import {
   dialogHeaderVariants,
   dialogTitleVariants,
 } from './dialog.variants';
+import { nextDialogId, ZardDialogHost } from './dialog-host';
+import { DIALOG_DURATION, ZardDialogPanelComponent } from './dialog-panel.component';
 
 const ESCAPE_KEYS = ['Escape', 'Esc'];
 
@@ -176,8 +175,8 @@ export class ZardDialogComponent extends ZardDialogHost {
     });
     overlayRef
       .keydownEvents()
-      .pipe(filter(event => ESCAPE_KEYS.includes(event.key)))
-      .subscribe(event => {
+      .pipe(filter((event) => ESCAPE_KEYS.includes(event.key)))
+      .subscribe((event) => {
         event.preventDefault();
         this.requestClose();
       });
@@ -227,9 +226,7 @@ export class ZardDialogComponent extends ZardDialogHost {
 
 @Component({
   selector: 'z-dialog-header, [z-dialog-header]',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
@@ -313,7 +310,9 @@ export class ZardDialogDescriptionComponent {
   readonly zDescription = input<string | TemplateRef<void>>();
 
   protected readonly id = nextDialogId('description');
-  protected readonly classes = computed(() => mergeClasses(dialogDescriptionVariants(), this.class()));
+  protected readonly classes = computed(() =>
+    mergeClasses(dialogDescriptionVariants(), this.class()),
+  );
 
   constructor() {
     afterNextRender(() => this.dialog?.descriptionId.set(this.id));
@@ -328,9 +327,7 @@ export class ZardDialogDescriptionComponent {
 
 @Component({
   selector: 'z-dialog-footer, [z-dialog-footer]',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {

@@ -27,15 +27,14 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-
 import { filter, map, of, Subject, switchMap, tap, timer } from 'rxjs';
 
-import { TOOLTIP_POSITIONS_MAP } from '@/shared/components/tooltip/tooltip-positions';
 import {
   tooltipPositionVariants,
   tooltipVariants,
   type ZardTooltipPositionVariants,
 } from '@/shared/components/tooltip/tooltip.variants';
+import { TOOLTIP_POSITIONS_MAP } from '@/shared/components/tooltip/tooltip-positions';
 import { ZardIdDirective } from '@/shared/core';
 import { ZardStringTemplateOutletDirective } from '@/shared/core/directives/string-template-outlet.directive';
 import { mergeClasses } from '@/shared/utils/merge-classes';
@@ -129,7 +128,7 @@ export class ZardTooltipDirective implements OnInit, OnDestroy {
             }),
             filter(() => !!this.overlayRef),
             switchMap(() => (this.overlayRef as OverlayRef).outsidePointerEvents()),
-            filter(event => !this.elementRef.nativeElement.contains(event.target)),
+            filter((event) => !this.elementRef.nativeElement.contains(event.target)),
             takeUntilDestroyed(this.destroyRef),
           )
           .subscribe(() => this.delay(false, 0));
@@ -182,10 +181,18 @@ export class ZardTooltipDirective implements OnInit, OnDestroy {
 
     this.listenersRefs = [
       ...this.listenersRefs,
-      this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () => this.delay(true, this.zShowDelay())),
-      this.renderer.listen(this.elementRef.nativeElement, 'mouseleave', () => this.delay(false, this.zHideDelay())),
-      this.renderer.listen(this.elementRef.nativeElement, 'focus', () => this.delay(true, this.zShowDelay())),
-      this.renderer.listen(this.elementRef.nativeElement, 'blur', () => this.delay(false, this.zHideDelay())),
+      this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () =>
+        this.delay(true, this.zShowDelay()),
+      ),
+      this.renderer.listen(this.elementRef.nativeElement, 'mouseleave', () =>
+        this.delay(false, this.zHideDelay()),
+      ),
+      this.renderer.listen(this.elementRef.nativeElement, 'focus', () =>
+        this.delay(true, this.zShowDelay()),
+      ),
+      this.renderer.listen(this.elementRef.nativeElement, 'blur', () =>
+        this.delay(false, this.zHideDelay()),
+      ),
     ];
   }
 
@@ -217,10 +224,12 @@ export class ZardTooltipDirective implements OnInit, OnDestroy {
 
     this.delaySubject
       .pipe(
-        switchMap(config => (config.delay < 0 ? of(config) : timer(config.delay).pipe(map(() => config)))),
+        switchMap((config) =>
+          config.delay < 0 ? of(config) : timer(config.delay).pipe(map(() => config)),
+        ),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(config => {
+      .subscribe((config) => {
         if (config.isShow) {
           this.show();
         } else {
@@ -292,7 +301,9 @@ export class ZardTooltipDirective implements OnInit, OnDestroy {
   selector: 'z-tooltip',
   imports: [ZardStringTemplateOutletDirective, ZardIdDirective],
   template: `
-    <ng-container *zStringTemplateOutlet="tooltipText()" zardId="tooltip" #z="zardId">{{ tooltipText() }}</ng-container>
+    <ng-container *zStringTemplateOutlet="tooltipText()" zardId="tooltip" #z="zardId">{{
+      tooltipText()
+    }}</ng-container>
 
     <span [class]="arrowClasses()">
       <svg

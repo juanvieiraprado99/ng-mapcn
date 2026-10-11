@@ -13,9 +13,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SITE_URL = 'https://ng-mapcn.vercel.app';
 const REPO_URL = 'https://github.com/juanvieiraprado99/ng-mapcn';
 
-const pkg = JSON.parse(
-  readFileSync(join(root, 'projects', 'ng-mapcn', 'package.json'), 'utf8'),
-);
+const pkg = JSON.parse(readFileSync(join(root, 'projects', 'ng-mapcn', 'package.json'), 'utf8'));
 const api = JSON.parse(
   readFileSync(
     join(root, 'projects', 'demo', 'src', 'app', 'pages', 'docs', 'api-reference.data.json'),

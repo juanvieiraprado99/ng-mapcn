@@ -10,4 +10,4 @@ function convertValueToPercentage(value: number, min: number, max: number): numb
   return ((value - min) / (max - min)) * 100;
 }
 
-export { clamp, roundToStep, convertValueToPercentage };
+export { clamp, convertValueToPercentage, roundToStep };

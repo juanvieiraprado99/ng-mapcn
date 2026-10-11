@@ -5,6 +5,7 @@ import {
   MarkerContentComponent,
   MarkerTooltipComponent,
 } from 'ng-mapcn';
+
 import { ExampleCardComponent } from '../../../shared/example-card';
 
 const ANALYTICS_DATA = [
@@ -35,9 +36,7 @@ const ANALYTICS_DATA = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
   template: `
-    <app-example-card
-      class="aspect-square sm:col-span-2 sm:aspect-video lg:aspect-auto"
-    >
+    <app-example-card class="aspect-square sm:col-span-2 sm:aspect-video lg:aspect-auto">
       <div
         class="bg-background/95 border-border/50 absolute top-3 left-3 z-10 rounded-lg border p-3 shadow-lg backdrop-blur-md"
       >

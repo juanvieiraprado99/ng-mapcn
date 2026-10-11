@@ -8,4 +8,6 @@ import { provideEchartsCore } from 'ngx-echarts';
  * application's initial bundle. Edit `chart-echarts.registry.ts` to change what is loaded.
  */
 export const provideZardCharts = () =>
-  provideEchartsCore({ echarts: () => import('./chart-echarts.registry').then(module => module.zardEcharts) });
+  provideEchartsCore({
+    echarts: () => import('./chart-echarts.registry').then((module) => module.zardEcharts),
+  });

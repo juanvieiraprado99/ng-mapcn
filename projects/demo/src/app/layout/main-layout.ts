@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+
 import { HeaderComponent } from './header';
 
 /** mapcn `(main)/layout.tsx`: the site header above every page except block views. */

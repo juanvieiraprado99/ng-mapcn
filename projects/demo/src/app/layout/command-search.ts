@@ -11,6 +11,7 @@ import {
   lucideLayers2,
   lucideSearch,
 } from '@ng-icons/lucide';
+
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardCommandImports, type ZardCommandOption } from '@/shared/components/command';
 import { ZardDialogImports } from '@/shared/components/dialog';
@@ -60,7 +61,9 @@ import { siteNavigation } from '@/shared/site-navigation';
       class="top-[min(22vh,10rem)] translate-y-0 gap-0 overflow-hidden p-0"
     >
       <z-dialog-title class="sr-only">Search...</z-dialog-title>
-      <z-dialog-description class="sr-only">Jump to pages, components, and docs</z-dialog-description>
+      <z-dialog-description class="sr-only"
+        >Jump to pages, components, and docs</z-dialog-description
+      >
       <!-- shadcn CommandDialog sizing: taller input and items, 20px icons. -->
       <z-command
         #command="zCommand"
@@ -110,7 +113,10 @@ export class CommandSearchComponent {
   protected readonly open = signal(false);
   protected readonly groups = siteNavigation;
   private readonly files = new Set(
-    siteNavigation.flatMap((group) => group.items).filter((item) => item.file).map((item) => item.href),
+    siteNavigation
+      .flatMap((group) => group.items)
+      .filter((item) => item.file)
+      .map((item) => item.href),
   );
 
   protected onKeydown(event: KeyboardEvent): void {

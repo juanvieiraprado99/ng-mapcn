@@ -1,3 +1,4 @@
+import { isPlatformBrowser } from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -5,7 +6,7 @@ import {
   computed,
   DestroyRef,
   effect,
-  ElementRef,
+  type ElementRef,
   inject,
   input,
   NgZone,
@@ -15,14 +16,14 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
 import {
   Map as MapLibreMap,
-  MapMouseEvent,
-  MapOptions,
-  ProjectionSpecification,
-  StyleSpecification,
+  type MapMouseEvent,
+  type MapOptions,
+  type ProjectionSpecification,
+  type StyleSpecification,
 } from 'maplibre-gl';
+
 import { MAP_DEFAULT_STYLES } from '../../providers/map-styles.provider';
 import { MapContextService } from '../../services/map-context.service';
 import { ThemeService } from '../../services/theme.service';
@@ -30,9 +31,9 @@ import {
   blankMapStyle,
   getDarkMapStyle,
   getLightMapStyle,
-  MapStylesConfig,
+  type MapStylesConfig,
 } from '../../styles/map-styles';
-import { getViewport, MapViewport } from '../../utils/map-utils';
+import { getViewport, type MapViewport } from '../../utils/map-utils';
 
 @Component({
   selector: 'ng-map',
@@ -67,9 +68,7 @@ export class MapComponent {
   protected readonly mapInstance = signal<MapLibreMap | null>(null);
   private readonly loadedFlag = signal(false);
   private readonly styleLoadedFlag = signal(false);
-  protected readonly isLoaded = computed(
-    () => this.loadedFlag() && this.styleLoadedFlag()
-  );
+  protected readonly isLoaded = computed(() => this.loadedFlag() && this.styleLoadedFlag());
 
   private readonly ctx = inject(MapContextService);
   private readonly themeService = inject(ThemeService);
@@ -131,9 +130,7 @@ export class MapComponent {
   }
 
   private resolvedTheme(): 'light' | 'dark' {
-    return this.theme() === 'auto'
-      ? this.themeService.theme()
-      : (this.theme() as 'light' | 'dark');
+    return this.theme() === 'auto' ? this.themeService.theme() : (this.theme() as 'light' | 'dark');
   }
 
   private initializeMap(): void {
@@ -203,10 +200,8 @@ export class MapComponent {
         m.on('click', (e) => this.zone.run(() => this.mapClick.emit(e)));
         m.on('error', (e) =>
           this.zone.run(() =>
-            this.mapError.emit(
-              e.error instanceof Error ? e.error : new Error(String(e.error))
-            )
-          )
+            this.mapError.emit(e.error instanceof Error ? e.error : new Error(String(e.error))),
+          ),
         );
 
         return m;

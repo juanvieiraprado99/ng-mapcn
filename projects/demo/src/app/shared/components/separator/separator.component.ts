@@ -6,7 +6,6 @@ import {
   input,
   ViewEncapsulation,
 } from '@angular/core';
-
 import type { ClassValue } from 'clsx';
 
 import { mergeClasses } from '@/shared/utils/merge-classes';
@@ -22,7 +21,8 @@ import { separatorVariants, type ZardSeparatorVariants } from './separator.varia
     'data-slot': 'separator',
     '[attr.data-orientation]': 'zOrientation()',
     '[attr.role]': 'zDecorative() ? "none" : "separator"',
-    '[attr.aria-orientation]': '!zDecorative() && zOrientation() === "vertical" ? "vertical" : null',
+    '[attr.aria-orientation]':
+      '!zDecorative() && zOrientation() === "vertical" ? "vertical" : null',
     '[class]': 'classes()',
   },
   exportAs: 'zSeparator',
@@ -34,5 +34,7 @@ export class ZardSeparatorComponent {
 
   // shadcn/ui uses div through SeparatorPrimitive. We don't use div, so we need to add 'block' class
   // to make it match shadcn/ui styling
-  protected readonly classes = computed(() => mergeClasses(separatorVariants(), 'block', this.class()));
+  protected readonly classes = computed(() =>
+    mergeClasses(separatorVariants(), 'block', this.class()),
+  );
 }

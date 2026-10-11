@@ -1,8 +1,5 @@
 import type { EChartsOption } from 'echarts';
 
-import { buildArcLabels, resolveRadius } from './chart-arc-label.util';
-import { paletteColor, withAlpha } from './chart-colors.util';
-import { buildTooltipHtml, type ZardChartTooltipContext, type ZardChartTooltipParam } from './chart-tooltip.formatter';
 import type {
   ZardChartChromeColors,
   ZardChartConfig,
@@ -16,6 +13,13 @@ import type {
   ZardChartStackOffset,
   ZardChartType,
 } from './chart.types';
+import { buildArcLabels, resolveRadius } from './chart-arc-label.util';
+import { paletteColor, withAlpha } from './chart-colors.util';
+import {
+  buildTooltipHtml,
+  type ZardChartTooltipContext,
+  type ZardChartTooltipParam,
+} from './chart-tooltip.formatter';
 
 /** Bars keep shadcn's default corner radius unless a series overrides it. */
 const DEFAULT_BAR_RADIUS = 4;
@@ -114,14 +118,19 @@ export function normalizeSeries(input: ZardChartSeriesInput | undefined): ZardCh
   if (!Array.isArray(input)) {
     return [];
   }
-  return input.map(item => (typeof item === 'string' ? { dataKey: item } : { ...item }));
+  return input.map((item) => (typeof item === 'string' ? { dataKey: item } : { ...item }));
 }
 
 function labelFor(config: ZardChartConfig, key: string): string {
   return config[key]?.label ?? key;
 }
 
-function colorFor(ctx: ZardChartBuildContext, key: string, index: number, declared?: string): string {
+function colorFor(
+  ctx: ZardChartBuildContext,
+  key: string,
+  index: number,
+  declared?: string,
+): string {
   if (declared) {
     return ctx.resolveColor(declared);
   }
@@ -159,7 +168,8 @@ type CartesianPoint = number | null | OptionRecord;
  * `fill` for the color, plus `itemStyle` and `label` for anything else about that one point.
  */
 function pointStyleOf(ctx: ZardChartBuildContext, row: ZardChartDatum): OptionRecord | undefined {
-  const fill = typeof row['fill'] === 'string' ? ctx.resolveColor(row['fill'] as string) : undefined;
+  const fill =
+    typeof row['fill'] === 'string' ? ctx.resolveColor(row['fill'] as string) : undefined;
   const declared = isPlainObject(row['itemStyle']) ? row['itemStyle'] : undefined;
   const label = isPlainObject(row['label']) ? row['label'] : undefined;
 
@@ -175,9 +185,12 @@ function pointStyleOf(ctx: ZardChartBuildContext, row: ZardChartDatum): OptionRe
   };
 }
 
-function seriesValues(ctx: ZardChartBuildContext, definitions: ZardChartSeries[]): Map<string, CartesianPoint[]> {
-  const keys = definitions.map(definition => definition.dataKey);
-  const values = new Map<string, CartesianPoint[]>(keys.map(key => [key, []]));
+function seriesValues(
+  ctx: ZardChartBuildContext,
+  definitions: ZardChartSeries[],
+): Map<string, CartesianPoint[]> {
+  const keys = definitions.map((definition) => definition.dataKey);
+  const values = new Map<string, CartesianPoint[]>(keys.map((key) => [key, []]));
 
   for (const row of ctx.data) {
     const source = ctx.stackOffset === 'expand' ? expandRow(row, keys) : row;
@@ -215,7 +228,11 @@ function barRadius(
   return ctx.horizontal ? [0, declared, declared, 0] : [declared, declared, 0, 0];
 }
 
-function areaFill(ctx: ZardChartBuildContext, color: string, definition: ZardChartSeries): OptionRecord {
+function areaFill(
+  ctx: ZardChartBuildContext,
+  color: string,
+  definition: ZardChartSeries,
+): OptionRecord {
   if (ctx.gradient) {
     return {
       color: {
@@ -257,9 +274,13 @@ function gridVisibility(grid: ZardChartGrid): { horizontal: boolean; vertical: b
   };
 }
 
-function buildAxes(ctx: ZardChartBuildContext, definitions: ZardChartSeries[], categories: string[]): OptionRecord {
+function buildAxes(
+  ctx: ZardChartBuildContext,
+  definitions: ZardChartSeries[],
+  categories: string[],
+): OptionRecord {
   const lines = gridVisibility(ctx.grid);
-  const hasBars = definitions.some(definition => (definition.type ?? ctx.type) === 'bar');
+  const hasBars = definitions.some((definition) => (definition.type ?? ctx.type) === 'bar');
 
   const categoryAxis: OptionRecord = {
     type: 'category',
@@ -278,7 +299,9 @@ function buildAxes(ctx: ZardChartBuildContext, definitions: ZardChartSeries[], c
       hideOverlap: true,
       color: ctx.chrome.mutedForeground,
       fontSize: 12,
-      ...(ctx.xAxisFormatter ? { formatter: (value: string) => ctx.xAxisFormatter?.(value) ?? value } : {}),
+      ...(ctx.xAxisFormatter
+        ? { formatter: (value: string) => ctx.xAxisFormatter?.(value) ?? value }
+        : {}),
     },
   };
 
@@ -295,7 +318,9 @@ function buildAxes(ctx: ZardChartBuildContext, definitions: ZardChartSeries[], c
       margin: 8,
       color: ctx.chrome.mutedForeground,
       fontSize: 12,
-      ...(ctx.yAxisFormatter ? { formatter: (value: number) => ctx.yAxisFormatter?.(value) ?? String(value) } : {}),
+      ...(ctx.yAxisFormatter
+        ? { formatter: (value: number) => ctx.yAxisFormatter?.(value) ?? String(value) }
+        : {}),
     },
     ...(ctx.stackOffset === 'expand' ? { max: 1, min: 0 } : {}),
   };
@@ -314,7 +339,10 @@ function buildAxes(ctx: ZardChartBuildContext, definitions: ZardChartSeries[], c
   return { xAxis, yAxis };
 }
 
-function buildCartesianSeries(ctx: ZardChartBuildContext, definitions: ZardChartSeries[]): OptionRecord[] {
+function buildCartesianSeries(
+  ctx: ZardChartBuildContext,
+  definitions: ZardChartSeries[],
+): OptionRecord[] {
   const values = seriesValues(ctx, definitions);
   const lastOfStack = new Map<string, number>();
 
@@ -338,7 +366,10 @@ function buildCartesianSeries(ctx: ZardChartBuildContext, definitions: ZardChart
       name: labelFor(ctx.config, definition.dataKey),
       type: isBar ? 'bar' : 'line',
       data: values.get(definition.dataKey) ?? [],
-      itemStyle: { color, ...(isBar ? { borderRadius: barRadius(ctx, definition, isStackTop) } : {}) },
+      itemStyle: {
+        color,
+        ...(isBar ? { borderRadius: barRadius(ctx, definition, isStackTop) } : {}),
+      },
       // Recharts sets a hair of space between the bars of a group; ECharts leaves a third of a bar.
       ...(isBar ? { emphasis: { disabled: true }, barGap: '5%' } : {}),
       label: seriesLabelOption(ctx, definition),
@@ -388,7 +419,7 @@ function clockwise<T>(items: readonly T[]): T[] {
 function buildRadar(ctx: ZardChartBuildContext, definitions: ZardChartSeries[]): OptionRecord {
   const lines = gridVisibility(ctx.grid);
   const gridVisible = lines.horizontal || lines.vertical;
-  const indicators = clockwise(ctx.data.map(row => ({ name: categoryOf(ctx, row) })));
+  const indicators = clockwise(ctx.data.map((row) => ({ name: categoryOf(ctx, row) })));
 
   const data = definitions.map((definition, index) => {
     const color = colorFor(ctx, definition.dataKey, index, definition.color);
@@ -396,7 +427,7 @@ function buildRadar(ctx: ZardChartBuildContext, definitions: ZardChartSeries[]):
 
     return {
       name: labelFor(ctx.config, definition.dataKey),
-      value: clockwise(ctx.data.map(row => toNumber(row[definition.dataKey]))),
+      value: clockwise(ctx.data.map((row) => toNumber(row[definition.dataKey]))),
       itemStyle: { color },
       lineStyle: { color, width: definition.strokeWidth ?? DEFAULT_RADAR_STROKE },
       symbol: (definition.showSymbol ?? false) ? 'circle' : 'none',
@@ -411,7 +442,10 @@ function buildRadar(ctx: ZardChartBuildContext, definitions: ZardChartSeries[]):
       indicator: indicators,
       shape: ctx.radarShape,
       axisName: { color: ctx.chrome.mutedForeground, fontSize: 12 },
-      axisLine: { show: gridVisible && ctx.radarRadialLines, lineStyle: { color: ctx.chrome.border } },
+      axisLine: {
+        show: gridVisible && ctx.radarRadialLines,
+        lineStyle: { color: ctx.chrome.border },
+      },
       splitLine: { show: gridVisible, lineStyle: { color: ctx.chrome.border } },
       splitArea: { show: false },
       // Recharts sizes the web off the container, not off however much room the names leave.
@@ -444,10 +478,16 @@ function buildPie(ctx: ZardChartBuildContext, definitions: ZardChartSeries[]): O
         center: ['50%', '50%'],
         padAngle: ctx.padAngle,
         // Recharts walks a pie counter-clockwise from twelve o'clock; ECharts goes the other way.
-        clockwise: ctx.startAngle !== undefined && ctx.endAngle !== undefined ? ctx.endAngle < ctx.startAngle : false,
+        clockwise:
+          ctx.startAngle !== undefined && ctx.endAngle !== undefined
+            ? ctx.endAngle < ctx.startAngle
+            : false,
         avoidLabelOverlap: true,
         animation: ctx.animation,
-        itemStyle: { borderColor: ctx.chrome.background, borderWidth: definitions[0]?.strokeWidth ?? 0 },
+        itemStyle: {
+          borderColor: ctx.chrome.background,
+          borderWidth: definitions[0]?.strokeWidth ?? 0,
+        },
         label: {
           show: ctx.label,
           color: ctx.chrome.foreground,
@@ -493,12 +533,12 @@ function buildRadialBar(ctx: ZardChartBuildContext, definitions: ZardChartSeries
   const [definition] = definitions;
   const stacked = definitions.length > 1;
   const names = stacked
-    ? definitions.map(item => labelFor(ctx.config, item.dataKey))
-    : ctx.data.map(row => labelFor(ctx.config, categoryOf(ctx, row)));
+    ? definitions.map((item) => labelFor(ctx.config, item.dataKey))
+    : ctx.data.map((row) => labelFor(ctx.config, categoryOf(ctx, row)));
 
   const rowValues = stacked
-    ? definitions.map(item => toNumber(ctx.data[0]?.[item.dataKey]) ?? 0)
-    : ctx.data.map(row => toNumber(row[definition?.dataKey ?? '']) ?? 0);
+    ? definitions.map((item) => toNumber(ctx.data[0]?.[item.dataKey]) ?? 0)
+    : ctx.data.map((row) => toNumber(row[definition?.dataKey ?? '']) ?? 0);
 
   const max = Math.max(...rowValues, 0) || 1;
   const track = withAlpha(ctx.chrome.mutedForeground, 0.15);
@@ -573,7 +613,10 @@ function buildRadialBar(ctx: ZardChartBuildContext, definitions: ZardChartSeries
   };
 }
 
-function buildRadialGauge(ctx: ZardChartBuildContext, definitions: ZardChartSeries[]): OptionRecord {
+function buildRadialGauge(
+  ctx: ZardChartBuildContext,
+  definitions: ZardChartSeries[],
+): OptionRecord {
   const [definition] = definitions;
   const row = ctx.data[0] ?? {};
   const value = toNumber(row[definition?.dataKey ?? '']) ?? 0;
@@ -661,7 +704,10 @@ function buildCenterText(ctx: ZardChartBuildContext): OptionRecord[] {
   return children;
 }
 
-function buildTooltip(ctx: ZardChartBuildContext, legendEntries: ZardChartLegendEntry[]): OptionRecord | undefined {
+function buildTooltip(
+  ctx: ZardChartBuildContext,
+  legendEntries: ZardChartLegendEntry[],
+): OptionRecord | undefined {
   if (!ctx.tooltip) {
     return undefined;
   }
@@ -673,11 +719,20 @@ function buildTooltip(ctx: ZardChartBuildContext, legendEntries: ZardChartLegend
 
   // A radar arrives as one param holding every indicator, so the tooltip needs their names.
   const indicators =
-    ctx.type === 'radar' ? clockwise(ctx.data.map(row => labelFor(ctx.config, categoryOf(ctx, row)))) : undefined;
+    ctx.type === 'radar'
+      ? clockwise(ctx.data.map((row) => labelFor(ctx.config, categoryOf(ctx, row))))
+      : undefined;
 
-  const context: ZardChartTooltipContext = { ...ctx.tooltip, config: ctx.config, colors, indicators };
+  const context: ZardChartTooltipContext = {
+    ...ctx.tooltip,
+    config: ctx.config,
+    colors,
+    indicators,
+  };
 
-  const hasBars = normalizeSeries(ctx.series).some(definition => (definition.type ?? ctx.type) === 'bar');
+  const hasBars = normalizeSeries(ctx.series).some(
+    (definition) => (definition.type ?? ctx.type) === 'bar',
+  );
   const cursor = ctx.tooltip.cursor
     ? hasBars
       ? { type: 'shadow', shadowStyle: { color: withAlpha(ctx.chrome.mutedForeground, 0.15) } }
@@ -698,7 +753,8 @@ function buildTooltip(ctx: ZardChartBuildContext, legendEntries: ZardChartLegend
     confine: true,
     extraCssText: 'box-shadow:none;',
     appendToBody: false,
-    formatter: (params: ZardChartTooltipParam | ZardChartTooltipParam[]) => buildTooltipHtml(params, context),
+    formatter: (params: ZardChartTooltipParam | ZardChartTooltipParam[]) =>
+      buildTooltipHtml(params, context),
   };
 }
 
@@ -776,7 +832,7 @@ export function resolveOptionColors<T>(option: T, resolveColor: (value: string) 
   }
 
   if (Array.isArray(option)) {
-    return option.map(item => resolveOptionColors(item, resolveColor)) as T;
+    return option.map((item) => resolveOptionColors(item, resolveColor)) as T;
   }
 
   if (isPlainObject(option)) {
@@ -803,15 +859,17 @@ export function buildChartOption(ctx: ZardChartBuildContext): EChartsOption {
     animationDurationUpdate: UPDATE_DURATION,
     animationEasingUpdate: 'cubicInOut',
     aria: { enabled: ctx.accessibility },
-    color: legendEntries.map(entry => entry.color),
+    color: legendEntries.map((entry) => entry.color),
     textStyle: { fontFamily: 'inherit' },
   };
 
   if (isCartesian) {
-    const categories = ctx.data.map(row => String(row[ctx.xAxisKey ?? ''] ?? ''));
+    const categories = ctx.data.map((row) => String(row[ctx.xAxisKey ?? ''] ?? ''));
     Object.assign(option, buildAxes(ctx, definitions, categories));
     const inset =
-      ctx.horizontal || definitions.some(definition => (definition.type ?? ctx.type) === 'bar') ? 0 : CURVE_GRID_INSET;
+      ctx.horizontal || definitions.some((definition) => (definition.type ?? ctx.type) === 'bar')
+        ? 0
+        : CURVE_GRID_INSET;
     option['grid'] = {
       left: inset,
       right: inset,
@@ -828,7 +886,9 @@ export function buildChartOption(ctx: ZardChartBuildContext): EChartsOption {
   } else {
     Object.assign(
       option,
-      ctx.radialVariant === 'gauge' ? buildRadialGauge(ctx, definitions) : buildRadialBar(ctx, definitions),
+      ctx.radialVariant === 'gauge'
+        ? buildRadialGauge(ctx, definitions)
+        : buildRadialBar(ctx, definitions),
     );
   }
 
@@ -840,14 +900,17 @@ export function buildChartOption(ctx: ZardChartBuildContext): EChartsOption {
   // The legend stays hidden — `z-chart-legend` renders the shadcn markup — but it must be
   // declared so `dispatchAction({ type: 'legendToggleSelect' })` has something to act on.
   if (ctx.hasLegend) {
-    option['legend'] = { show: false, data: legendEntries.map(entry => entry.name) };
+    option['legend'] = { show: false, data: legendEntries.map((entry) => entry.name) };
   }
 
   const centerText = buildCenterText(ctx);
   if (centerText.length > 0) {
     // A radial chart may already have put its ring labels here; the centre joins them.
     const existing = Array.isArray(option['graphic']) ? (option['graphic'] as OptionRecord[]) : [];
-    option['graphic'] = [...existing, { type: 'group', left: 'center', top: 'center', children: centerText }];
+    option['graphic'] = [
+      ...existing,
+      { type: 'group', left: 'center', top: 'center', children: centerText },
+    ];
   }
 
   if (ctx.dataZoom && isCartesian) {

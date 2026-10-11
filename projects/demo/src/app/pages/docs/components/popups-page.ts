@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { MapComponent, MapPopupComponent } from 'ng-mapcn';
+
+import { ZardButtonComponent } from '@/shared/components/button';
+
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
-import { ZardButtonComponent } from '@/shared/components/button';
 
 const POPUP_CODE = `import { Component, signal } from '@angular/core';
 import { MapComponent, MapPopupComponent } from 'ng-mapcn';

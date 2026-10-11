@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
   MapArcComponent,
-  MapArcDatum,
+  type MapArcDatum,
   MapComponent,
   MapMarkerComponent,
   MarkerContentComponent,
   MarkerLabelComponent,
 } from 'ng-mapcn';
+
 import { ExampleCardComponent } from '../../../shared/example-card';
 
 const HUB = { name: 'London', lng: -0.1276, lat: 51.5074 };
@@ -45,16 +46,14 @@ const DESTINATIONS = [
           [paint]="{
             'line-color': '#3b82f6',
             'line-opacity': 0.9,
-            'line-dasharray': [2, 2]
+            'line-dasharray': [2, 2],
           }"
           [interactive]="false"
         />
 
         <ng-map-marker [longitude]="hub.lng" [latitude]="hub.lat">
           <ng-marker-content>
-            <div
-              class="size-3 rounded-full border-2 border-white bg-blue-500"
-            ></div>
+            <div class="size-3 rounded-full border-2 border-white bg-blue-500"></div>
             <ng-marker-label position="top">{{ hub.name }}</ng-marker-label>
           </ng-marker-content>
         </ng-map-marker>
@@ -62,9 +61,7 @@ const DESTINATIONS = [
         @for (dest of destinations; track dest.name) {
           <ng-map-marker [longitude]="dest.lng" [latitude]="dest.lat">
             <ng-marker-content>
-              <div
-                class="size-2 rounded-full border-2 border-white bg-blue-500"
-              ></div>
+              <div class="size-2 rounded-full border-2 border-white bg-blue-500"></div>
               <ng-marker-label position="top">{{ dest.name }}</ng-marker-label>
             </ng-marker-content>
           </ng-map-marker>

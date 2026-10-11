@@ -1,21 +1,27 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import {
-  ApplicationConfig,
+  type ApplicationConfig,
   inject,
   provideAppInitializer,
   provideZonelessChangeDetection,
 } from '@angular/core';
 import {
-  Routes,
-  TitleStrategy,
+  provideClientHydration,
+  withEventReplay,
+  withNoIncrementalHydration,
+} from '@angular/platform-browser';
+import {
   provideRouter,
+  type Routes,
+  TitleStrategy,
   withComponentInputBinding,
   withInMemoryScrolling,
 } from '@angular/router';
-import { provideClientHydration, withEventReplay, withNoIncrementalHydration } from '@angular/platform-browser';
+
 import { provideZard } from '@/shared/core/provider/providezard';
 import { ThemeService } from '@/shared/theme.service';
 import { SiteTitleStrategy } from '@/shared/title-strategy';
+
 import { MainLayoutComponent } from './layout/main-layout';
 
 // Every route is lazy: nothing here may import `ng-mapcn`, or maplibre-gl
@@ -41,7 +47,12 @@ const routes: Routes = [
             title: 'Angular Map Blocks and Templates',
             description:
               'Ready-made Angular map blocks built with ng-mapcn and zard/ui: analytics dashboards, choropleths, heatmaps, store locators, delivery trackers and more. Copy and paste.',
-            keywords: ['Angular map templates', 'map dashboard Angular', 'store locator Angular', 'choropleth map'],
+            keywords: [
+              'Angular map templates',
+              'map dashboard Angular',
+              'store locator Angular',
+              'choropleth map',
+            ],
           },
         },
         loadChildren: () => import('./pages/blocks/blocks.routes').then((m) => m.BLOCKS_ROUTES),
@@ -62,8 +73,7 @@ const routes: Routes = [
   {
     // A block alone, without the site header (iframe previews, "Open in new tab").
     path: 'view',
-    loadChildren: () =>
-      import('./pages/blocks/view.routes').then((m) => m.BLOCK_VIEW_ROUTES),
+    loadChildren: () => import('./pages/blocks/view.routes').then((m) => m.BLOCK_VIEW_ROUTES),
   },
   {
     path: '**',
@@ -82,7 +92,8 @@ export const appConfig: ApplicationConfig = {
       }),
       withComponentInputBinding(),
     ),
-    provideHttpClient(withXhr()), provideClientHydration(withEventReplay(), withNoIncrementalHydration()),
+    provideHttpClient(withXhr()),
+    provideClientHydration(withEventReplay(), withNoIncrementalHydration()),
 
     provideZard(),
     // Eager: block views (no header, no theme toggle) still need its `t` hotkey

@@ -44,4 +44,6 @@ export const commandShortcutVariants = cva(
   'ml-auto text-xs tracking-widest text-muted-foreground group-data-selected/command-item:text-accent-foreground',
 );
 
-export type ZardCommandItemVariants = NonNullable<VariantProps<typeof commandItemVariants>['variant']>;
+export type ZardCommandItemVariants = NonNullable<
+  VariantProps<typeof commandItemVariants>['variant']
+>;

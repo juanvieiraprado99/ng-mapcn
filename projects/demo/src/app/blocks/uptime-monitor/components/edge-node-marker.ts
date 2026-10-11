@@ -1,7 +1,8 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { MapMarkerComponent, MarkerContentComponent, MarkerTooltipComponent } from 'ng-mapcn';
-import { statusMeta, type EdgeNode } from '../data';
+
+import { type EdgeNode, statusMeta } from '../data';
 
 @Component({
   selector: 'app-edge-node-marker',

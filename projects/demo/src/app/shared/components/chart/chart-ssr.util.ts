@@ -50,7 +50,10 @@ export function renderChartToSvg(
     instance.setOption(option);
     return makeResponsive(instance.renderToSVGString(), width, height);
   } catch (error) {
-    console.warn('[z-chart] server-side rendering failed; the chart will render on the client only.', error);
+    console.warn(
+      '[z-chart] server-side rendering failed; the chart will render on the client only.',
+      error,
+    );
     return null;
   } finally {
     instance?.dispose();

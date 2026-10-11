@@ -12,10 +12,12 @@ import {
   signal,
   ViewEncapsulation,
 } from '@angular/core';
-
 import type { ClassValue } from 'clsx';
 
-import { collapsibleContentVariants, collapsibleVariants } from '@/shared/components/collapsible/collapsible.variants';
+import {
+  collapsibleContentVariants,
+  collapsibleVariants,
+} from '@/shared/components/collapsible/collapsible.variants';
 import { ZardIdDirective } from '@/shared/core';
 import { mergeClasses } from '@/shared/utils/merge-classes';
 
@@ -38,7 +40,8 @@ import { mergeClasses } from '@/shared/utils/merge-classes';
 })
 export class ZardCollapsibleDirective {
   private readonly uniqueId = inject(ZardIdDirective);
-  private readonly isElement = inject(ElementRef<HTMLElement>).nativeElement.tagName.toLowerCase() === 'z-collapsible';
+  private readonly isElement =
+    inject(ElementRef<HTMLElement>).nativeElement.tagName.toLowerCase() === 'z-collapsible';
 
   readonly zOpen = input(false, { transform: booleanAttribute });
   readonly zDisabled = input(false, { transform: booleanAttribute });

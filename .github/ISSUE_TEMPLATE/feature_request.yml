@@ -1,6 +1,6 @@
 name: Feature request
 description: Suggest a new component, input or capability
-title: "[Feature]: "
+title: '[Feature]: '
 labels: [enhancement]
 body:
   - type: textarea

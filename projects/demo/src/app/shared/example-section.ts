@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+
 import { ComponentPreviewComponent } from './component-preview';
 import { DocsSectionComponent } from './docs';
 import type { CodeLang } from './highlighter';

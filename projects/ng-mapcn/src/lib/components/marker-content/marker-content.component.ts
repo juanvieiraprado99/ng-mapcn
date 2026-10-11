@@ -1,13 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  EmbeddedViewRef,
-  TemplateRef,
-  ViewContainerRef,
   effect,
+  type EmbeddedViewRef,
   inject,
+  type TemplateRef,
   viewChild,
+  ViewContainerRef,
 } from '@angular/core';
+
 import { MarkerContextService } from '../map-marker/marker-context.service';
 
 @Component({
@@ -52,7 +53,10 @@ export class MarkerContentComponent {
       view.detectChanges();
 
       // No projected content -> default marker icon (mapcn's blue dot)
-      if (!wrapper.hasChildNodes() || (wrapper.textContent?.trim() === '' && !wrapper.querySelector('*'))) {
+      if (
+        !wrapper.hasChildNodes() ||
+        (wrapper.textContent?.trim() === '' && !wrapper.querySelector('*'))
+      ) {
         const icon = document.createElement('div');
         icon.className = 'ng-marker-default-icon';
         wrapper.appendChild(icon);

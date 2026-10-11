@@ -3,10 +3,11 @@ import type { Map as MapLibreMap } from 'maplibre-gl';
 import {
   MapComponent,
   MapMarkerComponent,
-  MapViewport,
+  type MapViewport,
   MarkerContentComponent,
   MarkerLabelComponent,
 } from 'ng-mapcn';
+
 import { CodeBlockComponent } from '../../../shared/code-block';
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';

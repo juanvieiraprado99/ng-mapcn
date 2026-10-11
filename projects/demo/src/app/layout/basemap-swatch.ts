@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+
 import type { BasemapId } from '@/shared/basemap.service';
 
 interface Palette {
@@ -17,24 +18,94 @@ interface Palette {
  */
 const PALETTES: Record<BasemapId, readonly [Palette, Palette]> = {
   carto: [
-    { land: '#fafaf8', water: '#d4dadc', park: '#e9ede4', road: '#ffffff', major: '#ffffff', casing: '#e0e0e0' },
-    { land: '#161616', water: '#2e3a42', park: '#1c241c', road: '#3a3a3a', major: '#5c5c5c', casing: '#0c0c0c' },
+    {
+      land: '#fafaf8',
+      water: '#d4dadc',
+      park: '#e9ede4',
+      road: '#ffffff',
+      major: '#ffffff',
+      casing: '#e0e0e0',
+    },
+    {
+      land: '#161616',
+      water: '#2e3a42',
+      park: '#1c241c',
+      road: '#3a3a3a',
+      major: '#5c5c5c',
+      casing: '#0c0c0c',
+    },
   ],
   openfreemap: [
-    { land: '#f2f3f0', water: '#c2c8ca', park: '#e3e8de', road: '#ffffff', major: '#ffffff', casing: '#d9d9d9' },
-    { land: '#17181c', water: '#24384a', park: '#1d281d', road: '#3a3d44', major: '#5d6170', casing: '#0e0f12' },
+    {
+      land: '#f2f3f0',
+      water: '#c2c8ca',
+      park: '#e3e8de',
+      road: '#ffffff',
+      major: '#ffffff',
+      casing: '#d9d9d9',
+    },
+    {
+      land: '#17181c',
+      water: '#24384a',
+      park: '#1d281d',
+      road: '#3a3d44',
+      major: '#5d6170',
+      casing: '#0e0f12',
+    },
   ],
   osm: [
-    { land: '#f2efe9', water: '#aad3df', park: '#c8facc', road: '#ffffff', major: '#fcd6a4', casing: '#d6c9b6' },
-    { land: '#f2efe9', water: '#aad3df', park: '#c8facc', road: '#ffffff', major: '#fcd6a4', casing: '#d6c9b6' },
+    {
+      land: '#f2efe9',
+      water: '#aad3df',
+      park: '#c8facc',
+      road: '#ffffff',
+      major: '#fcd6a4',
+      casing: '#d6c9b6',
+    },
+    {
+      land: '#f2efe9',
+      water: '#aad3df',
+      park: '#c8facc',
+      road: '#ffffff',
+      major: '#fcd6a4',
+      casing: '#d6c9b6',
+    },
   ],
   maptiler: [
-    { land: '#f8f4f0', water: '#9ec7ef', park: '#d4e6c3', road: '#ffffff', major: '#ffd37f', casing: '#e2d6c8' },
-    { land: '#1f242b', water: '#14324d', park: '#21332a', road: '#3a4250', major: '#9a7238', casing: '#12161b' },
+    {
+      land: '#f8f4f0',
+      water: '#9ec7ef',
+      park: '#d4e6c3',
+      road: '#ffffff',
+      major: '#ffd37f',
+      casing: '#e2d6c8',
+    },
+    {
+      land: '#1f242b',
+      water: '#14324d',
+      park: '#21332a',
+      road: '#3a4250',
+      major: '#9a7238',
+      casing: '#12161b',
+    },
   ],
   stadia: [
-    { land: '#f4f4f1', water: '#b6d0e0', park: '#dbe7d4', road: '#ffffff', major: '#f2e3c6', casing: '#e1e1dc' },
-    { land: '#2a2c31', water: '#16181b', park: '#2c3a30', road: '#44474d', major: '#62666d', casing: '#1c1e21' },
+    {
+      land: '#f4f4f1',
+      water: '#b6d0e0',
+      park: '#dbe7d4',
+      road: '#ffffff',
+      major: '#f2e3c6',
+      casing: '#e1e1dc',
+    },
+    {
+      land: '#2a2c31',
+      water: '#16181b',
+      park: '#2c3a30',
+      road: '#44474d',
+      major: '#62666d',
+      casing: '#1c1e21',
+    },
   ],
 };
 
@@ -53,7 +124,12 @@ const PALETTES: Record<BasemapId, readonly [Palette, Palette]> = {
     '[style]': 'vars()',
   },
   template: `
-    <svg viewBox="0 0 96 64" preserveAspectRatio="xMidYMid slice" class="block size-full" aria-hidden="true">
+    <svg
+      viewBox="0 0 96 64"
+      preserveAspectRatio="xMidYMid slice"
+      class="block size-full"
+      aria-hidden="true"
+    >
       <rect width="96" height="64" class="fill-(--l-land) dark:fill-(--d-land)" />
       <path
         d="M60 0h36v64H78c-4-8-12-10-14-18s6-14 2-22S58 8 60 0Z"

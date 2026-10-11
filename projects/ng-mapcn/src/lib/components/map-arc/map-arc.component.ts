@@ -9,12 +9,17 @@ import {
   output,
   untracked,
 } from '@angular/core';
-import { GeoJSONSource, LineLayerSpecification, MapLayerMouseEvent } from 'maplibre-gl';
+import {
+  type GeoJSONSource,
+  type LineLayerSpecification,
+  type MapLayerMouseEvent,
+} from 'maplibre-gl';
+
 import { MapContextService } from '../../services/map-context.service';
 import {
   buildArcCoordinates,
-  MapArcDatum,
-  MapArcEvent,
+  type MapArcDatum,
+  type MapArcEvent,
   mergeHoverPaint,
   nextId,
 } from '../../utils/map-utils';
@@ -243,7 +248,7 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
               longitude: e.lngLat.lng,
               latitude: e.lngLat.lat,
               originalEvent: e,
-            })
+            }),
           );
         }
       };
@@ -263,7 +268,7 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
             longitude: e.lngLat.lng,
             latitude: e.lngLat.lat,
             originalEvent: e,
-          })
+          }),
         );
       };
 

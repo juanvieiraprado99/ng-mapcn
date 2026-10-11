@@ -11,7 +11,6 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { type ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideSearch } from '@ng-icons/lucide';
 
@@ -25,25 +24,25 @@ import { ZardCommand } from '@/shared/components/command/command.tokens';
     <div data-slot="command-input-wrapper" class="flex h-9 items-center gap-2 border-b px-3">
       <ng-icon name="lucideSearch" class="size-4! shrink-0 opacity-50" />
       <input
-          data-slot="command-input"
-          class="placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
-          #searchInput
-          [placeholder]="placeholder()"
-          [value]="searchTerm()"
-          [disabled]="disabled()"
-          (input)="onInput($event)"
-          (keydown)="onKeyDown($event)"
-          (blur)="onTouched()"
-          aria-controls="command-list"
-          aria-describedby="command-instructions"
-          aria-haspopup="listbox"
-          aria-label="Search commands"
-          autocomplete="off"
-          autocorrect="off"
-          spellcheck="false"
-          role="combobox"
-          [attr.aria-expanded]="true"
-        />
+        data-slot="command-input"
+        class="placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
+        #searchInput
+        [placeholder]="placeholder()"
+        [value]="searchTerm()"
+        [disabled]="disabled()"
+        (input)="onInput($event)"
+        (keydown)="onKeyDown($event)"
+        (blur)="onTouched()"
+        aria-controls="command-list"
+        aria-describedby="command-instructions"
+        aria-haspopup="listbox"
+        aria-label="Search commands"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        role="combobox"
+        [attr.aria-expanded]="true"
+      />
     </div>
   `,
   providers: [
@@ -60,7 +59,9 @@ import { ZardCommand } from '@/shared/components/command/command.tokens';
 })
 export class ZardCommandInputComponent implements ControlValueAccessor {
   private readonly commandComponent = inject(ZardCommand, { optional: true });
-  readonly searchInput = viewChild<unknown, ElementRef<HTMLInputElement>>('searchInput', { read: ElementRef });
+  readonly searchInput = viewChild<unknown, ElementRef<HTMLInputElement>>('searchInput', {
+    read: ElementRef,
+  });
 
   readonly placeholder = input<string>('Type a command or search...');
 

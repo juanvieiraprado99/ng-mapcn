@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+
 import { CodeBlockComponent } from '../../shared/code-block';
 import { DocsImports } from '../../shared/docs';
-import { PropRow, PropTableComponent } from '../../shared/prop-table';
+import { type PropRow, PropTableComponent } from '../../shared/prop-table';
 // Single source of truth: `scripts/generate-llms-txt.mjs` reads this same file
 // to build /llms.txt and /llms-full.txt.
 import apiData from './api-reference.data.json';

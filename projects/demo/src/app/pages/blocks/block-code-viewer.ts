@@ -9,10 +9,11 @@ import {
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronRight, lucideFile, lucideFolder } from '@ng-icons/lucide';
+
 import type { BlockMeta } from '@/blocks/registry';
-import { ZardCollapsibleImports } from '@/shared/components/collapsible';
 import { CodeCopyButtonComponent } from '@/shared/code-copy-button';
 import { CodeSurfaceComponent } from '@/shared/code-surface';
+import { ZardCollapsibleImports } from '@/shared/components/collapsible';
 
 interface FileTree {
   name: string;

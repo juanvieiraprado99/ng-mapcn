@@ -19,7 +19,7 @@ cpSync(join(libSrc, 'lib'), filesDir, {
 
 // public-api.ts exports from './lib/...'; the copied tree drops the lib/ level.
 const publicApi = readFileSync(join(libSrc, 'public-api.ts'), 'utf8');
-const index = publicApi.replaceAll("./lib/", './');
+const index = publicApi.replaceAll('./lib/', './');
 writeFileSync(join(filesDir, 'index.ts'), index);
 
 console.log(`Synced library sources to ${filesDir}`);

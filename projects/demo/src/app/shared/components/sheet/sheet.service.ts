@@ -11,9 +11,9 @@ import {
   type ViewContainerRef,
 } from '@angular/core';
 
+import { SHEET_BACKDROP_CLASSES } from './sheet.variants';
 import { ZardSheetContainerComponent, ZardSheetOptions } from './sheet-container.component';
 import { ZardSheetRef } from './sheet-ref';
-import { SHEET_BACKDROP_CLASSES } from './sheet.variants';
 
 type ContentType<T> = ComponentType<T> | TemplateRef<T> | string;
 

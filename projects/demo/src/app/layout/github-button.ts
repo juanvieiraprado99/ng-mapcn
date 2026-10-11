@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+
 import { ZardButtonComponent } from '@/shared/components/button';
 import { GITHUB_URL } from '@/shared/site-navigation';
 

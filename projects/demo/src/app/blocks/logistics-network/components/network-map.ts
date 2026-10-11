@@ -2,16 +2,18 @@ import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import {
   MapArcComponent,
+  type MapArcDatum,
   MapComponent,
   MapControlsComponent,
   MapMarkerComponent,
   MarkerContentComponent,
   MarkerTooltipComponent,
-  type MapArcDatum,
 } from 'ng-mapcn';
+
 import { ZardSeparatorComponent } from '@/shared/components/separator';
 import { ZardSidebarImports } from '@/shared/components/sidebar';
-import { modeConfig, regionLabels, statusConfig, type Hub, type Route } from '../data';
+
+import { type Hub, modeConfig, regionLabels, type Route, statusConfig } from '../data';
 
 @Component({
   selector: 'app-network-map',
@@ -33,7 +35,7 @@ import { modeConfig, regionLabels, statusConfig, type Hub, type Route } from '..
     <div
       class="border-border/40 bg-background/70 absolute top-4 left-4 z-20 flex items-center gap-3 rounded-lg border px-2.5 py-1.5 backdrop-blur-sm"
     >
-      <button z-sidebar-trigger></button>
+      <button z-sidebar-trigger aria-label="Toggle sidebar"></button>
       <z-separator zOrientation="vertical" class="h-4! self-center!" />
       <div class="flex items-center gap-3 text-xs">
         <div class="flex items-center gap-1.5">

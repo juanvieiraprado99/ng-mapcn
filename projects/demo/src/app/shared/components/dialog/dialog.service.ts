@@ -11,9 +11,9 @@ import {
   type ViewContainerRef,
 } from '@angular/core';
 
+import { DIALOG_BACKDROP_CLASSES } from './dialog.variants';
 import { ZardDialogContainerComponent, ZardDialogOptions } from './dialog-container.component';
 import { ZardDialogRef } from './dialog-ref';
-import { DIALOG_BACKDROP_CLASSES } from './dialog.variants';
 
 type ContentType<T> = ComponentType<T> | TemplateRef<T> | string;
 

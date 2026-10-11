@@ -1,11 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, ViewEncapsulation } from '@angular/core';
-
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  ViewEncapsulation,
+} from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
 import type { ClassValue } from 'clsx';
 
 import { mergeClasses } from '@/shared/utils/merge-classes';
 
-import { ZARD_CHART } from './chart-context';
 import type { ZardChartLegendEntry } from './chart.types';
 import {
   chartLegendItemVariants,
@@ -13,6 +18,7 @@ import {
   chartLegendVariants,
   type ZardChartLegendAlignVariants,
 } from './chart.variants';
+import { ZARD_CHART } from './chart-context';
 
 /**
  * The only declarative child that renders real DOM. ECharts' own legend cannot reproduce the
@@ -50,8 +56,12 @@ export class ZardChartLegendComponent {
   readonly class = input<ClassValue>('');
   readonly zVerticalAlign = input<ZardChartLegendAlignVariants>('bottom');
 
-  protected readonly entries = computed<ZardChartLegendEntry[]>(() => this.chart?.legendEntries() ?? []);
-  protected readonly hidden = computed<ReadonlySet<string>>(() => this.chart?.hiddenSeries() ?? new Set<string>());
+  protected readonly entries = computed<ZardChartLegendEntry[]>(
+    () => this.chart?.legendEntries() ?? [],
+  );
+  protected readonly hidden = computed<ReadonlySet<string>>(
+    () => this.chart?.hiddenSeries() ?? new Set<string>(),
+  );
 
   protected readonly classes = computed(() =>
     mergeClasses(chartLegendVariants({ zVerticalAlign: this.zVerticalAlign() }), this.class()),

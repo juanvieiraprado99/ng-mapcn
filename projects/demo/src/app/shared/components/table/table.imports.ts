@@ -1,11 +1,11 @@
 import {
-  ZardTableComponent,
-  ZardTableHeaderComponent,
   ZardTableBodyComponent,
-  ZardTableRowComponent,
-  ZardTableHeadComponent,
-  ZardTableCellComponent,
   ZardTableCaptionComponent,
+  ZardTableCellComponent,
+  ZardTableComponent,
+  ZardTableHeadComponent,
+  ZardTableHeaderComponent,
+  ZardTableRowComponent,
 } from '@/shared/components/table/table.component';
 
 export const ZardTableImports = [

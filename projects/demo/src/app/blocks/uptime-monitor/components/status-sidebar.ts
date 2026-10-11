@@ -1,6 +1,7 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { getNetworkSummary, statusMeta, type EdgeNode } from '../data';
+
+import { type EdgeNode, getNetworkSummary, statusMeta } from '../data';
 
 @Component({
   selector: 'app-status-sidebar',

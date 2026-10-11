@@ -45,17 +45,20 @@ export const selectContentVariants = cva(
   },
 );
 
-export const selectViewportVariants = cva('min-h-0 flex-1 box-border overflow-x-hidden overflow-y-auto p-1', {
-  variants: {
-    zPosition: {
-      'item-aligned': '',
-      popper: 'w-full min-w-(--z-select-trigger-width) scroll-my-1',
+export const selectViewportVariants = cva(
+  'min-h-0 flex-1 box-border overflow-x-hidden overflow-y-auto p-1',
+  {
+    variants: {
+      zPosition: {
+        'item-aligned': '',
+        popper: 'w-full min-w-(--z-select-trigger-width) scroll-my-1',
+      },
+    },
+    defaultVariants: {
+      zPosition: 'popper',
     },
   },
-  defaultVariants: {
-    zPosition: 'popper',
-  },
-});
+);
 
 export const selectScrollButtonVariants = cva(
   'z-10 flex cursor-default items-center justify-center bg-popover py-1 [&_svg:not([class*="size-"])]:size-4',
@@ -116,6 +119,10 @@ export const selectItemIconVariants = cva('absolute flex size-3.5 items-center j
   },
 });
 
-export type ZardSelectPositionVariants = NonNullable<VariantProps<typeof selectContentVariants>['zPosition']>;
-export type ZardSelectItemModeVariants = NonNullable<VariantProps<typeof selectItemVariants>['zMode']>;
+export type ZardSelectPositionVariants = NonNullable<
+  VariantProps<typeof selectContentVariants>['zPosition']
+>;
+export type ZardSelectItemModeVariants = NonNullable<
+  VariantProps<typeof selectItemVariants>['zMode']
+>;
 export type ZardSelectAlignVariants = 'start' | 'center' | 'end';

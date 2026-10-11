@@ -8,7 +8,8 @@ import {
   output,
   untracked,
 } from '@angular/core';
-import { Marker, MarkerOptions, Point, PointLike } from 'maplibre-gl';
+import { Marker, type MarkerOptions, Point, type PointLike } from 'maplibre-gl';
+
 import { MapContextService } from '../../services/map-context.service';
 import { MarkerContextService } from './marker-context.service';
 
@@ -33,6 +34,7 @@ export class MapMarkerComponent {
   readonly markerMouseEnter = output<MouseEvent>();
   readonly markerMouseLeave = output<MouseEvent>();
   readonly dragStart = output<{ lng: number; lat: number }>();
+  // eslint-disable-next-line @angular-eslint/no-output-native -- public API (mapcn parity); renaming is breaking
   readonly drag = output<{ lng: number; lat: number }>();
   readonly dragEnd = output<{ lng: number; lat: number }>();
 
@@ -74,13 +76,13 @@ export class MapMarkerComponent {
           .addTo(map);
 
         el.addEventListener('click', (e) =>
-          this.zone.run(() => this.markerClick.emit(e as MouseEvent))
+          this.zone.run(() => this.markerClick.emit(e as MouseEvent)),
         );
         el.addEventListener('mouseenter', (e) =>
-          this.zone.run(() => this.markerMouseEnter.emit(e as MouseEvent))
+          this.zone.run(() => this.markerMouseEnter.emit(e as MouseEvent)),
         );
         el.addEventListener('mouseleave', (e) =>
-          this.zone.run(() => this.markerMouseLeave.emit(e as MouseEvent))
+          this.zone.run(() => this.markerMouseLeave.emit(e as MouseEvent)),
         );
 
         m.on('dragstart', () => {

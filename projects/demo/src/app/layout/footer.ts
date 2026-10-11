@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import { GITHUB_URL } from '@/shared/site-navigation';
+
 import { LogoComponent } from './logo';
 
 interface FooterLink {
@@ -82,9 +84,7 @@ interface FooterLink {
         </div>
 
         <div class="mt-12 border-t pt-6">
-          <p class="text-muted-foreground text-xs">
-            © {{ year }} ng-mapcn. All rights reserved.
-          </p>
+          <p class="text-muted-foreground text-xs">© {{ year }} ng-mapcn. All rights reserved.</p>
         </div>
       </div>
     </footer>

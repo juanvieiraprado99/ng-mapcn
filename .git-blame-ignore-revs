@@ -1,0 +1,8 @@
+# Revisions to ignore in git blame (mechanical formatting commits).
+# Use with: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# style: format the codebase with Prettier
+adbb0d9f9aee6021b1bacb0a3a7ec844710d2ca9
+
+# style: sort imports and use type-only imports
+3152a0e1f5abe14e8823ef0582427b32372aa515

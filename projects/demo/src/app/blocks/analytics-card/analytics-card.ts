@@ -7,8 +7,10 @@ import {
   MapMarkerComponent,
   MarkerContentComponent,
 } from 'ng-mapcn';
+
 import { ZardBadgeComponent } from '@/shared/components/badge';
 import { ZardCardComponent } from '@/shared/components/card';
+
 import { totalVisitors, visitorGrowth, visitorLocations } from './data';
 
 // Country borders from a public CDN, or swap in your own GeoJSON.

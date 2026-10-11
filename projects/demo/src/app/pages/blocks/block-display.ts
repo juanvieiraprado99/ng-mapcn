@@ -2,9 +2,11 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { DomSanitizer } from '@angular/platform-browser';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCheck, lucideMaximize, lucideTerminal } from '@ng-icons/lucide';
+
 import { type BlockMeta, zardDocsUrl, zardInstallCommand } from '@/blocks/registry';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSeparatorComponent } from '@/shared/components/separator';
+
 import { BlockCodeViewerComponent } from './block-code-viewer';
 
 type Tab = 'preview' | 'code';

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { MapComponent, MapGeoJSONComponent, MapGeoJSONEvent } from 'ng-mapcn';
+import { MapComponent, MapGeoJSONComponent, type MapGeoJSONEvent } from 'ng-mapcn';
+
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
 

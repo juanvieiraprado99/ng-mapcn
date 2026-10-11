@@ -1,5 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, input, ViewEncapsulation } from '@angular/core';
-
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  ViewEncapsulation,
+} from '@angular/core';
 import type { ClassValue } from 'clsx';
 
 import {
@@ -59,5 +64,7 @@ export class ZardSelectLabelComponent {
 export class ZardSelectSeparatorComponent {
   readonly class = input<ClassValue>('');
 
-  protected readonly classes = computed(() => mergeClasses(selectSeparatorVariants(), this.class()));
+  protected readonly classes = computed(() =>
+    mergeClasses(selectSeparatorVariants(), this.class()),
+  );
 }

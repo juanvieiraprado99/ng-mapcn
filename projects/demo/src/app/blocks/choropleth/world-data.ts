@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { DestroyRef, inject, PLATFORM_ID, signal, type Signal } from '@angular/core';
+import { DestroyRef, inject, PLATFORM_ID, type Signal, signal } from '@angular/core';
 
 export const WORLD_GEOJSON =
   'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@v5.1.2/geojson/ne_110m_admin_0_countries.geojson';

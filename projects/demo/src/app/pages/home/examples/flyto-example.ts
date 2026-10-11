@@ -1,10 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import type { Map as MapLibreMap } from 'maplibre-gl';
-import {
-  MapComponent,
-  MapMarkerComponent,
-  MarkerContentComponent,
-} from 'ng-mapcn';
+import { MapComponent, MapMarkerComponent, MarkerContentComponent } from 'ng-mapcn';
+
 import { ExampleCardComponent } from '../../../shared/example-card';
 
 const DESTINATIONS = [
@@ -17,12 +14,7 @@ const DESTINATIONS = [
 @Component({
   selector: 'app-flyto-example',
   standalone: true,
-  imports: [
-    ExampleCardComponent,
-    MapComponent,
-    MapMarkerComponent,
-    MarkerContentComponent,
-  ],
+  imports: [ExampleCardComponent, MapComponent, MapMarkerComponent, MarkerContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
   template: `
@@ -33,14 +25,9 @@ const DESTINATIONS = [
         [options]="{ scrollZoom: false, dragRotate: false, pitchWithRotate: false }"
         (mapReady)="onMapReady($event)"
       >
-        <ng-map-marker
-          [longitude]="active().center[0]"
-          [latitude]="active().center[1]"
-        >
+        <ng-map-marker [longitude]="active().center[0]" [latitude]="active().center[1]">
           <ng-marker-content>
-            <div
-              class="size-3.5 rounded-full border-2 border-white bg-blue-500 shadow-lg"
-            ></div>
+            <div class="size-3.5 rounded-full border-2 border-white bg-blue-500 shadow-lg"></div>
           </ng-marker-content>
         </ng-map-marker>
       </ng-map>

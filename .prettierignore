@@ -1,0 +1,10 @@
+dist/
+.angular/
+coverage/
+node_modules/
+projects/ng-mapcn/schematics/map/files/
+projects/demo/src/app/blocks/block-sources.generated.ts
+projects/demo/public/
+package-lock.json
+CODE_OF_CONDUCT.md
+docs/

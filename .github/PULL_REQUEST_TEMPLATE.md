@@ -20,6 +20,7 @@ Closes #
 ## Checklist
 
 - [ ] PR title follows Conventional Commits (`type(scope): description`)
+- [ ] `npm run lint` and `npm run format:check` pass
 - [ ] `npm run build:lib:prod` passes
 - [ ] Tests added/updated and `npm test` passes (when applicable)
 - [ ] Docs updated, and `npm run generate:llms` run if the public API changed

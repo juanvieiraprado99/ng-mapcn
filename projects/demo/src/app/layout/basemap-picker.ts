@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCheck, lucideChevronsUpDown, lucideExternalLink } from '@ng-icons/lucide';
+
 import { type BasemapProvider, BasemapService } from '@/shared/basemap.service';
 import { ZardBadgeComponent } from '@/shared/components/badge';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardInputComponent } from '@/shared/components/input';
 import { type ZardPopoverDirective, ZardPopoverImports } from '@/shared/components/popover';
+
 import { BasemapSwatchComponent } from './basemap-swatch';
 
 /**

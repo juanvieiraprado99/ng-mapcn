@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { inject, Injectable } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
+
 import { type Breadcrumb, JsonLdService } from './json-ld.service';
 import {
   SITE_DESCRIPTION,
@@ -64,7 +65,10 @@ export class SeoService {
     this.meta.updateTag({ property: 'og:title', content: title });
     this.meta.updateTag({ property: 'og:description', content: description });
     this.meta.updateTag({ property: 'og:url', content: url });
-    this.meta.updateTag({ property: 'og:type', content: seo?.home || !name ? 'website' : 'article' });
+    this.meta.updateTag({
+      property: 'og:type',
+      content: seo?.home || !name ? 'website' : 'article',
+    });
     this.meta.updateTag({ property: 'og:image', content: SITE_OG_IMAGE });
 
     this.meta.updateTag({ name: 'twitter:title', content: title });
@@ -78,10 +82,7 @@ export class SeoService {
     } else if (seo?.home || !name) {
       this.jsonLd.setHome();
     } else {
-      this.jsonLd.setPage(name, description, path, [
-        ...(seo?.breadcrumbs ?? []),
-        { name, path },
-      ]);
+      this.jsonLd.setPage(name, description, path, [...(seo?.breadcrumbs ?? []), { name, path }]);
     }
   }
 

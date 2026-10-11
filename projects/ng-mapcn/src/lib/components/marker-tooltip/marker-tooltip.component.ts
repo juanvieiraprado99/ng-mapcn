@@ -1,16 +1,17 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  EmbeddedViewRef,
-  TemplateRef,
-  ViewContainerRef,
   effect,
+  type EmbeddedViewRef,
   inject,
   input,
+  type TemplateRef,
   untracked,
   viewChild,
+  ViewContainerRef,
 } from '@angular/core';
-import { Offset, Popup, PositionAnchor } from 'maplibre-gl';
+import { type Offset, Popup, type PositionAnchor } from 'maplibre-gl';
+
 import { MapContextService } from '../../services/map-context.service';
 import { MarkerContextService } from '../map-marker/marker-context.service';
 

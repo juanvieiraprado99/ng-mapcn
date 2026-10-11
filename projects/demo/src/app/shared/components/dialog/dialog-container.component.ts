@@ -24,22 +24,21 @@ import {
   type ViewContainerRef,
   ViewEncapsulation,
 } from '@angular/core';
-
 import { NgIcon } from '@ng-icons/core';
 import type { ClassValue } from 'clsx';
 
 import { ZardButtonComponent } from '@/shared/components/button/button.component';
 import { noopFn } from '@/shared/utils/noop';
 
-import { ZardDialogHost } from './dialog-host';
-import { DIALOG_DURATION, ZardDialogPanelComponent } from './dialog-panel.component';
-import type { ZardDialogRef } from './dialog-ref';
 import {
   ZardDialogDescriptionComponent,
   ZardDialogFooterComponent,
   ZardDialogHeaderComponent,
   ZardDialogTitleComponent,
 } from './dialog.component';
+import { ZardDialogHost } from './dialog-host';
+import { DIALOG_DURATION, ZardDialogPanelComponent } from './dialog-panel.component';
+import type { ZardDialogRef } from './dialog-ref';
 
 export type OnClickCallback<T> = (instance: T) => false | void | object;
 
@@ -106,7 +105,10 @@ export class ZardDialogOptions<T, U> {
             <z-dialog-title data-testid="z-title" [zTitle]="config.zTitle" />
           }
           @if (config.zDescription) {
-            <z-dialog-description data-testid="z-description" [zDescription]="config.zDescription" />
+            <z-dialog-description
+              data-testid="z-description"
+              [zDescription]="config.zDescription"
+            />
           }
         </z-dialog-header>
       }
@@ -181,7 +183,9 @@ export class ZardDialogOptions<T, U> {
   // forwardRef: the decorator is evaluated before the class binding exists, so a bare
   // reference to ZardDialogContainerComponent here throws "Cannot access before initialization"
   // whenever the module is evaluated outside the AOT compiler.
-  providers: [{ provide: ZardDialogHost, useExisting: forwardRef(() => ZardDialogContainerComponent) }],
+  providers: [
+    { provide: ZardDialogHost, useExisting: forwardRef(() => ZardDialogContainerComponent) },
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: { style: 'display: contents' },

@@ -1,5 +1,6 @@
-import { inject, Provider } from '@angular/core';
+import { inject, type Provider } from '@angular/core';
 import { provideMapStyles } from 'ng-mapcn';
+
 import { BasemapService } from './basemap.service';
 
 /**
@@ -9,6 +10,4 @@ import { BasemapService } from './basemap.service';
  * eager app shell would drag maplibre-gl (CommonJS, not tree-shakeable) into
  * the initial bundle.
  */
-export const basemapProviders: Provider[] = [
-  provideMapStyles(() => inject(BasemapService).styles),
-];
+export const basemapProviders: Provider[] = [provideMapStyles(() => inject(BasemapService).styles)];

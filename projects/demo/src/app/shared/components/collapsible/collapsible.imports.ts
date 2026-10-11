@@ -1,6 +1,6 @@
 import {
-  ZardCollapsibleDirective,
   ZardCollapsibleContentComponent,
+  ZardCollapsibleDirective,
   ZardCollapsibleTriggerDirective,
 } from '@/shared/components/collapsible/collapsible.component';
 

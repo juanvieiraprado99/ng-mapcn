@@ -8,7 +8,8 @@ import {
   output,
   untracked,
 } from '@angular/core';
-import { GeoJSONSource, MapGeoJSONFeature, MapMouseEvent } from 'maplibre-gl';
+import { type GeoJSONSource, type MapGeoJSONFeature, type MapMouseEvent } from 'maplibre-gl';
+
 import { MapContextService } from '../../services/map-context.service';
 import { nextId } from '../../utils/map-utils';
 
@@ -161,7 +162,7 @@ export class MapClusterLayerComponent {
           this.pointClick.emit({
             feature: feature as unknown as GeoJSON.Feature<GeoJSON.Point>,
             coordinates,
-          })
+          }),
         );
       };
 
@@ -186,11 +187,7 @@ export class MapClusterLayerComponent {
         map.off('mouseleave', this.clusterLayerId, cursorOff);
         map.off('mouseenter', this.unclusteredLayerId, cursorOn);
         map.off('mouseleave', this.unclusteredLayerId, cursorOff);
-        for (const id of [
-          this.clusterCountLayerId,
-          this.unclusteredLayerId,
-          this.clusterLayerId,
-        ]) {
+        for (const id of [this.clusterCountLayerId, this.unclusteredLayerId, this.clusterLayerId]) {
           try {
             if (map.getLayer(id)) map.removeLayer(id);
           } catch {}
@@ -239,10 +236,7 @@ export class MapClusterLayerComponent {
     });
   }
 
-  private clusterColorExpression(
-    colors: [string, string, string],
-    thresholds: [number, number],
-  ) {
+  private clusterColorExpression(colors: [string, string, string], thresholds: [number, number]) {
     return [
       'step',
       ['get', 'point_count'],
