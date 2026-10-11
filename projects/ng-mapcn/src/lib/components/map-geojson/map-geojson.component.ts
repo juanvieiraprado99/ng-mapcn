@@ -7,6 +7,8 @@ import {
   input,
   NgZone,
   output,
+  signal,
+  untracked,
 } from '@angular/core';
 import {
   type FillLayerSpecification,
@@ -77,6 +79,8 @@ export class MapGeoJSONComponent {
   private readonly sourceId = computed(() => `geojson-source-${this.resolvedId()}`);
   private readonly fillLayerId = computed(() => `geojson-fill-${this.resolvedId()}`);
   private readonly lineLayerId = computed(() => `geojson-line-${this.resolvedId()}`);
+  /** Bumped every time the source is (re)created, so the layer effect re-adds its layers. */
+  private readonly sourceRevision = signal(0);
 
   private readonly mergedFillPaint = computed<MapFillPaint>(() => {
     const defaults = GEOJSON_DEFAULT_COLORS[this.ctx.resolvedTheme()];
@@ -108,9 +112,12 @@ export class MapGeoJSONComponent {
 
       map.addSource(sourceId, {
         type: 'geojson',
-        data: this.data() as never,
+        // Untracked: data changes go through setData below, never a source re-create.
+        data: untracked(() => this.data()) as never,
         ...(promoteId ? { promoteId } : {}),
       });
+      // The cleanup of a previous run removed the layers with the old source.
+      this.sourceRevision.update((r) => r + 1);
 
       onCleanup(() => {
         try {
@@ -139,6 +146,7 @@ export class MapGeoJSONComponent {
       const map = this.ctx.map();
       if (!map) return;
 
+      this.sourceRevision();
       const sourceId = this.sourceId();
       if (!map.getSource(sourceId)) return;
 
