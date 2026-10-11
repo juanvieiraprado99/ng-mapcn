@@ -77,6 +77,14 @@ export default defineConfig([
     },
   },
   {
+    files: ['**/*.spec.ts', 'projects/ng-mapcn/src/testing/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@angular-eslint/prefer-on-push-component-change-detection': 'off',
+      '@angular-eslint/component-selector': 'off',
+    },
+  },
+  {
     files: ['**/*.html'],
     extends: [angular.configs.templateRecommended, angular.configs.templateAccessibility],
   },
