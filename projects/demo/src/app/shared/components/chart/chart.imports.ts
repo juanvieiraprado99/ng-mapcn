@@ -2,4 +2,8 @@ import { ZardChartLegendComponent } from '@/shared/components/chart/chart-legend
 import { ZardChartTooltipComponent } from '@/shared/components/chart/chart-tooltip.component';
 import { ZardChartComponent } from '@/shared/components/chart/chart.component';
 
-export const ZardChartImports = [ZardChartComponent, ZardChartTooltipComponent, ZardChartLegendComponent] as const;
+export const ZardChartImports = [
+  ZardChartComponent,
+  ZardChartTooltipComponent,
+  ZardChartLegendComponent,
+] as const;

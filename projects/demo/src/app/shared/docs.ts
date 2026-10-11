@@ -45,13 +45,7 @@ export function slugify(text: string): string {
       @if (neighbours.prev || neighbours.next) {
         <div class="mt-auto flex items-center justify-between gap-4">
           @if (neighbours.prev; as prev) {
-            <a
-              z-button
-              zType="ghost"
-              zSize="sm"
-              class="-ml-2 h-auto py-2"
-              [routerLink]="prev.href"
-            >
+            <a z-button zType="ghost" zSize="sm" class="-ml-2 h-auto py-2" [routerLink]="prev.href">
               <ng-icon name="lucideChevronLeft" size="16" />
               {{ prev.title }}
             </a>
@@ -59,13 +53,7 @@ export function slugify(text: string): string {
             <div></div>
           }
           @if (neighbours.next; as next) {
-            <a
-              z-button
-              zType="ghost"
-              zSize="sm"
-              class="-mr-2 h-auto py-2"
-              [routerLink]="next.href"
-            >
+            <a z-button zType="ghost" zSize="sm" class="-mr-2 h-auto py-2" [routerLink]="next.href">
               {{ next.title }}
               <ng-icon name="lucideChevronRight" size="16" />
             </a>

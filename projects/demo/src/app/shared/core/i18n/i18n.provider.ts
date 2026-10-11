@@ -5,7 +5,9 @@ import { DEFAULT_LOCALE } from './i18n.constants';
 import { ZARD_I18N, ZARD_LOCALE } from './i18n.tokens';
 import type { ZardI18nInterface } from './i18n.types';
 
-export function provideZardI18n(locale: ZardI18nInterface | string = DEFAULT_LOCALE): EnvironmentProviders {
+export function provideZardI18n(
+  locale: ZardI18nInterface | string = DEFAULT_LOCALE,
+): EnvironmentProviders {
   if (typeof locale === 'string') {
     return makeEnvironmentProviders([{ provide: ZARD_LOCALE, useValue: locale }]);
   }

@@ -35,7 +35,9 @@ export const chartLegendVariants = cva('flex items-center justify-center gap-4 p
   },
 });
 
-export type ZardChartLegendAlignVariants = NonNullable<VariantProps<typeof chartLegendVariants>['zVerticalAlign']>;
+export type ZardChartLegendAlignVariants = NonNullable<
+  VariantProps<typeof chartLegendVariants>['zVerticalAlign']
+>;
 
 export const chartLegendItemVariants = cva(
   'flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground transition-opacity',

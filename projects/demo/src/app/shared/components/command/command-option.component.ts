@@ -99,7 +99,7 @@ export class ZardCommandOptionComponent {
   });
 
   constructor() {
-    effect(onCleanup => {
+    effect((onCleanup) => {
       const cmd = this.parentCommand();
       const grp = this.commandGroup();
 

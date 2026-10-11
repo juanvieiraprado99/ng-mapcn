@@ -16,4 +16,6 @@ export const tooltipPositionVariants = cva('absolute', {
   },
 });
 
-export type ZardTooltipPositionVariants = NonNullable<VariantProps<typeof tooltipPositionVariants>['position']>;
+export type ZardTooltipPositionVariants = NonNullable<
+  VariantProps<typeof tooltipPositionVariants>['position']
+>;

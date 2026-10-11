@@ -82,9 +82,7 @@ interface FooterLink {
         </div>
 
         <div class="mt-12 border-t pt-6">
-          <p class="text-muted-foreground text-xs">
-            © {{ year }} ng-mapcn. All rights reserved.
-          </p>
+          <p class="text-muted-foreground text-xs">© {{ year }} ng-mapcn. All rights reserved.</p>
         </div>
       </div>
     </footer>

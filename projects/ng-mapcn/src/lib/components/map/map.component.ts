@@ -67,9 +67,7 @@ export class MapComponent {
   protected readonly mapInstance = signal<MapLibreMap | null>(null);
   private readonly loadedFlag = signal(false);
   private readonly styleLoadedFlag = signal(false);
-  protected readonly isLoaded = computed(
-    () => this.loadedFlag() && this.styleLoadedFlag()
-  );
+  protected readonly isLoaded = computed(() => this.loadedFlag() && this.styleLoadedFlag());
 
   private readonly ctx = inject(MapContextService);
   private readonly themeService = inject(ThemeService);
@@ -131,9 +129,7 @@ export class MapComponent {
   }
 
   private resolvedTheme(): 'light' | 'dark' {
-    return this.theme() === 'auto'
-      ? this.themeService.theme()
-      : (this.theme() as 'light' | 'dark');
+    return this.theme() === 'auto' ? this.themeService.theme() : (this.theme() as 'light' | 'dark');
   }
 
   private initializeMap(): void {
@@ -203,10 +199,8 @@ export class MapComponent {
         m.on('click', (e) => this.zone.run(() => this.mapClick.emit(e)));
         m.on('error', (e) =>
           this.zone.run(() =>
-            this.mapError.emit(
-              e.error instanceof Error ? e.error : new Error(String(e.error))
-            )
-          )
+            this.mapError.emit(e.error instanceof Error ? e.error : new Error(String(e.error))),
+          ),
         );
 
         return m;

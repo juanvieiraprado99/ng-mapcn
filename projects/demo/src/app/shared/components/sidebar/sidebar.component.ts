@@ -44,9 +44,7 @@ import { mergeClasses } from '@/shared/utils/merge-classes';
 
 @Component({
   selector: 'z-sidebar-provider',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   providers: [ZardSidebarService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
@@ -68,7 +66,7 @@ export class ZardSidebarProviderComponent implements OnInit {
    * blocks rely on that to stay deterministic without changing the state of other sidebars.
    */
   readonly zDefaultOpen = input<boolean | undefined, unknown>(undefined, {
-    transform: value => (value === undefined ? undefined : booleanAttribute(value)),
+    transform: (value) => (value === undefined ? undefined : booleanAttribute(value)),
   });
 
   /** When set, the provider is controlled: `setOpen` only reports through `zOpenChange`. */
@@ -84,13 +82,17 @@ export class ZardSidebarProviderComponent implements OnInit {
   // The docs site declares a global `--sidebar-width` for its own navigation, so the variables have
   // to be set inline on this host to win inside the provider's scope.
   protected readonly hostStyle = computed(() =>
-    [`--sidebar-width: ${ZARD_SIDEBAR_WIDTH}`, `--sidebar-width-icon: ${ZARD_SIDEBAR_WIDTH_ICON}`, this.style()]
+    [
+      `--sidebar-width: ${ZARD_SIDEBAR_WIDTH}`,
+      `--sidebar-width-icon: ${ZARD_SIDEBAR_WIDTH_ICON}`,
+      this.style(),
+    ]
       .filter(Boolean)
       .join('; '),
   );
 
   constructor() {
-    this.sidebarService.onOpenChange = open => this.zOpenChange.emit(open);
+    this.sidebarService.onOpenChange = (open) => this.zOpenChange.emit(open);
 
     effect(() => {
       this.sidebarService.controlledOpen.set(this.zOpen());
@@ -186,7 +188,9 @@ export class ZardSidebarComponent {
 
   protected readonly mobileStyle = `--sidebar-width: ${ZARD_SIDEBAR_WIDTH_MOBILE}`;
 
-  protected readonly isDesktop = computed(() => this.zCollapsible() !== 'none' && !this.sidebarService.isMobile());
+  protected readonly isDesktop = computed(
+    () => this.zCollapsible() !== 'none' && !this.sidebarService.isMobile(),
+  );
 
   /** shadcn keeps this attribute empty while expanded, and every `group-data-[collapsible=…]` class relies on it. */
   protected readonly desktopCollapsible = computed(() =>
@@ -202,7 +206,9 @@ export class ZardSidebarComponent {
     return this.sidebarService.isMobile() ? 'contents' : sidebarRootVariants();
   });
 
-  protected readonly mobileState = computed(() => (this.sidebarService.openMobile() ? 'open' : 'closed'));
+  protected readonly mobileState = computed(() =>
+    this.sidebarService.openMobile() ? 'open' : 'closed',
+  );
 
   protected readonly backdropClasses = computed(() => sidebarMobileBackdropVariants());
 
@@ -213,7 +219,10 @@ export class ZardSidebarComponent {
   protected readonly gapClasses = computed(() => sidebarGapVariants({ zVariant: this.zVariant() }));
 
   protected readonly containerClasses = computed(() =>
-    mergeClasses(sidebarContainerVariants({ zSide: this.zSide(), zVariant: this.zVariant() }), this.class()),
+    mergeClasses(
+      sidebarContainerVariants({ zSide: this.zSide(), zVariant: this.zVariant() }),
+      this.class(),
+    ),
   );
 
   protected readonly innerClasses = computed(() => sidebarInnerVariants());
@@ -250,7 +259,11 @@ export class ZardSidebarTriggerComponent {
   readonly class = input<ClassValue>('');
 
   protected readonly classes = computed(() =>
-    mergeClasses(buttonVariants({ zType: 'ghost', zSize: 'icon-sm' }), sidebarTriggerVariants(), this.class()),
+    mergeClasses(
+      buttonVariants({ zType: 'ghost', zSize: 'icon-sm' }),
+      sidebarTriggerVariants(),
+      this.class(),
+    ),
   );
 }
 
@@ -281,9 +294,7 @@ export class ZardSidebarRailComponent {
 
 @Component({
   selector: 'z-sidebar-inset, main[z-sidebar-inset]',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {

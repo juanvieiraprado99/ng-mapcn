@@ -1,6 +1,6 @@
 name: Bug report
 description: Something in ng-mapcn does not work as expected
-title: "[Bug]: "
+title: '[Bug]: '
 labels: [bug, needs-repro]
 body:
   - type: markdown

@@ -81,20 +81,21 @@ Always use **Conventional Commits** format — commit messages are parsed by the
 <type>[optional scope]: <short description>
 ```
 
-| Type | When to use |
-|------|-------------|
-| `feat` | New feature or component |
-| `fix` | Bug fix |
-| `docs` | Documentation changes |
+| Type       | When to use                           |
+| ---------- | ------------------------------------- |
+| `feat`     | New feature or component              |
+| `fix`      | Bug fix                               |
+| `docs`     | Documentation changes                 |
 | `refactor` | Code refactoring (no behavior change) |
-| `perf` | Performance improvement |
-| `style` | Formatting, missing semicolons, etc. |
-| `test` | Adding or fixing tests |
-| `build` | Build system or dependency changes |
-| `ci` | CI/CD configuration changes |
-| `chore` | Miscellaneous maintenance tasks |
+| `perf`     | Performance improvement               |
+| `style`    | Formatting, missing semicolons, etc.  |
+| `test`     | Adding or fixing tests                |
+| `build`    | Build system or dependency changes    |
+| `ci`       | CI/CD configuration changes           |
+| `chore`    | Miscellaneous maintenance tasks       |
 
 **Examples:**
+
 - `feat(marker): add support for custom SVG icons`
 - `fix(popup): ensure readable text in dark mode`
 - `chore: bump ng-mapcn to version 21.0.0-beta.6`

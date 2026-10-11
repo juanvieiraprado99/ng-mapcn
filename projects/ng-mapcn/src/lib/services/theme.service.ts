@@ -13,9 +13,7 @@ export class ThemeService {
   constructor() {
     if (!this.isBrowser) return;
 
-    const observer = new MutationObserver(() =>
-      this.themeSignal.set(this.detect())
-    );
+    const observer = new MutationObserver(() => this.themeSignal.set(this.detect()));
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class'],
@@ -61,9 +59,7 @@ export class ThemeService {
     if (html.classList.contains('dark')) return 'dark';
     if (html.classList.contains('light')) return 'light';
     if (window.matchMedia) {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     return 'light';
   }

@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { docsNavigation } from '@/shared/site-navigation';
 
-
 /**
  * mapcn `DocsSidebar` — a non-collapsible shadcn `Sidebar`; the classes below
  * are the ones its SidebarGroup / GroupLabel / Menu / MenuButton render.

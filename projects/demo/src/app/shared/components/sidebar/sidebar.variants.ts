@@ -5,7 +5,9 @@ export const sidebarWrapperVariants = cva(
 );
 
 /** `collapsible="none"` — a plain, always-visible column. */
-export const sidebarNoneVariants = cva('flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground');
+export const sidebarNoneVariants = cva(
+  'flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground',
+);
 
 /** The desktop wrapper. Carries `group` and `peer`, so it has to sit on the host element. */
 export const sidebarRootVariants = cva('group peer hidden text-sidebar-foreground md:block');
@@ -16,7 +18,8 @@ export const sidebarGapVariants = cva(
     variants: {
       zVariant: {
         sidebar: 'group-data-[collapsible=icon]:w-(--sidebar-width-icon)',
-        floating: 'group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]',
+        floating:
+          'group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]',
         inset: 'group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]',
       },
     },
@@ -37,8 +40,10 @@ export const sidebarContainerVariants = cva(
       zVariant: {
         sidebar:
           'group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l',
-        floating: 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]',
-        inset: 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]',
+        floating:
+          'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]',
+        inset:
+          'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]',
       },
     },
     defaultVariants: {
@@ -211,11 +216,19 @@ export const sidebarMenuSubButtonVariants = cva(
   },
 );
 
-export type ZardSidebarSideVariants = NonNullable<VariantProps<typeof sidebarContainerVariants>['zSide']>;
-export type ZardSidebarVariantVariants = NonNullable<VariantProps<typeof sidebarContainerVariants>['zVariant']>;
+export type ZardSidebarSideVariants = NonNullable<
+  VariantProps<typeof sidebarContainerVariants>['zSide']
+>;
+export type ZardSidebarVariantVariants = NonNullable<
+  VariantProps<typeof sidebarContainerVariants>['zVariant']
+>;
 export type ZardSidebarCollapsibleVariants = 'offcanvas' | 'icon' | 'none';
-export type ZardSidebarMenuButtonTypeVariants = NonNullable<VariantProps<typeof sidebarMenuButtonVariants>['zType']>;
-export type ZardSidebarMenuButtonSizeVariants = NonNullable<VariantProps<typeof sidebarMenuButtonVariants>['zSize']>;
+export type ZardSidebarMenuButtonTypeVariants = NonNullable<
+  VariantProps<typeof sidebarMenuButtonVariants>['zType']
+>;
+export type ZardSidebarMenuButtonSizeVariants = NonNullable<
+  VariantProps<typeof sidebarMenuButtonVariants>['zSize']
+>;
 export type ZardSidebarMenuSubButtonSizeVariants = NonNullable<
   VariantProps<typeof sidebarMenuSubButtonVariants>['zSize']
 >;

@@ -1,6 +1,10 @@
 import { mergeClasses } from '@/shared/utils/merge-classes';
 
-import type { ZardChartConfig, ZardChartTooltipIndicator, ZardChartTooltipTrigger } from './chart.types';
+import type {
+  ZardChartConfig,
+  ZardChartTooltipIndicator,
+  ZardChartTooltipTrigger,
+} from './chart.types';
 
 /** The subset of the ECharts callback params the tooltip actually reads. */
 export interface ZardChartTooltipParam {
@@ -60,7 +64,7 @@ const HTML_ENTITIES: Record<string, string> = {
 
 /** Escapes user data before it is concatenated into the tooltip's innerHTML. */
 export function escapeHtml(value: unknown): string {
-  return String(value ?? '').replace(/[&<>"']/g, char => HTML_ENTITIES[char]);
+  return String(value ?? '').replace(/[&<>"']/g, (char) => HTML_ENTITIES[char]);
 }
 
 function toNumber(value: unknown): number | null {
@@ -115,7 +119,7 @@ function colorOf(param: ZardChartTooltipParam, ctx: ZardChartTooltipContext): st
 
 /** True when the params are a radar's, which arrive as one param holding every indicator. */
 function isRadar(items: ZardChartTooltipParam[], ctx: ZardChartTooltipContext): boolean {
-  return !!ctx.indicators?.length && items.every(param => Array.isArray(param.value));
+  return !!ctx.indicators?.length && items.every((param) => Array.isArray(param.value));
 }
 
 /**
@@ -125,7 +129,7 @@ function isRadar(items: ZardChartTooltipParam[], ctx: ZardChartTooltipContext): 
 function radarRows(items: ZardChartTooltipParam[], ctx: ZardChartTooltipContext): TooltipRow[] {
   const indicators = ctx.indicators ?? [];
 
-  return items.flatMap(param => {
+  return items.flatMap((param) => {
     const color = colorOf(param, ctx);
     const values = Array.isArray(param.value) ? param.value : [];
 
@@ -149,8 +153,12 @@ function rowOf(param: ZardChartTooltipParam, ctx: ZardChartTooltipContext): Tool
 }
 
 function itemLabel(param: ZardChartTooltipParam, ctx: ZardChartTooltipContext): string {
-  const key = ctx.nameKey ?? (ctx.trigger === 'item' ? (param.name ?? '') : (param.seriesName ?? ''));
-  return ctx.config[key]?.label ?? (ctx.trigger === 'item' ? (param.name ?? '') : (param.seriesName ?? ''));
+  const key =
+    ctx.nameKey ?? (ctx.trigger === 'item' ? (param.name ?? '') : (param.seriesName ?? ''));
+  return (
+    ctx.config[key]?.label ??
+    (ctx.trigger === 'item' ? (param.name ?? '') : (param.seriesName ?? ''))
+  );
 }
 
 function headerLabel(params: ZardChartTooltipParam[], ctx: ZardChartTooltipContext): string {
@@ -202,7 +210,9 @@ export function buildTooltipHtml(
   }
 
   const radar = isRadar(items, ctx);
-  const entries: TooltipRow[] = radar ? radarRows(items, ctx) : items.map(param => rowOf(param, ctx));
+  const entries: TooltipRow[] = radar
+    ? radarRows(items, ctx)
+    : items.map((param) => rowOf(param, ctx));
 
   if (entries.length === 0) {
     return '';
@@ -222,7 +232,9 @@ export function buildTooltipHtml(
       const rowClasses = mergeClasses(ROW_CLASSES, ctx.indicator === 'dot' ? 'items-center' : '');
       const innerAlign = nestLabel ? 'items-end' : 'items-center';
       const nestedLabel =
-        nestLabel && !ctx.hideLabel && label !== '' ? `<div class="${labelClasses}">${escapeHtml(label)}</div>` : '';
+        nestLabel && !ctx.hideLabel && label !== ''
+          ? `<div class="${labelClasses}">${escapeHtml(label)}</div>`
+          : '';
 
       return `<div class="${rowClasses}">${indicatorHtml(color, ctx, nestLabel)}<div class="flex flex-1 justify-between leading-none ${innerAlign}"><div class="grid gap-1.5">${nestedLabel}<span class="text-muted-foreground">${escapeHtml(name)}</span></div><span class="font-mono font-medium tabular-nums text-foreground">${escapeHtml(value)}</span></div></div>`;
     })

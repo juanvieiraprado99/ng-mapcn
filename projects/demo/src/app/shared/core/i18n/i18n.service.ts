@@ -49,8 +49,11 @@ export class ZardI18nService {
 
   setTranslation(translation: Partial<ZardI18nInterface>): void {
     this.state.update(
-      current =>
-        deepMerge(current as Record<string, unknown>, translation as Record<string, unknown>) as ZardI18nInterface,
+      (current) =>
+        deepMerge(
+          current as Record<string, unknown>,
+          translation as Record<string, unknown>,
+        ) as ZardI18nInterface,
     );
   }
 

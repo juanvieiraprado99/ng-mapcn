@@ -43,9 +43,7 @@
             "server": "projects/demo/src/main.server.ts",
             "outputMode": "server",
             "security": {
-              "allowedHosts": [
-                "localhost"
-              ]
+              "allowedHosts": ["localhost"]
             },
             "ssr": {
               "entry": "projects/demo/src/server.ts"

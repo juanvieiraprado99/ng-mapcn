@@ -9,10 +9,26 @@ const FUNCTION_PATTERN = /^([a-z-]+)\(\s*([\s\S]*?)\s*\)$/i;
 const MAX_VAR_DEPTH = 8;
 
 /** CSS color functions that accept the modern `<channels> / <alpha>` syntax. */
-const SLASH_ALPHA_FUNCTIONS = new Set(['color', 'hsl', 'hsla', 'hwb', 'lab', 'lch', 'oklab', 'oklch', 'rgb', 'rgba']);
+const SLASH_ALPHA_FUNCTIONS = new Set([
+  'color',
+  'hsl',
+  'hsla',
+  'hwb',
+  'lab',
+  'lch',
+  'oklab',
+  'oklch',
+  'rgb',
+  'rgba',
+]);
 
 /** The two functions that also have a legacy comma syntax, mapped to their alpha-aware twin. */
-const LEGACY_ALPHA_FUNCTIONS: Record<string, string> = { hsl: 'hsla', hsla: 'hsla', rgb: 'rgba', rgba: 'rgba' };
+const LEGACY_ALPHA_FUNCTIONS: Record<string, string> = {
+  hsl: 'hsla',
+  hsla: 'hsla',
+  rgb: 'rgba',
+  rgba: 'rgba',
+};
 
 /** Canonical name to emit when writing the modern slash syntax. */
 const CANONICAL_FUNCTIONS: Record<string, string> = { hsla: 'hsl', rgba: 'rgb' };
@@ -138,12 +154,16 @@ function readCssColor(host: HTMLElement | null | undefined, value: string, depth
  * Resolves a CSS color that may be a `var(--token)` reference into a literal value
  * ECharts can consume. Falls back to the var()'s own fallback, then to the raw input.
  */
-export function resolveCssColor(host: HTMLElement | null | undefined, value: string, depth = 0): string {
+export function resolveCssColor(
+  host: HTMLElement | null | undefined,
+  value: string,
+  depth = 0,
+): string {
   return toCanvasColor(readCssColor(host, value, depth));
 }
 
 function hexWithAlpha(digits: string, alpha: number): string {
-  const expanded = digits.length <= 4 ? [...digits].map(char => char + char).join('') : digits;
+  const expanded = digits.length <= 4 ? [...digits].map((char) => char + char).join('') : digits;
   const channel = Math.round(alpha * 255)
     .toString(16)
     .padStart(2, '0');
@@ -186,7 +206,7 @@ function applyAlpha(color: string, alpha: number): string {
         const channels = body
           .split(',')
           .slice(0, 3)
-          .map(part => part.trim())
+          .map((part) => part.trim())
           .join(', ');
         return `${legacy}(${channels}, ${clamped})`;
       }

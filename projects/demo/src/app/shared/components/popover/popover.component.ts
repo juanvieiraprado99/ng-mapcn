@@ -47,7 +47,8 @@ import {
 } from './popover.variants';
 
 export type ZardPopoverTrigger = 'click' | 'hover' | null;
-export type ZardPopoverPlacement = 'top' | 'bottom' | 'left' | 'right' | 'inline-start' | 'inline-end';
+export type ZardPopoverPlacement =
+  'top' | 'bottom' | 'left' | 'right' | 'inline-start' | 'inline-end';
 export type ZardPopoverAlign = 'start' | 'center' | 'end';
 
 /**
@@ -171,7 +172,7 @@ export class ZardPopoverDirective implements OnInit, OnDestroy {
   constructor() {
     toObservable(this.zVisible)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(visible => {
+      .subscribe((visible) => {
         const currentlyVisible = this.isVisible();
         if (visible && !currentlyVisible) {
           this.show();
@@ -182,7 +183,7 @@ export class ZardPopoverDirective implements OnInit, OnDestroy {
 
     toObservable(this.zTrigger)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(trigger => {
+      .subscribe((trigger) => {
         if (this.listeners.length) {
           this.unlistenAll();
         }
@@ -293,15 +294,15 @@ export class ZardPopoverDirective implements OnInit, OnDestroy {
 
     positionStrategy.positionChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(change => this.applyPosition(change.connectionPair));
+      .subscribe((change) => this.applyPosition(change.connectionPair));
 
     this.overlayRef
       .keydownEvents()
       .pipe(
-        filter(event => event.key === 'Escape' && this.isVisible()),
+        filter((event) => event.key === 'Escape' && this.isVisible()),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(event => {
+      .subscribe((event) => {
         event.preventDefault();
         event.stopPropagation();
         this.close(true);
@@ -317,7 +318,7 @@ export class ZardPopoverDirective implements OnInit, OnDestroy {
     ) {
       this.overlayRefSubscription = this.overlayRef
         .outsidePointerEvents()
-        .pipe(filter(event => !this.nativeElement.contains(event.target)))
+        .pipe(filter((event) => !this.nativeElement.contains(event.target)))
         .subscribe(() => this.hide());
     }
   }
@@ -329,11 +330,17 @@ export class ZardPopoverDirective implements OnInit, OnDestroy {
     }
 
     if (trigger === 'click') {
-      this.listeners.push(this.renderer.listen(this.nativeElement, 'click.stop', () => this.toggle()));
+      this.listeners.push(
+        this.renderer.listen(this.nativeElement, 'click.stop', () => this.toggle()),
+      );
     } else if (trigger === 'hover') {
-      this.listeners.push(this.renderer.listen(this.nativeElement, 'mouseenter', () => this.show()));
+      this.listeners.push(
+        this.renderer.listen(this.nativeElement, 'mouseenter', () => this.show()),
+      );
 
-      this.listeners.push(this.renderer.listen(this.nativeElement, 'mouseleave', () => this.hide()));
+      this.listeners.push(
+        this.renderer.listen(this.nativeElement, 'mouseleave', () => this.hide()),
+      );
     }
   }
 
@@ -350,7 +357,7 @@ export class ZardPopoverDirective implements OnInit, OnDestroy {
     const sideOffset = this.zSideOffset();
     const alignOffset = this.zAlignOffset();
 
-    return [placement, ...FALLBACK_PLACEMENTS[placement]].map(fallback =>
+    return [placement, ...FALLBACK_PLACEMENTS[placement]].map((fallback) =>
       buildPosition(fallback, align, sideOffset, alignOffset),
     );
   }
@@ -449,11 +456,15 @@ export class ZardPopoverDirective implements OnInit, OnDestroy {
       return;
     }
 
-    this.animationListener = this.renderer.listen(content, 'animationend', (event: AnimationEvent) => {
-      if (event.target === content) {
-        this.detachNow();
-      }
-    });
+    this.animationListener = this.renderer.listen(
+      content,
+      'animationend',
+      (event: AnimationEvent) => {
+        if (event.target === content) {
+          this.detachNow();
+        }
+      },
+    );
 
     // happy-dom never fires `animationend`, so the timer is the only guaranteed path in tests.
     this.detachTimer = setTimeout(() => this.detachNow(), ZARD_POPOVER_ANIMATION_DURATION);
@@ -477,7 +488,9 @@ export class ZardPopoverDirective implements OnInit, OnDestroy {
     if (!isPlatformBrowser(this.platformId)) {
       return true;
     }
-    return this.document.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    return (
+      this.document.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    );
   }
 }
 
@@ -530,14 +543,14 @@ export class ZardPopoverDescriptionComponent {
 
   readonly id = computed(() => this.uniqueId()?.id() ?? null);
 
-  protected readonly classes = computed(() => mergeClasses(popoverDescriptionVariants(), this.class()));
+  protected readonly classes = computed(() =>
+    mergeClasses(popoverDescriptionVariants(), this.class()),
+  );
 }
 
 @Component({
   selector: 'z-popover-header, [z-popover-header]',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {

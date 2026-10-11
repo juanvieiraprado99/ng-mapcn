@@ -190,8 +190,8 @@ export class ZardSheetComponent extends ZardSheetHost {
     });
     overlayRef
       .keydownEvents()
-      .pipe(filter(event => ESCAPE_KEYS.includes(event.key)))
-      .subscribe(event => {
+      .pipe(filter((event) => ESCAPE_KEYS.includes(event.key)))
+      .subscribe((event) => {
         event.preventDefault();
         this.requestClose();
       });
@@ -241,9 +241,7 @@ export class ZardSheetComponent extends ZardSheetHost {
 
 @Component({
   selector: 'z-sheet-header, [z-sheet-header]',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
@@ -327,7 +325,9 @@ export class ZardSheetDescriptionComponent {
   readonly zDescription = input<string | TemplateRef<void>>();
 
   protected readonly id = nextSheetId('description');
-  protected readonly classes = computed(() => mergeClasses(sheetDescriptionVariants(), this.class()));
+  protected readonly classes = computed(() =>
+    mergeClasses(sheetDescriptionVariants(), this.class()),
+  );
 
   constructor() {
     afterNextRender(() => this.sheet?.descriptionId.set(this.id));
@@ -342,9 +342,7 @@ export class ZardSheetDescriptionComponent {
 
 @Component({
   selector: 'z-sheet-footer, [z-sheet-footer]',
-  template: `
-    <ng-content />
-  `,
+  template: ` <ng-content /> `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {

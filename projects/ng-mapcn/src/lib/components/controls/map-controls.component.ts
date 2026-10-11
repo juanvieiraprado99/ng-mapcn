@@ -23,7 +23,9 @@ import { MapContextService } from '../../services/map-context.service';
   host: { class: 'ng-map-controls-host' },
 })
 export class MapControlsComponent {
-  readonly position = input<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'>('bottom-right');
+  readonly position = input<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'>(
+    'bottom-right',
+  );
   readonly showZoom = input(true);
   readonly showCompass = input(false);
   readonly showLocate = input(false);
@@ -70,8 +72,7 @@ export class MapControlsComponent {
       }
 
       if (this.isBrowser) {
-        this.fullscreenHandler = () =>
-          this.isFullscreen.set(!!document.fullscreenElement);
+        this.fullscreenHandler = () => this.isFullscreen.set(!!document.fullscreenElement);
         document.addEventListener('fullscreenchange', this.fullscreenHandler);
       }
 
@@ -114,7 +115,7 @@ export class MapControlsComponent {
         this.locating.set(false);
       },
       () => this.locating.set(false),
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10000 },
     );
   }
 

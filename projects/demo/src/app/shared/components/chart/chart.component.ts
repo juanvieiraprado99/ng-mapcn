@@ -70,11 +70,14 @@ function optionalNumberAttribute(value: unknown): number | undefined {
 
 /** Same guard, for the inputs that must always end up with a number. */
 function numberAttributeOr(fallback: number): (value: unknown) => number {
-  return value => numberAttribute(value, fallback);
+  return (value) => numberAttribute(value, fallback);
 }
 
 /** The canvas is measured on every resize; only a real change should redraw the chart. */
-function sameSize(a: { width: number; height: number }, b: { width: number; height: number }): boolean {
+function sameSize(
+  a: { width: number; height: number },
+  b: { width: number; height: number },
+): boolean {
   return a.width === b.width && a.height === b.height;
 }
 
@@ -83,7 +86,12 @@ function sameSize(a: { width: number; height: number }, b: { width: number; heig
   imports: [NgxEchartsDirective],
   template: `
     @if (ssrSvg(); as svg) {
-      <div [class]="canvasClasses()" [attr.role]="hostRole()" [attr.aria-label]="ariaLabel()" [innerHTML]="svg"></div>
+      <div
+        [class]="canvasClasses()"
+        [attr.role]="hostRole()"
+        [attr.aria-label]="ariaLabel()"
+        [innerHTML]="svg"
+      ></div>
     } @else if (onScreen()) {
       <div
         echarts
@@ -147,7 +155,9 @@ export class ZardChartComponent implements ZardChartHost {
   readonly zLazyRender = input(true, { transform: booleanAttribute });
   readonly zRadarShape = input<ZardChartRadarShape>('polygon');
   readonly zRadarRadialLines = input(true, { transform: booleanAttribute });
-  readonly zStartAngle = input<number | undefined>(undefined, { transform: optionalNumberAttribute });
+  readonly zStartAngle = input<number | undefined>(undefined, {
+    transform: optionalNumberAttribute,
+  });
   readonly zEndAngle = input<number | undefined>(undefined, { transform: optionalNumberAttribute });
   readonly zPadAngle = input(0, { transform: numberAttributeOr(0) });
   readonly zGradient = input(false, { transform: booleanAttribute });
@@ -215,7 +225,10 @@ export class ZardChartComponent implements ZardChartHost {
     }
 
     try {
-      return globalThis.getComputedStyle(this.elementRef.nativeElement as HTMLElement).fontFamily || 'sans-serif';
+      return (
+        globalThis.getComputedStyle(this.elementRef.nativeElement as HTMLElement).fontFamily ||
+        'sans-serif'
+      );
     } catch {
       return 'sans-serif';
     }
@@ -236,7 +249,9 @@ export class ZardChartComponent implements ZardChartHost {
 
   // The live chart is a browser affair: on the server the SVG below is all there is, and
   // instantiating the ngx-echarts directive there would ask for a ResizeObserver that is absent.
-  protected readonly onScreen = computed(() => this.isBrowser && (this.seen() || !this.zLazyRender()));
+  protected readonly onScreen = computed(
+    () => this.isBrowser && (this.seen() || !this.zLazyRender()),
+  );
 
   private watchVisibility(): void {
     const host = this.elementRef.nativeElement as HTMLElement;
@@ -247,8 +262,8 @@ export class ZardChartComponent implements ZardChartHost {
     }
 
     const observer = new globalThis.IntersectionObserver(
-      entries => {
-        if (!entries.some(entry => entry.isIntersecting)) {
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) {
           return;
         }
         this.seen.set(true);
@@ -263,11 +278,13 @@ export class ZardChartComponent implements ZardChartHost {
   }
 
   private watchPointerType(): void {
-    this.watchMedia('(pointer: coarse)', matches => this.coarsePointer.set(matches));
+    this.watchMedia('(pointer: coarse)', (matches) => this.coarsePointer.set(matches));
   }
 
   private watchMotionPreference(): void {
-    this.watchMedia('(prefers-reduced-motion: reduce)', matches => this.reducedMotion.set(matches));
+    this.watchMedia('(prefers-reduced-motion: reduce)', (matches) =>
+      this.reducedMotion.set(matches),
+    );
   }
 
   private watchMedia(query: string, apply: (matches: boolean) => void): void {
@@ -284,7 +301,7 @@ export class ZardChartComponent implements ZardChartHost {
   }
 
   private scheduleColorRefresh(): void {
-    const bump = () => this.colorRevision.update(value => value + 1);
+    const bump = () => this.colorRevision.update((value) => value + 1);
 
     if (typeof globalThis.requestAnimationFrame === 'function') {
       globalThis.requestAnimationFrame(bump);
@@ -374,7 +391,9 @@ export class ZardChartComponent implements ZardChartHost {
     return resolveOptionColors(merged, context.resolveColor);
   });
 
-  readonly legendEntries = computed<ZardChartLegendEntry[]>(() => buildLegendEntries(this.buildContext()));
+  readonly legendEntries = computed<ZardChartLegendEntry[]>(() =>
+    buildLegendEntries(this.buildContext()),
+  );
 
   protected readonly initOpts = computed(() => ({ renderer: this.zRenderer() }));
 
@@ -410,13 +429,17 @@ export class ZardChartComponent implements ZardChartHost {
 
     const config = this.zConfig();
     const labels = normalizeSeries(this.zSeries())
-      .map(definition => config[definition.dataKey]?.label ?? definition.dataKey)
+      .map((definition) => config[definition.dataKey]?.label ?? definition.dataKey)
       .filter(Boolean);
 
-    return labels.length > 0 ? `${this.zType()} chart of ${labels.join(', ')}` : `${this.zType()} chart`;
+    return labels.length > 0
+      ? `${this.zType()} chart of ${labels.join(', ')}`
+      : `${this.zType()} chart`;
   });
 
-  protected readonly classes = computed(() => mergeClasses(chartVariants({ zType: this.zType() }), this.class()));
+  protected readonly classes = computed(() =>
+    mergeClasses(chartVariants({ zType: this.zType() }), this.class()),
+  );
 
   protected readonly canvasClasses = computed(() => mergeClasses(chartCanvasVariants()));
 
@@ -461,14 +484,16 @@ export class ZardChartComponent implements ZardChartHost {
 
     // Cleared on destroy: the chart can be torn down in the same tick it was created — a route
     // change, a category switch — and ECharts throws when an action reaches a disposed instance.
-    const timer = setTimeout(() => instance.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex }));
+    const timer = setTimeout(() =>
+      instance.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex }),
+    );
     this.destroyRef.onDestroy(() => clearTimeout(timer));
   }
 
   toggleSeries(name: string): void {
     this.chartInstance()?.dispatchAction({ type: 'legendToggleSelect', name });
 
-    this.hiddenSeries.update(current => {
+    this.hiddenSeries.update((current) => {
       const next = new Set(current);
       if (next.has(name)) {
         next.delete(name);

@@ -80,26 +80,17 @@ const TRAIL_COORDINATES: [number, number][] = [
         [zoom]="11.8"
         [options]="{ scrollZoom: false, dragRotate: false, pitchWithRotate: false }"
       >
-        <ng-map-route
-          [coordinates]="coordinates"
-          color="#3b82f6"
-          [width]="3"
-          [opacity]="0.9"
-        />
+        <ng-map-route [coordinates]="coordinates" color="#3b82f6" [width]="3" [opacity]="0.9" />
 
         <ng-map-marker [longitude]="start[0]" [latitude]="start[1]">
           <ng-marker-content>
-            <div
-              class="size-3 rounded-full border-2 border-white bg-emerald-500 shadow-lg"
-            ></div>
+            <div class="size-3 rounded-full border-2 border-white bg-emerald-500 shadow-lg"></div>
           </ng-marker-content>
         </ng-map-marker>
 
         <ng-map-marker [longitude]="end[0]" [latitude]="end[1]">
           <ng-marker-content>
-            <div
-              class="size-3 rounded-full border-2 border-white bg-red-500 shadow-lg"
-            ></div>
+            <div class="size-3 rounded-full border-2 border-white bg-red-500 shadow-lg"></div>
           </ng-marker-content>
         </ng-map-marker>
       </ng-map>

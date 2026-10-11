@@ -31,15 +31,15 @@ This is an Angular library workspace with two projects:
 
 Inside `projects/ng-mapcn/src/lib/`:
 
-| Path | Purpose |
-|---|---|
-| `components/map/` | Map host: MapLibre init, theme-driven `setStyle`, `blank` style, controlled `viewport`, loader overlay |
-| `components/map-marker/` + `marker-content/`, `marker-popup/`, `marker-tooltip/`, `marker-label/` | Marker created once and reconciled by diffed setters; content projected into the marker element |
-| `components/map-route/`, `map-geojson/`, `map-arc/`, `map-cluster-layer/` | Imperative layer components with empty templates |
-| `services/map-context.service.ts` | `map`, `isLoaded`, `resolvedTheme` signals, provided by `<ng-map>` |
-| `services/theme.service.ts` | Watches the `dark`/`light` class on `<html>`, with a `prefers-color-scheme` fallback |
-| `utils/map-utils.ts` | `nextId`, `getViewport`, `mergeHoverPaint`, `buildArcCoordinates`, shared types |
-| `styles/` | SCSS tokens/utilities and `map-styles.ts` (Carto defaults + `blankMapStyle`) |
+| Path                                                                                              | Purpose                                                                                                |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `components/map/`                                                                                 | Map host: MapLibre init, theme-driven `setStyle`, `blank` style, controlled `viewport`, loader overlay |
+| `components/map-marker/` + `marker-content/`, `marker-popup/`, `marker-tooltip/`, `marker-label/` | Marker created once and reconciled by diffed setters; content projected into the marker element        |
+| `components/map-route/`, `map-geojson/`, `map-arc/`, `map-cluster-layer/`                         | Imperative layer components with empty templates                                                       |
+| `services/map-context.service.ts`                                                                 | `map`, `isLoaded`, `resolvedTheme` signals, provided by `<ng-map>`                                     |
+| `services/theme.service.ts`                                                                       | Watches the `dark`/`light` class on `<html>`, with a `prefers-color-scheme` fallback                   |
+| `utils/map-utils.ts`                                                                              | `nextId`, `getViewport`, `mergeHoverPaint`, `buildArcCoordinates`, shared types                        |
+| `styles/`                                                                                         | SCSS tokens/utilities and `map-styles.ts` (Carto defaults + `blankMapStyle`)                           |
 
 The library is also distributed by schematics (`ng add ng-mapcn`). `scripts/sync-schematic-files.mjs` mirrors `src/lib/**` into `schematics/map/files/`. That folder is generated and git-ignored, so never edit it by hand.
 
@@ -69,18 +69,18 @@ We use [Conventional Commits](https://www.conventionalcommits.org/). The GitHub 
 <type>[optional scope]: <short description>
 ```
 
-| Type | When to use |
-|---|---|
-| `feat` | New feature or component |
-| `fix` | Bug fix |
-| `docs` | Documentation changes |
+| Type       | When to use                           |
+| ---------- | ------------------------------------- |
+| `feat`     | New feature or component              |
+| `fix`      | Bug fix                               |
+| `docs`     | Documentation changes                 |
 | `refactor` | Code refactoring (no behavior change) |
-| `perf` | Performance improvement |
-| `style` | Formatting, missing semicolons, etc. |
-| `test` | Adding or fixing tests |
-| `build` | Build system or dependency changes |
-| `ci` | CI/CD configuration changes |
-| `chore` | Miscellaneous maintenance tasks |
+| `perf`     | Performance improvement               |
+| `style`    | Formatting, missing semicolons, etc.  |
+| `test`     | Adding or fixing tests                |
+| `build`    | Build system or dependency changes    |
+| `ci`       | CI/CD configuration changes           |
+| `chore`    | Miscellaneous maintenance tasks       |
 
 Examples: `feat(marker): add support for custom SVG icons`, `fix(popup): ensure readable text in dark mode`.
 

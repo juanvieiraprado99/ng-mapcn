@@ -243,7 +243,7 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
               longitude: e.lngLat.lng,
               latitude: e.lngLat.lat,
               originalEvent: e,
-            })
+            }),
           );
         }
       };
@@ -263,7 +263,7 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
             longitude: e.lngLat.lng,
             latitude: e.lngLat.lat,
             originalEvent: e,
-          })
+          }),
         );
       };
 

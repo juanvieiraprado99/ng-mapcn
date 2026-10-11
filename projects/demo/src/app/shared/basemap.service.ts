@@ -1,5 +1,13 @@
 import { isPlatformBrowser } from '@angular/common';
-import { computed, DestroyRef, effect, inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
+import {
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  Injectable,
+  PLATFORM_ID,
+  signal,
+} from '@angular/core';
 import type { StyleSpecification } from 'maplibre-gl';
 // Type-only: a value import would pull the whole ng-mapcn FESM (and with it
 // maplibre-gl) into the initial bundle, since this service is root-provided.
@@ -120,15 +128,12 @@ export class BasemapService {
   readonly keys = signal<Partial<Record<BasemapId, string>>>(this.restored.keys);
 
   readonly provider = computed(
-    () =>
-      this.providers.find((p) => p.id === this.providerId()) ?? this.providers[0],
+    () => this.providers.find((p) => p.id === this.providerId()) ?? this.providers[0],
   );
 
   readonly key = computed(() => this.keys()[this.providerId()] ?? '');
 
-  readonly styles = computed<MapStylesConfig | undefined>(() =>
-    this.provider().styles(this.key()),
-  );
+  readonly styles = computed<MapStylesConfig | undefined>(() => this.provider().styles(this.key()));
 
   constructor() {
     effect(() => {

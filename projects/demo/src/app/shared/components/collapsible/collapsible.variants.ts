@@ -14,17 +14,20 @@ export const collapsibleVariants = cva('', {
   },
 });
 
-export const collapsibleContentVariants = cva('grid transition-[grid-template-rows,visibility] duration-200 ease-out', {
-  variants: {
-    isOpen: {
-      true: 'visible grid-rows-[1fr]',
-      false: 'invisible grid-rows-[0fr]',
+export const collapsibleContentVariants = cva(
+  'grid transition-[grid-template-rows,visibility] duration-200 ease-out',
+  {
+    variants: {
+      isOpen: {
+        true: 'visible grid-rows-[1fr]',
+        false: 'invisible grid-rows-[0fr]',
+      },
+    },
+    defaultVariants: {
+      isOpen: false,
     },
   },
-  defaultVariants: {
-    isOpen: false,
-  },
-});
+);
 
 export type ZardCollapsibleVariants = VariantProps<typeof collapsibleVariants>;
 export type ZardCollapsibleContentVariants = VariantProps<typeof collapsibleContentVariants>;

@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, ViewEncapsulation } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  ViewEncapsulation,
+} from '@angular/core';
 
 import { NgIcon } from '@ng-icons/core';
 import type { ClassValue } from 'clsx';
@@ -50,8 +57,12 @@ export class ZardChartLegendComponent {
   readonly class = input<ClassValue>('');
   readonly zVerticalAlign = input<ZardChartLegendAlignVariants>('bottom');
 
-  protected readonly entries = computed<ZardChartLegendEntry[]>(() => this.chart?.legendEntries() ?? []);
-  protected readonly hidden = computed<ReadonlySet<string>>(() => this.chart?.hiddenSeries() ?? new Set<string>());
+  protected readonly entries = computed<ZardChartLegendEntry[]>(
+    () => this.chart?.legendEntries() ?? [],
+  );
+  protected readonly hidden = computed<ReadonlySet<string>>(
+    () => this.chart?.hiddenSeries() ?? new Set<string>(),
+  );
 
   protected readonly classes = computed(() =>
     mergeClasses(chartLegendVariants({ zVerticalAlign: this.zVerticalAlign() }), this.class()),

@@ -28,7 +28,8 @@ export const inputGroupAddonVariants = cva(
         'inline-end': 'order-last pe-2 has-[>button]:me-[-0.3rem] has-[>kbd]:me-[-0.15rem]',
         'block-start':
           'order-first w-full justify-start px-2.5 pt-2 group-has-[>input]/input-group:pt-2 [.border-b]:pb-2',
-        'block-end': 'order-last w-full justify-start px-2.5 pb-2 group-has-[>input]/input-group:pb-2 [.border-t]:pt-2',
+        'block-end':
+          'order-last w-full justify-start px-2.5 pb-2 group-has-[>input]/input-group:pb-2 [.border-t]:pt-2',
       },
     },
     defaultVariants: {
@@ -79,8 +80,12 @@ export const inputGroupTextVariants = cva(
   "flex items-center gap-2 text-sm text-muted-foreground [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
 );
 
-export type ZardInputGroupAddonAlignVariants = NonNullable<VariantProps<typeof inputGroupAddonVariants>['zAlign']>;
-export type ZardInputGroupButtonSizeVariants = NonNullable<VariantProps<typeof inputGroupButtonVariants>['zSize']>;
+export type ZardInputGroupAddonAlignVariants = NonNullable<
+  VariantProps<typeof inputGroupAddonVariants>['zAlign']
+>;
+export type ZardInputGroupButtonSizeVariants = NonNullable<
+  VariantProps<typeof inputGroupButtonVariants>['zSize']
+>;
 export type ZardInputGroupButtonVariantVariants = NonNullable<
   VariantProps<typeof inputGroupButtonVariants>['zVariant']
 >;

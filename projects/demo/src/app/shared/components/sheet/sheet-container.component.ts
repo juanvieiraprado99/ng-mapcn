@@ -171,7 +171,9 @@ export class ZardSheetOptions<T, U> {
   // forwardRef: the decorator is evaluated before the class binding exists, so a bare
   // reference to ZardSheetContainerComponent here throws "Cannot access before initialization"
   // whenever the module is evaluated outside the AOT compiler.
-  providers: [{ provide: ZardSheetHost, useExisting: forwardRef(() => ZardSheetContainerComponent) }],
+  providers: [
+    { provide: ZardSheetHost, useExisting: forwardRef(() => ZardSheetContainerComponent) },
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: { style: 'display: contents' },

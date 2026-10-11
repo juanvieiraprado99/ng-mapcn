@@ -4,10 +4,10 @@
 
 Only the latest `22.x` line receives security fixes.
 
-| Version      | Supported |
-| ------------ | --------- |
+| Version       | Supported |
+| ------------- | --------- |
 | `22.x` (beta) | ✅        |
-| `< 22`       | ❌        |
+| `< 22`        | ❌        |
 
 ## Reporting a vulnerability
 

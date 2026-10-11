@@ -106,7 +106,10 @@ export class ZardDialogOptions<T, U> {
             <z-dialog-title data-testid="z-title" [zTitle]="config.zTitle" />
           }
           @if (config.zDescription) {
-            <z-dialog-description data-testid="z-description" [zDescription]="config.zDescription" />
+            <z-dialog-description
+              data-testid="z-description"
+              [zDescription]="config.zDescription"
+            />
           }
         </z-dialog-header>
       }
@@ -181,7 +184,9 @@ export class ZardDialogOptions<T, U> {
   // forwardRef: the decorator is evaluated before the class binding exists, so a bare
   // reference to ZardDialogContainerComponent here throws "Cannot access before initialization"
   // whenever the module is evaluated outside the AOT compiler.
-  providers: [{ provide: ZardDialogHost, useExisting: forwardRef(() => ZardDialogContainerComponent) }],
+  providers: [
+    { provide: ZardDialogHost, useExisting: forwardRef(() => ZardDialogContainerComponent) },
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: { style: 'display: contents' },

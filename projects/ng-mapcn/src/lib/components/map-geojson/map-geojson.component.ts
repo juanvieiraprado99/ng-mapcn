@@ -18,10 +18,7 @@ import { MapContextService } from '../../services/map-context.service';
 import { MapGeoJSONEvent, mergeHoverPaint, nextId } from '../../utils/map-utils';
 
 export type MapGeoJSONData =
-  | GeoJSON.FeatureCollection
-  | GeoJSON.Feature
-  | GeoJSON.Geometry
-  | string;
+  GeoJSON.FeatureCollection | GeoJSON.Feature | GeoJSON.Geometry | string;
 
 type MapFillPaint = NonNullable<FillLayerSpecification['paint']>;
 type MapLinePaint = NonNullable<LineLayerSpecification['paint']>;

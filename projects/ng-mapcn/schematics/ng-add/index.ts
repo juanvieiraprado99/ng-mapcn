@@ -1,10 +1,4 @@
-import {
-  Rule,
-  SchematicContext,
-  Tree,
-  chain,
-  schematic,
-} from '@angular-devkit/schematics';
+import { Rule, SchematicContext, Tree, chain, schematic } from '@angular-devkit/schematics';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
 const MAPLIBRE_VERSION = '^5.16.0';

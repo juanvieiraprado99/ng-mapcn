@@ -70,7 +70,9 @@ export class ZardInputGroupAddonComponent {
       return;
     }
 
-    const control = this.elementRef.nativeElement.parentElement?.querySelector('input, textarea') as HTMLElement | null;
+    const control = this.elementRef.nativeElement.parentElement?.querySelector(
+      'input, textarea',
+    ) as HTMLElement | null;
     control?.focus();
   }
 }
@@ -91,7 +93,10 @@ export class ZardInputGroupButtonDirective {
   readonly zSize = input<ZardInputGroupButtonSizeVariants>('xs');
 
   protected readonly classes = computed(() =>
-    mergeClasses(inputGroupButtonVariants({ zVariant: this.zVariant(), zSize: this.zSize() }), this.class()),
+    mergeClasses(
+      inputGroupButtonVariants({ zVariant: this.zVariant(), zSize: this.zSize() }),
+      this.class(),
+    ),
   );
 }
 

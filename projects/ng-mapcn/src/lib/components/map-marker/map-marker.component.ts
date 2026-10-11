@@ -74,13 +74,13 @@ export class MapMarkerComponent {
           .addTo(map);
 
         el.addEventListener('click', (e) =>
-          this.zone.run(() => this.markerClick.emit(e as MouseEvent))
+          this.zone.run(() => this.markerClick.emit(e as MouseEvent)),
         );
         el.addEventListener('mouseenter', (e) =>
-          this.zone.run(() => this.markerMouseEnter.emit(e as MouseEvent))
+          this.zone.run(() => this.markerMouseEnter.emit(e as MouseEvent)),
         );
         el.addEventListener('mouseleave', (e) =>
-          this.zone.run(() => this.markerMouseLeave.emit(e as MouseEvent))
+          this.zone.run(() => this.markerMouseLeave.emit(e as MouseEvent)),
         );
 
         m.on('dragstart', () => {

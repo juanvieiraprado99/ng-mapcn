@@ -9,9 +9,7 @@ export class MapContextService {
   private readonly resolvedThemeSignal = signal<'light' | 'dark'>('light');
 
   readonly map = this.mapSignal.asReadonly();
-  readonly isLoaded = computed(
-    () => this.loadedFlagSignal() && this.styleLoadedFlagSignal()
-  );
+  readonly isLoaded = computed(() => this.loadedFlagSignal() && this.styleLoadedFlagSignal());
   /** Theme currently applied to the map (mapcn context `resolvedTheme`). */
   readonly resolvedTheme = this.resolvedThemeSignal.asReadonly();
 

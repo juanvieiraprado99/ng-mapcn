@@ -46,7 +46,9 @@ export class ZardSidebarService {
 
   readonly isMobile = toSignal(
     this.isBrowser
-      ? this.breakpointObserver.observe(ZARD_SIDEBAR_MOBILE_BREAKPOINT).pipe(map(result => result.matches))
+      ? this.breakpointObserver
+          .observe(ZARD_SIDEBAR_MOBILE_BREAKPOINT)
+          .pipe(map((result) => result.matches))
       : of(false),
     { initialValue: false },
   );
@@ -73,9 +75,9 @@ export class ZardSidebarService {
 
   toggleSidebar(): void {
     if (this.isMobile()) {
-      this.internalOpenMobile.update(open => !open);
+      this.internalOpenMobile.update((open) => !open);
     } else {
-      this.setOpen(open => !open);
+      this.setOpen((open) => !open);
     }
   }
 

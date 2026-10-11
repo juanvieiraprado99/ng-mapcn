@@ -99,8 +99,7 @@ export class CreditsComponent {
     {
       name: 'Carto',
       role: 'Basemaps',
-      description:
-        'The free light and dark basemaps used by default — no API key required.',
+      description: 'The free light and dark basemaps used by default — no API key required.',
       url: 'https://carto.com',
     },
   ];

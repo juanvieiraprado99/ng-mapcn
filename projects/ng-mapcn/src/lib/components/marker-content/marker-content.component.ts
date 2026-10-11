@@ -52,7 +52,10 @@ export class MarkerContentComponent {
       view.detectChanges();
 
       // No projected content -> default marker icon (mapcn's blue dot)
-      if (!wrapper.hasChildNodes() || (wrapper.textContent?.trim() === '' && !wrapper.querySelector('*'))) {
+      if (
+        !wrapper.hasChildNodes() ||
+        (wrapper.textContent?.trim() === '' && !wrapper.querySelector('*'))
+      ) {
         const icon = document.createElement('div');
         icon.className = 'ng-marker-default-icon';
         wrapper.appendChild(icon);

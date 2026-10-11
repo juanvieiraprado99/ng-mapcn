@@ -27,11 +27,11 @@ ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map componen
 
 ## Compatibility
 
-| ng-mapcn | Angular | MapLibre GL | npm tag |
-|---|---|---|---|
-| `22.x` | `^22.0.0` | `^5.16.0` | `latest`, `beta` |
-| `21.x` | `^21.2.9` | `^5.16.0` | n/a |
-| `18.x` | `^18.2.14` | `^5.16.0` | n/a |
+| ng-mapcn | Angular    | MapLibre GL | npm tag          |
+| -------- | ---------- | ----------- | ---------------- |
+| `22.x`   | `^22.0.0`  | `^5.16.0`   | `latest`, `beta` |
+| `21.x`   | `^21.2.9`  | `^5.16.0`   | n/a              |
+| `18.x`   | `^18.2.14` | `^5.16.0`   | n/a              |
 
 Node.js `^22.22.3 || ^24.15.0 || >=26.0.0`. The commands below use the `@beta` tag so you always get the newest 22.x prerelease.
 
@@ -116,18 +116,18 @@ The map fills its parent, so give the parent an explicit height. More building b
 
 ## Components
 
-| Component | Description |
-|---|---|
-| `ng-map` | Map host. Inputs: `center`, `zoom`, `theme` (`light`/`dark`/`auto`), `styles` (per-theme basemap), `blank` (tile-less dataviz style), `projection`, `viewport` (controlled mode), `loading`, `options` (raw MapLibre `MapOptions`). Outputs: `viewportChange`, `mapReady`, `mapClick`, `mapError`. |
-| `ng-map-controls` | Zoom / compass / locate / fullscreen buttons (custom UI, not MapLibre `IControl`). |
-| `ng-map-marker` | Declarative marker. `longitude`, `latitude`, `draggable`, `offset`, `rotation`, `anchor`, alignments; click/hover/drag outputs. |
-| `ng-marker-content` | Projects custom HTML into the marker element (empty = default dot). |
-| `ng-marker-popup` / `ng-marker-tooltip` / `ng-marker-label` | Popup on click, tooltip on hover, CSS label above/below the marker. |
-| `ng-map-popup` | Standalone popup at a lng/lat (no marker). |
-| `ng-map-route` | LineString layer with color/width/opacity/dashArray and click output. |
-| `ng-map-geojson` | Fill + outline layers from GeoJSON data or URL. Declarative hover via `promoteId` + `fillHoverPaint` (feature-state). |
-| `ng-map-arc` | Curved arcs between points (flight paths). Invisible hit layer for comfortable hover/click; `hoverPaint` via feature-state. |
-| `ng-map-cluster-layer` | Clustered points with count labels, threshold-based colors/sizes and expansion-zoom on click. |
+| Component                                                   | Description                                                                                                                                                                                                                                                                                        |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ng-map`                                                    | Map host. Inputs: `center`, `zoom`, `theme` (`light`/`dark`/`auto`), `styles` (per-theme basemap), `blank` (tile-less dataviz style), `projection`, `viewport` (controlled mode), `loading`, `options` (raw MapLibre `MapOptions`). Outputs: `viewportChange`, `mapReady`, `mapClick`, `mapError`. |
+| `ng-map-controls`                                           | Zoom / compass / locate / fullscreen buttons (custom UI, not MapLibre `IControl`).                                                                                                                                                                                                                 |
+| `ng-map-marker`                                             | Declarative marker. `longitude`, `latitude`, `draggable`, `offset`, `rotation`, `anchor`, alignments; click/hover/drag outputs.                                                                                                                                                                    |
+| `ng-marker-content`                                         | Projects custom HTML into the marker element (empty = default dot).                                                                                                                                                                                                                                |
+| `ng-marker-popup` / `ng-marker-tooltip` / `ng-marker-label` | Popup on click, tooltip on hover, CSS label above/below the marker.                                                                                                                                                                                                                                |
+| `ng-map-popup`                                              | Standalone popup at a lng/lat (no marker).                                                                                                                                                                                                                                                         |
+| `ng-map-route`                                              | LineString layer with color/width/opacity/dashArray and click output.                                                                                                                                                                                                                              |
+| `ng-map-geojson`                                            | Fill + outline layers from GeoJSON data or URL. Declarative hover via `promoteId` + `fillHoverPaint` (feature-state).                                                                                                                                                                              |
+| `ng-map-arc`                                                | Curved arcs between points (flight paths). Invisible hit layer for comfortable hover/click; `hoverPaint` via feature-state.                                                                                                                                                                        |
+| `ng-map-cluster-layer`                                      | Clustered points with count labels, threshold-based colors/sizes and expansion-zoom on click.                                                                                                                                                                                                      |
 
 Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint`, `blankMapStyle`, `defaultStyles`, and `MapContextService` (map / isLoaded / resolvedTheme signals for advanced layer work via `inject`).
 
@@ -156,13 +156,13 @@ export const appConfig: ApplicationConfig = {
 
 Precedence: `[styles]` → `[blank]` → `provideMapStyles()` → Carto default.
 
-| Provider | Style URL | API key |
-|---|---|---|
-| Carto (default) | `https://basemaps.cartocdn.com/gl/{positron\|dark-matter\|voyager}-gl-style/style.json` | no |
-| OpenFreeMap | `https://tiles.openfreemap.org/styles/{liberty\|bright\|positron\|dark\|fiord}` | no |
-| OpenStreetMap | raster tiles `https://tile.openstreetmap.org/{z}/{x}/{y}.png` — build the `StyleSpecification` by hand; dev/demo only ([tile usage policy](https://operations.osmfoundation.org/policies/tiles/)) | no |
-| MapTiler | `https://api.maptiler.com/maps/{streets-v4\|streets-v4-dark\|dataviz-v4}/style.json?key=KEY` | yes |
-| Stadia Maps | `https://tiles.stadiamaps.com/styles/{alidade_smooth\|alidade_smooth_dark}.json?api_key=KEY` | keyless on `localhost` |
+| Provider        | Style URL                                                                                                                                                                                         | API key                |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| Carto (default) | `https://basemaps.cartocdn.com/gl/{positron\|dark-matter\|voyager}-gl-style/style.json`                                                                                                           | no                     |
+| OpenFreeMap     | `https://tiles.openfreemap.org/styles/{liberty\|bright\|positron\|dark\|fiord}`                                                                                                                   | no                     |
+| OpenStreetMap   | raster tiles `https://tile.openstreetmap.org/{z}/{x}/{y}.png` — build the `StyleSpecification` by hand; dev/demo only ([tile usage policy](https://operations.osmfoundation.org/policies/tiles/)) | no                     |
+| MapTiler        | `https://api.maptiler.com/maps/{streets-v4\|streets-v4-dark\|dataviz-v4}/style.json?key=KEY`                                                                                                      | yes                    |
+| Stadia Maps     | `https://tiles.stadiamaps.com/styles/{alidade_smooth\|alidade_smooth_dark}.json?api_key=KEY`                                                                                                      | keyless on `localhost` |
 
 Live examples for each: [ng-mapcn demo → Map Styles](https://ng-mapcn.vercel.app/docs/basemaps).
 
