@@ -83,3 +83,21 @@ export function update(fixture: { componentInstance: any; detectChanges(): void 
   Object.assign(fixture.componentInstance, props);
   fixture.detectChanges();
 }
+
+/** `loadMap()` followed by change detection so the layer components' effects run. */
+export function loadAndSettle(fixture: { detectChanges(): void }, map: FakeMap): void {
+  loadMap(map);
+  fixture.detectChanges();
+}
+
+/** Simulates the style finishing after `setStyle`: `styledata`, the 100 ms debounce, then effects. */
+export function reloadStyle(fixture: { detectChanges(): void }, map: FakeMap): void {
+  map.fire('styledata');
+  vi.advanceTimersByTime(100);
+  fixture.detectChanges();
+}
+
+/** The source/layer add/remove operations recorded on the map, in order. */
+export function structuralCalls(map: FakeMap): string[] {
+  return map.calls.filter((c) => /^(addSource|addLayer|removeLayer|removeSource):/.test(c));
+}
