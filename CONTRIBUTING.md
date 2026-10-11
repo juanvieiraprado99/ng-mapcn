@@ -77,6 +77,24 @@ npm run format:check  # verify formatting without writing
 - To hide the mechanical formatting commits from `git blame`, run `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
 - On Windows, LF line endings are enforced by `.gitattributes`, so no extra Git setup is needed.
 
+## Tests
+
+Unit tests run on [Vitest](https://vitest.dev) through the Angular CLI (`@angular/build:unit-test`) with jsdom.
+
+```bash
+npm test               # library + demo tests
+npm run test:lib       # library only
+npm run test:demo      # demo only (needs `npm run install:lib` first)
+npm run test:coverage  # library with coverage, written to coverage/ng-mapcn
+ng test ng-mapcn       # watch mode
+```
+
+- Specs live next to the code as `*.spec.ts` under `projects/ng-mapcn/src/lib/`. They are not copied by the `ng add` schematic.
+- MapLibre is mocked globally in `projects/ng-mapcn/src/testing/setup.ts`, so specs never create a real map. Import `projects/ng-mapcn/src/testing/maplibre-fake.ts` to inspect the fake instances.
+- Test helpers go in `projects/ng-mapcn/src/testing/`, never in `src/lib`, so they are not shipped by the package or the schematic.
+- jsdom has no layout, so `ng-map` would wait forever for a non-zero container size. Render maps with `renderMap` from `src/testing/render.ts`, which stubs the size, and use `loadMap` (with `vi.useFakeTimers()`) to open the load gate.
+- Restore global state in `afterEach`: real timers, `vi.restoreAllMocks()` and the `<html>` class.
+
 ## Commits
 
 We use [Conventional Commits](https://www.conventionalcommits.org/). The GitHub Actions release workflow parses commit messages to generate categorized release notes, so clear messages produce informative releases.

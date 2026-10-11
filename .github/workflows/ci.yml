@@ -36,3 +36,32 @@ jobs:
       - name: Lint commit messages
         if: github.event_name == 'pull_request'
         run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+  test:
+    runs-on: ubuntu-latest
+    env:
+      HUSKY: 0
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Library unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Install the built library for the demo tests
+        run: npm run install:lib
+
+      - name: Demo unit tests
+        run: npm run test:demo
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-ng-mapcn
+          path: coverage/ng-mapcn
