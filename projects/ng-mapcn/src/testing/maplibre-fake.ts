@@ -91,6 +91,11 @@ export class Map extends Evented {
 
   constructor(readonly options: any = {}) {
     super();
+    const failure = fakeRegistry.constructError;
+    if (failure) {
+      fakeRegistry.constructError = null;
+      throw failure;
+    }
     this.camera = {
       ...toLngLat(options.center),
       zoom: options.zoom ?? 0,
@@ -416,12 +421,16 @@ export const fakeRegistry: {
   maps: FakeMap[];
   markers: FakeMarker[];
   popups: FakePopup[];
+  /** When set, the next `new Map()` throws it (then the field is cleared). */
+  constructError: Error | null;
   reset(): void;
 } = {
   maps: [],
   markers: [],
   popups: [],
+  constructError: null,
   reset() {
+    this.constructError = null;
     this.maps.length = 0;
     this.markers.length = 0;
     this.popups.length = 0;
