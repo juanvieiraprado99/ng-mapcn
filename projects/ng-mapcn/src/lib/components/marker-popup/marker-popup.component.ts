@@ -12,7 +12,6 @@ import {
 } from '@angular/core';
 import { Popup } from 'maplibre-gl';
 
-import { MapContextService } from '../../services/map-context.service';
 import { MarkerContextService } from '../map-marker/marker-context.service';
 
 @Component({

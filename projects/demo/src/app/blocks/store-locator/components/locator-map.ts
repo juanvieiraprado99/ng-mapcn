@@ -65,6 +65,7 @@ export class FlyToSelectedComponent {
   template: `
     <button
       z-sidebar-trigger
+      aria-label="Toggle sidebar"
       class="bg-background absolute top-3 left-3 z-10 border shadow-sm md:hidden"
     ></button>
 

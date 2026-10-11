@@ -34,6 +34,7 @@ export class MapMarkerComponent {
   readonly markerMouseEnter = output<MouseEvent>();
   readonly markerMouseLeave = output<MouseEvent>();
   readonly dragStart = output<{ lng: number; lat: number }>();
+  // eslint-disable-next-line @angular-eslint/no-output-native -- public API (mapcn parity); renaming is breaking
   readonly drag = output<{ lng: number; lat: number }>();
   readonly dragEnd = output<{ lng: number; lat: number }>();
 
