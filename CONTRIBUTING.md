@@ -61,6 +61,22 @@ These come from the mapcn port plan. Do not violate them.
 - Formatting follows the Prettier config in `package.json` (100 columns, single quotes).
 - After changing the public API, run `npm run generate:llms` to regenerate `llms.txt` and `llms-full.txt`.
 
+## Linting and formatting
+
+ESLint (with angular-eslint) checks the code and Prettier formats it.
+
+```bash
+npm run lint          # report lint problems
+npm run lint:fix      # autofix what can be fixed
+npm run format        # format everything with Prettier
+npm run format:check  # verify formatting without writing
+```
+
+- Git hooks (husky) are installed automatically by `npm install`. On commit, lint-staged lints and formats the staged files, and commitlint checks that the message follows Conventional Commits.
+- CI repeats the lint, format and commit message checks on every pull request.
+- To hide the mechanical formatting commits from `git blame`, run `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
+- On Windows, LF line endings are enforced by `.gitattributes`, so no extra Git setup is needed.
+
 ## Commits
 
 We use [Conventional Commits](https://www.conventionalcommits.org/). The GitHub Actions release workflow parses commit messages to generate categorized release notes, so clear messages produce informative releases.
@@ -90,7 +106,7 @@ Examples: `feat(marker): add support for custom SVG icons`, `fix(popup): ensure 
 - Write the PR title in Conventional Commit form.
 - Link the issue in the description (`Closes #N`).
 - Check your change in the demo in both light and dark themes.
-- Run `npm run build:lib:prod` and `npm test` before opening the PR.
+- Run `npm run lint`, `npm run build:lib:prod` and `npm test` before opening the PR.
 
 ## Reporting bugs and security issues
 

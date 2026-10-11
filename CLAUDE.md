@@ -29,6 +29,12 @@ npm run publish:lib
 
 # Run tests
 ng test
+
+# Lint and format (ESLint + Prettier)
+npm run lint
+npm run lint:fix
+npm run format
+npm run format:check
 ```
 
 The demo app depends on `ng-mapcn` installed as a local `.tgz` file from `dist/`. After any library change, run `build-ui-dev` or `build-ui-dev-clean` before serving the demo.
@@ -75,7 +81,7 @@ Two channels, same sources:
 
 ## Commits
 
-Always use **Conventional Commits** format — commit messages are parsed by the GitHub Actions release workflow to generate categorized release notes, so well-described commits produce informative releases.
+Always use **Conventional Commits** format — commit messages are parsed by the GitHub Actions release workflow to generate categorized release notes, so well-described commits produce informative releases. commitlint enforces the format through a husky `commit-msg` hook, and lint-staged runs ESLint and Prettier on staged files in the `pre-commit` hook.
 
 ```
 <type>[optional scope]: <short description>
