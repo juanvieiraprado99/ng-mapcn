@@ -41,7 +41,7 @@ export class MyMapComponent {}`;
         Prerequisites
       </h2>
       <p class="text-muted-foreground mb-10 text-sm leading-relaxed">
-        An Angular 21+ project. Tailwind CSS is optional but recommended for
+        An Angular 22+ project. Tailwind CSS is optional but recommended for
         styling marker and popup content.
       </p>
 

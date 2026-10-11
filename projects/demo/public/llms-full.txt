@@ -2,7 +2,7 @@
 
 > Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v5 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
 
-Version: 21.0.0-beta.7 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
+Version: 22.0.0-beta.0 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
 
 ## Installation
 
@@ -398,7 +398,7 @@ The map is created in `afterNextRender` (browser-only, after hydration) and ever
 
 ## Tech Stack
 
-- Angular 21+ (standalone, signals, zoneless-friendly)
+- Angular 22+ (standalone, signals, zoneless-friendly)
 - TypeScript
 - MapLibre GL JS v5
 - TailwindCSS (demo site)

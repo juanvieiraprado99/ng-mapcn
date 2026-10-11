@@ -7,9 +7,8 @@
     "types": [
       "node"
     ],
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/app/*"]
+      "@/*": ["./src/app/*"]
     }
   },
   "include": [
@@ -17,5 +16,13 @@
   ],
   "exclude": [
     "src/**/*.spec.ts"
-  ]
+  ],
+  "angularCompilerOptions": {
+    "extendedDiagnostics": {
+      "checks": {
+        "nullishCoalescingNotNullable": "suppress",
+        "optionalChainNotNullable": "suppress"
+      }
+    }
+  }
 }

@@ -95,7 +95,7 @@ const FEATURES = `## Key Features
 
 const TECH_STACK = `## Tech Stack
 
-- Angular 21+ (standalone, signals, zoneless-friendly)
+- Angular 22+ (standalone, signals, zoneless-friendly)
 - TypeScript
 - MapLibre GL JS v5
 - TailwindCSS (demo site)

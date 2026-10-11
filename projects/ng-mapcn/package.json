@@ -1,10 +1,10 @@
 {
   "name": "ng-mapcn",
-  "version": "21.0.0-beta.7",
-  "description": "Beautiful maps for Angular, made simple. MapLibre GL components for Angular 21+ with theme-aware styling inspired by shadcn/ui.",
+  "version": "22.0.0-beta.0",
+  "description": "Beautiful maps for Angular, made simple. MapLibre GL components for Angular 22+ with theme-aware styling inspired by shadcn/ui.",
   "keywords": [
     "angular",
-    "angular-21",
+    "angular-22",
     "map",
     "maplibre",
     "maplibre-gl",
@@ -26,12 +26,12 @@
     "url": "https://github.com/juanvieiraprado99/ng-mapcn/issues"
   },
   "engines": {
-    "node": ">=18.0.0",
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0",
     "npm": ">=9.0.0"
   },
   "peerDependencies": {
-    "@angular/common": "^21.2.9",
-    "@angular/core": "^21.2.9"
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0"
   },
   "dependencies": {
     "tslib": "^2.3.0",

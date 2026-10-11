@@ -1,11 +1,11 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
 import {
   Routes,
   provideRouter,
   withInMemoryScrolling,
 } from '@angular/router';
-import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { provideClientHydration, withEventReplay, withNoIncrementalHydration } from '@angular/platform-browser';
 import { provideZard } from '@/shared/core/provider/providezard';
 
 // Every route is lazy: nothing here may import `ng-mapcn`, or maplibre-gl
@@ -39,7 +39,7 @@ export const appConfig: ApplicationConfig = {
         scrollPositionRestoration: 'top',
       })
     ),
-    provideHttpClient(), provideClientHydration(withEventReplay()),
+    provideHttpClient(withXhr()), provideClientHydration(withEventReplay(), withNoIncrementalHydration()),
 
     provideZard(),],
 };
