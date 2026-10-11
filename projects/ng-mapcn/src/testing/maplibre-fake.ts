@@ -201,7 +201,12 @@ export class Map extends Evented {
   addSource(id: string, source: any): this {
     if (this.sources[id]) throw new Error(`Source "${id}" already exists.`);
     this.calls.push(`addSource:${id}`);
-    this.sources[id] = { ...source, id, setData: vi.fn() };
+    this.sources[id] = {
+      ...source,
+      id,
+      setData: vi.fn(),
+      getClusterExpansionZoom: vi.fn((_clusterId: number) => Promise.resolve(0)),
+    };
     return this;
   }
 

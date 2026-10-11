@@ -1,0 +1,411 @@
+import { TestBed } from '@angular/core/testing';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { type FakeMap } from '../../../testing/maplibre-fake';
+import {
+  loadAndSettle,
+  reloadStyle,
+  renderMap,
+  structuralCalls,
+  update,
+} from '../../../testing/render';
+import { MapClusterLayerComponent } from './map-cluster-layer.component';
+
+const TEMPLATE = `
+  <ng-map [theme]="theme">
+    @if (show) {
+      <ng-map-cluster-layer
+        [data]="data"
+        [clusterMaxZoom]="clusterMaxZoom"
+        [clusterRadius]="clusterRadius"
+        [clusterColors]="clusterColors"
+        [clusterThresholds]="clusterThresholds"
+        [pointColor]="pointColor"
+        [zoomOnClusterClick]="zoomOnClusterClick"
+        (pointClick)="pointClick($event)"
+        (clusterClick)="clusterClick($event)"
+      />
+    }
+  </ng-map>
+`;
+
+const DATA: GeoJSON.FeatureCollection<GeoJSON.Point> = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      properties: { name: 'p' },
+      geometry: { type: 'Point', coordinates: [1, 2] },
+    },
+  ],
+};
+
+function hostDefaults(): Record<string, any> {
+  return {
+    theme: 'light',
+    show: true,
+    data: DATA,
+    clusterMaxZoom: 14,
+    clusterRadius: 50,
+    clusterColors: ['#22c55e', '#eab308', '#ef4444'],
+    clusterThresholds: [100, 750],
+    pointColor: '#3b82f6',
+    zoomOnClusterClick: true,
+    pointClick: vi.fn(),
+    clusterClick: vi.fn(),
+  };
+}
+
+async function render(hostProps: Record<string, unknown> = {}) {
+  const host = { ...hostDefaults(), ...hostProps };
+  const result = await renderMap(TEMPLATE, {
+    imports: [MapClusterLayerComponent],
+    hostProps: host,
+  });
+  return { ...result, map: result.map!, host };
+}
+
+/** Renders, loads, and resolves the auto-generated ids from the recorded `addSource` call. */
+async function renderLoaded(hostProps: Record<string, unknown> = {}) {
+  const result = await render(hostProps);
+  loadAndSettle(result.fixture, result.map);
+  return { ...result, ids: idsOf(result.map) };
+}
+
+function idsOf(map: FakeMap) {
+  const added = map.calls.find((c) => c.startsWith('addSource:cluster-source-'));
+  if (!added) throw new Error('the cluster source was not added');
+  const n = added.slice('addSource:cluster-source-'.length);
+  return {
+    source: `cluster-source-${n}`,
+    clusters: `clusters-${n}`,
+    count: `cluster-count-${n}`,
+    point: `unclustered-point-${n}`,
+  };
+}
+
+const clusterFeature = (clusterId: number, pointCount: number, coordinates = [3, 4]) => ({
+  properties: { cluster_id: clusterId, point_count: pointCount },
+  geometry: { type: 'Point', coordinates },
+});
+
+describe('MapClusterLayerComponent', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    document.documentElement.className = '';
+    TestBed.resetTestingModule();
+  });
+
+  describe('gating (invariant 1)', () => {
+    it('adds nothing before load, then the source before its three layers', async () => {
+      const { fixture, map, ctx } = await render();
+
+      expect(ctx.isLoaded()).toBe(false);
+      expect(structuralCalls(map)).toEqual([]);
+
+      loadAndSettle(fixture, map);
+      const ids = idsOf(map);
+
+      expect(structuralCalls(map)).toEqual([
+        `addSource:${ids.source}`,
+        `addLayer:${ids.clusters}`,
+        `addLayer:${ids.count}`,
+        `addLayer:${ids.point}`,
+      ]);
+    });
+  });
+
+  describe('re-add after theme switch (invariant 1)', () => {
+    it('re-adds the source and all layers exactly once after setStyle', async () => {
+      const { fixture, map, ids } = await renderLoaded();
+
+      update(fixture, { theme: 'dark' });
+      expect(map.setStyle).toHaveBeenCalled();
+      expect(map.getLayerOrder()).toEqual([]);
+
+      reloadStyle(fixture, map);
+
+      expect(map.getSource(ids.source)).toBeDefined();
+      expect(map.getLayerOrder()).toEqual([ids.clusters, ids.count, ids.point]);
+      const calls = structuralCalls(map);
+      for (const op of [
+        `addSource:${ids.source}`,
+        `addLayer:${ids.clusters}`,
+        `addLayer:${ids.count}`,
+        `addLayer:${ids.point}`,
+      ]) {
+        expect(calls.filter((c) => c === op)).toHaveLength(2);
+      }
+      expect(map.listenerCount('click', ids.clusters)).toBe(1);
+    });
+  });
+
+  describe('initial definition', () => {
+    it('enables clustering with the default options', async () => {
+      const { map, ids } = await renderLoaded();
+      const source = map.getSource(ids.source);
+
+      expect(source.type).toBe('geojson');
+      expect(source.cluster).toBe(true);
+      expect(source.clusterMaxZoom).toBe(14);
+      expect(source.clusterRadius).toBe(50);
+      expect(source.data).toBe(DATA);
+    });
+
+    it('forwards custom clusterMaxZoom and clusterRadius', async () => {
+      const { map, ids } = await renderLoaded({ clusterMaxZoom: 9, clusterRadius: 80 });
+
+      expect(map.getSource(ids.source).clusterMaxZoom).toBe(9);
+      expect(map.getSource(ids.source).clusterRadius).toBe(80);
+    });
+
+    it('builds step expressions from the colors and thresholds', async () => {
+      const { map, ids } = await renderLoaded({
+        clusterColors: ['#111111', '#222222', '#333333'],
+        clusterThresholds: [10, 20],
+      });
+
+      const paint = map.getLayer(ids.clusters).paint;
+      expect(paint['circle-color']).toEqual([
+        'step',
+        ['get', 'point_count'],
+        '#111111',
+        10,
+        '#222222',
+        20,
+        '#333333',
+      ]);
+      expect(paint['circle-radius']).toEqual(['step', ['get', 'point_count'], 20, 10, 30, 20, 40]);
+      expect(map.getLayer(ids.clusters).filter).toEqual(['has', 'point_count']);
+      expect(map.getLayer(ids.count).layout['text-field']).toBe('{point_count_abbreviated}');
+      expect(map.getLayer(ids.point).filter).toEqual(['!', ['has', 'point_count']]);
+      expect(map.getLayer(ids.point).paint['circle-color']).toBe('#3b82f6');
+    });
+  });
+
+  describe('reconcile, do not recreate (invariant 2)', () => {
+    it('updates colors, thresholds and pointColor through setPaintProperty only', async () => {
+      const { fixture, map, ids } = await renderLoaded();
+      map.setPaintProperty.mockClear();
+      map.calls.length = 0;
+
+      update(fixture, {
+        clusterColors: ['#a', '#b', '#c'],
+        clusterThresholds: [5, 6],
+        pointColor: '#00ff00',
+      });
+
+      expect(map.setPaintProperty).toHaveBeenCalledWith(ids.clusters, 'circle-color', [
+        'step',
+        ['get', 'point_count'],
+        '#a',
+        5,
+        '#b',
+        6,
+        '#c',
+      ]);
+      expect(map.setPaintProperty).toHaveBeenCalledWith(ids.clusters, 'circle-radius', [
+        'step',
+        ['get', 'point_count'],
+        20,
+        5,
+        30,
+        6,
+        40,
+      ]);
+      expect(map.setPaintProperty).toHaveBeenCalledWith(ids.point, 'circle-color', '#00ff00');
+      expect(structuralCalls(map)).toEqual([]);
+    });
+
+    it('pushes new object data through setData on the same source', async () => {
+      const { fixture, map, ids } = await renderLoaded();
+      const source = map.getSource(ids.source);
+      source.setData.mockClear();
+      map.calls.length = 0;
+      const next: GeoJSON.FeatureCollection<GeoJSON.Point> = {
+        type: 'FeatureCollection',
+        features: [],
+      };
+
+      update(fixture, { data: next });
+
+      expect(source.setData).toHaveBeenCalledWith(next);
+      expect(map.getSource(ids.source)).toBe(source);
+      expect(structuralCalls(map)).toEqual([]);
+    });
+
+    it('never calls setData for URL data', async () => {
+      const { fixture, map, ids } = await renderLoaded({ data: 'https://example.com/a.geojson' });
+      const source = map.getSource(ids.source);
+      expect(source.data).toBe('https://example.com/a.geojson');
+
+      update(fixture, { data: 'https://example.com/b.geojson' });
+
+      expect(source.setData).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('cluster click', () => {
+    it('emits clusterClick and eases to the expansion zoom', async () => {
+      const { map, host, ids } = await renderLoaded();
+      const source = map.getSource(ids.source);
+      source.getClusterExpansionZoom.mockResolvedValue(9);
+      map.queryRenderedFeatures.mockReturnValue([clusterFeature(5, 12, [3, 4])]);
+      const point = { x: 10, y: 20 };
+
+      map.fire('click', { point, lngLat: { lng: 3, lat: 4 } }, ids.clusters);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(map.queryRenderedFeatures).toHaveBeenCalledWith(point, { layers: [ids.clusters] });
+      expect(host['clusterClick']).toHaveBeenCalledWith({
+        clusterId: 5,
+        coordinates: [3, 4],
+        pointCount: 12,
+      });
+      expect(source.getClusterExpansionZoom).toHaveBeenCalledWith(5);
+      expect(map.easeTo).toHaveBeenCalledWith({ center: [3, 4], zoom: 9 });
+    });
+
+    it('does not ease when zoomOnClusterClick is false', async () => {
+      const { map, host, ids } = await renderLoaded({ zoomOnClusterClick: false });
+      map.queryRenderedFeatures.mockReturnValue([clusterFeature(5, 12)]);
+
+      map.fire('click', { point: { x: 0, y: 0 }, lngLat: { lng: 3, lat: 4 } }, ids.clusters);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(host['clusterClick']).toHaveBeenCalledTimes(1);
+      expect(map.getSource(ids.source).getClusterExpansionZoom).not.toHaveBeenCalled();
+      expect(map.easeTo).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when no cluster is rendered under the click', async () => {
+      const { map, host, ids } = await renderLoaded();
+      map.queryRenderedFeatures.mockReturnValue([]);
+
+      map.fire('click', { point: { x: 0, y: 0 }, lngLat: { lng: 3, lat: 4 } }, ids.clusters);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(host['clusterClick']).not.toHaveBeenCalled();
+      expect(map.easeTo).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('point click', () => {
+    const pointEvent = (featureLng: number, lng: number) => ({
+      features: [
+        { properties: { name: 'p' }, geometry: { type: 'Point', coordinates: [featureLng, 5] } },
+      ],
+      lngLat: { lng, lat: 5 },
+      point: { x: 0, y: 0 },
+    });
+
+    it('emits pointClick with the feature and its coordinates', async () => {
+      const { map, host, ids } = await renderLoaded();
+
+      map.fire('click', pointEvent(10, 11), ids.point);
+
+      expect(host['pointClick']).toHaveBeenCalledTimes(1);
+      const emitted = host['pointClick'].mock.calls[0][0];
+      expect(emitted.coordinates).toEqual([10, 5]);
+      expect(emitted.feature.properties).toEqual({ name: 'p' });
+    });
+
+    it('normalizes the longitude across world copies', async () => {
+      const { map, host, ids } = await renderLoaded();
+
+      map.fire('click', pointEvent(-170, 190), ids.point);
+
+      expect(host['pointClick'].mock.calls[0][0].coordinates).toEqual([190, 5]);
+    });
+
+    it('normalizes in the other direction too', async () => {
+      const { map, host, ids } = await renderLoaded();
+
+      map.fire('click', pointEvent(170, -190), ids.point);
+
+      expect(host['pointClick'].mock.calls[0][0].coordinates).toEqual([-190, 5]);
+    });
+
+    it('does not mutate the feature geometry while normalizing', async () => {
+      const { map, host, ids } = await renderLoaded();
+      const event = pointEvent(-170, 190);
+
+      map.fire('click', event, ids.point);
+
+      expect(event.features[0].geometry.coordinates).toEqual([-170, 5]);
+      expect(host['pointClick']).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores clicks without features', async () => {
+      const { map, host, ids } = await renderLoaded();
+
+      map.fire('click', { features: [], lngLat: { lng: 0, lat: 0 } }, ids.point);
+
+      expect(host['pointClick']).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('cursor', () => {
+    it('shows a pointer over clusters and points and resets it on leave', async () => {
+      const { map, ids } = await renderLoaded();
+
+      for (const layer of [ids.clusters, ids.point]) {
+        map.fire('mouseenter', {}, layer);
+        expect(map.getCanvas().style.cursor).toBe('pointer');
+        map.fire('mouseleave', {}, layer);
+        expect(map.getCanvas().style.cursor).toBe('');
+      }
+    });
+  });
+
+  describe('teardown (invariant 4)', () => {
+    it('removes every layer before the source and unregisters all six handlers', async () => {
+      const { fixture, map, ids } = await renderLoaded();
+      const handlers: [string, string][] = [
+        ['click', ids.clusters],
+        ['click', ids.point],
+        ['mouseenter', ids.clusters],
+        ['mouseleave', ids.clusters],
+        ['mouseenter', ids.point],
+        ['mouseleave', ids.point],
+      ];
+      for (const [event, layer] of handlers) expect(map.listenerCount(event, layer)).toBe(1);
+      map.calls.length = 0;
+
+      update(fixture, { show: false });
+
+      const calls = structuralCalls(map);
+      const source = calls.indexOf(`removeSource:${ids.source}`);
+      expect(source).toBeGreaterThan(-1);
+      for (const layer of [ids.clusters, ids.count, ids.point]) {
+        const index = calls.indexOf(`removeLayer:${layer}`);
+        expect(index).toBeGreaterThan(-1);
+        expect(index).toBeLessThan(source);
+      }
+      for (const [event, layer] of handlers) expect(map.listenerCount(event, layer)).toBe(0);
+    });
+
+    it('does not throw when the whole fixture is destroyed', async () => {
+      const { fixture } = await renderLoaded();
+      expect(() => fixture.destroy()).not.toThrow();
+    });
+  });
+
+  describe('interactivity', () => {
+    // The cluster layer has no `interactive` input: click and cursor handlers are always
+    // registered, so the checklist's "non-interactive registers no handlers" case does not apply.
+    it('always registers its layer-scoped handlers once loaded', async () => {
+      const { map, ids } = await renderLoaded();
+
+      expect(map.calls.filter((c) => c.startsWith('on:') && c.includes(ids.clusters))).toHaveLength(
+        3,
+      );
+      expect(map.calls.filter((c) => c.startsWith('on:') && c.includes(ids.point))).toHaveLength(3);
+    });
+  });
+});
