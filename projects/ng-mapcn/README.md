@@ -29,11 +29,11 @@ ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map componen
 
 | ng-mapcn | Angular | MapLibre GL | npm tag |
 |---|---|---|---|
-| `22.x` | `^22.0.0` | `^5.16.0` | `beta` |
+| `22.x` | `^22.0.0` | `^5.16.0` | `latest`, `beta` |
 | `21.x` | `^21.2.9` | `^5.16.0` | n/a |
-| `18.x` | `^18.2.14` | `^5.16.0` | `latest` (stale) |
+| `18.x` | `^18.2.14` | `^5.16.0` | n/a |
 
-Node.js `^22.22.3 || ^24.15.0 || >=26.0.0`. Until a stable 22.x ships, always install with the `@beta` tag: the default `latest` tag still points at the Angular 18 build.
+Node.js `^22.22.3 || ^24.15.0 || >=26.0.0`. The commands below use the `@beta` tag so you always get the newest 22.x prerelease.
 
 ## Quick start
 
