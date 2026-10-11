@@ -27,8 +27,11 @@ ng serve demo
 # Publish to npm
 npm run publish:lib
 
-# Run tests
-ng test
+# Run tests (Vitest via the Angular CLI)
+npm test                # lib + demo
+npm run test:lib        # library only
+npm run test:demo       # demo only (run npm run install:lib first)
+npm run test:coverage   # library with v8 coverage (coverage/ng-mapcn)
 
 # Lint and format (ESLint + Prettier)
 npm run lint
