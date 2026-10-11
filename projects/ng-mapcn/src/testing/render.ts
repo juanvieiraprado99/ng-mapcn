@@ -58,6 +58,9 @@ export async function renderMap(
   Object.assign(fixture.componentInstance as object, opts.hostProps ?? {});
   fixture.detectChanges();
   await fixture.whenStable();
+  // The map is created after the first pass; projected children are attached on the next one.
+  fixture.detectChanges();
+  await fixture.whenStable();
 
   const ctx = fixture.debugElement
     .query(By.directive(MapComponent))
@@ -73,4 +76,10 @@ export function loadMap(map: FakeMap): void {
   map.fire('load');
   map.fire('styledata');
   vi.advanceTimersByTime(100);
+}
+
+/** Assigns host inputs and runs change detection (effects run during it). */
+export function update(fixture: { componentInstance: any; detectChanges(): void }, props: object) {
+  Object.assign(fixture.componentInstance, props);
+  fixture.detectChanges();
 }
