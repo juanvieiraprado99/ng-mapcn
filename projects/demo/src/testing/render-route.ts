@@ -1,6 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, TitleStrategy } from '@angular/router';
+import { provideRouter, TitleStrategy, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 
@@ -36,7 +36,7 @@ export async function renderRoute(
 
   TestBed.configureTestingModule({
     providers: [
-      provideRouter(routes),
+      provideRouter(routes, withComponentInputBinding()),
       provideHttpClient(),
       provideZard(),
       { provide: TitleStrategy, useClass: SiteTitleStrategy },

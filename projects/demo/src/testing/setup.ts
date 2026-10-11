@@ -17,14 +17,21 @@ class IntersectionObserverStub {
 
 beforeEach(() => {
   fakeRegistry.reset();
-  // jsdom lacks both browser APIs.
+  // jsdom lacks these browser APIs.
   vi.stubGlobal('IntersectionObserver', IntersectionObserverStub);
   vi.stubGlobal(
     'matchMedia',
     vi.fn(() => ({
       matches: false,
+      // Legacy listener API, still used by the CDK breakpoint observer.
+      addListener: () => {},
+      removeListener: () => {},
       addEventListener: () => {},
       removeEventListener: () => {},
     })),
   );
+  // jsdom has no layout, so no scrolling (used by the store-locator block).
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {};
+  }
 });
