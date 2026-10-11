@@ -11,70 +11,196 @@ export const DOCS_ROUTES: Routes = [
     children: [
       {
         path: '',
+        title: 'Introduction',
+        data: {
+          seo: {
+            title: 'Introduction to Angular Map Components',
+            description:
+              'Introduction to ng-mapcn: copy-paste map components for Angular, built on MapLibre GL and styled with Tailwind CSS. Learn the composition model and what ships in the box.',
+            keywords: ['Angular maps', 'MapLibre Angular', 'Angular map library'],
+            breadcrumbs: [],
+          },
+        },
         loadComponent: () =>
           import('./getting-started').then((m) => m.GettingStartedComponent),
       },
       {
         path: 'installation',
+        title: 'Installation',
+        data: {
+          seo: {
+            title: 'Install Angular Map Components',
+            description:
+              'Install ng-mapcn in your Angular app with ng add or npm. Sets up maplibre-gl, registers its CSS and copies the map components into your project in one step.',
+            keywords: ['ng add ng-mapcn', 'install MapLibre Angular', 'Angular map setup'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }],
+          },
+        },
         loadComponent: () =>
           import('./installation').then((m) => m.InstallationComponent),
       },
       {
         path: 'api-reference',
+        title: 'API Reference',
+        data: {
+          seo: {
+            title: 'Angular Map API Reference',
+            description:
+              'Complete API reference for ng-mapcn: every Angular map component with its inputs, outputs, defaults and types — map, markers, popups, routes, arcs, GeoJSON and clusters.',
+            keywords: ['ng-mapcn API', 'Angular map inputs', 'MapLibre Angular API'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }],
+          },
+        },
         loadComponent: () =>
           import('./api-reference').then((m) => m.ApiReferenceComponent),
       },
       {
         path: 'basemaps',
+        title: 'Map Styles',
+        data: {
+          seo: {
+            title: 'Angular Map Styles and Basemaps',
+            description:
+              'Use any MapLibre-compatible basemap with ng-mapcn: Carto (default), MapTiler, Stadia, OpenFreeMap and OpenStreetMap, with automatic light and dark themes.',
+            keywords: ['MapLibre basemaps', 'Carto basemap', 'dark mode map Angular', 'vector tiles Angular'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }],
+          },
+        },
         loadComponent: () =>
           import('./components/basemaps-page').then((m) => m.BasemapsPageComponent),
       },
       {
-        path: 'llms-txt',
-        loadComponent: () => import('./llms-txt').then((m) => m.LlmsTxtComponent),
-      },
-      {
         path: 'components/map',
+        title: 'Map',
+        data: {
+          seo: {
+            title: 'Angular Map Component',
+            description:
+              'The ng-map component: drop an interactive MapLibre map into any Angular app. Controlled viewport, theme-aware styles, blank data maps and loading states.',
+            keywords: ['Angular map component', 'MapLibre map Angular', 'interactive map Angular'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
         loadComponent: () =>
           import('./components/map-page').then((m) => m.MapPageComponent),
       },
       {
         path: 'components/controls',
+        title: 'Controls',
+        data: {
+          seo: {
+            title: 'Angular Map Controls',
+            description:
+              'Add zoom, compass, locate-me and fullscreen controls to an Angular map with ng-map-controls. Positionable, themeable and built on MapLibre GL.',
+            keywords: ['map zoom controls Angular', 'geolocate control', 'fullscreen map Angular'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
         loadComponent: () =>
           import('./components/controls-page').then((m) => m.ControlsPageComponent),
       },
       {
         path: 'components/markers',
+        title: 'Markers',
+        data: {
+          seo: {
+            title: 'Angular Map Markers',
+            description:
+              'Angular map markers with custom HTML content, labels, tooltips and popups. Draggable, reactive markers built on MapLibre GL with signals and OnPush.',
+            keywords: ['Angular map marker', 'custom map marker', 'map tooltip Angular', 'draggable marker'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
         loadComponent: () =>
           import('./components/markers-page').then((m) => m.MarkersPageComponent),
       },
       {
         path: 'components/popups',
+        title: 'Popups',
+        data: {
+          seo: {
+            title: 'Angular Map Popups',
+            description:
+              'Standalone map popups for Angular: anchor any template to a coordinate with ng-map-popup, styled with Tailwind and shadcn-like defaults.',
+            keywords: ['map popup Angular', 'MapLibre popup', 'info window Angular'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
         loadComponent: () =>
           import('./components/popups-page').then((m) => m.PopupsPageComponent),
       },
       {
         path: 'components/routes',
+        title: 'Routes',
+        data: {
+          seo: {
+            title: 'Angular Map Routes and Polylines',
+            description:
+              'Draw routes and polylines on an Angular map with ng-map-route: trails, delivery paths and turn-by-turn directions, with hover and click events.',
+            keywords: ['map route Angular', 'polyline Angular', 'directions map', 'OSRM route'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
         loadComponent: () =>
           import('./components/routes-page').then((m) => m.RoutesPageComponent),
       },
       {
         path: 'components/arcs',
+        title: 'Arcs',
+        data: {
+          seo: {
+            title: 'Angular Map Arcs',
+            description:
+              'Draw curved great-circle arcs between coordinates on an Angular map with ng-map-arc — flight paths, connections and network flows with hover states.',
+            keywords: ['flight path map', 'great circle arc', 'connection map Angular'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
         loadComponent: () =>
           import('./components/arcs-page').then((m) => m.ArcsPageComponent),
       },
       {
         path: 'components/geojson',
+        title: 'GeoJSON',
+        data: {
+          seo: {
+            title: 'Angular GeoJSON Layers',
+            description:
+              'Render GeoJSON polygons and lines on an Angular map with ng-map-geojson: choropleths, boundaries and declarative hover states powered by feature-state.',
+            keywords: ['GeoJSON Angular', 'choropleth Angular', 'polygon layer MapLibre'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
         loadComponent: () =>
           import('./components/geojson-page').then((m) => m.GeojsonPageComponent),
       },
       {
         path: 'components/clusters',
+        title: 'Clusters',
+        data: {
+          seo: {
+            title: 'Angular Map Clusters',
+            description:
+              'Cluster thousands of points on an Angular map with ng-map-cluster-layer: zoom-to-expand, custom colors and counts, powered by MapLibre GL clustering.',
+            keywords: ['marker clustering Angular', 'point clusters MapLibre', 'large datasets map'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
         loadComponent: () =>
           import('./components/clusters-page').then((m) => m.ClustersPageComponent),
       },
       {
         path: 'components/advanced',
+        title: 'Advanced',
+        data: {
+          seo: {
+            title: 'Advanced Angular Map Usage',
+            description:
+              "Advanced ng-mapcn patterns: raw MapLibre map access, synced viewports, custom layers and the MapContextService — the Angular equivalent of mapcn's useMap.",
+            keywords: ['MapLibre map instance Angular', 'synced maps', 'custom map layers'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
         loadComponent: () =>
           import('./components/advanced-page').then((m) => m.AdvancedPageComponent),
       },

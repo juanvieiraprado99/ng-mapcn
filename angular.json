@@ -34,6 +34,8 @@
               }
             ],
             "styles": [
+              "node_modules/@fontsource-variable/geist/index.css",
+              "node_modules/@fontsource-variable/geist-mono/index.css",
               "node_modules/maplibre-gl/dist/maplibre-gl.css",
               "projects/demo/src/styles.css",
               "projects/demo/src/styles.scss"
@@ -104,6 +106,8 @@
               }
             ],
             "styles": [
+              "node_modules/@fontsource-variable/geist/index.css",
+              "node_modules/@fontsource-variable/geist-mono/index.css",
               "node_modules/maplibre-gl/dist/maplibre-gl.css",
               "projects/demo/src/styles.css",
               "projects/demo/src/styles.scss"

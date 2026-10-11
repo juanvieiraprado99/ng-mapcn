@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { computed, effect, inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import type { StyleSpecification } from 'maplibre-gl';
 // Type-only: a value import would pull the whole ng-mapcn FESM (and with it
 // maplibre-gl) into the initial bundle, since this service is root-provided.
@@ -10,6 +10,8 @@ export type BasemapId = 'carto' | 'openfreemap' | 'osm' | 'maptiler' | 'stadia';
 export interface BasemapProvider {
   readonly id: BasemapId;
   readonly label: string;
+  /** Vector styles re-theme cleanly; raster tiles are a fixed image. */
+  readonly kind: 'vector' | 'raster';
   readonly needsKey: boolean;
   /** Where the user gets an API key. */
   readonly keyUrl?: string;
@@ -40,13 +42,15 @@ const OSM_RASTER_STYLE: StyleSpecification = {
 export const BASEMAP_PROVIDERS: readonly BasemapProvider[] = [
   {
     id: 'carto',
-    label: 'Carto (default)',
+    label: 'Carto',
+    kind: 'vector',
     needsKey: false,
     styles: () => undefined,
   },
   {
     id: 'openfreemap',
     label: 'OpenFreeMap',
+    kind: 'vector',
     needsKey: false,
     styles: () => ({
       light: 'https://tiles.openfreemap.org/styles/positron',
@@ -56,6 +60,7 @@ export const BASEMAP_PROVIDERS: readonly BasemapProvider[] = [
   {
     id: 'osm',
     label: 'OpenStreetMap',
+    kind: 'raster',
     needsKey: false,
     note: 'Raster tiles. Dev/demo only — see the OSM tile usage policy.',
     styles: () => ({ light: OSM_RASTER_STYLE, dark: OSM_RASTER_STYLE }),
@@ -63,6 +68,7 @@ export const BASEMAP_PROVIDERS: readonly BasemapProvider[] = [
   {
     id: 'maptiler',
     label: 'MapTiler',
+    kind: 'vector',
     needsKey: true,
     keyUrl: 'https://cloud.maptiler.com/account/keys/',
     styles: (key) =>
@@ -76,6 +82,7 @@ export const BASEMAP_PROVIDERS: readonly BasemapProvider[] = [
   {
     id: 'stadia',
     label: 'Stadia Maps',
+    kind: 'vector',
     needsKey: true,
     keyUrl: 'https://client.stadiamaps.com/',
     note: 'Key optional on localhost (rate limited).',
@@ -134,6 +141,18 @@ export class BasemapService {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch {}
     });
+
+    if (!this.isBrowser) return;
+    // Follow picks made in other windows — the blocks gallery previews are
+    // iframes, and they should switch basemap with the page around them.
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY) return;
+      const state = this.restore();
+      this.providerId.set(state.providerId);
+      this.keys.set(state.keys);
+    };
+    window.addEventListener('storage', onStorage);
+    inject(DestroyRef).onDestroy(() => window.removeEventListener('storage', onStorage));
   }
 
   select(id: BasemapId): void {

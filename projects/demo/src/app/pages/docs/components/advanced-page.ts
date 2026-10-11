@@ -8,7 +8,7 @@ import {
   MarkerLabelComponent,
 } from 'ng-mapcn';
 import { CodeBlockComponent } from '../../../shared/code-block';
-import { DocsPageComponent } from '../../../shared/docs-page';
+import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
 
 const MAP_READY_CODE = `import { Component } from '@angular/core';
@@ -115,7 +115,7 @@ const CITIES = [
   selector: 'app-advanced-page',
   standalone: true,
   imports: [
-    DocsPageComponent,
+    DocsImports,
     ExampleSectionComponent,
     CodeBlockComponent,
     MapComponent,
@@ -136,12 +136,12 @@ const CITIES = [
       >
         <span description>
           The
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">mapReady</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">mapReady</code>
           output hands you the raw
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">maplibre-gl</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maplibre-gl</code>
           Map instance for anything the declarative API doesn't cover. Here it
           drives
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">flyTo</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">flyTo</code>
           on a globe projection.
         </span>
         <div class="relative h-full">
@@ -177,7 +177,7 @@ const CITIES = [
       >
         <span description>
           Combine
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">markerClick</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">markerClick</code>
           with the map instance: click a marker to fly to its city.
         </span>
         <ng-map [center]="[7, 46.5]" [zoom]="4" (mapReady)="markersMap = $event">
@@ -205,7 +205,7 @@ const CITIES = [
       >
         <span description>
           Two maps sharing one controlled
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">viewport</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewport</code>
           signal. Pan or zoom either map and the other follows.
         </span>
         <div class="grid h-full grid-cols-2 gap-2">
@@ -220,26 +220,20 @@ const CITIES = [
         </div>
       </app-example-section>
 
-      <section class="mb-12">
-        <h2
-          id="using-the-context-service"
-          class="mb-2 scroll-mt-24 text-xl font-semibold"
-        >
-          Using the Context Service
-        </h2>
-        <p class="text-muted-foreground mb-4 text-sm leading-relaxed">
+      <app-docs-section title="Using the Context Service" anchor="using-the-context-service">
+        <p>
           Build your own map components: any component projected inside
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-map</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map</code>
           can inject
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">MapContextService</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService</code>
           to access the map instance,
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">isLoaded</code>,
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">isLoaded</code>,
           and the resolved theme — the Angular equivalent of mapcn's
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">useMap()</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">useMap()</code>
           hook.
         </p>
         <app-code-block [code]="contextCode" />
-      </section>
+      </app-docs-section>
     </app-docs-page>
   `,
 })

@@ -8,8 +8,9 @@ import {
   MarkerLabelComponent,
   MarkerTooltipComponent,
 } from 'ng-mapcn';
-import { DocsPageComponent } from '../../../shared/docs-page';
+import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
+import { ZardButtonComponent } from '@/shared/components/button';
 
 const BASIC_CODE = `import { Component } from '@angular/core';
 import {
@@ -132,7 +133,7 @@ export class DraggableMarkerComponent {
   selector: 'app-markers-page',
   standalone: true,
   imports: [
-    DocsPageComponent,
+    DocsImports,
     ExampleSectionComponent,
     MapComponent,
     MapMarkerComponent,
@@ -141,6 +142,7 @@ export class DraggableMarkerComponent {
     MarkerLabelComponent,
     MarkerTooltipComponent,
     DecimalPipe,
+    ZardButtonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -155,13 +157,13 @@ export class DraggableMarkerComponent {
       >
         <span description>
           Place markers with
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-map-marker</code>.
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-marker</code>.
           Project any HTML into
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-marker-content</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-content</code>
           — leave it empty for the default dot. Add
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-marker-tooltip</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-tooltip</code>
           for hover tooltips and
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-marker-label</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-label</code>
           for always-visible labels.
         </span>
         <ng-map [center]="[139.735, 35.69]" [zoom]="10.5">
@@ -186,7 +188,7 @@ export class DraggableMarkerComponent {
       >
         <span description>
           Attach a popup with
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-marker-popup</code>.
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code>.
           It opens when the marker is clicked and can contain any projected
           HTML — here with images, ratings, and action buttons. Only one is
           open at a time; clicking the map closes it.
@@ -264,10 +266,7 @@ export class DraggableMarkerComponent {
                     <span>{{ place.hours }}</span>
                   </div>
                   <div class="flex gap-2 pt-1">
-                    <button
-                      type="button"
-                      class="bg-primary text-primary-foreground flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-opacity hover:opacity-90"
-                    >
+                    <button z-button zSize="sm" type="button" class="flex-1">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -283,9 +282,11 @@ export class DraggableMarkerComponent {
                       Directions
                     </button>
                     <button
+                      z-button
+                      zType="outline"
+                      zSize="icon-sm"
                       type="button"
                       aria-label="Open"
-                      class="hover:bg-accent inline-flex size-8 items-center justify-center rounded-md border transition-colors"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -319,9 +320,9 @@ export class DraggableMarkerComponent {
       >
         <span description>
           Set
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">draggable</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">draggable</code>
           and listen to
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">dragEnd</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">dragEnd</code>
           to track the marker position.
         </span>
         <div class="relative h-full">

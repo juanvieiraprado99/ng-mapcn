@@ -12,7 +12,7 @@ import {
   MarkerContentComponent,
   MarkerLabelComponent,
 } from 'ng-mapcn';
-import { DocsPageComponent } from '../../../shared/docs-page';
+import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
 
 const BASIC_CODE = `import { Component } from '@angular/core';
@@ -101,7 +101,7 @@ interface OsrmResponse {
   selector: 'app-routes-page',
   standalone: true,
   imports: [
-    DocsPageComponent,
+    DocsImports,
     ExampleSectionComponent,
     MapComponent,
     MapRouteComponent,
@@ -121,9 +121,9 @@ interface OsrmResponse {
         [code]="basicCode"
       >
         <span description>
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-map-route</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-route</code>
           renders a line from an array of
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">[lng, lat]</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[lng, lat]</code>
           coordinates. Customize color, width, opacity, and dash pattern.
         </span>
         <ng-map [center]="[-73.97, 40.782]" [zoom]="12">

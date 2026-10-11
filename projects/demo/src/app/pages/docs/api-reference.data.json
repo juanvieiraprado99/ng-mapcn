@@ -124,7 +124,8 @@
         { "name": "latitude", "type": "number", "default": "required", "description": "Latitude coordinate of the popup." },
         { "name": "closeButton", "type": "boolean", "default": "false", "description": "Shows a close button in the popup." },
         { "name": "offset", "type": "Offset", "default": "16", "description": "Pixel offset of the popup." },
-        { "name": "maxWidth", "type": "string", "default": "'none'", "description": "CSS max-width of the popup container." }
+        { "name": "maxWidth", "type": "string", "default": "'none'", "description": "CSS max-width of the popup container." },
+        { "name": "closeOnClick", "type": "boolean", "default": "true", "description": "Closes the popup when the map is clicked. Applied at creation only." }
       ],
       "outputs": [
         { "name": "popupClose", "type": "void", "default": "", "description": "Emits when the popup closes." }

@@ -20,6 +20,30 @@
   overflow: hidden;
 }
 
+/* Blocks: tooltip / popup content that draws its own surface (mapcn passes a
+   className to MarkerTooltip / MapPopup; ng-mapcn exposes the content only).
+   The wrapper drops its default look so the projected element is the surface. */
+.ng-tooltip-pill:has(> .map-tooltip-surface) {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  font-weight: inherit;
+  white-space: normal;
+}
+
+.ng-popup-card:has(> .map-popup-surface) {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  min-width: 0;
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 /* Shared demo marker dot (colored via inline style) */
 .city-marker-dot {
   width: 16px;
@@ -28,14 +52,4 @@
   border: 2px solid #fff;
   box-shadow: 0 2px 4px rgb(0 0 0 / 0.25);
   cursor: pointer;
-}
-
-/* Global styles */
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }

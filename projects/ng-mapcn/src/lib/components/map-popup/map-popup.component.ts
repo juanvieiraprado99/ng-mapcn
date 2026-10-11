@@ -31,6 +31,11 @@ export class MapPopupComponent {
   readonly closeButton = input(false);
   readonly offset = input<Offset>(16);
   readonly maxWidth = input('none');
+  /**
+   * Close when the map is clicked (MapLibre default). Applied at creation only —
+   * MapLibre's Popup has no setter for it (mapcn parity: `closeOnClick` prop).
+   */
+  readonly closeOnClick = input(true);
 
   readonly popupClose = output<void>();
 
@@ -57,6 +62,7 @@ export class MapPopupComponent {
 
       const popup = new Popup({
         offset: untracked(() => this.offset()),
+        closeOnClick: untracked(() => this.closeOnClick()),
         // MapLibre's own chrome stays off; the close button is ours.
         closeButton: false,
         focusAfterOpen: true,

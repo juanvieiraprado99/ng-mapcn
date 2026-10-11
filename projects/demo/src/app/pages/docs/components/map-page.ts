@@ -15,7 +15,7 @@ import {
 } from 'ng-mapcn';
 
 type StyleKey = 'default' | 'openstreetmap' | 'openstreetmap3d';
-import { DocsPageComponent } from '../../../shared/docs-page';
+import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
 
 const WORLD_GEOJSON =
@@ -143,7 +143,7 @@ export class CustomStyleMapComponent {
   selector: 'app-map-page',
   standalone: true,
   imports: [
-    DocsPageComponent,
+    DocsImports,
     ExampleSectionComponent,
     MapComponent,
     MapGeoJSONComponent,
@@ -162,7 +162,7 @@ export class CustomStyleMapComponent {
       >
         <span description>
           The
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-map</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map</code>
           component handles MapLibre GL setup, theming, and provides context
           for child components.
         </span>
@@ -176,9 +176,9 @@ export class CustomStyleMapComponent {
       >
         <span description>
           Use the
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">viewport</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewport</code>
           input and
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">viewportChange</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewportChange</code>
           output to control the map's viewport externally. This is useful when
           you need to sync the map state with your application or respond to
           viewport changes.
@@ -205,11 +205,11 @@ export class CustomStyleMapComponent {
       >
         <span description>
           The
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">blank</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">blank</code>
           input swaps the default street basemap for a transparent, tile-less
           canvas — perfect for data visualizations where you draw your own
           layers instead of showing streets and labels. Here, a
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-map-geojson</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code>
           layer renders world country borders on top of the transparent
           canvas.
         </span>
@@ -225,7 +225,7 @@ export class CustomStyleMapComponent {
       >
         <span description>
           Use the
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">styles</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">styles</code>
           input to provide custom map styles. This example uses free vector
           tiles from OpenFreeMap, an open-source project; the data comes from
           OpenStreetMap.

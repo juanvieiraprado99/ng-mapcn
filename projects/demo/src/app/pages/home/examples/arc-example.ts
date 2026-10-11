@@ -33,7 +33,7 @@ const DESTINATIONS = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
   template: `
-    <app-example-card [stagger]="8" class="aspect-square">
+    <app-example-card class="aspect-square">
       <ng-map
         [center]="[-0.1276, 41.5074]"
         [zoom]="1"

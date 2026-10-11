@@ -48,7 +48,6 @@ const ROUTE: [number, number][] = [
   host: { class: 'contents' },
   template: `
     <app-example-card
-      [stagger]="9"
       class="aspect-square sm:col-span-2 sm:aspect-video lg:aspect-auto"
     >
       <ng-map

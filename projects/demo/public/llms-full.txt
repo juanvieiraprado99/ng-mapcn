@@ -211,6 +211,7 @@ A standalone popup component that can be placed anywhere on the map without a ma
 | `closeButton` | `boolean` | `false` | Shows a close button in the popup. |
 | `offset` | `Offset` | `16` | Pixel offset of the popup. |
 | `maxWidth` | `string` | `'none'` | CSS max-width of the popup container. |
+| `closeOnClick` | `boolean` | `true` | Closes the popup when the map is clicked. Applied at creation only. |
 
 **Outputs**
 

@@ -50,7 +50,7 @@ const STATUS_CONFIG: Record<Status, { bg: string; label: string; textClass: stri
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
   template: `
-    <app-example-card [stagger]="7" class="aspect-square">
+    <app-example-card class="aspect-square">
       <ng-map
         [center]="[-122.434, 37.776]"
         [zoom]="11"

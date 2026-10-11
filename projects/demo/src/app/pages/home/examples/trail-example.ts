@@ -37,7 +37,7 @@ const TRAIL_COORDINATES: [number, number][] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
   template: `
-    <app-example-card [stagger]="5" class="aspect-square">
+    <app-example-card class="aspect-square">
       <div
         class="bg-background/95 border-border/50 absolute top-3 left-3 z-10 rounded-lg border p-3 shadow-lg backdrop-blur-md"
       >

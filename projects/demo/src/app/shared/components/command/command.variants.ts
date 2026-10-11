@@ -1,0 +1,47 @@
+import { cva, type VariantProps } from 'class-variance-authority';
+
+export const commandVariants = cva(
+  'bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md',
+);
+
+export const commandListVariants = cva(
+  'max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto outline-none',
+);
+
+export const commandGroupVariants = cva(
+  'overflow-hidden p-1 text-foreground **:data-[slot=command-group-heading]:px-2 **:data-[slot=command-group-heading]:py-1.5 **:data-[slot=command-group-heading]:text-xs **:data-[slot=command-group-heading]:font-medium **:data-[slot=command-group-heading]:text-muted-foreground',
+);
+
+export const commandItemVariants = cva(
+  [
+    'group/command-item relative flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none select-none transition-colors',
+    'data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50',
+    'data-selected:bg-accent data-selected:text-accent-foreground [&_ng-icon]:text-muted-foreground',
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    'data-selected:*:[svg]:text-accent-foreground',
+  ],
+  {
+    variants: {
+      variant: {
+        default: '',
+        // Tinted background, destructive text — the same treatment as the
+        // destructive button and dropdown item. It used to be a solid
+        // `bg-destructive` with `text-destructive-foreground`, a token no theme
+        // ever defined, so the text stayed dark on red.
+        destructive:
+          'text-destructive data-selected:bg-destructive/10 data-selected:text-destructive dark:data-selected:bg-destructive/20',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+    },
+  },
+);
+
+export const commandSeparatorVariants = cva('-mx-1 my-1 h-px bg-border');
+
+export const commandShortcutVariants = cva(
+  'ml-auto text-xs tracking-widest text-muted-foreground group-data-selected/command-item:text-accent-foreground',
+);
+
+export type ZardCommandItemVariants = NonNullable<VariantProps<typeof commandItemVariants>['variant']>;

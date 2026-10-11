@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CodeBlockComponent } from '../../shared/code-block';
-import { DocsPageComponent } from '../../shared/docs-page';
+import { DocsImports } from '../../shared/docs';
 import { PropRow, PropTableComponent } from '../../shared/prop-table';
 // Single source of truth: `scripts/generate-llms-txt.mjs` reads this same file
 // to build /llms.txt and /llms-full.txt.
@@ -18,81 +18,74 @@ interface ApiSection {
 @Component({
   selector: 'app-api-reference',
   standalone: true,
-  imports: [DocsPageComponent, PropTableComponent, CodeBlockComponent],
+  imports: [DocsImports, PropTableComponent, CodeBlockComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-docs-page
       title="API Reference"
       description="Complete reference for all map components and their inputs and outputs."
     >
-      <h2 id="component-anatomy" class="mb-3 scroll-mt-24 text-xl font-semibold">
-        Component Anatomy
-      </h2>
-      <p class="text-muted-foreground mb-4 text-sm leading-relaxed">
-        All parts of the component set you can use and combine to build your
-        map:
-      </p>
-      <div class="mb-12">
-        <app-code-block [code]="anatomyCode" />
-      </div>
+      <app-docs-note>
+        <strong>Note:</strong> This library is built on top of
+        <a
+          href="https://maplibre.org/maplibre-gl-js/docs/API/"
+          target="_blank"
+          rel="noopener noreferrer"
+          [class]="link"
+          >MapLibre GL JS</a
+        >. Most components extend the native MapLibre options. Refer to the
+        <a
+          href="https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/"
+          target="_blank"
+          rel="noopener noreferrer"
+          [class]="link"
+          >MapLibre Map API</a
+        >
+        for additional options not listed here.
+      </app-docs-note>
+
+      <app-docs-section title="Component Anatomy">
+        <p>All parts of the component set you can use and combine to build your map.</p>
+        <app-code-block [code]="anatomyCode" [showCopyButton]="false" />
+      </app-docs-section>
 
       @for (section of sections; track section.id) {
-        <section class="mb-12">
-          <h2
-            [id]="section.id"
-            class="mb-1 scroll-mt-24 text-xl font-semibold"
-          >
-            {{ section.title }}
-          </h2>
-          <div class="mb-3">
-            <code class="bg-muted rounded px-1.5 py-0.5 text-xs">{{
-              section.selector
-            }}</code>
-          </div>
-          <p class="text-muted-foreground mb-4 text-sm leading-relaxed">
-            {{ section.description }}
+        <app-docs-section [title]="section.title" [anchor]="section.id">
+          <p>
+            <code [class]="code">{{ section.selector }}</code>
           </p>
+          <p>{{ section.description }}</p>
           @if (section.inputs.length > 0) {
-            <div class="mb-2 text-sm font-medium">Inputs</div>
-            <app-prop-table [rows]="section.inputs" />
+            <app-prop-table title="Inputs" nameLabel="Input" [rows]="section.inputs" />
           }
           @if (section.outputs.length > 0) {
-            <div class="mb-2 text-sm font-medium">Outputs</div>
-            <app-prop-table [rows]="section.outputs" />
+            <app-prop-table title="Outputs" nameLabel="Output" [rows]="section.outputs" />
           }
-        </section>
+        </app-docs-section>
       }
 
-      <section class="mb-12">
-        <h2
-          id="mapcontextservice"
-          class="mb-1 scroll-mt-24 text-xl font-semibold"
-        >
-          MapContextService
-        </h2>
-        <p class="text-muted-foreground mb-4 text-sm leading-relaxed">
-          Component-scoped service provided by ng-map — the Angular equivalent
-          of mapcn's useMap() hook. Inject it in any component projected inside
-          ng-map to access the raw map.
+      <app-docs-section title="MapContextService" anchor="mapcontextservice">
+        <p>
+          Component-scoped service provided by <code [class]="code">ng-map</code> - the Angular
+          equivalent of mapcn's <code [class]="code">useMap()</code> hook. Inject it in any component
+          projected inside <code [class]="code">ng-map</code> to access the raw map.
         </p>
-        <app-prop-table [rows]="contextRows" />
-      </section>
+        <app-prop-table nameLabel="Member" [rows]="contextRows" />
+      </app-docs-section>
 
-      <section class="mb-12">
-        <h2 id="providemapstyles" class="mb-1 scroll-mt-24 text-xl font-semibold">
-          provideMapStyles()
-        </h2>
-        <p class="text-muted-foreground mb-4 text-sm leading-relaxed">
-          Sets the app-wide default basemap through the MAP_DEFAULT_STYLES
-          token. Every ng-map without its own styles input (and without blank)
-          uses it; pass a signal to swap the basemap at runtime. Precedence:
-          styles → blank → provideMapStyles() → Carto default.
+      <app-docs-section title="provideMapStyles()" anchor="providemapstyles">
+        <p>
+          Sets the app-wide default basemap through the
+          <code [class]="code">MAP_DEFAULT_STYLES</code> token. Every
+          <code [class]="code">ng-map</code> without its own <code [class]="code">styles</code> input
+          (and without <code [class]="code">blank</code>) uses it; pass a signal to swap the basemap
+          at runtime. Precedence: <code [class]="code">styles</code> →
+          <code [class]="code">blank</code> → <code [class]="code">provideMapStyles()</code> → Carto
+          default.
         </p>
-        <div class="mb-4">
-          <app-code-block [code]="provideStylesCode" />
-        </div>
-        <app-prop-table [rows]="provideStylesRows" />
-      </section>
+        <app-code-block [code]="provideStylesCode" />
+        <app-prop-table nameLabel="Argument" [rows]="provideStylesRows" />
+      </app-docs-section>
     </app-docs-page>
   `,
 })
@@ -103,4 +96,8 @@ export class ApiReferenceComponent {
   readonly provideStylesRows: PropRow[] = apiData.provideStylesRows;
   readonly contextRows: PropRow[] = apiData.contextRows;
   readonly sections: ApiSection[] = apiData.sections;
+
+  /** mapcn `DocsLink` / `DocsCode`. */
+  protected readonly link = 'text-foreground font-medium underline underline-offset-4';
+  protected readonly code = 'bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm';
 }

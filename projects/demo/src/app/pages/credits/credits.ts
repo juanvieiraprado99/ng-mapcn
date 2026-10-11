@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { FooterComponent } from '@/layout/footer';
 import { ZardBadgeComponent } from '@/shared/components/badge';
 import { ZardButtonComponent } from '@/shared/components/button';
-import { ExampleCardComponent } from '@/shared/example-card';
+import { cardVariants } from '@/shared/components/card';
+import { PageHeaderImports } from '@/shared/page-header';
 
 interface Credit {
   readonly name: string;
@@ -14,36 +16,36 @@ interface Credit {
 @Component({
   selector: 'app-credits',
   standalone: true,
-  imports: [ZardBadgeComponent, ZardButtonComponent, ExampleCardComponent],
+  imports: [ZardBadgeComponent, ZardButtonComponent, PageHeaderImports, FooterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="container py-14">
-      <h1 class="text-3xl font-semibold tracking-tight">Credits</h1>
-      <p class="text-muted-foreground mt-2 max-w-2xl">
+    <app-page-header align="left" size="sm">
+      <app-page-header-heading>Credits</app-page-header-heading>
+      <app-page-header-description>
         ng-mapcn stands on the shoulders of these projects.
-      </p>
+      </app-page-header-description>
+    </app-page-header>
 
-      <div class="mt-10 grid gap-6 sm:grid-cols-2">
+    <section class="animate-fade-up animate-stagger container max-w-6xl" style="--stagger: 3.5">
+      <div class="grid gap-5 sm:grid-cols-2">
         @for (credit of credits; track credit.name) {
-          <app-example-card>
-            <div class="flex h-full flex-col gap-3 p-6">
+          <div [class]="card">
+            <div class="flex h-full flex-col gap-3 px-4">
               <div class="flex items-center gap-2">
                 <span class="font-semibold">{{ credit.name }}</span>
                 <z-badge zType="secondary">{{ credit.role }}</z-badge>
               </div>
-
-              <p class="text-muted-foreground flex-1 text-sm">
+              <p class="text-muted-foreground flex-1 text-sm leading-relaxed">
                 {{ credit.description }}
               </p>
-
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 pt-1">
                 <a
                   z-button
                   zType="outline"
                   zSize="sm"
                   [href]="credit.url"
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   >Visit site</a
                 >
                 @if (credit.docsUrl) {
@@ -53,19 +55,23 @@ interface Credit {
                     zSize="sm"
                     [href]="credit.docsUrl"
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     >Docs</a
                   >
                 }
               </div>
             </div>
-          </app-example-card>
+          </div>
         }
       </div>
     </section>
+
+    <app-footer />
   `,
 })
 export class CreditsComponent {
+  protected readonly card = cardVariants();
+
   readonly credits: readonly Credit[] = [
     {
       name: 'mapcn',

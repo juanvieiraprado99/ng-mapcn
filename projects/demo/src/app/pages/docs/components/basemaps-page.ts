@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import type { StyleSpecification } from 'maplibre-gl';
 import { MapComponent, MapStylesConfig } from 'ng-mapcn';
 import { BasemapService } from '../../../shared/basemap.service';
-import { DocsPageComponent } from '../../../shared/docs-page';
+import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
 
 const CARTO_CODE = `<!-- No [styles] input: Carto Positron (light) / Dark Matter (dark) -->
@@ -182,22 +182,24 @@ const OSM: MapStylesConfig = { light: OSM_STYLE, dark: OSM_STYLE };
 @Component({
   selector: 'app-basemaps-page',
   standalone: true,
-  imports: [DocsPageComponent, ExampleSectionComponent, MapComponent],
+  imports: [DocsImports, ExampleSectionComponent, MapComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-docs-page
       title="Map Styles"
       description="ng-mapcn renders any MapLibre-compatible basemap. Carto is the default; here is a working example for each major provider."
     >
-      <p class="text-muted-foreground mb-10 text-sm leading-relaxed">
+      <app-docs-section>
+        <p>
         Pass a per-theme
-        <code class="bg-muted rounded px-1.5 py-0.5 text-xs">styles</code>
+        <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">styles</code>
         config to a single map, or call
-        <code class="bg-muted rounded px-1.5 py-0.5 text-xs">provideMapStyles()</code>
+        <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">provideMapStyles()</code>
         once to set the basemap for the whole app — that is exactly what the
         basemap picker in this site's header does, so every map below (and on
         every other page) follows it live.
-      </p>
+        </p>
+      </app-docs-section>
 
       <app-example-section
         title="Carto (default)"
@@ -206,10 +208,10 @@ const OSM: MapStylesConfig = { light: OSM_STYLE, dark: OSM_STYLE };
       >
         <span description>
           Used when no
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">styles</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">styles</code>
           is given: Positron for light, Dark Matter for dark. No API key.
-          Other variants: <code class="bg-muted rounded px-1.5 py-0.5 text-xs">voyager-gl-style</code>
-          and the <code class="bg-muted rounded px-1.5 py-0.5 text-xs">*-nolabels-*</code>
+          Other variants: <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">voyager-gl-style</code>
+          and the <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">*-nolabels-*</code>
           styles — this preview uses Voyager.
         </span>
         <ng-map [center]="[2.3522, 48.8566]" [zoom]="11" [styles]="carto" />
@@ -223,11 +225,11 @@ const OSM: MapStylesConfig = { light: OSM_STYLE, dark: OSM_STYLE };
         <span description>
           Free vector tiles built from OpenStreetMap data — no registration, no
           API key, no request limits. Styles:
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">liberty</code>,
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">bright</code>,
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">positron</code>,
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">dark</code>,
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">fiord</code>.
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">liberty</code>,
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">bright</code>,
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">positron</code>,
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">dark</code>,
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">fiord</code>.
         </span>
         <ng-map [center]="[13.388, 52.517]" [zoom]="11" [styles]="openFreeMap" />
       </app-example-section>
@@ -238,11 +240,11 @@ const OSM: MapStylesConfig = { light: OSM_STYLE, dark: OSM_STYLE };
         [code]="osmCode"
       >
         <span description>
-          OSM does not host a <code class="bg-muted rounded px-1.5 py-0.5 text-xs">style.json</code> —
+          OSM does not host a <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">style.json</code> —
           it serves raster tiles, so the MapLibre style is written by hand. Keep
           the object in a constant: the map compares the resolved style by
           identity before calling
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">setStyle</code>.
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">setStyle</code>.
           The public tile server is for development and small demos only — read
           the
           <a
@@ -263,12 +265,12 @@ const OSM: MapStylesConfig = { light: OSM_STYLE, dark: OSM_STYLE };
         [code]="maptilerCode"
       >
         <span description>
-          Requires an API key (<code class="bg-muted rounded px-1.5 py-0.5 text-xs">?key=</code>).
+          Requires an API key (<code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">?key=</code>).
           Style ids follow the
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">streets-v4</code> /
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">streets-v4-dark</code>
-          pattern (also <code class="bg-muted rounded px-1.5 py-0.5 text-xs">dataviz-v4</code>,
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">satellite</code>).
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">streets-v4</code> /
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">streets-v4-dark</code>
+          pattern (also <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">dataviz-v4</code>,
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">satellite</code>).
           To preview it live, pick <strong>MapTiler</strong> in the header and
           paste your key — it is kept in your browser only.
         </span>
@@ -291,14 +293,14 @@ const OSM: MapStylesConfig = { light: OSM_STYLE, dark: OSM_STYLE };
       >
         <span description>
           Keyless on
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">localhost</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">localhost</code>
           (rate limited); in production use
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">?api_key=</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">?api_key=</code>
           or domain-based auth. Styles:
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">alidade_smooth</code>,
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">alidade_smooth_dark</code>,
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">outdoors</code>,
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">osm_bright</code>.
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">alidade_smooth</code>,
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">alidade_smooth_dark</code>,
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">outdoors</code>,
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">osm_bright</code>.
         </span>
         <ng-map [center]="[12, 53]" [zoom]="5" [styles]="stadiaStyles()" />
       </app-example-section>
@@ -309,13 +311,13 @@ const OSM: MapStylesConfig = { light: OSM_STYLE, dark: OSM_STYLE };
         [code]="appWideCode"
       >
         <span description>
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">provideMapStyles()</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">provideMapStyles()</code>
           sets the default basemap for every
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-map</code> in
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map</code> in
           the app. Precedence:
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">[styles]</code> →
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">[blank]</code> →
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">provideMapStyles()</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[styles]</code> →
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[blank]</code> →
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">provideMapStyles()</code>
           → Carto. Pass a signal and the basemap swaps at runtime — the header
           picker on this site is that signal.
         </span>

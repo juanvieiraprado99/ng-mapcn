@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { MapComponent, MapGeoJSONComponent, MapGeoJSONEvent } from 'ng-mapcn';
-import { DocsPageComponent } from '../../../shared/docs-page';
+import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
 
 const WORLD_GEOJSON =
@@ -65,7 +65,7 @@ export class GeojsonOverlayComponent {
   selector: 'app-geojson-page',
   standalone: true,
   imports: [
-    DocsPageComponent,
+    DocsImports,
     ExampleSectionComponent,
     MapComponent,
     MapGeoJSONComponent,
@@ -82,7 +82,7 @@ export class GeojsonOverlayComponent {
         [code]="basicCode"
       >
         <span description>
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-map-geojson</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code>
           accepts a URL or an inline GeoJSON object. On a blank basemap it uses
           theme-aware monochrome defaults — here rendering world country
           borders.
@@ -99,9 +99,9 @@ export class GeojsonOverlayComponent {
       >
         <span description>
           Layer GeoJSON over a street basemap with custom paints. Set
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">promoteId</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code>
           and a
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">fillHoverPaint</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">fillHoverPaint</code>
           to get declarative hover highlighting via feature-state.
         </span>
         <div class="relative h-full">

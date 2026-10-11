@@ -10,7 +10,7 @@ import {
   MarkerContentComponent,
   MarkerLabelComponent,
 } from 'ng-mapcn';
-import { DocsPageComponent } from '../../../shared/docs-page';
+import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
 
 const BASIC_CODE = `import { Component } from '@angular/core';
@@ -218,7 +218,7 @@ const MODE_COLOR_EXPRESSION: ExpressionSpecification = [
   selector: 'app-arcs-page',
   standalone: true,
   imports: [
-    DocsPageComponent,
+    DocsImports,
     ExampleSectionComponent,
     MapComponent,
     MapArcComponent,
@@ -239,9 +239,9 @@ const MODE_COLOR_EXPRESSION: ExpressionSpecification = [
         [code]="basicCode"
       >
         <span description>
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-map-arc</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-arc</code>
           renders smooth Bézier arcs from
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">from</code>/<code
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">from</code>/<code
             class="bg-muted rounded px-1.5 py-0.5 text-xs"
             >to</code
           >
@@ -288,11 +288,11 @@ const MODE_COLOR_EXPRESSION: ExpressionSpecification = [
       >
         <span description>
           Extra datum properties drive the
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">paint</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">paint</code>
           via expressions, and
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">hoverPaint</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">hoverPaint</code>
           +
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">arcHover</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">arcHover</code>
           power the popup. Hover a lane to see its details.
         </span>
         <div class="relative h-full">

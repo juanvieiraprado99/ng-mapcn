@@ -4,7 +4,7 @@ import {
   MapClusterLayerComponent,
   MapComponent,
 } from 'ng-mapcn';
-import { DocsPageComponent } from '../../../shared/docs-page';
+import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
 
 const CLUSTER_CODE = `import { Component } from '@angular/core';
@@ -41,7 +41,7 @@ export class ClusterMapComponent {
   selector: 'app-clusters-page',
   standalone: true,
   imports: [
-    DocsPageComponent,
+    DocsImports,
     ExampleSectionComponent,
     MapComponent,
     MapClusterLayerComponent,
@@ -58,11 +58,11 @@ export class ClusterMapComponent {
         [code]="clusterCode"
       >
         <span description>
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-map-cluster-layer</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-cluster-layer</code>
           clusters point features automatically. Circle color and size scale
           with the cluster count; clicking a cluster zooms in, clicking a point
           emits
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">pointClick</code>.
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">pointClick</code>.
           This example shows USGS earthquake data.
         </span>
         <div class="relative h-full">

@@ -1,56 +1,34 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  inject,
-  signal,
-} from '@angular/core';
+import { ViewportScroller } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { DocsSidebarComponent } from './docs-sidebar';
-import { DocsTocComponent, TocHeading } from './docs-toc';
 
+/**
+ * mapcn docs `layout.tsx`: sidebar + page. Each page renders its own body and
+ * "On This Page" rail through `app-docs-page`.
+ */
 @Component({
   selector: 'app-docs-layout',
   standalone: true,
-  imports: [RouterOutlet, DocsSidebarComponent, DocsTocComponent],
+  imports: [RouterOutlet, DocsSidebarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'flex flex-1' },
   template: `
-    <div
-      class="container grid gap-10 py-10 lg:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[200px_minmax(0,1fr)_200px]"
-    >
-      <aside class="hidden lg:block">
-        <div class="sticky top-24">
-          <app-docs-sidebar />
-        </div>
-      </aside>
-
-      <main class="min-w-0" #main>
-        <router-outlet (activate)="onActivate()" />
-      </main>
-
-      <aside class="hidden xl:block">
-        <div class="sticky top-24">
-          <app-docs-toc [headings]="headings()" />
-        </div>
-      </aside>
+    <div class="container flex min-h-min w-full px-0">
+      <app-docs-sidebar />
+      <!-- The routed page renders next to <router-outlet>; make it the flex child. -->
+      <div
+        class="flex min-w-0 flex-1 [&>:not(router-outlet)]:flex [&>:not(router-outlet)]:min-w-0 [&>:not(router-outlet)]:flex-1"
+      >
+        <router-outlet />
+      </div>
     </div>
   `,
 })
 export class DocsLayoutComponent {
-  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-  readonly headings = signal<TocHeading[]>([]);
-
-  onActivate(): void {
-    // Page component just rendered; collect its h2[id] anchors for the TOC.
-    setTimeout(() => {
-      const nodes =
-        this.host.nativeElement.querySelectorAll<HTMLElement>('main h2[id]');
-      this.headings.set(
-        Array.from(nodes).map((node) => ({
-          id: node.id,
-          text: node.textContent?.trim() ?? '',
-        }))
-      );
-    });
+  constructor() {
+    // Anchor scrolling ignores CSS scroll-margin; clear the sticky header
+    // (h-14) plus breathing room, matching the sections' `scroll-m-24`.
+    inject(ViewportScroller).setOffset([0, 96]);
   }
 }

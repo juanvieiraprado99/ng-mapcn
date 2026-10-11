@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { ZardTableImports } from '@/shared/components/table';
-import { ZardBadgeComponent } from '@/shared/components/badge';
 
 export interface PropRow {
   name: string;
@@ -9,39 +8,48 @@ export interface PropRow {
   description: string;
 }
 
+/** mapcn `DocsPropTable`: borderless API table with code-chip cells. */
 @Component({
   selector: 'app-prop-table',
   standalone: true,
-  imports: [ZardTableImports, ZardBadgeComponent],
+  imports: [ZardTableImports],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'prop-table block space-y-3 [.prop-table+&]:mt-8' },
   template: `
-    <div class="mb-10 overflow-x-auto rounded-lg border">
-      <table z-table class="text-left text-sm">
+    @if (title(); as heading) {
+      <h3 class="text-foreground font-semibold">{{ heading }}</h3>
+    }
+    <div class="relative w-full overflow-x-auto">
+      <table
+        z-table
+        class="[&_tbody_tr:last-child]:border-b [&_td:first-child]:pl-0 [&_td:last-child]:pr-0 [&_th:first-child]:pl-0 [&_th:last-child]:pr-0"
+      >
         <thead z-table-header>
           <tr z-table-row>
-            <th z-table-head>Prop</th>
-            <th z-table-head>Type</th>
-            <th z-table-head>Default</th>
-            <th z-table-head>Description</th>
+            <th z-table-head class="h-10 text-xs font-medium">{{ nameLabel() }}</th>
+            <th z-table-head class="h-10 text-xs font-medium">Type</th>
+            <th z-table-head class="h-10 text-xs font-medium">Default</th>
+            <th z-table-head class="h-10 text-xs font-medium">Description</th>
           </tr>
         </thead>
         <tbody z-table-body>
           @for (row of rows(); track row.name) {
-            <tr z-table-row class="align-top">
-              <td z-table-cell>
-                <z-badge zType="secondary" class="font-mono">{{ row.name }}</z-badge>
+            <tr z-table-row>
+              <td z-table-cell class="py-3 align-top">
+                <code [class]="code + ' text-[13px]'">{{ row.name }}</code>
               </td>
-              <td z-table-cell>
-                <z-badge zType="outline" class="font-mono">{{ row.type }}</z-badge>
+              <td z-table-cell class="py-3 align-top whitespace-normal">
+                <code [class]="code + ' text-foreground/70 text-xs'">{{ row.type }}</code>
               </td>
-              <td z-table-cell>
-                @if (row.default) {
-                  <z-badge zType="outline" class="font-mono">{{ row.default }}</z-badge>
-                } @else {
-                  <span class="text-muted-foreground text-xs">—</span>
-                }
+              <td z-table-cell class="py-3 align-top">
+                <code [class]="code + ' text-foreground/70 text-xs whitespace-normal'">{{
+                  row.default || '—'
+                }}</code>
               </td>
-              <td z-table-cell class="text-muted-foreground text-xs leading-relaxed">
+              <td
+                z-table-cell
+                class="text-foreground/70 min-w-[180px] py-3 text-sm leading-relaxed whitespace-normal"
+              >
                 {{ row.description }}
               </td>
             </tr>
@@ -53,4 +61,10 @@ export interface PropRow {
 })
 export class PropTableComponent {
   readonly rows = input.required<PropRow[]>();
+  readonly title = input<string>();
+  /** Header of the first column ("Prop", "Input", "Output", ...). */
+  readonly nameLabel = input('Prop');
+
+  /** mapcn `DocsCode` chip. */
+  protected readonly code = 'bg-muted relative rounded-md px-1.5 py-0.5 font-mono';
 }

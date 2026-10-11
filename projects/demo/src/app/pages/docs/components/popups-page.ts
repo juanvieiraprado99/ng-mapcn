@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { MapComponent, MapPopupComponent } from 'ng-mapcn';
-import { DocsPageComponent } from '../../../shared/docs-page';
+import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
+import { ZardButtonComponent } from '@/shared/components/button';
 
 const POPUP_CODE = `import { Component, signal } from '@angular/core';
 import { MapComponent, MapPopupComponent } from 'ng-mapcn';
@@ -57,10 +58,11 @@ export class StandalonePopupComponent {
   selector: 'app-popups-page',
   standalone: true,
   imports: [
-    DocsPageComponent,
+    DocsImports,
     ExampleSectionComponent,
     MapComponent,
     MapPopupComponent,
+    ZardButtonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -75,9 +77,9 @@ export class StandalonePopupComponent {
       >
         <span description>
           Use
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-map-popup</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-popup</code>
           to display a popup at any location on the map. Unlike
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-marker-popup</code>,
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code>,
           standalone popups are not attached to markers and can be controlled
           programmatically.
         </span>
@@ -100,9 +102,12 @@ export class StandalonePopupComponent {
                     The city that never sleeps. Population: 8.3 million
                   </p>
                   <button
+                    z-button
+                    zType="outline"
+                    zSize="sm"
                     type="button"
+                    class="w-full"
                     (click)="showPopup.set(false)"
-                    class="hover:bg-accent w-full rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
                   >
                     Close
                   </button>
@@ -113,9 +118,11 @@ export class StandalonePopupComponent {
 
           @if (!showPopup()) {
             <button
+              z-button
+              zSize="sm"
               type="button"
+              class="absolute bottom-4 left-4 z-10"
               (click)="showPopup.set(true)"
-              class="bg-primary text-primary-foreground absolute bottom-4 left-4 z-10 rounded-md px-3 py-1.5 text-sm font-medium transition-opacity hover:opacity-90"
             >
               Show Popup
             </button>

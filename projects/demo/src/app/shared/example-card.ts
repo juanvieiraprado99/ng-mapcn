@@ -1,24 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { cardVariants } from '@/shared/components/card';
-import { mergeClasses } from '@/shared/utils/merge-classes';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
+/** mapcn `ExampleCard`: the frame around each live map on the home grid. */
 @Component({
   selector: 'app-example-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    '[class]': 'classes()',
-    '[style.--stagger]': 'stagger()',
+    class: 'bg-card border-border/50 relative block overflow-hidden rounded-xl border shadow-sm',
   },
   template: `<ng-content />`,
 })
-export class ExampleCardComponent {
-  readonly stagger = input(5);
-
-  protected readonly classes = computed(() =>
-    mergeClasses(
-      cardVariants(),
-      'relative block gap-0 overflow-hidden py-0 animate-scale-in animate-stagger',
-    ),
-  );
-}
+export class ExampleCardComponent {}

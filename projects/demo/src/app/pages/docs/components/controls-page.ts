@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MapComponent, MapControlsComponent } from 'ng-mapcn';
-import { DocsPageComponent } from '../../../shared/docs-page';
+import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
 
 const CONTROLS_CODE = `import { Component } from '@angular/core';
@@ -30,7 +30,7 @@ export class ControlsMapComponent {}`;
   selector: 'app-controls-page',
   standalone: true,
   imports: [
-    DocsPageComponent,
+    DocsImports,
     ExampleSectionComponent,
     MapComponent,
     MapControlsComponent,
@@ -48,11 +48,11 @@ export class ControlsMapComponent {}`;
       >
         <span description>
           The
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">ng-map-controls</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-controls</code>
           component renders map control buttons. Choose a corner with
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">position</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">position</code>
           and toggle individual controls with the
-          <code class="bg-muted rounded px-1.5 py-0.5 text-xs">show*</code>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">show*</code>
           inputs.
         </span>
         <ng-map [center]="[2.3522, 48.8566]" [zoom]="12">
