@@ -1,16 +1,17 @@
 import {
+  ApplicationRef,
   ChangeDetectionStrategy,
   Component,
   effect,
   type EmbeddedViewRef,
   inject,
+  Injector,
   input,
   NgZone,
   output,
   type TemplateRef,
   untracked,
   viewChild,
-  ViewContainerRef,
 } from '@angular/core';
 import { type Offset, Popup } from 'maplibre-gl';
 
@@ -40,7 +41,8 @@ export class MapPopupComponent {
 
   readonly popupClose = output<void>();
 
-  private readonly vcr = inject(ViewContainerRef);
+  private readonly appRef = inject(ApplicationRef);
+  private readonly injector = inject(Injector);
   private readonly mapCtx = inject(MapContextService);
   private readonly zone = inject(NgZone);
   private readonly tpl = viewChild.required<TemplateRef<unknown>>('tpl');
@@ -57,7 +59,13 @@ export class MapPopupComponent {
       const container = document.createElement('div');
       container.className = 'ng-popup-card';
 
-      const view: EmbeddedViewRef<unknown> = this.vcr.createEmbeddedView(this.tpl());
+      // Not created in the host's ViewContainerRef: Angular re-inserts a container's views next
+      // to its anchor whenever the host is (re)projected — e.g. by <ng-map>'s
+      // `@if (mapInstance()) { <ng-content /> }` — which would pull the nodes back out of the
+      // card. A detached view attached to the ApplicationRef keeps change detection and lets the
+      // popup own the nodes' placement (the CDK portal approach).
+      const view: EmbeddedViewRef<unknown> = this.tpl().createEmbeddedView(null, this.injector);
+      this.appRef.attachView(view);
       view.rootNodes.forEach((n: Node) => container.appendChild(n));
       view.detectChanges();
 
