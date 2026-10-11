@@ -24,7 +24,7 @@ Closes #
 - [ ] Tests added/updated and `npm test` passes (when applicable)
 - [ ] Docs updated, and `npm run generate:llms` run if the public API changed
 - [ ] Demo checked in both light and dark themes
-- [ ] Library invariants respected (see [CONTRIBUTING.md](../CONTRIBUTING.md#library-invariants))
+- [ ] Library invariants respected (see [CONTRIBUTING.md](https://github.com/juanvieiraprado99/ng-mapcn/blob/main/CONTRIBUTING.md#library-invariants))
 
 ## Screenshots
 

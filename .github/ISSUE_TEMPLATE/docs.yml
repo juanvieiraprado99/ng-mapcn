@@ -1,5 +1,5 @@
 name: Documentation
-description: Report a missing, unclear or incorrect documentation
+description: Report missing, unclear or incorrect documentation
 title: "[Docs]: "
 labels: [documentation]
 body:
