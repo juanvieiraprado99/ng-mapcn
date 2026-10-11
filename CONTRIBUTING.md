@@ -14,6 +14,14 @@ npm install
 npm run build-ui-dev
 ```
 
+On a fresh clone, `npm install` fails because the demo depends on `file:dist/ng-mapcn/ng-mapcn-<version>.tgz`, which only exists after the first library build. Install once without that dependency, then restore the manifest:
+
+```bash
+npm pkg delete dependencies.ng-mapcn && npm install
+git checkout package.json package-lock.json
+npm run build-ui-dev
+```
+
 `build-ui-dev` builds the library, packs it, installs the `.tgz` into the workspace and serves the demo app. The demo consumes `ng-mapcn` as a local `.tgz` from `dist/`, so **rerun it after every library change**.
 
 If builds look stale, use the clean variant, which clears `.angular` and `dist` first:
