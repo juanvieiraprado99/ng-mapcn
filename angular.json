@@ -124,7 +124,8 @@
             "setupFiles": ["projects/ng-mapcn/src/testing/setup.ts"],
             "coverageInclude": ["src/lib/**/*.ts"],
             "coverageExclude": ["src/lib/**/*.spec.ts"],
-            "coverageReporters": ["text-summary", "html", "lcovonly"]
+            "coverageReporters": ["text-summary", "html", "lcovonly"],
+            "coverageThresholds": { "statements": 95, "branches": 90, "functions": 95, "lines": 95 }
           }
         }
       }

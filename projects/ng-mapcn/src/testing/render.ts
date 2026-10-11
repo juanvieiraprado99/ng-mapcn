@@ -58,6 +58,9 @@ export async function renderMap(
   Object.assign(fixture.componentInstance as object, opts.hostProps ?? {});
   fixture.detectChanges();
   await fixture.whenStable();
+  // The map is created after the first pass; projected children are attached on the next one.
+  fixture.detectChanges();
+  await fixture.whenStable();
 
   const ctx = fixture.debugElement
     .query(By.directive(MapComponent))
@@ -73,4 +76,28 @@ export function loadMap(map: FakeMap): void {
   map.fire('load');
   map.fire('styledata');
   vi.advanceTimersByTime(100);
+}
+
+/** Assigns host inputs and runs change detection (effects run during it). */
+export function update(fixture: { componentInstance: any; detectChanges(): void }, props: object) {
+  Object.assign(fixture.componentInstance, props);
+  fixture.detectChanges();
+}
+
+/** `loadMap()` followed by change detection so the layer components' effects run. */
+export function loadAndSettle(fixture: { detectChanges(): void }, map: FakeMap): void {
+  loadMap(map);
+  fixture.detectChanges();
+}
+
+/** Simulates the style finishing after `setStyle`: `styledata`, the 100 ms debounce, then effects. */
+export function reloadStyle(fixture: { detectChanges(): void }, map: FakeMap): void {
+  map.fire('styledata');
+  vi.advanceTimersByTime(100);
+  fixture.detectChanges();
+}
+
+/** The source/layer add/remove operations recorded on the map, in order. */
+export function structuralCalls(map: FakeMap): string[] {
+  return map.calls.filter((c) => /^(addSource|addLayer|removeLayer|removeSource):/.test(c));
 }

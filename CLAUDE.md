@@ -28,8 +28,9 @@ ng serve demo
 npm run publish:lib
 
 # Run tests (Vitest via the Angular CLI)
-npm test                # lib + demo
+npm test                # lib + schematics + demo
 npm run test:lib        # library only
+npm run test:schematics # builds + tests the ng-add / map schematics (node env, dist/ng-mapcn/schematics)
 npm run test:demo       # demo only (run npm run install:lib first)
 npm run test:coverage   # library with v8 coverage (coverage/ng-mapcn)
 

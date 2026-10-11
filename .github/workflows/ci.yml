@@ -54,6 +54,9 @@ jobs:
       - name: Library unit tests with coverage
         run: npm run test:coverage
 
+      - name: Schematics tests
+        run: npm run test:schematics
+
       - name: Install the built library for the demo tests
         run: npm run install:lib
 

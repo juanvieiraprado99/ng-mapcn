@@ -64,6 +64,14 @@ export class Point {
     public x: number,
     public y: number,
   ) {}
+
+  static convert(value: unknown): Point {
+    if (value instanceof Point) return value;
+    if (Array.isArray(value)) return new Point(value[0], value[1]);
+    if (typeof value === 'number') return new Point(value, value);
+    const v = value as { x: number; y: number } | undefined;
+    return new Point(v?.x ?? 0, v?.y ?? 0);
+  }
 }
 
 type LngLatLike = [number, number] | { lng: number; lat: number } | { lon: number; lat: number };
@@ -87,6 +95,9 @@ export class Map extends Evented {
   private moving = false;
   private camera = { lng: 0, lat: 0, zoom: 0, bearing: 0, pitch: 0 };
   private readonly canvas = document.createElement('canvas');
+  private readonly container = Object.assign(document.createElement('div'), {
+    requestFullscreen: vi.fn(() => Promise.resolve()),
+  });
   removed = false;
 
   constructor(readonly options: any = {}) {
@@ -116,6 +127,10 @@ export class Map extends Evented {
 
   getCanvas(): HTMLCanvasElement {
     return this.canvas;
+  }
+
+  getContainer(): HTMLElement & { requestFullscreen: ReturnType<typeof vi.fn> } {
+    return this.container;
   }
 
   getCenter(): { lng: number; lat: number } {
@@ -186,7 +201,12 @@ export class Map extends Evented {
   addSource(id: string, source: any): this {
     if (this.sources[id]) throw new Error(`Source "${id}" already exists.`);
     this.calls.push(`addSource:${id}`);
-    this.sources[id] = { ...source, id, setData: vi.fn() };
+    this.sources[id] = {
+      ...source,
+      id,
+      setData: vi.fn(),
+      getClusterExpansionZoom: vi.fn((_clusterId: number) => Promise.resolve(0)),
+    };
     return this;
   }
 
@@ -358,10 +378,12 @@ export class Popup extends Evented {
   private maxWidth: string;
   private content: Node | null = null;
   private open = false;
+  private offset: unknown;
   map: Map | null = null;
 
   constructor(readonly options: any = {}) {
     super();
+    this.offset = options.offset;
     this.maxWidth = options.maxWidth ?? '240px';
     fakeRegistry.popups.push(this);
   }
@@ -381,6 +403,14 @@ export class Popup extends Evented {
   }
   getContent(): Node | null {
     return this.content;
+  }
+  setOffset(offset: unknown): this {
+    this.offset = offset;
+    this.calls.push('setOffset');
+    return this;
+  }
+  getOffset(): unknown {
+    return this.offset;
   }
   setMaxWidth(value: string): this {
     this.maxWidth = value;
