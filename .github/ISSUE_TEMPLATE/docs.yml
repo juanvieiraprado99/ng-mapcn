@@ -1,0 +1,25 @@
+name: Documentation
+description: Report a missing, unclear or incorrect documentation
+title: "[Docs]: "
+labels: [documentation]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page or section
+      description: URL of the docs page, or the README section.
+      placeholder: https://ng-mapcn.vercel.app/docs/...
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+    validations:
+      required: false

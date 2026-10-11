@@ -1,0 +1,81 @@
+name: Bug report
+description: Something in ng-mapcn does not work as expected
+title: "[Bug]: "
+labels: [bug, needs-repro]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please [search existing issues](https://github.com/juanvieiraprado99/ng-mapcn/issues) first to avoid duplicates.
+
+        **Security issues do not belong here.** Report them privately following the [security policy](https://github.com/juanvieiraprado99/ng-mapcn/security/policy).
+  - type: input
+    id: ngmapcn-version
+    attributes:
+      label: ng-mapcn version
+      description: Version of the npm package, or the version you ran `ng add` with.
+      placeholder: 22.0.0-beta.0
+    validations:
+      required: true
+  - type: input
+    id: angular-version
+    attributes:
+      label: Angular version
+      placeholder: 22.2.2
+    validations:
+      required: true
+  - type: input
+    id: maplibre-version
+    attributes:
+      label: maplibre-gl version
+      placeholder: 5.16.0
+    validations:
+      required: true
+  - type: dropdown
+    id: install-channel
+    attributes:
+      label: Install channel
+      description: How did you add ng-mapcn to your project?
+      options:
+        - ng add (copied sources)
+        - npm package
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Chrome 141 / macOS
+    validations:
+      required: false
+  - type: input
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Link to a minimal reproduction (GitHub repo or StackBlitz). You can start from a fresh Angular project at https://stackblitz.com/fork/angular and add ng-mapcn.
+      placeholder: https://stackblitz.com/edit/...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Render `<ng-map>` with ...
+        2. Toggle ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happens instead? Include console errors and screenshots if relevant.
+    validations:
+      required: true
