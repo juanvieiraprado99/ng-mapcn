@@ -19,8 +19,9 @@
     "publish:lib": "node scripts/sync-readme.mjs && ng build ng-mapcn --configuration production && node scripts/build-schematics.mjs && cd dist/ng-mapcn && npm publish --tag beta --access public",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "build-ui-dev": "node -e \"const v = require('./projects/ng-mapcn/package.json').version; require('child_process').execSync('ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-' + v + '.tgz -f && node scripts/generate-block-sources.mjs && ng serve demo', { stdio: 'inherit' })\"",
-    "build-ui-dev-clean": "node -e \"const v = require('./projects/ng-mapcn/package.json').version; const { execSync } = require('child_process'); const fs = require('fs'); if (process.platform === 'win32') { try { execSync('powershell -Command \\\"if (Test-Path .angular) { Remove-Item -Recurse -Force .angular }; if (Test-Path dist) { Remove-Item -Recurse -Force dist }\\\"', { stdio: 'inherit' }); } catch(e) {} } else { try { execSync('rm -rf .angular dist', { stdio: 'inherit' }); } catch(e) {} } execSync('ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-' + v + '.tgz -f && node scripts/generate-block-sources.mjs && ng serve demo', { stdio: 'inherit' })\"",
+    "install:lib": "node -e \"const v = require('./projects/ng-mapcn/package.json').version; require('child_process').execSync('ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-' + v + '.tgz -f --no-save', { stdio: 'inherit' })\"",
+    "build-ui-dev": "node -e \"const v = require('./projects/ng-mapcn/package.json').version; require('child_process').execSync('ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-' + v + '.tgz -f --no-save && node scripts/generate-block-sources.mjs && ng serve demo', { stdio: 'inherit' })\"",
+    "build-ui-dev-clean": "node -e \"const v = require('./projects/ng-mapcn/package.json').version; const { execSync } = require('child_process'); const fs = require('fs'); if (process.platform === 'win32') { try { execSync('powershell -Command \\\"if (Test-Path .angular) { Remove-Item -Recurse -Force .angular }; if (Test-Path dist) { Remove-Item -Recurse -Force dist }\\\"', { stdio: 'inherit' }); } catch(e) {} } else { try { execSync('rm -rf .angular dist', { stdio: 'inherit' }); } catch(e) {} } execSync('ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-' + v + '.tgz -f --no-save && node scripts/generate-block-sources.mjs && ng serve demo', { stdio: 'inherit' })\"",
     "serve:ssr:demo": "node dist/demo/server/server.mjs"
   },
   "prettier": {
@@ -53,7 +54,6 @@
     "echarts": "^6.1.0",
     "express": "^5.1.0",
     "maplibre-gl": "^5.16.0",
-    "ng-mapcn": "file:dist/ng-mapcn/ng-mapcn-22.0.0-beta.0.tgz",
     "ngx-echarts": "^22.0.0",
     "rxjs": "~7.8.0",
     "tailwind-merge": "^3.7.0",
