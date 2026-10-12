@@ -37,16 +37,28 @@ describe('maplibre-fake', () => {
     expect(() => map.addLayer({ id: 'l', type: 'line', source: 'nope' } as any)).toThrow();
   });
 
-  it('setStyle clears sources and layers', () => {
+  it('setStyle keeps the current style until the new one loads, then clears sources and layers', () => {
     const map = createMap();
     map.addSource('s', geojsonSource());
     map.addLayer({ id: 'l', type: 'line', source: 's' } as any);
+    const onStyleLoad = vi.fn();
+    const onStyleData = vi.fn();
+    map.on('style.load', onStyleLoad);
+    map.on('styledata', onStyleData);
 
     map.setStyle('https://example.com/style.json');
 
+    expect(map.calls).toContain('setStyle');
+    expect(map.hasPendingStyle()).toBe(true);
+    expect(map.getLayer('l')).toBeDefined();
+
+    map.finishStyleLoad();
+
+    expect(map.hasPendingStyle()).toBe(false);
     expect(map.getSource('s')).toBeUndefined();
     expect(map.getLayer('l')).toBeUndefined();
-    expect(map.calls).toContain('setStyle');
+    expect(onStyleLoad).toHaveBeenCalledTimes(1);
+    expect(onStyleData).toHaveBeenCalledTimes(1);
   });
 
   it('jumpTo updates camera and fires move', () => {

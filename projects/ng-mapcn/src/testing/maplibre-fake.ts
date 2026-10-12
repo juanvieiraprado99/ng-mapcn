@@ -181,14 +181,37 @@ export class Map extends Evented {
     return this;
   });
 
-  /** Like MapLibre with a new style: every source and layer is dropped. */
+  /** True while a style requested with `setStyle` has not been applied yet. */
+  private styleLoading = false;
+
+  /**
+   * Test-only: whether a `setStyle` is still in flight. (MapLibre's own `isStyleLoaded()` stays
+   * true during a diffed `setStyle`, so it cannot tell — measured in a real browser.)
+   */
+  hasPendingStyle(): boolean {
+    return this.styleLoading;
+  }
+
+  /**
+   * Like MapLibre: the new style is fetched asynchronously, so the current style (and every source
+   * and layer in it) stays until `finishStyleLoad()` applies the new one.
+   */
   setStyle = vi.fn((style: unknown, _options?: unknown) => {
     this.calls.push('setStyle');
     this.options.style = style;
-    this.sources = {};
-    this.layers = [];
+    this.styleLoading = true;
     return this;
   });
+
+  /** The requested style arrives: every source and layer is dropped, then `style.load` + `styledata`. */
+  finishStyleLoad(): void {
+    this.calls.push('styleLoaded');
+    this.sources = {};
+    this.layers = [];
+    this.styleLoading = false;
+    this.fire('style.load');
+    this.fire('styledata');
+  }
   setProjection = vi.fn((_projection: unknown) => {
     this.calls.push('setProjection');
     return this;
