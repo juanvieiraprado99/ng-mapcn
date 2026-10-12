@@ -6,7 +6,6 @@ import {
   inject,
   input,
   output,
-  signal,
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideClock, lucideMapPin, lucidePhone } from '@ng-icons/lucide';
@@ -69,12 +68,7 @@ export class FlyToSelectedComponent {
       class="bg-background absolute top-3 left-3 z-10 border shadow-sm md:hidden"
     ></button>
 
-    <ng-map
-      [center]="center()"
-      [zoom]="12"
-      [options]="{ minZoom: 10, maxZoom: 17 }"
-      (mapReady)="mapReady.set(true)"
-    >
+    <ng-map [center]="center()" [zoom]="12" [options]="{ minZoom: 10, maxZoom: 17 }">
       <ng-map-controls [showFullscreen]="true" [showCompass]="true" />
       <app-fly-to-selected [store]="selected()" />
 
@@ -100,9 +94,7 @@ export class FlyToSelectedComponent {
         </ng-map-marker>
       }
 
-      <!-- ng-map-popup takes its content when it is created: mount it once the
-           map is ready, so the selected store at load time renders inside it. -->
-      @if (mapReady() && selected(); as store) {
+      @if (selected(); as store) {
         <ng-map-popup
           [longitude]="store.lng"
           [latitude]="store.lat"
@@ -155,7 +147,6 @@ export class LocatorMapComponent {
   readonly selectStore = output<string>();
   readonly clearSelection = output<void>();
 
-  protected readonly mapReady = signal(false);
   protected readonly selected = computed(() =>
     this.stores().find((store) => store.id === this.selectedId()),
   );
