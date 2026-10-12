@@ -89,9 +89,8 @@ export class StandalonePopupComponent {
           <ng-map
             [center]="[-74.006, 40.7128]"
             [zoom]="13"
-            (mapReady)="ready.set(true)"
           >
-            @if (showPopup() && ready()) {
+            @if (showPopup()) {
               <ng-map-popup
                 [longitude]="-74.006"
                 [latitude]="40.7128"
@@ -138,7 +137,4 @@ export class PopupsPageComponent {
   readonly popupCode = POPUP_CODE;
 
   readonly showPopup = signal(true);
-  // ng-map-popup captures its projected content on creation; only mount it once
-  // the map has loaded so the projected nodes are present at that moment.
-  readonly ready = signal(false);
 }
