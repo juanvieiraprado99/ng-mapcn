@@ -10,3 +10,7 @@ CODE_OF_CONDUCT.md
 docs/
 playwright-report/
 test-results/
+
+# Generated and rewritten by release-please
+.release-please-manifest.json
+projects/ng-mapcn/CHANGELOG.md
