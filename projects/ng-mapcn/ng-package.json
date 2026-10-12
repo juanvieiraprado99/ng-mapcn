@@ -4,5 +4,6 @@
   "lib": {
     "entryFile": "src/public-api.ts"
   },
-  "assets": ["styles.scss", "src/lib/styles/**/*.scss", "CHANGELOG.md"]
+  "assets": ["styles.scss", "src/lib/styles/**/*.scss", "CHANGELOG.md"],
+  "allowedNonPeerDependencies": ["@types/geojson"]
 }

@@ -8,6 +8,7 @@ import {
   output,
   untracked,
 } from '@angular/core';
+import type * as GeoJSON from 'geojson';
 import { type GeoJSONSource, type MapGeoJSONFeature, type MapMouseEvent } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';

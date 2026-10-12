@@ -10,6 +10,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import type * as GeoJSON from 'geojson';
 import {
   type FillLayerSpecification,
   type GeoJSONSource,

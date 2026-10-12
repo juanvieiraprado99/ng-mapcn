@@ -1,3 +1,4 @@
+import type * as GeoJSON from 'geojson';
 import { type Map as MapLibreMap, type MapMouseEvent } from 'maplibre-gl';
 
 /** Current viewport state of a map (mapcn `MapViewport`). */

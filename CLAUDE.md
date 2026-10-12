@@ -49,7 +49,7 @@ The demo app depends on `ng-mapcn` installed as a local `.tgz` file from `dist/`
 
 This is an **Angular library workspace** (`ng-packagr`) with two projects:
 
-- `projects/ng-mapcn/` — the publishable library, an Angular port of [mapcn](https://mapcn.dev) (React + MapLibre GL v5)
+- `projects/ng-mapcn/` — the publishable library, an Angular port of [mapcn](https://mapcn.dev) (React + MapLibre GL; this port targets MapLibre GL v6)
 - `projects/demo/` — a demo/test app that consumes the built library
 
 ### Library structure (`projects/ng-mapcn/src/lib/`)

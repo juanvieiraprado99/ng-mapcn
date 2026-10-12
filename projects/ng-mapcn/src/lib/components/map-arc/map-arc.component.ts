@@ -9,6 +9,7 @@ import {
   output,
   untracked,
 } from '@angular/core';
+import type * as GeoJSON from 'geojson';
 import {
   type GeoJSONSource,
   type LineLayerSpecification,

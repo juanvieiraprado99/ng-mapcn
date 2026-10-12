@@ -7,8 +7,19 @@ import {
 } from '@angular-devkit/schematics';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
-const MAPLIBRE_VERSION = '^5.16.0';
+// v6.4.1+ fixes GHSA-jrc7-96c5-q579 (attribution XSS); the copied sources are written against v6.
+const MAPLIBRE_VERSION = '^6.11.2';
+// The public types reference GeoJSON; maplibre-gl v6 no longer loads them ambiently.
+const GEOJSON_TYPES_VERSION = '^7946.0.16';
 const MAPLIBRE_CSS = 'node_modules/maplibre-gl/dist/maplibre-gl.css';
+// MapLibre v6 loads its module worker from `./maplibre-gl-worker.mjs` next to the bundle that
+// imports it (`import.meta.url`), and the worker imports `./maplibre-gl-shared.mjs`. Copying both
+// to the output root puts them beside the app chunks.
+const WORKER_ASSETS = ['maplibre-gl-worker.mjs', 'maplibre-gl-shared.mjs'].map((glob) => ({
+  glob,
+  input: 'node_modules/maplibre-gl/dist',
+  output: '/',
+}));
 
 // Global overrides required by mapcn: MapLibre injects its own popup chrome,
 // which must be neutralized so the framework-styled content shows cleanly.
@@ -35,6 +46,7 @@ export function ngAdd(options: NgAddOptions): Rule {
   return chain([
     addMaplibreDependency(),
     registerMaplibreCss(options),
+    registerWorkerAssets(options),
     appendGlobalStyles(options),
     schematic('map', { path: options.path }),
     installDependencies(),
@@ -42,14 +54,58 @@ export function ngAdd(options: NgAddOptions): Rule {
 }
 
 function addMaplibreDependency(): Rule {
-  return (tree: Tree) => {
+  return (tree: Tree, context: SchematicContext) => {
     const pkgBuffer = tree.read('package.json');
     if (!pkgBuffer) return tree;
     const pkg = JSON.parse(pkgBuffer.toString());
+    const before = JSON.stringify(pkg);
     pkg.dependencies = pkg.dependencies ?? {};
-    if (!pkg.dependencies['maplibre-gl']) {
+    const existing: string | undefined = pkg.dependencies['maplibre-gl'];
+    if (!existing) {
       pkg.dependencies['maplibre-gl'] = MAPLIBRE_VERSION;
+    } else if (!/^[\^~]?6\./.test(existing)) {
+      // Never rewrite the app's own pin — but the copied sources will not compile against it.
+      context.logger.warn(
+        `ng-mapcn needs maplibre-gl ${MAPLIBRE_VERSION} (v6.4.1+ also fixes GHSA-jrc7-96c5-q579); ` +
+          `found "${existing}". Update it before building.`,
+      );
+    }
+    if (!pkg.dependencies['@types/geojson'] && !pkg.devDependencies?.['@types/geojson']) {
+      pkg.devDependencies = { ...pkg.devDependencies, '@types/geojson': GEOJSON_TYPES_VERSION };
+    }
+    if (JSON.stringify(pkg) !== before) {
       tree.overwrite('package.json', JSON.stringify(pkg, null, 2) + '\n');
+    }
+    return tree;
+  };
+}
+
+function registerWorkerAssets(options: NgAddOptions): Rule {
+  return (tree: Tree, context: SchematicContext) => {
+    const angularJsonBuffer = tree.read('angular.json');
+    if (!angularJsonBuffer) return tree; // registerMaplibreCss already warned
+    const workspace = JSON.parse(angularJsonBuffer.toString());
+    const projectName = options.project ?? Object.keys(workspace.projects ?? {})[0];
+    const buildOptions = workspace.projects?.[projectName]?.architect?.build?.options;
+    if (!buildOptions) {
+      context.logger.warn(
+        `Could not locate the build options for project "${projectName}" — copy ` +
+          'maplibre-gl-worker.mjs and maplibre-gl-shared.mjs from node_modules/maplibre-gl/dist ' +
+          'to your build output root manually.',
+      );
+      return tree;
+    }
+    const assets: unknown[] = (buildOptions.assets ??= []);
+    const missing = WORKER_ASSETS.filter(
+      (asset) =>
+        !assets.some(
+          (a) =>
+            typeof a === 'object' && a !== null && (a as { glob?: string }).glob === asset.glob,
+        ),
+    );
+    if (missing.length) {
+      assets.push(...missing);
+      tree.overwrite('angular.json', JSON.stringify(workspace, null, 2) + '\n');
     }
     return tree;
   };
