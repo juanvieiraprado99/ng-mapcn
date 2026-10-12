@@ -8,6 +8,7 @@ import {
   output,
   untracked,
 } from '@angular/core';
+import type * as GeoJSON from 'geojson';
 import { type GeoJSONSource, type MapGeoJSONFeature, type MapMouseEvent } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
@@ -64,6 +65,8 @@ export class MapClusterLayerComponent {
   private readonly clusterLayerId = `clusters-${this.id}`;
   private readonly clusterCountLayerId = `cluster-count-${this.id}`;
   private readonly unclusteredLayerId = `unclustered-point-${this.id}`;
+  /** Data currently in the source, so re-runs of the data effect skip a no-op setData. */
+  private appliedData: string | GeoJSON.FeatureCollection<GeoJSON.Point> | null = null;
 
   constructor() {
     // Add source and layers once the map style is loaded; re-runs after theme setStyle.
@@ -76,9 +79,11 @@ export class MapClusterLayerComponent {
       const thresholds = untracked(() => this.clusterThresholds());
       const pointColor = untracked(() => this.pointColor());
 
+      const data = untracked(() => this.data());
+      this.appliedData = data;
       map.addSource(this.sourceId, {
         type: 'geojson',
-        data: untracked(() => this.data()),
+        data,
         cluster: true,
         clusterMaxZoom: untracked(() => this.clusterMaxZoom()),
         clusterRadius: untracked(() => this.clusterRadius()),
@@ -141,9 +146,11 @@ export class MapClusterLayerComponent {
 
         if (untracked(() => this.zoomOnClusterClick())) {
           const source = map.getSource(this.sourceId) as GeoJSONSource;
-          source.getClusterExpansionZoom(clusterId).then((zoom) => {
-            map.easeTo({ center: coordinates, zoom });
-          });
+          source
+            .getClusterExpansionZoom(clusterId)
+            .then((zoom) => map.easeTo({ center: coordinates, zoom }))
+            // Rejects when the source changed or was removed in the meantime
+            .catch(() => {});
         }
       };
 
@@ -206,7 +213,10 @@ export class MapClusterLayerComponent {
       const map = this.ctx.map();
       if (!map) return;
       const source = map.getSource(this.sourceId) as GeoJSONSource | undefined;
-      source?.setData(data);
+      // Skip what the source was just created with (load / theme switch re-runs this effect)
+      if (!source || data === this.appliedData) return;
+      source.setData(data);
+      this.appliedData = data;
     });
 
     // Update layer paint when style props change

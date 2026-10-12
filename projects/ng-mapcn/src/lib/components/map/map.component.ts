@@ -3,7 +3,6 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
-  computed,
   DestroyRef,
   effect,
   type ElementRef,
@@ -54,7 +53,7 @@ export class MapComponent {
   readonly projection = input<ProjectionSpecification>();
   readonly theme = input<'light' | 'dark' | 'auto'>('auto');
   readonly loading = input(false);
-  readonly viewport = input<Partial<MapViewport> | undefined>(undefined);
+  readonly viewport = input<Partial<MapViewport>>();
   /** Extra MapLibre options passed through to the constructor (mapcn spreads these in React). */
   readonly options = input<Omit<MapOptions, 'container' | 'style'>>();
 
@@ -66,11 +65,10 @@ export class MapComponent {
 
   // Internal state exposed to template
   protected readonly mapInstance = signal<MapLibreMap | null>(null);
-  private readonly loadedFlag = signal(false);
-  private readonly styleLoadedFlag = signal(false);
-  protected readonly isLoaded = computed(() => this.loadedFlag() && this.styleLoadedFlag());
 
   private readonly ctx = inject(MapContextService);
+  /** Load gate shared with the child components (map `load` + debounced `styledata`). */
+  protected readonly isLoaded = this.ctx.isLoaded;
   private readonly themeService = inject(ThemeService);
   /** App-wide basemap default (`provideMapStyles`), when the app provides one. */
   private readonly appStyles = inject(MAP_DEFAULT_STYLES, { optional: true });
@@ -80,9 +78,12 @@ export class MapComponent {
 
   private styleTimeoutRef: ReturnType<typeof setTimeout> | null = null;
   private initTimeoutRef: ReturnType<typeof setTimeout> | null = null;
+  private sizeObserver: ResizeObserver | null = null;
   private destroyed = false;
   private internalUpdate = false;
   private currentStyle: string | StyleSpecification | null = null;
+  /** Whether a [projection] was pushed to the map, so clearing the input can reset it. */
+  private projectionApplied = false;
 
   constructor() {
     afterNextRender(() => this.initializeMap());
@@ -126,6 +127,17 @@ export class MapComponent {
       this.internalUpdate = false;
     });
 
+    // Runtime [projection] changes. While the gate is closed the styledata handler applies the
+    // current value before re-opening it; clearing the input resets to MapLibre's default.
+    effect(() => {
+      const proj = this.projection();
+      const map = this.mapInstance();
+      if (!map || !untracked(() => this.ctx.isLoaded())) return;
+      if (proj) map.setProjection(proj);
+      else if (this.projectionApplied) map.setProjection({ type: 'mercator' });
+      this.projectionApplied = !!proj;
+    });
+
     this.destroyRef.onDestroy(() => this.destroyMap());
   }
 
@@ -140,13 +152,8 @@ export class MapComponent {
     const container = this.container()?.nativeElement;
     if (!container) return;
 
-    const w = container.offsetWidth || container.getBoundingClientRect().width;
-    const h = container.offsetHeight || container.getBoundingClientRect().height;
-    if (!w || !h) {
-      // Retry outside the zone so the poll doesn't trigger change detection
-      this.zone.runOutsideAngular(() => {
-        this.initTimeoutRef = setTimeout(() => this.initializeMap(), 100);
-      });
+    if (!hasSize(container)) {
+      this.waitForSize(container);
       return;
     }
 
@@ -173,7 +180,6 @@ export class MapComponent {
         const m = new MapLibreMap(options);
 
         m.on('load', () => {
-          this.loadedFlag.set(true);
           this.ctx.setLoadedFlag(true);
           this.zone.run(() => this.mapReady.emit(m));
         });
@@ -184,8 +190,10 @@ export class MapComponent {
           // operations are allowed (avoids race conditions around setStyle)
           this.styleTimeoutRef = setTimeout(() => {
             const proj = this.projection();
-            if (proj) m.setProjection(proj);
-            this.styleLoadedFlag.set(true);
+            if (proj) {
+              m.setProjection(proj);
+              this.projectionApplied = true;
+            }
             this.ctx.setStyleLoadedFlag(true);
           }, 100);
         });
@@ -195,7 +203,6 @@ export class MapComponent {
         // the styledata fired while the style was still being fetched (slow network). Close the
         // gate; the styledata that follows re-opens it, and the layer components re-add everything.
         m.on('style.load', () => {
-          this.styleLoadedFlag.set(false);
           this.ctx.setStyleLoadedFlag(false);
         });
 
@@ -224,6 +231,27 @@ export class MapComponent {
     }
   }
 
+  /**
+   * MapLibre needs a laid-out container (hidden tab, `display: none` parent). Waits for a resize
+   * where available, polling otherwise — outside the zone so neither triggers change detection.
+   */
+  private waitForSize(container: HTMLElement): void {
+    this.zone.runOutsideAngular(() => {
+      if (typeof ResizeObserver === 'undefined') {
+        this.initTimeoutRef = setTimeout(() => this.initializeMap(), 100);
+        return;
+      }
+      const observer = new ResizeObserver(() => {
+        if (!hasSize(container)) return;
+        observer.disconnect();
+        this.sizeObserver = null;
+        this.initializeMap();
+      });
+      observer.observe(container);
+      this.sizeObserver = observer;
+    });
+  }
+
   /** Precedence: `styles` input > `blank` > app-wide default > Carto default. */
   private getMapStyle(theme: 'light' | 'dark'): string | StyleSpecification {
     const s = this.styles();
@@ -246,7 +274,6 @@ export class MapComponent {
     const style = this.getMapStyle(theme);
     if (style === this.currentStyle) return;
     this.currentStyle = style;
-    this.styleLoadedFlag.set(false);
     this.ctx.setStyleLoadedFlag(false);
     map.setStyle(style, { diff: true });
   }
@@ -264,6 +291,8 @@ export class MapComponent {
       clearTimeout(this.initTimeoutRef);
       this.initTimeoutRef = null;
     }
+    this.sizeObserver?.disconnect();
+    this.sizeObserver = null;
     this.clearStyleTimeout();
     const map = this.mapInstance();
     if (map) {
@@ -279,4 +308,10 @@ export class MapComponent {
   getMap(): MapLibreMap | null {
     return this.mapInstance();
   }
+}
+
+function hasSize(el: HTMLElement): boolean {
+  const w = el.offsetWidth || el.getBoundingClientRect().width;
+  const h = el.offsetHeight || el.getBoundingClientRect().height;
+  return !!w && !!h;
 }

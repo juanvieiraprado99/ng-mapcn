@@ -137,6 +137,17 @@ describe('MapControlsComponent', () => {
       expect(svg.style.transform).toBe('rotateX(5deg) rotateZ(10deg)');
     });
 
+    it('syncs the compass immediately when it is enabled on a rotated map', async () => {
+      const { fixture, map } = await render();
+      map.jumpTo({ bearing: 45, pitch: 10 });
+
+      update(fixture, { showCompass: true });
+
+      const svg = button(fixture, 'Reset north').querySelector('svg')!;
+      expect(svg.style.transform).toBe('rotateX(10deg) rotateZ(-45deg)');
+      expect(map.listenerCount('rotate')).toBe(1);
+    });
+
     it('registers no compass handlers when the compass is hidden', async () => {
       const { map } = await render();
 
@@ -186,6 +197,29 @@ describe('MapControlsComponent', () => {
       expect(getCurrentPosition).toHaveBeenCalledTimes(1);
     });
 
+    it('does nothing when the browser has no geolocation', async () => {
+      const { fixture, map } = await render({ showLocate: true });
+
+      expect(() => button(fixture, 'My location').click()).not.toThrow();
+      fixture.detectChanges();
+
+      expect(button(fixture, 'My location').disabled).toBe(false);
+      expect(map.flyTo).not.toHaveBeenCalled();
+    });
+
+    it('ignores a position that arrives after the controls were destroyed', async () => {
+      const getCurrentPosition = vi.fn();
+      stubGeolocation(getCurrentPosition);
+      const { fixture, map, host } = await render({ showLocate: true });
+      button(fixture, 'My location').click();
+
+      update(fixture, { show: false });
+      getCurrentPosition.mock.calls[0][0]({ coords: { longitude: 5, latitude: 6 } });
+
+      expect(map.flyTo).not.toHaveBeenCalled();
+      expect(host['locateChange']).not.toHaveBeenCalled();
+    });
+
     it('resets the locating state on error without emitting', async () => {
       const getCurrentPosition = vi.fn();
       stubGeolocation(getCurrentPosition);
@@ -211,17 +245,27 @@ describe('MapControlsComponent', () => {
       expect(map.getContainer().requestFullscreen).toHaveBeenCalledTimes(1);
     });
 
-    it('exits fullscreen when the document is already fullscreen', async () => {
+    it('swallows a rejected fullscreen request', async () => {
+      const { fixture, map } = await render({ showFullscreen: true });
+      map.getContainer().requestFullscreen.mockReturnValueOnce(Promise.reject(new Error('denied')));
+
+      button(fixture, 'Toggle fullscreen').click();
+      await Promise.resolve();
+
+      expect(map.getContainer().requestFullscreen).toHaveBeenCalledTimes(1);
+    });
+
+    it('exits fullscreen when the map container is fullscreen', async () => {
       const exitFullscreen = vi.fn();
       Object.defineProperty(document, 'exitFullscreen', {
         configurable: true,
         value: exitFullscreen,
       });
+      const { fixture, map } = await render({ showFullscreen: true });
       Object.defineProperty(document, 'fullscreenElement', {
         configurable: true,
-        value: document.body,
+        value: map.getContainer(),
       });
-      const { fixture, map } = await render({ showFullscreen: true });
 
       button(fixture, 'Toggle fullscreen').click();
 
@@ -229,9 +273,25 @@ describe('MapControlsComponent', () => {
       expect(map.getContainer().requestFullscreen).not.toHaveBeenCalled();
     });
 
-    it('swaps the icon on fullscreenchange', async () => {
+    it('swaps the icon and aria-pressed on fullscreenchange', async () => {
+      const { fixture, map } = await render({ showFullscreen: true });
+      const btn = () => button(fixture, 'Toggle fullscreen');
+      const before = btn().querySelector('path')!.getAttribute('d');
+      expect(btn().getAttribute('aria-pressed')).toBe('false');
+
+      Object.defineProperty(document, 'fullscreenElement', {
+        configurable: true,
+        value: map.getContainer(),
+      });
+      document.dispatchEvent(new Event('fullscreenchange'));
+      fixture.detectChanges();
+
+      expect(btn().querySelector('path')!.getAttribute('d')).not.toBe(before);
+      expect(btn().getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('ignores another element going fullscreen', async () => {
       const { fixture } = await render({ showFullscreen: true });
-      const before = button(fixture, 'Toggle fullscreen').querySelector('path')!.getAttribute('d');
 
       Object.defineProperty(document, 'fullscreenElement', {
         configurable: true,
@@ -240,8 +300,7 @@ describe('MapControlsComponent', () => {
       document.dispatchEvent(new Event('fullscreenchange'));
       fixture.detectChanges();
 
-      const after = button(fixture, 'Toggle fullscreen').querySelector('path')!.getAttribute('d');
-      expect(after).not.toBe(before);
+      expect(button(fixture, 'Toggle fullscreen').getAttribute('aria-pressed')).toBe('false');
     });
 
     it('removes the fullscreenchange listener on destroy', async () => {
@@ -254,6 +313,22 @@ describe('MapControlsComponent', () => {
       update(fixture, { show: false });
 
       expect(remove).toHaveBeenCalledWith('fullscreenchange', added![1]);
+    });
+  });
+
+  describe('accessibility', () => {
+    it('gives every button an aria-label', async () => {
+      const { fixture } = await render({
+        showCompass: true,
+        showLocate: true,
+        showFullscreen: true,
+      });
+      const buttons = [
+        ...fixture.nativeElement.querySelectorAll('.ng-control-btn'),
+      ] as HTMLElement[];
+
+      expect(buttons).toHaveLength(5);
+      for (const b of buttons) expect(b.getAttribute('aria-label')).toBe(b.getAttribute('title'));
     });
   });
 

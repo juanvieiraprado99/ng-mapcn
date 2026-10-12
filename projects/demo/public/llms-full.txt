@@ -1,8 +1,8 @@
 # ng-mapcn — full reference
 
-> Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v5 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
+> Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
 
-Version: 22.0.0-beta.0 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
+Version: 22.0.0-beta.1 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
 
 ## Installation
 
@@ -390,7 +390,7 @@ The map is created in `afterNextRender` (browser-only, after hydration) and ever
 
 ## Key Features
 
-- **MapLibre GL JS v5** under the hood — no API keys required (Carto basemaps)
+- **MapLibre GL JS v6** under the hood — no API keys required (Carto basemaps)
 - **Composable** — markers, popups, routes, GeoJSON, arcs and clusters are children of `<ng-map>`
 - **Signals-first** — standalone components, `input()`/`output()`, `effect()`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
@@ -401,7 +401,7 @@ The map is created in `afterNextRender` (browser-only, after hydration) and ever
 
 - Angular 22+ (standalone, signals, zoneless-friendly)
 - TypeScript
-- MapLibre GL JS v5
+- MapLibre GL JS v6
 - TailwindCSS (demo site)
 - Carto basemaps (default tiles)
 

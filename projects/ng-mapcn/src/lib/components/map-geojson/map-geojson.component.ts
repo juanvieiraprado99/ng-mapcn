@@ -10,6 +10,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import type * as GeoJSON from 'geojson';
 import {
   type FillLayerSpecification,
   type GeoJSONSource,
@@ -48,25 +49,25 @@ export class MapGeoJSONComponent {
   /** GeoJSON data (FeatureCollection, Feature, Geometry) or a URL to fetch it from. */
   readonly data = input.required<MapGeoJSONData>();
   /** Optional unique identifier prefix for the source/layers. Auto-generated if not provided. */
-  readonly id = input<string | undefined>(undefined);
+  readonly id = input<string>();
   /**
    * Feature property to promote to the feature `id`. Required for hover
    * feature-state (`fillHoverPaint`) and stable hover/click payloads.
    */
-  readonly promoteId = input<string | undefined>(undefined);
+  readonly promoteId = input<string>();
   /** Paint for the fill layer; merged onto theme defaults. `false` omits the layer. */
-  readonly fillPaint = input<MapFillPaint | false | undefined>(undefined);
+  readonly fillPaint = input<MapFillPaint | false>();
   /** Paint for the outline layer; merged onto a hairline default. `false` omits the layer. */
-  readonly linePaint = input<MapLinePaint | false | undefined>(undefined);
+  readonly linePaint = input<MapLinePaint | false>();
   /** Paint applied to the hovered feature via feature-state. Requires `promoteId`. */
-  readonly fillHoverPaint = input<MapFillPaint | undefined>(undefined);
+  readonly fillHoverPaint = input<MapFillPaint>();
   /** Whether features respond to mouse events. */
   readonly interactive = input(false);
   /**
    * Optional MapLibre layer id to insert the layers before (z-order control).
    * Applied at layer creation only — later changes are ignored (mapcn parity).
    */
-  readonly beforeId = input<string | undefined>(undefined);
+  readonly beforeId = input<string>();
 
   readonly featureClick = output<MapGeoJSONEvent>();
   readonly featureHover = output<MapGeoJSONEvent | null>();
@@ -81,6 +82,8 @@ export class MapGeoJSONComponent {
   private readonly lineLayerId = computed(() => `geojson-line-${this.resolvedId()}`);
   /** Bumped every time the source is (re)created, so the layer effect re-adds its layers. */
   private readonly sourceRevision = signal(0);
+  /** Data currently in the source, so re-runs of the data effect skip a no-op setData. */
+  private appliedData: MapGeoJSONData | null = null;
 
   private readonly mergedFillPaint = computed<MapFillPaint>(() => {
     const defaults = GEOJSON_DEFAULT_COLORS[this.ctx.resolvedTheme()];
@@ -110,12 +113,14 @@ export class MapGeoJSONComponent {
       const lineLayerId = this.lineLayerId();
       const promoteId = this.promoteId();
 
+      const data = untracked(() => this.data());
       map.addSource(sourceId, {
         type: 'geojson',
         // Untracked: data changes go through setData below, never a source re-create.
-        data: untracked(() => this.data()) as never,
+        data: data as never,
         ...(promoteId ? { promoteId } : {}),
       });
+      this.appliedData = data;
       // The cleanup of a previous run removed the layers with the old source.
       this.sourceRevision.update((r) => r + 1);
 
@@ -137,7 +142,10 @@ export class MapGeoJSONComponent {
       const map = this.ctx.map();
       if (!map) return;
       const source = map.getSource(this.sourceId()) as GeoJSONSource | undefined;
-      source?.setData(data as never);
+      // Skip what the source was just created with — a URL would be fetched twice.
+      if (!source || data === this.appliedData) return;
+      source.setData(data as never);
+      this.appliedData = data;
     });
 
     // Sync layers and paint when visibility or styling changes.
@@ -198,6 +206,9 @@ export class MapGeoJSONComponent {
       const sourceId = this.sourceId();
       const fillLayerId = this.fillLayerId();
       let hoveredId: string | number | null = null;
+      // Features without an id (no promoteId) cannot be told apart: hover is reported once on
+      // enter instead of on every mousemove.
+      let hovering = false;
 
       const setHover = (next: string | number | null) => {
         if (next === hoveredId) return;
@@ -225,13 +236,16 @@ export class MapGeoJSONComponent {
         const feature = e.features?.[0];
         if (!feature) return;
         map.getCanvas().style.cursor = 'pointer';
-        if (feature.id === hoveredId) return;
-        setHover(feature.id ?? null);
+        const id = feature.id ?? null;
+        if (hovering && id === hoveredId) return;
+        hovering = true;
+        setHover(id);
         // Map events fire outside the zone — re-enter for outputs
         this.zone.run(() => this.featureHover.emit(toEvent(feature, e)));
       };
 
       const handleMouseLeave = () => {
+        hovering = false;
         setHover(null);
         map.getCanvas().style.cursor = '';
         this.zone.run(() => this.featureHover.emit(null));

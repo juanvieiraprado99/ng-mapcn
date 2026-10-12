@@ -52,3 +52,7 @@ projects/ng-mapcn/schematics/map/files/
 # Playwright
 /playwright-report/
 /test-results/
+
+# Local agent tooling (skills installed with `npx skills`)
+.claude/
+.agents/

@@ -50,16 +50,19 @@ describe('ng-add schematic', () => {
     runner.runSchematic('ng-add', { path: DEFAULT_PATH, ...options }, tree);
 
   describe('maplibre-gl dependency', () => {
-    it('adds maplibre-gl ^5.16.0 when it is missing', async () => {
+    it('adds maplibre-gl ^6.11.2 when it is missing', async () => {
       const tree = await run();
 
-      expect(readJson(tree, 'package.json').dependencies['maplibre-gl']).toBe('^5.16.0');
+      expect(readJson(tree, 'package.json').dependencies['maplibre-gl']).toBe('^6.11.2');
     });
 
     it('creates the dependencies block when the package has none', async () => {
       const tree = await run({}, createTree({ pkg: { name: 'app' } }));
 
-      expect(readJson(tree, 'package.json').dependencies).toEqual({ 'maplibre-gl': '^5.16.0' });
+      expect(readJson(tree, 'package.json').dependencies).toEqual({ 'maplibre-gl': '^6.11.2' });
+      expect(readJson(tree, 'package.json').devDependencies).toEqual({
+        '@types/geojson': '^7946.0.16',
+      });
     });
 
     it('keeps an existing maplibre-gl version', async () => {
@@ -69,6 +72,28 @@ describe('ng-add schematic', () => {
       );
 
       expect(readJson(tree, 'package.json').dependencies['maplibre-gl']).toBe('^4.0.0');
+      // The copied sources need v6, and <=6.4.0 has GHSA-jrc7-96c5-q579.
+      expect(warnings.some((w) => w.includes('maplibre-gl ^6.11.2') && w.includes('^4.0.0'))).toBe(
+        true,
+      );
+    });
+
+    it('does not warn about an existing v6 range', async () => {
+      await run(
+        {},
+        createTree({ pkg: { name: 'app', dependencies: { 'maplibre-gl': '^6.12.0' } } }),
+      );
+
+      expect(warnings.some((w) => w.includes('maplibre-gl ^6.11.2'))).toBe(false);
+    });
+
+    it('keeps an existing @types/geojson version', async () => {
+      const tree = await run(
+        {},
+        createTree({ pkg: { name: 'app', devDependencies: { '@types/geojson': '7946.0.10' } } }),
+      );
+
+      expect(readJson(tree, 'package.json').devDependencies['@types/geojson']).toBe('7946.0.10');
     });
 
     it('does not fail when there is no package.json', async () => {
@@ -76,6 +101,37 @@ describe('ng-add schematic', () => {
 
       expect(tree.exists('package.json')).toBe(false);
       expect(tree.exists(`${DEFAULT_PATH}/index.ts`)).toBe(true);
+    });
+  });
+
+  describe('maplibre-gl worker', () => {
+    const WORKER_ASSETS = [
+      { glob: 'maplibre-gl-worker.mjs', input: 'node_modules/maplibre-gl/dist', output: '/' },
+      { glob: 'maplibre-gl-shared.mjs', input: 'node_modules/maplibre-gl/dist', output: '/' },
+    ];
+    const assetsOf = (tree: Tree): unknown[] =>
+      readJson(tree, 'angular.json').projects.app.architect.build.options.assets;
+
+    it('copies the module worker and its shared chunk next to the app bundles', async () => {
+      const tree = await run();
+
+      expect(assetsOf(tree)).toEqual(WORKER_ASSETS);
+    });
+
+    it('appends to existing assets once, even when run twice', async () => {
+      const angularJson = {
+        projects: {
+          app: {
+            architect: {
+              build: { options: { styles: [], assets: [{ glob: '**/*', input: 'public' }] } },
+            },
+          },
+        },
+      };
+      const first = await run({}, createTree({ angularJson }));
+      const second = await run({}, first);
+
+      expect(assetsOf(second)).toEqual([{ glob: '**/*', input: 'public' }, ...WORKER_ASSETS]);
     });
   });
 
@@ -104,7 +160,7 @@ describe('ng-add schematic', () => {
       expect(stylesOf(second).filter((s) => s === MAPLIBRE_CSS)).toHaveLength(1);
       expect(count(second.readContent('src/styles.scss'), '.maplibregl-popup-content')).toBe(1);
       expect(count(second.readContent('src/styles.scss'), '@use ')).toBe(1);
-      expect(readJson(second, 'package.json').dependencies['maplibre-gl']).toBe('^5.16.0');
+      expect(readJson(second, 'package.json').dependencies['maplibre-gl']).toBe('^6.11.2');
     });
 
     it('uses the project option', async () => {
@@ -140,12 +196,12 @@ describe('ng-add schematic', () => {
       expect(warnings.some((w) => w.includes('angular.json not found'))).toBe(true);
     });
 
-    it('warns and leaves angular.json untouched when the styles array is missing', async () => {
+    it('warns and does not create a styles array when it is missing', async () => {
       const angularJson = { projects: { app: { architect: { build: { options: {} } } } } };
-      const before = JSON.stringify(angularJson, null, 2);
       const tree = await run({}, createTree({ angularJson }));
 
-      expect(tree.readContent('angular.json')).toBe(before);
+      // The worker assets are still registered; only the css step is skipped.
+      expect(stylesOf(tree)).toBeUndefined();
       expect(warnings.some((w) => w.includes('Could not locate the styles array'))).toBe(true);
     });
   });
@@ -157,6 +213,8 @@ describe('ng-add schematic', () => {
 
       expect(scss).toContain('.maplibregl-popup-content');
       expect(scss).toContain('.maplibregl-popup-tip');
+      // Same overrides as the npm package's styles.scss
+      expect(scss).toContain('max-width: none !important;');
       expect(count(scss, '.maplibregl-popup-content')).toBe(1);
       expect(scss.indexOf('body { margin: 0; }')).toBeLessThan(
         scss.indexOf('.maplibregl-popup-content'),

@@ -23,7 +23,7 @@ export class MapMarkerComponent {
   readonly longitude = input.required<number>();
   readonly latitude = input.required<number>();
   readonly draggable = input(false);
-  readonly offset = input<PointLike | undefined>(undefined);
+  readonly offset = input<PointLike>();
   readonly rotation = input(0);
   /** Applied at creation only — MapLibre's Marker has no anchor setter (mapcn parity). */
   readonly anchor = input<MarkerOptions['anchor']>(undefined);

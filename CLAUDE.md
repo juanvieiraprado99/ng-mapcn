@@ -49,7 +49,7 @@ The demo app depends on `ng-mapcn` installed as a local `.tgz` file from `dist/`
 
 This is an **Angular library workspace** (`ng-packagr`) with two projects:
 
-- `projects/ng-mapcn/` — the publishable library, an Angular port of [mapcn](https://mapcn.dev) (React + MapLibre GL v5)
+- `projects/ng-mapcn/` — the publishable library, an Angular port of [mapcn](https://mapcn.dev) (React + MapLibre GL; this port targets MapLibre GL v6)
 - `projects/demo/` — a demo/test app that consumes the built library
 
 ### Library structure (`projects/ng-mapcn/src/lib/`)
@@ -57,10 +57,10 @@ This is an **Angular library workspace** (`ng-packagr`) with two projects:
 **Composition model (mapcn parity):** `<ng-map>` provides a component-scoped `MapContextService` (`providers: [MapContextService]`). All child components (`ng-map-marker`, `ng-map-route`, `ng-map-geojson`, `ng-map-arc`, `ng-map-cluster-layer`, `ng-map-controls`, `ng-map-popup`) resolve the map via `inject(MapContextService)` — the Angular equivalent of mapcn's `useMap()`. There is no global registry.
 
 - `components/map/` — map host: MapLibre init (`renderWorldCopies: false`, compact attribution), theme-driven `setStyle`, `blank` style, controlled `viewport` with anti-feedback-loop guard, loader overlay.
-- `components/map-marker/` + `marker-content/`, `marker-popup/`, `marker-tooltip/`, `marker-label/` — marker created once, reconciled by diffed setters; content projected into `marker.getElement()` via embedded views (the Angular "portal").
+- `components/map-marker/` + `marker-content/`, `marker-popup/`, `marker-tooltip/`, `marker-label/` — marker created once, reconciled by diffed setters; content projected into `marker.getElement()` / popup cards via `renderPortal` (`utils/portal.ts`: an ApplicationRef-attached embedded view whose root nodes, comment anchors included, are moved into the MapLibre-owned element — the Angular "portal").
 - `components/map-route|map-geojson|map-arc|map-cluster-layer/` — imperative layer components with empty templates.
 - `services/map-context.service.ts` — `map`, `isLoaded`, `resolvedTheme` signals.
-- `services/theme.service.ts` — watches the **`dark`/`light` class** on `document.documentElement` (MutationObserver) with a `prefers-color-scheme` fallback.
+- `services/theme.service.ts` — watches the **`dark`/`light` class** (then the `data-theme` attribute) on `document.documentElement` (MutationObserver) with a `prefers-color-scheme` fallback.
 - `utils/map-utils.ts` — `nextId`, `getViewport`, `mergeHoverPaint`, `buildArcCoordinates`, shared types.
 - `styles/` — SCSS tokens/utilities; `map-styles.ts` has Carto defaults + `blankMapStyle`.
 

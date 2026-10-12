@@ -19,8 +19,8 @@ ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map componen
 
 ## Features
 
-- **MapLibre GL JS v5** under the hood, no API keys required (Carto basemaps)
-- **Theme-aware**: follows the `dark`/`light` class on `<html>` (or `prefers-color-scheme`) and swaps the basemap at runtime
+- **MapLibre GL JS v6** under the hood, no API keys required (Carto basemaps)
+- **Theme-aware**: follows the `dark`/`light` class or `data-theme` attribute on `<html>` (or `prefers-color-scheme`) and swaps the basemap at runtime
 - **Composable**: declare markers, popups, routes, GeoJSON, arcs and clusters as children of `<ng-map>`
 - **Signals-first**: standalone components, signal inputs/outputs, `effect()`-based reconciliation
 - **Copy-paste distribution**: `ng add ng-mapcn` copies the sources into your project (shadcn-style). Also usable as a regular npm package.
@@ -30,7 +30,7 @@ ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map componen
 
 | ng-mapcn | Angular    | MapLibre GL | npm tag          |
 | -------- | ---------- | ----------- | ---------------- |
-| `22.x`   | `^22.0.0`  | `^5.16.0`   | `latest`, `beta` |
+| `22.x`   | `^22.0.0`  | `^6.11.2`   | `latest`, `beta` |
 | `21.x`   | `^21.2.9`  | `^5.16.0`   | n/a              |
 | `18.x`   | `^18.2.14` | `^5.16.0`   | n/a              |
 
@@ -48,10 +48,13 @@ ng add ng-mapcn@beta
 
 This will:
 
-1. Add `maplibre-gl` to your dependencies
+1. Add `maplibre-gl` to your dependencies (and `@types/geojson` to your dev dependencies)
 2. Register `maplibre-gl/dist/maplibre-gl.css` in `angular.json`
-3. Append the required `.maplibregl-popup-*` CSS overrides to your global stylesheet
-4. Copy the component sources to `src/app/components/ui/map` (customize with `--path`)
+3. Register MapLibre's worker files as build assets (see [MapLibre worker](#maplibre-worker))
+4. Append the required `.maplibregl-popup-*` CSS overrides to your global stylesheet
+5. Copy the component sources to `src/app/components/ui/map` (customize with `--path`)
+
+If your app already depends on an older `maplibre-gl`, `ng add` keeps your version and warns: update it to `^6.11.2`.
 
 Or as a regular npm package:
 
@@ -78,11 +81,24 @@ The popup overrides are **required**. MapLibre injects its own popup chrome, whi
   box-shadow: none !important;
   padding: 0 !important;
   border-radius: 0 !important;
+  max-width: none !important;
 }
 .maplibregl-popup-tip {
   display: none !important;
 }
 ```
+
+#### MapLibre worker
+
+MapLibre GL v6 ships as ES modules and loads its web worker from `maplibre-gl-worker.mjs` next to the bundle that imports it, and that worker imports `maplibre-gl-shared.mjs`. Angular's builder does not emit these files on its own, so copy both to the output root (`ng add` does this for you):
+
+```jsonc
+// angular.json → projects.<app>.architect.build.options.assets
+{ "glob": "maplibre-gl-worker.mjs", "input": "node_modules/maplibre-gl/dist", "output": "/" },
+{ "glob": "maplibre-gl-shared.mjs", "input": "node_modules/maplibre-gl/dist", "output": "/" }
+```
+
+If you serve the files from somewhere else (a CDN, a `deployUrl`), call MapLibre's own `setWorkerUrl('https://…/maplibre-gl-worker.mjs')` once at startup. MapLibre v6 requires WebGL2: without it the `Map` constructor throws a `GPUInitializationError`, which `<ng-map>` emits through `(mapError)`.
 
 ### 2. Add a map
 
@@ -134,7 +150,7 @@ Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint
 
 ## Theming
 
-Without a `theme` input, the map watches the `dark`/`light` class on `document.documentElement` (works with any theme toggler) and falls back to `prefers-color-scheme`. Switching theme calls `map.setStyle(..., { diff: true })` and every layer component re-adds itself automatically once the style settles.
+Without a `theme` input, the map watches the `dark`/`light` class (or a `data-theme="dark"`/`"light"` attribute) on `document.documentElement` (works with any theme toggler) and falls back to `prefers-color-scheme`. Switching theme calls `map.setStyle(..., { diff: true })` and every layer component re-adds itself automatically once the style settles.
 
 ## Basemaps
 
@@ -199,6 +215,18 @@ Notes:
 - If a bundler complains about `maplibre-gl` during server build/prerender, mark
   it external for the server (`externalDependencies: ["maplibre-gl"]`) or add
   `ngSkipHydration` to the element hosting `<ng-map>`.
+
+## Security
+
+- **Only load trusted basemap styles and attributions.** The attribution control (on by default) renders style and source attribution strings as HTML, so the URLs you pass to `[styles]` / `provideMapStyles()`, a `customAttribution` in `[options]`, and GeoJSON URLs given to `[data]` must come from sources you control or trust, never straight from user input. ng-mapcn requires `maplibre-gl` `^6.11.2`, which includes the fix for [GHSA-jrc7-96c5-q579](https://github.com/advisories/GHSA-jrc7-96c5-q579) (attribution sanitizer bypass in `maplibre-gl` ≤ 6.4.0).
+- **Content Security Policy**: with the worker self-hosted as above, `worker-src 'self'` is enough (no `blob:`). MapLibre also needs `img-src data: blob: 'self'` plus your tile/style hosts in `connect-src` and `img-src` (`https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com` for the default basemaps: the style is served from the first; TileJSON, glyphs, sprites and tiles from `tiles.basemaps.cartocdn.com` and `tiles-a/b/c.basemaps.cartocdn.com`).
+- **Privacy**: the default basemaps are served by Carto, a third party that receives your users' IP address and the areas they view. Self-host or swap the style with `[styles]` / `provideMapStyles()` if that matters. `ng-map-controls`' locate button asks for the browser's geolocation and emits the coordinates through `(locateChange)`: treat them as personal data.
+
+## Performance
+
+- **Lazy-load the map.** MapLibre is large: in the demo's production build its chunk is about 1 MB (≈285 KB gzipped), more than the demo's entire initial JavaScript (≈160 KB gzipped), and the first map also fetches the worker files (≈150 KB gzipped, on the worker thread, cached afterwards). Keep `ng-mapcn` out of your initial bundle with a lazy route (`loadComponent`) or `@defer (on viewport) { <ng-map>…</ng-map> }`.
+- **Many points → layers, not markers.** Each `<ng-map-marker>` is a DOM element with its own component; for hundreds of points use `<ng-map-cluster-layer>` or `<ng-map-geojson>`, which render on the GPU.
+- **Pass new references to update data.** Layer components push `[data]` / `[coordinates]` to MapLibre only when the reference changes; replace arrays and objects instead of mutating them.
 
 ## For LLMs
 

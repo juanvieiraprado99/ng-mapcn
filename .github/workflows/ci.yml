@@ -33,6 +33,13 @@ jobs:
 
       - run: npm run format:check
 
+      # Runtime dependencies are what consumers ship; a high/critical advisory there blocks the PR.
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Verify registry signatures
+        run: npm audit signatures
+
       - name: Lint commit messages
         if: github.event_name == 'pull_request'
         run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose

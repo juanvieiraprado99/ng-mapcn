@@ -2,17 +2,18 @@ import {
   ChangeDetectionStrategy,
   Component,
   effect,
-  type EmbeddedViewRef,
   inject,
+  Injector,
   input,
+  signal,
   type TemplateRef,
   untracked,
   viewChild,
-  ViewContainerRef,
 } from '@angular/core';
 import { type Offset, Popup, type PositionAnchor } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
+import { renderPortal } from '../../utils/portal';
 import { MarkerContextService } from '../map-marker/marker-context.service';
 
 @Component({
@@ -23,12 +24,13 @@ import { MarkerContextService } from '../map-marker/marker-context.service';
 export class MarkerTooltipComponent {
   readonly offset = input<Offset>(16);
   /** Applied at creation only — MapLibre's Popup has no anchor setter (mapcn parity). */
-  readonly anchor = input<PositionAnchor | undefined>(undefined);
+  readonly anchor = input<PositionAnchor>();
 
-  private readonly vcr = inject(ViewContainerRef);
+  private readonly injector = inject(Injector);
   private readonly mapCtx = inject(MapContextService);
   private readonly markerCtx = inject(MarkerContextService);
   private readonly tpl = viewChild.required<TemplateRef<unknown>>('tpl');
+  private readonly popup = signal<Popup | null>(null);
 
   constructor() {
     effect((onCleanup) => {
@@ -39,10 +41,7 @@ export class MarkerTooltipComponent {
       const container = document.createElement('div');
       container.className = 'ng-tooltip-pill';
       container.style.pointerEvents = 'none';
-
-      const view: EmbeddedViewRef<unknown> = this.vcr.createEmbeddedView(this.tpl());
-      view.rootNodes.forEach((n: Node) => container.appendChild(n));
-      view.detectChanges();
+      const destroyPortal = renderPortal(this.tpl(), this.injector, container);
 
       const popup = new Popup({
         maxWidth: 'none',
@@ -65,23 +64,21 @@ export class MarkerTooltipComponent {
       el.addEventListener('mouseenter', show);
       el.addEventListener('mouseleave', hide);
 
-      this.popup = popup;
+      this.popup.set(popup);
 
       onCleanup(() => {
         el.removeEventListener('mouseenter', show);
         el.removeEventListener('mouseleave', hide);
         popup.remove();
-        view.destroy();
-        this.popup = null;
+        destroyPortal();
+        this.popup.set(null);
       });
     });
 
     // Reconcile offset changes on the live popup (mapcn parity)
     effect(() => {
       const offset = this.offset();
-      this.popup?.setOffset(offset ?? 16);
+      this.popup()?.setOffset(offset ?? 16);
     });
   }
-
-  private popup: Popup | null = null;
 }

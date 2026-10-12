@@ -408,4 +408,28 @@ describe('MapClusterLayerComponent', () => {
       expect(map.calls.filter((c) => c.startsWith('on:') && c.includes(ids.point))).toHaveLength(3);
     });
   });
+  describe('no redundant updates', () => {
+    it('does not setData with the data the source was just created with', async () => {
+      const { fixture, map, ids } = await renderLoaded();
+      expect(map.getSource(ids.source).setData).not.toHaveBeenCalled();
+
+      update(fixture, { theme: 'dark' });
+      reloadStyle(fixture, map);
+
+      expect(map.getSource(ids.source).setData).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('expansion zoom failure', () => {
+    it('swallows a rejected expansion-zoom lookup', async () => {
+      const { map, ids } = await renderLoaded();
+      map.getSource(ids.source).getClusterExpansionZoom.mockRejectedValue(new Error('gone'));
+      map.queryRenderedFeatures.mockReturnValue([clusterFeature(5, 12)]);
+
+      map.fire('click', { point: { x: 0, y: 0 }, lngLat: { lng: 3, lat: 4 } }, ids.clusters);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(map.easeTo).not.toHaveBeenCalled();
+    });
+  });
 });

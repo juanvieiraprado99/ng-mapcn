@@ -1,8 +1,8 @@
 # ng-mapcn
 
-> Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v5 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
+> Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
 
-Version: 22.0.0-beta.0 · License: MIT · npm: https://www.npmjs.com/package/ng-mapcn
+Version: 22.0.0-beta.1 · License: MIT · npm: https://www.npmjs.com/package/ng-mapcn
 
 ## Overview
 
@@ -93,7 +93,7 @@ Without a `theme` input, the map watches the `dark`/`light` class on `document.d
 
 ## Key Features
 
-- **MapLibre GL JS v5** under the hood — no API keys required (Carto basemaps)
+- **MapLibre GL JS v6** under the hood — no API keys required (Carto basemaps)
 - **Composable** — markers, popups, routes, GeoJSON, arcs and clusters are children of `<ng-map>`
 - **Signals-first** — standalone components, `input()`/`output()`, `effect()`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
@@ -104,7 +104,7 @@ Without a `theme` input, the map watches the `dark`/`light` class on `document.d
 
 - Angular 22+ (standalone, signals, zoneless-friendly)
 - TypeScript
-- MapLibre GL JS v5
+- MapLibre GL JS v6
 - TailwindCSS (demo site)
 - Carto basemaps (default tiles)
 

@@ -2,16 +2,16 @@ import {
   ChangeDetectionStrategy,
   Component,
   effect,
-  type EmbeddedViewRef,
   inject,
+  Injector,
   NgZone,
   output,
   type TemplateRef,
   viewChild,
-  ViewContainerRef,
 } from '@angular/core';
 import { Popup } from 'maplibre-gl';
 
+import { renderPortal } from '../../utils/portal';
 import { MarkerContextService } from '../map-marker/marker-context.service';
 
 @Component({
@@ -22,7 +22,7 @@ import { MarkerContextService } from '../map-marker/marker-context.service';
 export class MarkerPopupComponent {
   readonly popupClose = output<void>();
 
-  private readonly vcr = inject(ViewContainerRef);
+  private readonly injector = inject(Injector);
   private readonly markerCtx = inject(MarkerContextService);
   private readonly zone = inject(NgZone);
   private readonly tpl = viewChild.required<TemplateRef<unknown>>('tpl');
@@ -34,10 +34,7 @@ export class MarkerPopupComponent {
 
       const container = document.createElement('div');
       container.className = 'ng-popup-card';
-
-      const view: EmbeddedViewRef<unknown> = this.vcr.createEmbeddedView(this.tpl());
-      view.rootNodes.forEach((n: Node) => container.appendChild(n));
-      view.detectChanges();
+      const destroyPortal = renderPortal(this.tpl(), this.injector, container);
 
       const popup = new Popup({
         maxWidth: 'none',
@@ -51,10 +48,9 @@ export class MarkerPopupComponent {
       marker.setPopup(popup);
 
       onCleanup(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        marker.setPopup(null as any);
+        marker.setPopup(null);
         popup.remove();
-        view.destroy();
+        destroyPortal();
       });
     });
   }
