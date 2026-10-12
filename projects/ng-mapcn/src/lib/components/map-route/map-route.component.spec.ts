@@ -199,6 +199,46 @@ describe('MapRouteComponent', () => {
       expect(fakeRegistry.maps[0].getSource(SOURCE)).toBeDefined();
     });
 
+    it('moves the source and layer to the new ids when [id] changes, and keeps updating', async () => {
+      const { fixture, map } = await renderLoaded();
+      map.calls.length = 0;
+
+      update(fixture, { id: 'r2' });
+
+      expect(structuralCalls(map)).toEqual([
+        `removeLayer:${LAYER}`,
+        `removeSource:${SOURCE}`,
+        'addSource:r2',
+        'addLayer:r2-layer',
+      ]);
+      expect(map.listenerCount('click', LAYER)).toBe(0);
+      expect(map.listenerCount('click', 'r2-layer')).toBe(1);
+
+      const next: [number, number][] = [
+        [8, 8],
+        [9, 9],
+      ];
+      update(fixture, { coordinates: next, color: '#123456' });
+      expect(map.getSource('r2').setData).toHaveBeenLastCalledWith(
+        expect.objectContaining({ geometry: { type: 'LineString', coordinates: next } }),
+      );
+      expect(map.getLayer('r2-layer').paint['line-color']).toBe('#123456');
+    });
+
+    it('binds and unbinds handlers when [interactive] toggles, without re-adding the layer', async () => {
+      const { fixture, map } = await renderLoaded({ interactive: false });
+      map.calls.length = 0;
+
+      update(fixture, { interactive: true });
+      expect(map.listenerCount('click', LAYER)).toBe(1);
+      expect(map.listenerCount('mouseenter', LAYER)).toBe(1);
+
+      update(fixture, { interactive: false });
+      expect(map.listenerCount('click', LAYER)).toBe(0);
+      expect(map.listenerCount('mouseleave', LAYER)).toBe(0);
+      expect(structuralCalls(map)).toEqual([]);
+    });
+
     it('clears the dash pattern when dashArray goes back to undefined', async () => {
       const { fixture, map } = await renderLoaded({ dashArray: [2, 4] });
       map.setPaintProperty.mockClear();

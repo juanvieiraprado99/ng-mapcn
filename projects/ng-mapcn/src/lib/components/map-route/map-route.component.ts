@@ -22,11 +22,11 @@ import { nextId } from '../../utils/map-utils';
 export class MapRouteComponent {
   readonly coordinates = input.required<[number, number][]>();
   /** Optional unique identifier prefix for the source/layer. Auto-generated if not provided. */
-  readonly id = input<string | undefined>(undefined);
+  readonly id = input<string>();
   readonly color = input('#4285F4');
   readonly width = input(3);
   readonly opacity = input(0.8);
-  readonly dashArray = input<[number, number] | undefined>(undefined);
+  readonly dashArray = input<[number, number]>();
   readonly interactive = input(true);
 
   readonly routeClick = output<MapMouseEvent>();
@@ -39,20 +39,20 @@ export class MapRouteComponent {
   private readonly layerId = computed(() => `${this.sourceId()}-layer`);
 
   constructor() {
-    // Add source + layer once the map style is loaded
+    // Add source + layer once the map style is loaded; re-runs after theme setStyle
+    // and when [id] changes (the cleanup removes the old ids).
     effect((onCleanup) => {
       if (!this.ctx.isLoaded()) return;
       const map = this.ctx.map();
       if (!map) return;
 
+      const sourceId = this.sourceId();
+      const layerId = this.layerId();
       const coords = untracked(() => this.coordinates());
       const color = untracked(() => this.color());
       const width = untracked(() => this.width());
       const opacity = untracked(() => this.opacity());
       const da = untracked(() => this.dashArray());
-      const interactive = untracked(() => this.interactive());
-      const sourceId = untracked(() => this.sourceId());
-      const layerId = untracked(() => this.layerId());
 
       map.addSource(sourceId, {
         type: 'geojson',
@@ -72,6 +72,23 @@ export class MapRouteComponent {
         },
       });
 
+      onCleanup(() => {
+        try {
+          if (map.getLayer(layerId)) map.removeLayer(layerId);
+        } catch {}
+        try {
+          if (map.getSource(sourceId)) map.removeSource(sourceId);
+        } catch {}
+      });
+    });
+
+    // Interaction handlers — toggling [interactive] rebinds them without touching the layer.
+    effect((onCleanup) => {
+      if (!this.ctx.isLoaded()) return;
+      const map = this.ctx.map();
+      if (!map || !this.interactive()) return;
+      const layerId = this.layerId();
+
       // Map events fire outside the zone (map is created there) — re-enter for outputs
       const handleClick = (e: MapMouseEvent) => this.zone.run(() => this.routeClick.emit(e));
       const handleMouseEnter = () => {
@@ -80,24 +97,19 @@ export class MapRouteComponent {
       const handleMouseLeave = () => {
         map.getCanvas().style.cursor = '';
       };
-      if (interactive) {
-        map.on('click', layerId, handleClick);
-        map.on('mouseenter', layerId, handleMouseEnter);
-        map.on('mouseleave', layerId, handleMouseLeave);
-      }
+      map.on('click', layerId, handleClick);
+      map.on('mouseenter', layerId, handleMouseEnter);
+      map.on('mouseleave', layerId, handleMouseLeave);
 
       onCleanup(() => {
-        if (interactive) {
-          map.off('click', layerId, handleClick);
-          map.off('mouseenter', layerId, handleMouseEnter);
-          map.off('mouseleave', layerId, handleMouseLeave);
+        map.off('click', layerId, handleClick);
+        map.off('mouseenter', layerId, handleMouseEnter);
+        map.off('mouseleave', layerId, handleMouseLeave);
+        try {
+          map.getCanvas().style.cursor = '';
+        } catch {
+          // map may be mid-teardown
         }
-        try {
-          if (map.getLayer(layerId)) map.removeLayer(layerId);
-        } catch {}
-        try {
-          if (map.getSource(sourceId)) map.removeSource(sourceId);
-        } catch {}
       });
     });
 
