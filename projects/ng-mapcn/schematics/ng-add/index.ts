@@ -19,6 +19,7 @@ const GLOBAL_CSS = `
   box-shadow: none !important;
   padding: 0 !important;
   border-radius: 0 !important;
+  max-width: none !important;
 }
 .maplibregl-popup-tip {
   display: none !important;

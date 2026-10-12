@@ -157,6 +157,8 @@ describe('ng-add schematic', () => {
 
       expect(scss).toContain('.maplibregl-popup-content');
       expect(scss).toContain('.maplibregl-popup-tip');
+      // Same overrides as the npm package's styles.scss
+      expect(scss).toContain('max-width: none !important;');
       expect(count(scss, '.maplibregl-popup-content')).toBe(1);
       expect(scss.indexOf('body { margin: 0; }')).toBeLessThan(
         scss.indexOf('.maplibregl-popup-content'),
