@@ -80,6 +80,7 @@ export class MapComponent {
 
   private styleTimeoutRef: ReturnType<typeof setTimeout> | null = null;
   private initTimeoutRef: ReturnType<typeof setTimeout> | null = null;
+  private sizeObserver: ResizeObserver | null = null;
   private destroyed = false;
   private internalUpdate = false;
   private currentStyle: string | StyleSpecification | null = null;
@@ -153,13 +154,8 @@ export class MapComponent {
     const container = this.container()?.nativeElement;
     if (!container) return;
 
-    const w = container.offsetWidth || container.getBoundingClientRect().width;
-    const h = container.offsetHeight || container.getBoundingClientRect().height;
-    if (!w || !h) {
-      // Retry outside the zone so the poll doesn't trigger change detection
-      this.zone.runOutsideAngular(() => {
-        this.initTimeoutRef = setTimeout(() => this.initializeMap(), 100);
-      });
+    if (!hasSize(container)) {
+      this.waitForSize(container);
       return;
     }
 
@@ -240,6 +236,27 @@ export class MapComponent {
     }
   }
 
+  /**
+   * MapLibre needs a laid-out container (hidden tab, `display: none` parent). Waits for a resize
+   * where available, polling otherwise — outside the zone so neither triggers change detection.
+   */
+  private waitForSize(container: HTMLElement): void {
+    this.zone.runOutsideAngular(() => {
+      if (typeof ResizeObserver === 'undefined') {
+        this.initTimeoutRef = setTimeout(() => this.initializeMap(), 100);
+        return;
+      }
+      const observer = new ResizeObserver(() => {
+        if (!hasSize(container)) return;
+        observer.disconnect();
+        this.sizeObserver = null;
+        this.initializeMap();
+      });
+      observer.observe(container);
+      this.sizeObserver = observer;
+    });
+  }
+
   /** Precedence: `styles` input > `blank` > app-wide default > Carto default. */
   private getMapStyle(theme: 'light' | 'dark'): string | StyleSpecification {
     const s = this.styles();
@@ -280,6 +297,8 @@ export class MapComponent {
       clearTimeout(this.initTimeoutRef);
       this.initTimeoutRef = null;
     }
+    this.sizeObserver?.disconnect();
+    this.sizeObserver = null;
     this.clearStyleTimeout();
     const map = this.mapInstance();
     if (map) {
@@ -295,4 +314,10 @@ export class MapComponent {
   getMap(): MapLibreMap | null {
     return this.mapInstance();
   }
+}
+
+function hasSize(el: HTMLElement): boolean {
+  const w = el.offsetWidth || el.getBoundingClientRect().width;
+  const h = el.offsetHeight || el.getBoundingClientRect().height;
+  return !!w && !!h;
 }

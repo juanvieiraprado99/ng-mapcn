@@ -131,6 +131,55 @@ describe('MapComponent', () => {
       fixture.detectChanges();
     });
 
+    it('waits for a ResizeObserver size change instead of polling when available', async () => {
+      const observers: { cb: () => void; disconnect: ReturnType<typeof vi.fn> }[] = [];
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          disconnect = vi.fn();
+          constructor(public cb: () => void) {
+            observers.push(this);
+          }
+          observe = vi.fn();
+        },
+      );
+      try {
+        await render({}, { size: null });
+        expect(observers).toHaveLength(1);
+
+        // No polling, and a resize that is still zero-sized keeps waiting.
+        vi.advanceTimersByTime(1000);
+        observers[0].cb();
+        expect(fakeRegistry.maps).toHaveLength(0);
+        expect(observers[0].disconnect).not.toHaveBeenCalled();
+
+        setMapSize({ width: 400, height: 300 });
+        observers[0].cb();
+        expect(fakeRegistry.maps).toHaveLength(1);
+        expect(observers[0].disconnect).toHaveBeenCalled();
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
+    it('disconnects a pending ResizeObserver on destroy', async () => {
+      const disconnect = vi.fn();
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          disconnect = disconnect;
+          observe = vi.fn();
+        },
+      );
+      try {
+        const { fixture } = await render({}, { size: null });
+        fixture.destroy();
+        expect(disconnect).toHaveBeenCalled();
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
     it('never constructs a Map on the server', async () => {
       const { ctx } = await render(
         {},
