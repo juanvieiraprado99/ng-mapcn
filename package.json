@@ -16,7 +16,6 @@
     "build:lib": "node scripts/sync-readme.mjs && ng build ng-mapcn && node scripts/build-schematics.mjs",
     "build:lib:prod": "node scripts/sync-readme.mjs && ng build ng-mapcn --configuration production && node scripts/build-schematics.mjs",
     "build:schematics": "node scripts/build-schematics.mjs",
-    "publish:lib": "node scripts/sync-readme.mjs && ng build ng-mapcn --configuration production && node scripts/build-schematics.mjs && cd dist/ng-mapcn && npm publish --tag beta --access public",
     "watch": "ng build --watch --configuration development",
     "test": "npm run test:lib && npm run test:schematics && npm run test:demo",
     "test:lib": "ng test ng-mapcn --watch=false",

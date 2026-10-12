@@ -1,63 +1,88 @@
-name: Create Release on Version Change
+name: Release
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'projects/ng-mapcn/package.json'
+    branches: [main]
 
-permissions:
-  contents: write
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  release:
+  release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    outputs:
+      release_created: ${{ steps.release.outputs['projects/ng-mapcn--release_created'] }}
+      tag_name: ${{ steps.release.outputs['projects/ng-mapcn--tag_name'] }}
+      version: ${{ steps.release.outputs['projects/ng-mapcn--version'] }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
+  publish:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      HUSKY: 0
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          ref: ${{ needs.release-please.outputs.tag_name }}
 
-      - name: Get version from package.json
-        id: package-version
-        run: |
-          VERSION=$(node -p "require('./projects/ng-mapcn/package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
-
-      - name: Check if tag exists
-        id: tag-check
-        run: |
-          VERSION=${{ steps.package-version.outputs.version }}
-          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Build categorized changelog
-        id: changelog
-        if: steps.tag-check.outputs.exists == 'false'
-        run: |
-          VERSION=${{ steps.package-version.outputs.version }}
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-
-          if [ -z "$LAST_TAG" ]; then
-            RAW=$(git log --pretty=format:"%s|||%h" | head -50)
-          else
-            RAW=$(git log "$LAST_TAG"..HEAD --pretty=format:"%s|||%h")
-          fi
-
-          echo "$RAW" | python3 .github/scripts/build_changelog.py "$VERSION" > /tmp/release_body.md
-          echo "body_file=/tmp/release_body.md" >> $GITHUB_OUTPUT
-
-      - name: Create Release
-        if: steps.tag-check.outputs.exists == 'false'
-        uses: ncipollo/release-action@v1
+      - uses: actions/setup-node@v4
         with:
-          tag: v${{ steps.package-version.outputs.version }}
-          name: v${{ steps.package-version.outputs.version }}
-          bodyFile: ${{ steps.changelog.outputs.body_file }}
-          draft: false
-          prerelease: ${{ contains(steps.package-version.outputs.version, 'beta') || contains(steps.package-version.outputs.version, 'alpha') || contains(steps.package-version.outputs.version, 'rc') }}
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      # Trusted Publishing needs npm >= 11.5.1 (publish) and >= 11.21.0 (dist-tag).
+      - name: Update npm
+        run: |
+          npm install -g npm@^11.21.0
+          npm --version
+
+      - run: npm ci
+
+      - run: npm run build:lib:prod
+
+      - name: Verify the built version matches the release
+        env:
+          RELEASE_VERSION: ${{ needs.release-please.outputs.version }}
+        run: |
+          BUILT=$(node -p "require('./dist/ng-mapcn/package.json').version")
+          if [ "$BUILT" != "$RELEASE_VERSION" ]; then
+            echo "Built version $BUILT does not match release version $RELEASE_VERSION" >&2
+            exit 1
+          fi
+
+      - name: Decide dist-tags
+        id: tags
+        env:
+          RELEASE_VERSION: ${{ needs.release-please.outputs.version }}
+        run: node scripts/npm-dist-tags.mjs "$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to npm
+        working-directory: dist/ng-mapcn
+        run: npm publish --access public --provenance --tag ${{ steps.tags.outputs.publish_tag }}
+
+      - name: Point latest at this prerelease
+        if: steps.tags.outputs.also_latest == 'true'
+        env:
+          RELEASE_VERSION: ${{ needs.release-please.outputs.version }}
+        run: npm dist-tag add "ng-mapcn@$RELEASE_VERSION" latest
+
+      - name: Show dist-tags
+        run: npm view ng-mapcn dist-tags
