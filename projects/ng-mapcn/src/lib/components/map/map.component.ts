@@ -3,7 +3,6 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
-  computed,
   DestroyRef,
   effect,
   type ElementRef,
@@ -54,7 +53,7 @@ export class MapComponent {
   readonly projection = input<ProjectionSpecification>();
   readonly theme = input<'light' | 'dark' | 'auto'>('auto');
   readonly loading = input(false);
-  readonly viewport = input<Partial<MapViewport> | undefined>(undefined);
+  readonly viewport = input<Partial<MapViewport>>();
   /** Extra MapLibre options passed through to the constructor (mapcn spreads these in React). */
   readonly options = input<Omit<MapOptions, 'container' | 'style'>>();
 
@@ -66,11 +65,10 @@ export class MapComponent {
 
   // Internal state exposed to template
   protected readonly mapInstance = signal<MapLibreMap | null>(null);
-  private readonly loadedFlag = signal(false);
-  private readonly styleLoadedFlag = signal(false);
-  protected readonly isLoaded = computed(() => this.loadedFlag() && this.styleLoadedFlag());
 
   private readonly ctx = inject(MapContextService);
+  /** Load gate shared with the child components (map `load` + debounced `styledata`). */
+  protected readonly isLoaded = this.ctx.isLoaded;
   private readonly themeService = inject(ThemeService);
   /** App-wide basemap default (`provideMapStyles`), when the app provides one. */
   private readonly appStyles = inject(MAP_DEFAULT_STYLES, { optional: true });
@@ -182,7 +180,6 @@ export class MapComponent {
         const m = new MapLibreMap(options);
 
         m.on('load', () => {
-          this.loadedFlag.set(true);
           this.ctx.setLoadedFlag(true);
           this.zone.run(() => this.mapReady.emit(m));
         });
@@ -197,7 +194,6 @@ export class MapComponent {
               m.setProjection(proj);
               this.projectionApplied = true;
             }
-            this.styleLoadedFlag.set(true);
             this.ctx.setStyleLoadedFlag(true);
           }, 100);
         });
@@ -207,7 +203,6 @@ export class MapComponent {
         // the styledata fired while the style was still being fetched (slow network). Close the
         // gate; the styledata that follows re-opens it, and the layer components re-add everything.
         m.on('style.load', () => {
-          this.styleLoadedFlag.set(false);
           this.ctx.setStyleLoadedFlag(false);
         });
 
@@ -279,7 +274,6 @@ export class MapComponent {
     const style = this.getMapStyle(theme);
     if (style === this.currentStyle) return;
     this.currentStyle = style;
-    this.styleLoadedFlag.set(false);
     this.ctx.setStyleLoadedFlag(false);
     map.setStyle(style, { diff: true });
   }

@@ -56,22 +56,22 @@ const DEFAULT_ARC_LAYOUT: MapArcLineLayout = {
 export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
   readonly data = input.required<T[]>();
   /** Optional unique identifier prefix for the source/layers. Auto-generated if not provided. */
-  readonly id = input<string | undefined>(undefined);
+  readonly id = input<string>();
   /** Perpendicular curvature relative to the segment length. 0 = straight line. */
   readonly curvature = input(DEFAULT_ARC_CURVATURE);
   /** Number of segments used to approximate each arc. */
   readonly samples = input(DEFAULT_ARC_SAMPLES);
   /** Line paint; merged onto the defaults. Datum extras are available via `["get", ...]`. */
-  readonly paint = input<MapArcLinePaint | undefined>(undefined);
-  readonly layout = input<MapArcLineLayout | undefined>(undefined);
+  readonly paint = input<MapArcLinePaint>();
+  readonly layout = input<MapArcLineLayout>();
   /** Paint applied to the hovered arc via feature-state. */
-  readonly hoverPaint = input<MapArcLinePaint | undefined>(undefined);
+  readonly hoverPaint = input<MapArcLinePaint>();
   readonly interactive = input(true);
   /**
    * Optional MapLibre layer id to insert the arc layers before (z-order control).
    * Applied at layer creation only — later changes are ignored (mapcn parity).
    */
-  readonly beforeId = input<string | undefined>(undefined);
+  readonly beforeId = input<string>();
 
   readonly arcClick = output<MapArcEvent<T>>();
   readonly arcHover = output<MapArcEvent<T> | null>();

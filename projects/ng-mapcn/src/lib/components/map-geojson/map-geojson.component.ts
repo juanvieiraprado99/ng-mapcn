@@ -48,25 +48,25 @@ export class MapGeoJSONComponent {
   /** GeoJSON data (FeatureCollection, Feature, Geometry) or a URL to fetch it from. */
   readonly data = input.required<MapGeoJSONData>();
   /** Optional unique identifier prefix for the source/layers. Auto-generated if not provided. */
-  readonly id = input<string | undefined>(undefined);
+  readonly id = input<string>();
   /**
    * Feature property to promote to the feature `id`. Required for hover
    * feature-state (`fillHoverPaint`) and stable hover/click payloads.
    */
-  readonly promoteId = input<string | undefined>(undefined);
+  readonly promoteId = input<string>();
   /** Paint for the fill layer; merged onto theme defaults. `false` omits the layer. */
-  readonly fillPaint = input<MapFillPaint | false | undefined>(undefined);
+  readonly fillPaint = input<MapFillPaint | false>();
   /** Paint for the outline layer; merged onto a hairline default. `false` omits the layer. */
-  readonly linePaint = input<MapLinePaint | false | undefined>(undefined);
+  readonly linePaint = input<MapLinePaint | false>();
   /** Paint applied to the hovered feature via feature-state. Requires `promoteId`. */
-  readonly fillHoverPaint = input<MapFillPaint | undefined>(undefined);
+  readonly fillHoverPaint = input<MapFillPaint>();
   /** Whether features respond to mouse events. */
   readonly interactive = input(false);
   /**
    * Optional MapLibre layer id to insert the layers before (z-order control).
    * Applied at layer creation only — later changes are ignored (mapcn parity).
    */
-  readonly beforeId = input<string | undefined>(undefined);
+  readonly beforeId = input<string>();
 
   readonly featureClick = output<MapGeoJSONEvent>();
   readonly featureHover = output<MapGeoJSONEvent | null>();
