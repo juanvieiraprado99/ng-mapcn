@@ -5,5 +5,5 @@
     "entryFile": "src/public-api.ts"
   },
   "allowedNonPeerDependencies": ["maplibre-gl"],
-  "assets": ["styles.scss", "src/lib/styles/**/*.scss"]
+  "assets": ["styles.scss", "src/lib/styles/**/*.scss", "CHANGELOG.md"]
 }
