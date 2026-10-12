@@ -37,8 +37,8 @@ function hostDefaults(): Record<string, any> {
 }
 
 /**
- * Renders the map first and mounts the popup afterwards (the demo's documented workaround, see
- * the BUG test below for a popup that exists before the map is ready).
+ * Renders the map first and mounts the popup afterwards (see the regression test below for a
+ * popup that exists before the map is ready).
  */
 async function render(hostProps: Record<string, unknown> = {}) {
   const host: Record<string, any> = { ...hostDefaults(), ...hostProps, show: false };
@@ -108,14 +108,10 @@ describe('MapPopupComponent', () => {
   });
 
   describe('content projection before the map is ready', () => {
-    // BUG: a popup that is already in the template when <ng-map> creates the map loses its
-    // content. Its creation effect runs in the same pass in which <ng-map> first renders its
-    // `@if (mapInstance()) { <ng-content /> }`; the nodes the effect moved into .ng-popup-card
-    // are re-attached next to the popup host by that projection, leaving the card empty. (The
-    // demo works around it: "ng-map-popup takes its content when it is created: mount it once
-    // the map is ready".) Fix: build/refresh the card content after ng-map has rendered its
-    // projection, or project the content without moving the nodes out of the embedded view.
-    it.fails('projects the content when the popup exists from the first render', async () => {
+    // Regression: the content view used to live in the host's ViewContainerRef, so <ng-map>'s
+    // `@if (mapInstance()) { <ng-content /> }` projection re-inserted its nodes next to the host,
+    // leaving the card empty.
+    it('projects the content when the popup exists from the first render', async () => {
       await renderMap(TEMPLATE, {
         imports: [MapPopupComponent],
         hostProps: hostDefaults(),
