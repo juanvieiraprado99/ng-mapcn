@@ -90,9 +90,13 @@ export function loadAndSettle(fixture: { detectChanges(): void }, map: FakeMap):
   fixture.detectChanges();
 }
 
-/** Simulates the style finishing after `setStyle`: `styledata`, the 100 ms debounce, then effects. */
+/**
+ * Simulates the style requested by `setStyle` arriving: `style.load` + `styledata` (see
+ * `finishStyleLoad`), the 100 ms debounce, then effects.
+ */
 export function reloadStyle(fixture: { detectChanges(): void }, map: FakeMap): void {
-  map.fire('styledata');
+  if (map.hasPendingStyle()) map.finishStyleLoad();
+  else map.fire('styledata');
   vi.advanceTimersByTime(100);
   fixture.detectChanges();
 }

@@ -190,6 +190,15 @@ export class MapComponent {
           }, 100);
         });
 
+        // A new style has been applied (full load, or a setStyle diff with changes). MapLibre has
+        // just dropped every custom source and layer, possibly after the gate already re-opened on
+        // the styledata fired while the style was still being fetched (slow network). Close the
+        // gate; the styledata that follows re-opens it, and the layer components re-add everything.
+        m.on('style.load', () => {
+          this.styleLoadedFlag.set(false);
+          this.ctx.setStyleLoadedFlag(false);
+        });
+
         // Fires every frame during pan/zoom — stays outside the zone; signal
         // consumers still update, and zone apps avoid a CD storm.
         m.on('move', () => {

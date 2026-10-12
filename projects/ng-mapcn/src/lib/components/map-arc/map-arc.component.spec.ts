@@ -151,6 +151,26 @@ describe('MapArcComponent', () => {
       expect(calls.filter((c) => c === `addLayer:${LINE}`)).toHaveLength(2);
       expect(map.listenerCount('mousemove', HIT)).toBe(1);
     });
+
+    it('keeps the layers when the new style arrives after the debounce (slow network)', async () => {
+      const { fixture, map } = await renderLoaded();
+
+      update(fixture, { theme: 'dark' });
+      // styledata from the layer removals, then the 100 ms debounce, while the style is in flight.
+      map.fire('styledata');
+      vi.advanceTimersByTime(100);
+      fixture.detectChanges();
+
+      // The new style arrives (drops every custom layer); change detection runs before the debounce
+      // ends, as it does in a browser.
+      map.finishStyleLoad();
+      fixture.detectChanges();
+      vi.advanceTimersByTime(100);
+      fixture.detectChanges();
+
+      expect(map.getSource(SOURCE)).toBeDefined();
+      expect(map.getLayerOrder()).toEqual([HIT, LINE]);
+    });
   });
 
   describe('hit layer width (invariant 6)', () => {

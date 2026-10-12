@@ -215,7 +215,7 @@ describe('MapComponent', () => {
       expect(ctx.resolvedTheme()).toBe('dark');
     });
 
-    it('swaps the style once on a theme change and closes the gate until styledata settles', async () => {
+    it('swaps the style once on a theme change and closes the gate until the new style settles', async () => {
       const { fixture, map, ctx } = await render({ theme: 'dark' });
       loadMap(map!);
       expect(ctx.isLoaded()).toBe(true);
@@ -227,10 +227,29 @@ describe('MapComponent', () => {
       expect(ctx.isLoaded()).toBe(false);
       expect(ctx.resolvedTheme()).toBe('light');
 
-      map!.fire('styledata');
+      map!.finishStyleLoad();
       vi.advanceTimersByTime(99);
       expect(ctx.isLoaded()).toBe(false);
       vi.advanceTimersByTime(1);
+      expect(ctx.isLoaded()).toBe(true);
+    });
+
+    it('closes and re-opens the gate when the new style arrives after the debounce', async () => {
+      const { fixture, map, ctx } = await render({ theme: 'dark' });
+      loadMap(map!);
+
+      update(fixture, { theme: 'light' });
+      // MapLibre fires styledata for the layer removals while the new style is still being fetched,
+      // so the gate re-opens on the old style.
+      map!.fire('styledata');
+      vi.advanceTimersByTime(100);
+      expect(ctx.isLoaded()).toBe(true);
+
+      // The new style arrives and drops every custom layer: the gate must close so the layer
+      // components re-add them once it re-opens.
+      map!.finishStyleLoad();
+      expect(ctx.isLoaded()).toBe(false);
+      vi.advanceTimersByTime(100);
       expect(ctx.isLoaded()).toBe(true);
     });
 

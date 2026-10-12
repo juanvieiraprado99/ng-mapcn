@@ -41,19 +41,9 @@ test.describe('theme', () => {
     page,
     network,
   }) => {
-    // BUG: the layers are lost for good after a theme switch whenever the new basemap style takes
-    // longer than ~100 ms to arrive (always the case for a real Carto style over the network).
-    // Root cause (projects/ng-mapcn/src/lib/components/map/map.component.ts): `updateMapTheme`
-    // closes the load gate and calls `map.setStyle(style, { diff: true })`, but the `styledata`
-    // handler re-opens the gate after a fixed 100 ms debounce regardless of whether the new style
-    // has been applied yet. When the style arrives later than that, the layer components re-add
-    // their layers into the OLD style; the late style diff then removes them (they are not part of
-    // the new style), and the gate is already open, so nothing re-adds them. Observed sequence:
-    // setStyle -> styledata -> (100 ms) gate opens -> addLayer x2 -> style applied: layers=1 (bg).
-    // The race also hits (about half of the runs) with the instant local style, so this spec
-    // simulates a 300 ms network latency to make the failure deterministic.
-    test.fail();
-
+    // Regression: the gate used to re-open on the styledata fired by the layer removals, before the
+    // new style arrived, so the layers were added to the old style and dropped by the new one. The
+    // 300 ms style latency stands in for a real network round trip to the basemap provider.
     await gotoAndWaitForMap(page, '/docs/components/arcs', MAP);
     const before = await arcLayers(page);
     expect(before).toHaveLength(2);
