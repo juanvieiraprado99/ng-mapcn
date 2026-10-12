@@ -206,6 +206,19 @@ describe('MapComponent', () => {
       vi.advanceTimersByTime(100);
       expect(map!.setProjection).toHaveBeenCalledWith(projection);
     });
+
+    it('applies [projection] changes at runtime and resets to mercator when cleared', async () => {
+      const { fixture, map } = await render();
+      loadMap(map!);
+      expect(map!.setProjection).not.toHaveBeenCalled();
+
+      update(fixture, { projection: { type: 'globe' } });
+      expect(map!.setProjection).toHaveBeenLastCalledWith({ type: 'globe' });
+
+      update(fixture, { projection: undefined });
+      expect(map!.setProjection).toHaveBeenLastCalledWith({ type: 'mercator' });
+      expect(map!.setProjection).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('theme and styles', () => {

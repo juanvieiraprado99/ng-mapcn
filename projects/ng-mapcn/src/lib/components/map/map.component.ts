@@ -83,6 +83,8 @@ export class MapComponent {
   private destroyed = false;
   private internalUpdate = false;
   private currentStyle: string | StyleSpecification | null = null;
+  /** Whether a [projection] was pushed to the map, so clearing the input can reset it. */
+  private projectionApplied = false;
 
   constructor() {
     afterNextRender(() => this.initializeMap());
@@ -124,6 +126,17 @@ export class MapComponent {
       this.internalUpdate = true;
       map.jumpTo(next);
       this.internalUpdate = false;
+    });
+
+    // Runtime [projection] changes. While the gate is closed the styledata handler applies the
+    // current value before re-opening it; clearing the input resets to MapLibre's default.
+    effect(() => {
+      const proj = this.projection();
+      const map = this.mapInstance();
+      if (!map || !untracked(() => this.ctx.isLoaded())) return;
+      if (proj) map.setProjection(proj);
+      else if (this.projectionApplied) map.setProjection({ type: 'mercator' });
+      this.projectionApplied = !!proj;
     });
 
     this.destroyRef.onDestroy(() => this.destroyMap());
@@ -184,7 +197,10 @@ export class MapComponent {
           // operations are allowed (avoids race conditions around setStyle)
           this.styleTimeoutRef = setTimeout(() => {
             const proj = this.projection();
-            if (proj) m.setProjection(proj);
+            if (proj) {
+              m.setProjection(proj);
+              this.projectionApplied = true;
+            }
             this.styleLoadedFlag.set(true);
             this.ctx.setStyleLoadedFlag(true);
           }, 100);
