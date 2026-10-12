@@ -34,6 +34,11 @@ npm run test:schematics # builds + tests the ng-add / map schematics (node env, 
 npm run test:demo       # demo only (run npm run install:lib first)
 npm run test:coverage   # library with v8 coverage (coverage/ng-mapcn)
 
+# End-to-end tests (Playwright + headless Chromium, offline fixtures)
+npm run e2e:build       # prod build (dist/demo) + dev build (dist/demo-e2e)
+npm run e2e             # dev project (interaction specs) + prod project (smoke)
+npm run e2e:ui          # Playwright UI mode
+
 # Lint and format (ESLint + Prettier)
 npm run lint
 npm run lint:fix

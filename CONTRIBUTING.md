@@ -96,6 +96,24 @@ ng test ng-mapcn       # watch mode
 - jsdom has no layout, so `ng-map` would wait forever for a non-zero container size. Render maps with `renderMap` from `src/testing/render.ts`, which stubs the size, and use `loadMap` (with `vi.useFakeTimers()`) to open the load gate.
 - Restore global state in `afterEach`: real timers, `vi.restoreAllMocks()` and the `<html>` class.
 
+## E2E tests
+
+End-to-end tests run the demo app in headless Chromium with real MapLibre and WebGL (software rendered), through [Playwright](https://playwright.dev). They cover map loading, markers and popups, route/arc/GeoJSON layers and hover, cluster expansion, theme switching, synced viewports, and a smoke test of every page on the production build.
+
+```bash
+npm run e2e:build   # production build (dist/demo) + development build (dist/demo-e2e)
+npm run e2e         # run every spec (Playwright starts both servers itself)
+npm run e2e:ui      # the same in Playwright's UI mode
+npx playwright test --project=dev map.spec   # one spec, dev project only
+```
+
+Run `npx playwright install chromium` once to download the browser. Rerun `npm run e2e:build` after changing the library or the demo; the specs run against the built output.
+
+- **Offline and deterministic.** `e2e/fixtures.ts` intercepts every request that is not `localhost`: basemap `style.json` files get a minimal local style (a light and a dark variant), remote GeoJSON and the OSRM route come from `e2e/fixtures/*.json` or small stubs, and images and raster tiles get a 1x1 PNG. Anything else is aborted and fails the test, as does any console error or uncaught exception. The fixture is automatic: import `test` and `expect` from `./fixtures`, not from `@playwright/test`.
+- **Two projects.** The `dev` project (port 4310) runs the interaction specs against a development build, which exposes `window.ng`, so specs reach the MapLibre instance without any test hooks in product code. The `prod` project (port 4320) runs only `smoke.spec.ts` against the shipped bundle and asserts that `window.ng` is absent.
+- **Adding a spec.** Create `e2e/<topic>.spec.ts`, open the page with `gotoAndWaitForMap(page, url, mapIndex)` from `e2e/map-helpers.ts` (read the page template first: examples are the `ng-map` elements in page order, and some are non-interactive), then use `mapCall` to run code against the map, `layerIds` and `featureState` to inspect it, and `findRenderedPoint` to find a point you can hover or click. Wait on conditions (`expect.poll`, auto-waiting locators, map events), never on fixed sleeps. A new remote URL needs a fixture entry in `e2e/fixtures.ts`.
+- On failure CI uploads the `playwright-report` and `test-results` (traces) as an artifact.
+
 ## Commits
 
 We use [Conventional Commits](https://www.conventionalcommits.org/). The GitHub Actions release workflow parses commit messages to generate categorized release notes, so clear messages produce informative releases.
@@ -125,7 +143,7 @@ Examples: `feat(marker): add support for custom SVG icons`, `fix(popup): ensure 
 - Write the PR title in Conventional Commit form.
 - Link the issue in the description (`Closes #N`).
 - Check your change in the demo in both light and dark themes.
-- Run `npm run lint`, `npm run build:lib:prod` and `npm test` before opening the PR.
+- Run `npm run lint`, `npm run build:lib:prod` and `npm test` before opening the PR (and `npm run e2e:build && npm run e2e` when you touch the library or the demo).
 
 ## Reporting bugs and security issues
 
