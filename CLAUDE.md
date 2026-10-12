@@ -24,9 +24,6 @@ npm run build-ui-dev-clean
 # Serve demo app (requires library already built and installed locally)
 ng serve demo
 
-# Publish to npm
-npm run publish:lib
-
 # Run tests (Vitest via the Angular CLI)
 npm test                # lib + schematics + demo
 npm run test:lib        # library only
@@ -91,6 +88,8 @@ Two channels, same sources:
 ## Commits
 
 Always use **Conventional Commits** format — commit messages are parsed by the GitHub Actions release workflow to generate categorized release notes, so well-described commits produce informative releases. commitlint enforces the format through a husky `commit-msg` hook, and lint-staged runs ESLint and Prettier on staged files in the `pre-commit` hook.
+
+PRs are **squash merged**: the PR title becomes the commit on `main`, so it must be a Conventional Commit too (the `pr-title` check enforces it). Releases come from release-please (see `CONTRIBUTING.md`); never publish to npm by hand.
 
 ```
 <type>[optional scope]: <short description>

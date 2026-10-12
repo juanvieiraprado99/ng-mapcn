@@ -148,10 +148,20 @@ Examples: `feat(marker): add support for custom SVG icons`, `fix(popup): ensure 
 ## Pull requests
 
 - Branch from `main`, and keep one topic per PR.
-- Write the PR title in Conventional Commit form.
+- PRs are **squash merged**: the PR title becomes the commit message on `main`, so it must be a Conventional Commit (for example `fix(popup): keep text readable in dark mode`, subject in lower case). The `pr-title` check enforces it.
 - Link the issue in the description (`Closes #N`).
 - Check your change in the demo in both light and dark themes.
 - Run `npm run lint`, `npm run build:lib:prod` and `npm test` before opening the PR (and `npm run e2e:build && npm run e2e` when you touch the library or the demo).
+
+## Releases
+
+Releases are automated with [release-please](https://github.com/googleapis/release-please); nobody publishes by hand.
+
+- On every push to `main`, release-please opens or updates a release PR built from the `feat`, `fix` and `perf` commits that touch `projects/ng-mapcn`.
+- Merging the release PR bumps the version on the `-beta.N` line, updates `projects/ng-mapcn/CHANGELOG.md`, tags `vX.Y.Z`, creates the GitHub release and publishes `ng-mapcn` to npm through [Trusted Publishing](https://docs.npmjs.com/trusted-publishers) (OIDC, with provenance, no token).
+- npm dist-tags: every prerelease is published to `beta`. While no stable version of that major exists (today: no stable 22.x), the prerelease also moves `latest`, so `npm i ng-mapcn` installs the newest beta. Once a stable version of a major exists, prereleases only go to `beta` and stable versions go to `latest`.
+- To leave the beta line, land a commit with the footer `Release-As: 22.0.0`, then set `"prerelease": false` for the 22.x line in `release-please-config.json`.
+- The docs site redeploys automatically on every push to `main`, including when a release PR is merged.
 
 ## Reporting bugs and security issues
 
