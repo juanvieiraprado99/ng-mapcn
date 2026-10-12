@@ -1,14 +1,13 @@
 import {
-  ApplicationRef,
   ChangeDetectionStrategy,
   Component,
   effect,
-  type EmbeddedViewRef,
   inject,
   Injector,
   input,
   NgZone,
   output,
+  signal,
   type TemplateRef,
   untracked,
   viewChild,
@@ -16,6 +15,7 @@ import {
 import { type Offset, Popup } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
+import { renderPortal } from '../../utils/portal';
 
 /**
  * Standalone popup anchored at a lng/lat (no marker). Created once and
@@ -41,14 +41,13 @@ export class MapPopupComponent {
 
   readonly popupClose = output<void>();
 
-  private readonly appRef = inject(ApplicationRef);
   private readonly injector = inject(Injector);
   private readonly mapCtx = inject(MapContextService);
   private readonly zone = inject(NgZone);
   private readonly tpl = viewChild.required<TemplateRef<unknown>>('tpl');
 
-  private popup: Popup | null = null;
-  private container: HTMLDivElement | null = null;
+  /** The live popup and its content card; null until the map exists. */
+  private readonly instance = signal<{ popup: Popup; container: HTMLDivElement } | null>(null);
 
   constructor() {
     // Create once when the map becomes available.
@@ -58,16 +57,7 @@ export class MapPopupComponent {
 
       const container = document.createElement('div');
       container.className = 'ng-popup-card';
-
-      // Not created in the host's ViewContainerRef: Angular re-inserts a container's views next
-      // to its anchor whenever the host is (re)projected — e.g. by <ng-map>'s
-      // `@if (mapInstance()) { <ng-content /> }` — which would pull the nodes back out of the
-      // card. A detached view attached to the ApplicationRef keeps change detection and lets the
-      // popup own the nodes' placement (the CDK portal approach).
-      const view: EmbeddedViewRef<unknown> = this.tpl().createEmbeddedView(null, this.injector);
-      this.appRef.attachView(view);
-      view.rootNodes.forEach((n: Node) => container.appendChild(n));
-      view.detectChanges();
+      const destroyPortal = renderPortal(this.tpl(), this.injector, container);
 
       const popup = new Popup({
         offset: untracked(() => this.offset()),
@@ -83,20 +73,14 @@ export class MapPopupComponent {
       // 'close' fires from the map's event system (outside the zone) — re-enter
       popup.on('close', () => this.zone.run(() => this.popupClose.emit()));
 
-      if (untracked(() => this.closeButton())) {
-        container.appendChild(this.createCloseButton(popup));
-      }
-
-      this.popup = popup;
-      this.container = container;
+      this.instance.set({ popup, container });
 
       onCleanup(() => {
-        this.popup = null;
-        this.container = null;
+        this.instance.set(null);
         try {
           popup.remove();
         } catch {}
-        view.destroy();
+        destroyPortal();
       });
     });
 
@@ -106,7 +90,7 @@ export class MapPopupComponent {
       const lat = this.latitude();
       const offset = this.offset();
       const maxWidth = this.maxWidth();
-      const popup = this.popup;
+      const popup = this.instance()?.popup;
       if (!popup) return;
 
       const current = popup.getLngLat();
@@ -120,9 +104,9 @@ export class MapPopupComponent {
     // Reconcile closeButton — mapcn renders it reactively.
     effect(() => {
       const showClose = this.closeButton();
-      const popup = this.popup;
-      const container = this.container;
-      if (!popup || !container) return;
+      const instance = this.instance();
+      if (!instance) return;
+      const { popup, container } = instance;
 
       const existing = container.querySelector('.ng-popup-close');
       if (showClose && !existing) {

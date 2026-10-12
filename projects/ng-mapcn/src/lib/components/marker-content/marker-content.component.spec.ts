@@ -56,6 +56,23 @@ describe('MarkerContentComponent', () => {
     ).not.toBeNull();
   });
 
+  it('keeps top-level control-flow blocks inside the marker element when they re-render', async () => {
+    const { fixture } = await renderMap(
+      `<ng-map><ng-map-marker [longitude]="1" [latitude]="2">
+         <ng-marker-content>
+           @if (show) { <span class="late">late</span> }
+         </ng-marker-content>
+       </ng-map-marker></ng-map>`,
+      { imports: IMPORTS, hostProps: { show: false } },
+    );
+    const el = fakeRegistry.markers[0].getElement();
+
+    update(fixture, { show: true });
+
+    expect(el.querySelector('.ng-marker-content .late')?.textContent).toBe('late');
+    expect(fixture.nativeElement.querySelector('.late')).toBeNull();
+  });
+
   it('clears the previous children of the marker element and removes the content on teardown', async () => {
     const { fixture } = await renderMap(
       `<ng-map><ng-map-marker [longitude]="1" [latitude]="2">
