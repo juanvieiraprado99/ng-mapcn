@@ -127,6 +127,16 @@ describe('MapPopupComponent', () => {
       expect(content().querySelector('.ng-popup-close')).toBeNull();
     });
 
+    it('builds the close icon as SVG elements, without assigning innerHTML (Trusted Types)', async () => {
+      const setInnerHTML = vi.spyOn(Element.prototype, 'innerHTML', 'set');
+      await render({ closeButton: true });
+
+      const svg = content().querySelector('.ng-popup-close svg')!;
+      expect(svg.namespaceURI).toBe('http://www.w3.org/2000/svg');
+      expect(svg.querySelectorAll('path')).toHaveLength(2);
+      expect(setInnerHTML).not.toHaveBeenCalled();
+    });
+
     it('is appended with an aria-label when closeButton is set and removes the popup on click', async () => {
       const { host } = await render({ closeButton: true });
       const button = content().querySelector<HTMLButtonElement>('.ng-popup-close')!;

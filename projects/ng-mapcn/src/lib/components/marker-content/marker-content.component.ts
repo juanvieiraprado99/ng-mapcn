@@ -28,7 +28,7 @@ export class MarkerContentComponent {
 
       const host = marker.getElement();
       // Clear MapLibre's default marker content
-      host.innerHTML = '';
+      host.replaceChildren();
 
       const wrapper = document.createElement('div');
       wrapper.className = 'ng-marker-content';

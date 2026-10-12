@@ -35,6 +35,19 @@ describe('MarkerContentComponent', () => {
     expect(el.querySelector('.ng-marker-default-icon')).toBeNull();
   });
 
+  it('clears the marker element without assigning innerHTML (Trusted Types)', async () => {
+    const setInnerHTML = vi.spyOn(Element.prototype, 'innerHTML', 'set');
+    await renderMap(
+      `<ng-map><ng-map-marker [longitude]="1" [latitude]="2">
+         <ng-marker-content><span class="pin">pin</span></ng-marker-content>
+       </ng-map-marker></ng-map>`,
+      { imports: IMPORTS },
+    );
+
+    expect(fakeRegistry.markers[0].getElement().querySelector('.pin')).not.toBeNull();
+    expect(setInnerHTML).not.toHaveBeenCalled();
+  });
+
   it('renders the default icon when there is no content', async () => {
     await renderMap(
       `<ng-map><ng-map-marker [longitude]="1" [latitude]="2"><ng-marker-content /></ng-map-marker></ng-map>`,
