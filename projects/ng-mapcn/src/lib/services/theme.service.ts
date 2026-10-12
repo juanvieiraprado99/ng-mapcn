@@ -16,7 +16,7 @@ export class ThemeService {
     const observer = new MutationObserver(() => this.themeSignal.set(this.detect()));
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class'],
+      attributeFilter: ['class', 'data-theme'],
     });
 
     let mq: MediaQueryList | null = null;
@@ -58,6 +58,9 @@ export class ThemeService {
     const html = document.documentElement;
     if (html.classList.contains('dark')) return 'dark';
     if (html.classList.contains('light')) return 'light';
+    // Same selectors as the global stylesheet (`[data-theme='dark' | 'light']`)
+    const attr = html.getAttribute('data-theme');
+    if (attr === 'dark' || attr === 'light') return attr;
     if (window.matchMedia) {
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }

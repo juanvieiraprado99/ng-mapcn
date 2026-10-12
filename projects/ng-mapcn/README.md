@@ -20,7 +20,7 @@ ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map componen
 ## Features
 
 - **MapLibre GL JS v5** under the hood, no API keys required (Carto basemaps)
-- **Theme-aware**: follows the `dark`/`light` class on `<html>` (or `prefers-color-scheme`) and swaps the basemap at runtime
+- **Theme-aware**: follows the `dark`/`light` class or `data-theme` attribute on `<html>` (or `prefers-color-scheme`) and swaps the basemap at runtime
 - **Composable**: declare markers, popups, routes, GeoJSON, arcs and clusters as children of `<ng-map>`
 - **Signals-first**: standalone components, signal inputs/outputs, `effect()`-based reconciliation
 - **Copy-paste distribution**: `ng add ng-mapcn` copies the sources into your project (shadcn-style). Also usable as a regular npm package.
@@ -134,7 +134,7 @@ Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint
 
 ## Theming
 
-Without a `theme` input, the map watches the `dark`/`light` class on `document.documentElement` (works with any theme toggler) and falls back to `prefers-color-scheme`. Switching theme calls `map.setStyle(..., { diff: true })` and every layer component re-adds itself automatically once the style settles.
+Without a `theme` input, the map watches the `dark`/`light` class (or a `data-theme="dark"`/`"light"` attribute) on `document.documentElement` (works with any theme toggler) and falls back to `prefers-color-scheme`. Switching theme calls `map.setStyle(..., { diff: true })` and every layer component re-adds itself automatically once the style settles.
 
 ## Basemaps
 

@@ -47,6 +47,25 @@ describe('ThemeService', () => {
     expect(TestBed.inject(ThemeService).theme()).toBe('light');
   });
 
+  it('honours data-theme on <html>, like the global stylesheet', async () => {
+    stubMatchMedia(false);
+    document.documentElement.setAttribute('data-theme', 'dark');
+    const service = TestBed.inject(ThemeService);
+    expect(service.theme()).toBe('dark');
+
+    document.documentElement.setAttribute('data-theme', 'light');
+    await flushObserver();
+    expect(service.theme()).toBe('light');
+    document.documentElement.removeAttribute('data-theme');
+  });
+
+  it('lets data-theme="light" win over a dark prefers-color-scheme', () => {
+    stubMatchMedia(true);
+    document.documentElement.setAttribute('data-theme', 'light');
+    expect(TestBed.inject(ThemeService).theme()).toBe('light');
+    document.documentElement.removeAttribute('data-theme');
+  });
+
   it('falls back to prefers-color-scheme when there is no class', () => {
     const { matchMedia } = stubMatchMedia(true);
     expect(TestBed.inject(ThemeService).theme()).toBe('dark');

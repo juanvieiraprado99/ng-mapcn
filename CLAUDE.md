@@ -60,7 +60,7 @@ This is an **Angular library workspace** (`ng-packagr`) with two projects:
 - `components/map-marker/` + `marker-content/`, `marker-popup/`, `marker-tooltip/`, `marker-label/` — marker created once, reconciled by diffed setters; content projected into `marker.getElement()` via embedded views (the Angular "portal").
 - `components/map-route|map-geojson|map-arc|map-cluster-layer/` — imperative layer components with empty templates.
 - `services/map-context.service.ts` — `map`, `isLoaded`, `resolvedTheme` signals.
-- `services/theme.service.ts` — watches the **`dark`/`light` class** on `document.documentElement` (MutationObserver) with a `prefers-color-scheme` fallback.
+- `services/theme.service.ts` — watches the **`dark`/`light` class** (then the `data-theme` attribute) on `document.documentElement` (MutationObserver) with a `prefers-color-scheme` fallback.
 - `utils/map-utils.ts` — `nextId`, `getViewport`, `mergeHoverPaint`, `buildArcCoordinates`, shared types.
 - `styles/` — SCSS tokens/utilities; `map-styles.ts` has Carto defaults + `blankMapStyle`.
 
