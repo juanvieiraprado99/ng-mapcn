@@ -248,12 +248,7 @@ describe('MapGeoJSONComponent', () => {
       expect(setData).toHaveBeenCalledWith(next);
     });
 
-    // BUG: the source-creation effect reads `this.data()` (to build the initial source), so it
-    // tracks it. A `[data]` change re-runs that effect: its cleanup removes both layers and the
-    // source and it adds the source back. The layer-sync effect has no changed dependency, so the
-    // layers are never re-added, and invariant 2 (never destroy/recreate) is violated.
-    // Fix: read `this.data()` with `untracked()` when creating the source.
-    it.fails('does not remove or re-add the source or layers when [data] changes', async () => {
+    it('does not remove or re-add the source or layers when [data] changes', async () => {
       const { fixture, map } = await renderLoaded();
       const source = map.getSource(SOURCE);
       map.calls.length = 0;
@@ -264,12 +259,20 @@ describe('MapGeoJSONComponent', () => {
       expect(map.getSource(SOURCE)).toBe(source);
     });
 
-    // BUG: same root cause as above — the layers disappear after a `[data]` change.
-    it.fails('keeps the fill and line layers present after [data] changes', async () => {
+    it('keeps the fill and line layers present after [data] changes', async () => {
       const { fixture, map } = await renderLoaded();
 
       update(fixture, { data: { type: 'FeatureCollection', features: [] } });
 
+      expect(map.getLayerOrder()).toEqual([FILL, LINE]);
+    });
+
+    it('re-creates the source with the new promoteId and keeps both layers', async () => {
+      const { fixture, map } = await renderLoaded({ promoteId: 'code' });
+
+      update(fixture, { promoteId: 'name' });
+
+      expect(map.getSource(SOURCE).promoteId).toBe('name');
       expect(map.getLayerOrder()).toEqual([FILL, LINE]);
     });
   });
