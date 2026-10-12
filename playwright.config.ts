@@ -5,6 +5,8 @@ const PROD_PORT = 4320;
 
 export default defineConfig({
   testDir: 'e2e',
+  // Software-rendered WebGL (SwiftShader) slows down when several maps load in parallel.
+  timeout: 60_000,
   fullyParallel: true,
   retries: process.env['CI'] ? 1 : 0,
   reporter: process.env['CI'] ? [['html', { open: 'never' }], ['github']] : 'list',

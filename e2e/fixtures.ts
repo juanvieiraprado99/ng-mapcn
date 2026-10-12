@@ -4,14 +4,27 @@ import { join } from 'node:path';
 import { expect, test as base } from '@playwright/test';
 
 /**
- * Minimal basemap served for every `style.json` request: no tiles, no glyphs, no sprites, so the
- * suite never needs the network and maps become ready in about a second.
+ * Minimal basemaps served for every style request: no tiles, no glyphs, no sprites, so the suite
+ * never needs the network and maps become ready in about a second. The light and dark variants
+ * differ (background colour) so a theme switch is a real `setStyle` that removes and re-adds the
+ * layers added by the components, exactly like swapping Carto positron for dark-matter.
  */
-export const MINIMAL_STYLE = {
-  version: 8,
-  sources: {},
-  layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#eee' } }],
-};
+export const LIGHT_BACKGROUND = '#eeeeee';
+export const DARK_BACKGROUND = '#222222';
+
+export function minimalStyle(dark: boolean) {
+  return {
+    version: 8,
+    sources: {},
+    layers: [
+      {
+        id: 'bg',
+        type: 'background',
+        paint: { 'background-color': dark ? DARK_BACKGROUND : LIGHT_BACKGROUND },
+      },
+    ],
+  };
+}
 
 const FIXTURES_DIR = join(__dirname, 'fixtures');
 
@@ -31,14 +44,44 @@ const PIXEL_PNG = Buffer.from(
   'base64',
 );
 
+/**
+ * OSRM routing stub: a straight 12-point line between the requested coordinates, in the shape of
+ * the real `/route/v1/driving/<lng,lat;lng,lat>` response.
+ */
+function osrmResponse(pathname: string) {
+  const [from, to] = decodeURIComponent(pathname.split('/').pop() ?? '')
+    .split(';')
+    .map((pair) => pair.split(',').map(Number));
+  const steps = 12;
+  const coordinates = Array.from({ length: steps + 1 }, (_, i) => [
+    from[0] + ((to[0] - from[0]) * i) / steps,
+    from[1] + ((to[1] - from[1]) * i) / steps,
+  ]);
+  return {
+    code: 'Ok',
+    routes: [{ geometry: { type: 'LineString', coordinates }, duration: 600, distance: 3200 }],
+    waypoints: [],
+  };
+}
+
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
 
 /** Fails the test if the page asked for anything that is not served locally or faked below. */
-export const test = base.extend<{ network: { blocked: string[]; errors: string[] } }>({
+export interface NetworkState {
+  /** Requests that no fixture intercepted (asserted empty after every test). */
+  blocked: string[];
+  /** Console errors and uncaught exceptions (asserted empty after every test). */
+  errors: string[];
+  /** Simulated latency for basemap style responses, for specs about style swaps. Default 0. */
+  styleDelayMs: number;
+}
+
+export const test = base.extend<{ network: NetworkState }>({
   network: [
     async ({ page }, use) => {
       const blocked: string[] = [];
       const errors: string[] = [];
+      const state: NetworkState = { blocked, errors, styleDelayMs: 0 };
 
       page.on('console', (message) => {
         if (message.type() === 'error') {
@@ -53,7 +96,13 @@ export const test = base.extend<{ network: { blocked: string[]; errors: string[]
           return route.continue();
         }
         if (/style\.json$|\/styles\/[^/]+$/.test(url.pathname)) {
-          return route.fulfill({ json: MINIMAL_STYLE });
+          if (state.styleDelayMs > 0) {
+            await new Promise((resolve) => setTimeout(resolve, state.styleDelayMs));
+          }
+          return route.fulfill({ json: minimalStyle(/dark/i.test(url.pathname)) });
+        }
+        if (url.hostname === 'router.project-osrm.org') {
+          return route.fulfill({ json: osrmResponse(url.pathname) });
         }
         const data = REMOTE_DATA.find(({ match }) => match.test(url.href));
         if (data) {
@@ -69,7 +118,7 @@ export const test = base.extend<{ network: { blocked: string[]; errors: string[]
         return route.abort();
       });
 
-      await use({ blocked, errors });
+      await use(state);
 
       // Asserted here (not in afterEach) so every spec gets the guards for free.
       expect.soft(blocked, 'requests that no fixture intercepted').toEqual([]);
