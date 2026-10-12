@@ -81,6 +81,8 @@ export class MapGeoJSONComponent {
   private readonly lineLayerId = computed(() => `geojson-line-${this.resolvedId()}`);
   /** Bumped every time the source is (re)created, so the layer effect re-adds its layers. */
   private readonly sourceRevision = signal(0);
+  /** Data currently in the source, so re-runs of the data effect skip a no-op setData. */
+  private appliedData: MapGeoJSONData | null = null;
 
   private readonly mergedFillPaint = computed<MapFillPaint>(() => {
     const defaults = GEOJSON_DEFAULT_COLORS[this.ctx.resolvedTheme()];
@@ -110,12 +112,14 @@ export class MapGeoJSONComponent {
       const lineLayerId = this.lineLayerId();
       const promoteId = this.promoteId();
 
+      const data = untracked(() => this.data());
       map.addSource(sourceId, {
         type: 'geojson',
         // Untracked: data changes go through setData below, never a source re-create.
-        data: untracked(() => this.data()) as never,
+        data: data as never,
         ...(promoteId ? { promoteId } : {}),
       });
+      this.appliedData = data;
       // The cleanup of a previous run removed the layers with the old source.
       this.sourceRevision.update((r) => r + 1);
 
@@ -137,7 +141,10 @@ export class MapGeoJSONComponent {
       const map = this.ctx.map();
       if (!map) return;
       const source = map.getSource(this.sourceId()) as GeoJSONSource | undefined;
-      source?.setData(data as never);
+      // Skip what the source was just created with — a URL would be fetched twice.
+      if (!source || data === this.appliedData) return;
+      source.setData(data as never);
+      this.appliedData = data;
     });
 
     // Sync layers and paint when visibility or styling changes.
@@ -198,6 +205,9 @@ export class MapGeoJSONComponent {
       const sourceId = this.sourceId();
       const fillLayerId = this.fillLayerId();
       let hoveredId: string | number | null = null;
+      // Features without an id (no promoteId) cannot be told apart: hover is reported once on
+      // enter instead of on every mousemove.
+      let hovering = false;
 
       const setHover = (next: string | number | null) => {
         if (next === hoveredId) return;
@@ -225,13 +235,16 @@ export class MapGeoJSONComponent {
         const feature = e.features?.[0];
         if (!feature) return;
         map.getCanvas().style.cursor = 'pointer';
-        if (feature.id === hoveredId) return;
-        setHover(feature.id ?? null);
+        const id = feature.id ?? null;
+        if (hovering && id === hoveredId) return;
+        hovering = true;
+        setHover(id);
         // Map events fire outside the zone — re-enter for outputs
         this.zone.run(() => this.featureHover.emit(toEvent(feature, e)));
       };
 
       const handleMouseLeave = () => {
+        hovering = false;
         setHover(null);
         map.getCanvas().style.cursor = '';
         this.zone.run(() => this.featureHover.emit(null));

@@ -37,6 +37,8 @@ export class MapRouteComponent {
   private readonly autoId = nextId('ng-route');
   private readonly sourceId = computed(() => this.id() ?? this.autoId);
   private readonly layerId = computed(() => `${this.sourceId()}-layer`);
+  /** Coordinates currently in the source, so re-runs of the data effect skip a no-op setData. */
+  private appliedCoords: [number, number][] | null = null;
 
   constructor() {
     // Add source + layer once the map style is loaded; re-runs after theme setStyle
@@ -58,6 +60,7 @@ export class MapRouteComponent {
         type: 'geojson',
         data: this.toGeoJSON(coords),
       });
+      this.appliedCoords = coords;
 
       map.addLayer({
         id: layerId,
@@ -120,8 +123,10 @@ export class MapRouteComponent {
       const map = this.ctx.map();
       if (!map) return;
       const source = map.getSource(this.sourceId()) as GeoJSONSource | undefined;
-      if (!source) return;
+      // Skip what the source was just created with (load / theme switch re-runs this effect)
+      if (!source || coords === this.appliedCoords) return;
       source.setData(this.toGeoJSON(coords));
+      this.appliedCoords = coords;
     });
 
     // Update paint properties reactively

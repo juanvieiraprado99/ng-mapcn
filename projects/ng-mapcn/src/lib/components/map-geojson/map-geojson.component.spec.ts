@@ -445,4 +445,37 @@ describe('MapGeoJSONComponent', () => {
       expect(map.listenerCount('mousemove', FILL)).toBe(0);
     });
   });
+  describe('no redundant updates', () => {
+    it('does not setData with the data the source was just created with', async () => {
+      const { fixture, map } = await renderLoaded();
+      expect(map.getSource(SOURCE).setData).not.toHaveBeenCalled();
+
+      update(fixture, { theme: 'dark' });
+      reloadStyle(fixture, map);
+
+      expect(map.getSource(SOURCE).setData).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('hover without feature ids', () => {
+    it('emits featureHover once on enter instead of on every mousemove', async () => {
+      const { map, host } = await renderLoaded({ interactive: true });
+      const noId = {
+        features: [{ properties: {}, geometry: { type: 'Point', coordinates: [1, 2] } }],
+        lngLat: { lng: 1, lat: 2 },
+        point: { x: 0, y: 0 },
+      };
+
+      map.fire('mousemove', noId, FILL);
+      map.fire('mousemove', noId, FILL);
+      map.fire('mousemove', noId, FILL);
+
+      expect(host['featureHover']).toHaveBeenCalledTimes(1);
+      expect(map.setFeatureState).not.toHaveBeenCalled();
+
+      map.fire('mouseleave', {}, FILL);
+      map.fire('mousemove', noId, FILL);
+      expect(host['featureHover']).toHaveBeenCalledTimes(3);
+    });
+  });
 });

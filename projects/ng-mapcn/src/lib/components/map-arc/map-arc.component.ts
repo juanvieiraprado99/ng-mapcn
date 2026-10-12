@@ -117,6 +117,13 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
     };
   });
 
+  /** Arcs by `String(id)`, for O(1) lookups from hover/click feature ids. */
+  private readonly arcsById = computed(
+    () => new Map(this.data().map((arc) => [String(arc.id), arc] as const)),
+  );
+  /** Data currently in the source, so re-runs of the data effect skip a no-op setData. */
+  private appliedData: GeoJSON.FeatureCollection<GeoJSON.LineString> | null = null;
+
   constructor() {
     // Add source and layers once the map style is loaded; re-runs after theme setStyle.
     effect((onCleanup) => {
@@ -129,11 +136,9 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
       const hitLayerId = this.hitLayerId();
       const beforeId = untracked(() => this.beforeId());
 
-      map.addSource(sourceId, {
-        type: 'geojson',
-        data: untracked(() => this.geoJSON()),
-        promoteId: 'id',
-      });
+      const data = untracked(() => this.geoJSON());
+      map.addSource(sourceId, { type: 'geojson', data, promoteId: 'id' });
+      this.appliedData = data;
 
       map.addLayer(
         {
@@ -179,7 +184,10 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
       const map = this.ctx.map();
       if (!map) return;
       const source = map.getSource(this.sourceId()) as GeoJSONSource | undefined;
-      source?.setData(geoJSON);
+      // Skip what the source was just created with (load / theme switch re-runs this effect)
+      if (!source || geoJSON === this.appliedData) return;
+      source.setData(geoJSON);
+      this.appliedData = geoJSON;
     });
 
     // Sync paint/layout when they change.
@@ -228,9 +236,7 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
       };
 
       const findArc = (featureId: string | number | undefined): T | undefined =>
-        featureId == null
-          ? undefined
-          : untracked(() => this.data()).find((arc) => String(arc.id) === String(featureId));
+        featureId == null ? undefined : untracked(() => this.arcsById()).get(String(featureId));
 
       const handleMouseMove = (e: MapLayerMouseEvent) => {
         const featureId = e.features?.[0]?.id as string | number | undefined;

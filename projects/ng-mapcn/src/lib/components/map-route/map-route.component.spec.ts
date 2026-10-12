@@ -311,4 +311,15 @@ describe('MapRouteComponent', () => {
       expect(host['routeClick']).not.toHaveBeenCalled();
     });
   });
+  describe('no redundant updates', () => {
+    it('does not setData with the data the source was just created with', async () => {
+      const { fixture, map } = await renderLoaded();
+      expect(map.getSource(SOURCE).setData).not.toHaveBeenCalled();
+
+      update(fixture, { theme: 'dark' });
+      reloadStyle(fixture, map);
+
+      expect(map.getSource(SOURCE).setData).not.toHaveBeenCalled();
+    });
+  });
 });
