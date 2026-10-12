@@ -48,3 +48,7 @@ Thumbs.db
 projects/ng-mapcn/schematics/map/files/
 
 .vercel
+
+# Playwright
+/playwright-report/
+/test-results/

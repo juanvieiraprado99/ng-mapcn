@@ -1,0 +1,269 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": 0,
+      "properties": {
+        "NAME": "United States of America",
+        "NAME_LONG": "United States of America",
+        "ADMIN": "United States of America",
+        "ISO_A3": "USA"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-125, 25],
+            [-67, 25],
+            [-67, 49],
+            [-125, 49],
+            [-125, 25]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 1,
+      "properties": {
+        "NAME": "Canada",
+        "NAME_LONG": "Canada",
+        "ADMIN": "Canada",
+        "ISO_A3": "CAN"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-140, 50],
+            [-55, 50],
+            [-55, 70],
+            [-140, 70],
+            [-140, 50]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 2,
+      "properties": {
+        "NAME": "Brazil",
+        "NAME_LONG": "Brazil",
+        "ADMIN": "Brazil",
+        "ISO_A3": "BRA"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-74, -33],
+            [-35, -33],
+            [-35, 5],
+            [-74, 5],
+            [-74, -33]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 3,
+      "properties": {
+        "NAME": "United Kingdom",
+        "NAME_LONG": "United Kingdom",
+        "ADMIN": "United Kingdom",
+        "ISO_A3": "GBR"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-8, 50],
+            [2, 50],
+            [2, 59],
+            [-8, 59],
+            [-8, 50]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 4,
+      "properties": {
+        "NAME": "France",
+        "NAME_LONG": "France",
+        "ADMIN": "France",
+        "ISO_A3": "FRA"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-5, 42],
+            [8, 42],
+            [8, 51],
+            [-5, 51],
+            [-5, 42]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 5,
+      "properties": {
+        "NAME": "Germany",
+        "NAME_LONG": "Germany",
+        "ADMIN": "Germany",
+        "ISO_A3": "DEU"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [6, 47],
+            [15, 47],
+            [15, 55],
+            [6, 55],
+            [6, 47]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 6,
+      "properties": {
+        "NAME": "India",
+        "NAME_LONG": "India",
+        "ADMIN": "India",
+        "ISO_A3": "IND"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [68, 8],
+            [97, 8],
+            [97, 35],
+            [68, 35],
+            [68, 8]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 7,
+      "properties": {
+        "NAME": "China",
+        "NAME_LONG": "China",
+        "ADMIN": "China",
+        "ISO_A3": "CHN"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [74, 18],
+            [135, 18],
+            [135, 53],
+            [74, 53],
+            [74, 18]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 8,
+      "properties": {
+        "NAME": "Japan",
+        "NAME_LONG": "Japan",
+        "ADMIN": "Japan",
+        "ISO_A3": "JPN"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [130, 31],
+            [145, 31],
+            [145, 45],
+            [130, 45],
+            [130, 31]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 9,
+      "properties": {
+        "NAME": "Australia",
+        "NAME_LONG": "Australia",
+        "ADMIN": "Australia",
+        "ISO_A3": "AUS"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [113, -39],
+            [153, -39],
+            [153, -11],
+            [113, -11],
+            [113, -39]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 10,
+      "properties": {
+        "NAME": "South Africa",
+        "NAME_LONG": "South Africa",
+        "ADMIN": "South Africa",
+        "ISO_A3": "ZAF"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [16, -35],
+            [33, -35],
+            [33, -22],
+            [16, -22],
+            [16, -35]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 11,
+      "properties": {
+        "NAME": "Russia",
+        "NAME_LONG": "Russia",
+        "ADMIN": "Russia",
+        "ISO_A3": "RUS"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [28, 50],
+            [180, 50],
+            [180, 75],
+            [28, 75],
+            [28, 50]
+          ]
+        ]
+      }
+    }
+  ]
+}

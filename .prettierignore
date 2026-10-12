@@ -8,3 +8,5 @@ projects/demo/public/
 package-lock.json
 CODE_OF_CONDUCT.md
 docs/
+playwright-report/
+test-results/

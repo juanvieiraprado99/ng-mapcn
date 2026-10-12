@@ -12,6 +12,8 @@ const zardGlobs = [
 export default defineConfig([
   globalIgnores([
     'dist/',
+    'playwright-report/',
+    'test-results/',
     '.angular/',
     'coverage/',
     'node_modules/',

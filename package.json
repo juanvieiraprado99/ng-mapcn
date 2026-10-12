@@ -30,6 +30,9 @@
     "install:lib": "node -e \"const v = require('./projects/ng-mapcn/package.json').version; require('child_process').execSync('ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-' + v + '.tgz -f --no-save', { stdio: 'inherit' })\"",
     "build-ui-dev": "node -e \"const v = require('./projects/ng-mapcn/package.json').version; require('child_process').execSync('ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-' + v + '.tgz -f --no-save && node scripts/generate-block-sources.mjs && ng serve demo', { stdio: 'inherit' })\"",
     "build-ui-dev-clean": "node -e \"const v = require('./projects/ng-mapcn/package.json').version; const { execSync } = require('child_process'); const fs = require('fs'); if (process.platform === 'win32') { try { execSync('powershell -Command \\\"if (Test-Path .angular) { Remove-Item -Recurse -Force .angular }; if (Test-Path dist) { Remove-Item -Recurse -Force dist }\\\"', { stdio: 'inherit' }); } catch(e) {} } else { try { execSync('rm -rf .angular dist', { stdio: 'inherit' }); } catch(e) {} } execSync('ng cache clean && ng build ng-mapcn && cd dist/ng-mapcn && npm pack && cd ../.. && npm i ./dist/ng-mapcn/ng-mapcn-' + v + '.tgz -f --no-save && node scripts/generate-block-sources.mjs && ng serve demo', { stdio: 'inherit' })\"",
+    "e2e:build": "node scripts/vercel-build.mjs && ng build demo --configuration development --output-path dist/demo-e2e",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
     "serve:ssr:demo": "node dist/demo/server/server.mjs",
     "prepare": "husky"
   },
@@ -81,6 +84,7 @@
     "@commitlint/config-conventional": "^21.2.3",
     "@emnapi/core": "1.10.0",
     "@emnapi/runtime": "1.10.0",
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4.3.2",
     "@types/express": "^5.0.1",
     "@types/node": "^22.20.5",
