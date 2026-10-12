@@ -38,7 +38,7 @@ const REMOTE_DATA: { match: RegExp; file: string }[] = [
   },
 ];
 
-/** 1x1 transparent PNG for remote images (marker photos), so they never hit the network. */
+/** 1x1 transparent PNG for remote images and raster tiles, so they never hit the network. */
 const PIXEL_PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
   'base64',
@@ -111,7 +111,11 @@ export const test = base.extend<{ network: NetworkState }>({
             body: readFileSync(join(FIXTURES_DIR, data.file)),
           });
         }
-        if (route.request().resourceType() === 'image') {
+        // Raster basemap tiles (the OpenStreetMap example on the basemaps page) and <img> sources.
+        if (
+          url.hostname === 'tile.openstreetmap.org' ||
+          route.request().resourceType() === 'image'
+        ) {
           return route.fulfill({ contentType: 'image/png', body: PIXEL_PNG });
         }
         blocked.push(`${route.request().method()} ${url.href}`);
