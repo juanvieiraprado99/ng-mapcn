@@ -91,7 +91,9 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "tsConfig": "projects/demo/tsconfig.spec.json"
+            "tsConfig": "projects/demo/tsconfig.spec.json",
+            "setupFiles": ["projects/demo/src/testing/setup.ts"],
+            "runnerConfig": "vitest.demo.config.mts"
           }
         }
       }

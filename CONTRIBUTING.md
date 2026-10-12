@@ -96,6 +96,14 @@ ng test ng-mapcn       # watch mode
 - jsdom has no layout, so `ng-map` would wait forever for a non-zero container size. Render maps with `renderMap` from `src/testing/render.ts`, which stubs the size, and use `loadMap` (with `vi.useFakeTimers()`) to open the load gate.
 - Restore global state in `afterEach`: real timers, `vi.restoreAllMocks()` and the `<html>` class.
 
+### Demo tests
+
+- Demo specs live next to the code under `projects/demo/src/app/`; helpers go in `projects/demo/src/testing/`. Run `npm run install:lib` first: the demo consumes the packed library, and any `npm install` / `npm ci` removes it.
+- The demo reuses the library's MapLibre fake: `projects/demo/src/testing/setup.ts` mocks `maplibre-gl` with `projects/ng-mapcn/src/testing/maplibre-fake.ts`, and stubs the jsdom gaps the pages need (`IntersectionObserver`, `matchMedia`, `scrollIntoView`).
+- `vitest.demo.config.mts` inlines `ng-mapcn`. The packaged library in `node_modules` is otherwise externalized and loads the real CommonJS `maplibre-gl`, which bypasses the mock.
+- `renderRoute(url)` renders a URL through the real route table (`app.routes.ts`) and returns the first `<h1>` and every `console.error`. Smoke tests assert the heading, the exact `document.title` and no errors.
+- Restore global state in `afterEach`: `localStorage.clear()`, the `<html>` class, `vi.restoreAllMocks()`, `vi.unstubAllGlobals()` and `TestBed.resetTestingModule()`, and remove any meta/link/script tags a test adds to `document.head`.
+
 ## Commits
 
 We use [Conventional Commits](https://www.conventionalcommits.org/). The GitHub Actions release workflow parses commit messages to generate categorized release notes, so clear messages produce informative releases.
