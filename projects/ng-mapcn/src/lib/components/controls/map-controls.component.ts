@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   type ElementRef,
   inject,
@@ -52,61 +53,62 @@ export class MapControlsComponent {
   // Hierarchical DI — throws when placed outside <ng-map>, like mapcn's useMap()
   private readonly ctx = inject(MapContextService);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
-
-  private readonly resolvedMap = computed<MapLibreMap | null>(() => this.ctx.map());
-
-  private rotateHandler?: () => void;
-  private pitchHandler?: () => void;
-  private fullscreenHandler?: () => void;
+  private destroyed = false;
 
   constructor() {
+    // Compass sync. Reading compassSvg() makes the effect re-run once the @if'd SVG renders.
     effect((onCleanup) => {
-      const map = this.resolvedMap();
-      if (!map) return;
+      const map = this.ctx.map();
+      if (!map || !this.showCompass()) return;
 
-      if (this.showCompass()) {
-        this.rotateHandler = () => this.syncCompass(map);
-        this.pitchHandler = () => this.syncCompass(map);
-        map.on('rotate', this.rotateHandler);
-        map.on('pitch', this.pitchHandler);
-        this.syncCompass(map);
-      }
-
-      if (this.isBrowser) {
-        this.fullscreenHandler = () => this.isFullscreen.set(!!document.fullscreenElement);
-        document.addEventListener('fullscreenchange', this.fullscreenHandler);
-      }
+      const sync = () => this.syncCompass(map);
+      map.on('rotate', sync);
+      map.on('pitch', sync);
+      sync();
 
       onCleanup(() => {
-        if (this.rotateHandler) map.off('rotate', this.rotateHandler);
-        if (this.pitchHandler) map.off('pitch', this.pitchHandler);
-        if (this.fullscreenHandler)
-          document.removeEventListener('fullscreenchange', this.fullscreenHandler!);
+        map.off('rotate', sync);
+        map.off('pitch', sync);
       });
     });
+
+    effect((onCleanup) => {
+      const map = this.ctx.map();
+      if (!map || !this.isBrowser) return;
+
+      // Only this map's container counts — another element in fullscreen is not "ours".
+      const onChange = () =>
+        this.isFullscreen.set(document.fullscreenElement === map.getContainer());
+      document.addEventListener('fullscreenchange', onChange);
+      onCleanup(() => document.removeEventListener('fullscreenchange', onChange));
+    });
+
+    inject(DestroyRef).onDestroy(() => (this.destroyed = true));
   }
 
   protected zoomIn(): void {
-    const map = this.resolvedMap();
+    const map = this.ctx.map();
     if (map) map.zoomTo(map.getZoom() + 1, { duration: 300 });
   }
 
   protected zoomOut(): void {
-    const map = this.resolvedMap();
+    const map = this.ctx.map();
     if (map) map.zoomTo(map.getZoom() - 1, { duration: 300 });
   }
 
   protected resetNorthPitch(): void {
-    const map = this.resolvedMap();
+    const map = this.ctx.map();
     if (map) map.resetNorthPitch({ duration: 300 });
   }
 
   protected locate(): void {
-    const map = this.resolvedMap();
-    if (!map || this.locating()) return;
+    const map = this.ctx.map();
+    // Geolocation is missing on the server and in insecure contexts.
+    if (!map || this.locating() || !this.isBrowser || !navigator.geolocation) return;
     this.locating.set(true);
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
+        if (this.destroyed) return;
         map.flyTo({
           center: [coords.longitude, coords.latitude],
           zoom: 14,
@@ -121,11 +123,14 @@ export class MapControlsComponent {
   }
 
   protected toggleFullscreen(): void {
-    if (!document.fullscreenElement) {
-      this.resolvedMap()?.getContainer().requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
+    const container = this.ctx.map()?.getContainer();
+    if (!container) return;
+    const request =
+      document.fullscreenElement === container
+        ? document.exitFullscreen()
+        : container.requestFullscreen();
+    // Rejected when the browser denies it (no user gesture, iframe without allowfullscreen).
+    Promise.resolve(request).catch(() => {});
   }
 
   private syncCompass(map: MapLibreMap): void {

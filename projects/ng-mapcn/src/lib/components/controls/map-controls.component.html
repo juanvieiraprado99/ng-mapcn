@@ -1,7 +1,13 @@
 <div class="ng-controls" [class]="positionClass()">
   <div class="ng-control-group">
     @if (showZoom()) {
-      <button class="ng-control-btn" type="button" title="Zoom in" (click)="zoomIn()">
+      <button
+        class="ng-control-btn"
+        type="button"
+        title="Zoom in"
+        aria-label="Zoom in"
+        (click)="zoomIn()"
+      >
         <svg
           viewBox="0 0 24 24"
           width="16"
@@ -19,6 +25,7 @@
         class="ng-control-btn ng-control-btn--divider"
         type="button"
         title="Zoom out"
+        aria-label="Zoom out"
         (click)="zoomOut()"
       >
         <svg
@@ -41,6 +48,7 @@
         [class.ng-control-btn--divider]="showZoom()"
         type="button"
         title="Reset north"
+        aria-label="Reset north"
         (click)="resetNorthPitch()"
       >
         <svg
@@ -65,6 +73,8 @@
         [disabled]="locating()"
         type="button"
         title="My location"
+        aria-label="My location"
+        [attr.aria-busy]="locating()"
         (click)="locate()"
       >
         @if (locating()) {
@@ -106,6 +116,8 @@
         [class.ng-control-btn--divider]="showZoom() || showCompass() || showLocate()"
         type="button"
         title="Toggle fullscreen"
+        aria-label="Toggle fullscreen"
+        [attr.aria-pressed]="isFullscreen()"
         (click)="toggleFullscreen()"
       >
         @if (isFullscreen()) {
