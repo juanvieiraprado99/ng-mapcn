@@ -224,7 +224,7 @@ Notes:
 
 ## Performance
 
-- **Lazy-load the map.** MapLibre is large: in the demo's production build its chunk is about 1 MB (≈285 KB gzipped), more than the demo's entire initial JavaScript (≈160 KB gzipped). Keep `ng-mapcn` out of your initial bundle with a lazy route (`loadComponent`) or `@defer (on viewport) { <ng-map>…</ng-map> }`.
+- **Lazy-load the map.** MapLibre is large: in the demo's production build its chunk is about 1 MB (≈285 KB gzipped), more than the demo's entire initial JavaScript (≈160 KB gzipped), and the first map also fetches the worker files (≈150 KB gzipped, on the worker thread, cached afterwards). Keep `ng-mapcn` out of your initial bundle with a lazy route (`loadComponent`) or `@defer (on viewport) { <ng-map>…</ng-map> }`.
 - **Many points → layers, not markers.** Each `<ng-map-marker>` is a DOM element with its own component; for hundreds of points use `<ng-map-cluster-layer>` or `<ng-map-geojson>`, which render on the GPU.
 - **Pass new references to update data.** Layer components push `[data]` / `[coordinates]` to MapLibre only when the reference changes; replace arrays and objects instead of mutating them.
 
