@@ -106,4 +106,75 @@ describe('MarkerContentComponent', () => {
     // The embedded view is destroyed, so its projected nodes are detached.
     expect(el.querySelector('.fresh')).toBeNull();
   });
+
+  describe('default icon follows the projected content (mapcn: children || DefaultMarkerIcon)', () => {
+    /** MutationObserver records are delivered in a microtask. */
+    const flushMutations = () => Promise.resolve();
+    const icons = () =>
+      fakeRegistry.markers[0].getElement().querySelectorAll('.ng-marker-default-icon').length;
+
+    async function renderConditional(hostProps: Record<string, unknown>, content: string) {
+      const result = await renderMap(
+        `<ng-map><ng-map-marker [longitude]="1" [latitude]="2">
+           <ng-marker-content>${content}</ng-marker-content>
+         </ng-map-marker></ng-map>`,
+        { imports: IMPORTS, hostProps },
+      );
+      await flushMutations();
+      return result;
+    }
+
+    it('removes the default icon when conditional content appears', async () => {
+      const { fixture } = await renderConditional(
+        { show: false },
+        '@if (show) { <span class="pin">PIN</span> }',
+      );
+      expect(icons()).toBe(1);
+
+      update(fixture, { show: true });
+      await flushMutations();
+
+      expect(icons()).toBe(0);
+    });
+
+    it('shows the default icon again when the content goes away', async () => {
+      const { fixture } = await renderConditional(
+        { show: true },
+        '@if (show) { <span class="pin">PIN</span> }',
+      );
+      expect(icons()).toBe(0);
+
+      update(fixture, { show: false });
+      await flushMutations();
+
+      expect(icons()).toBe(1);
+    });
+
+    it('treats empty interpolated text as no content', async () => {
+      const { fixture } = await renderConditional({ label: '' }, '{{ label }}');
+      expect(icons()).toBe(1);
+
+      update(fixture, { label: 'A' });
+      await flushMutations();
+      expect(icons()).toBe(0);
+
+      update(fixture, { label: '' });
+      await flushMutations();
+      expect(icons()).toBe(1);
+    });
+
+    it('stops observing on teardown', async () => {
+      const disconnect = vi.spyOn(MutationObserver.prototype, 'disconnect');
+      const { fixture } = await renderMap(
+        `<ng-map><ng-map-marker [longitude]="1" [latitude]="2">
+           @if (withContent) { <ng-marker-content /> }
+         </ng-map-marker></ng-map>`,
+        { imports: IMPORTS, hostProps: { withContent: true } },
+      );
+
+      update(fixture, { withContent: false });
+
+      expect(disconnect).toHaveBeenCalled();
+    });
+  });
 });

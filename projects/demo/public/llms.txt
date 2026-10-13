@@ -2,7 +2,7 @@
 
 > Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
 
-Version: 22.0.0-beta.2 · License: MIT · npm: https://www.npmjs.com/package/ng-mapcn
+Version: 22.0.0-beta.3 · License: MIT · npm: https://www.npmjs.com/package/ng-mapcn
 
 ## Overview
 
@@ -22,7 +22,7 @@ Docs pages: [Map](https://ng-mapcn.vercel.app/docs/components/map) · [Controls]
 - **Map** (`ng-map`): The root container component that initializes MapLibre GL and provides context to child components. Automatically handles theme switching between light and dark modes.
 - **MapControls** (`ng-map-controls`): Renders map control buttons: zoom, compass, locate, and fullscreen. Must be used inside ng-map.
 - **MapMarker** (`ng-map-marker`): A container for marker-related components. Provides context for its children and handles marker positioning.
-- **MarkerContent** (`ng-marker-content`): Renders the visual content of a marker via content projection. If left empty, a default blue dot is rendered. Must be used inside ng-map-marker.
+- **MarkerContent** (`ng-marker-content`): Renders the visual content of a marker via content projection. If left empty, a default blue dot is rendered; it follows conditional content (shown while nothing is projected). Must be used inside ng-map-marker.
 - **MarkerLabel** (`ng-marker-label`): An always-visible text label above or below the marker. Must be used inside ng-marker-content.
 - **MarkerPopup** (`ng-marker-popup`): A popup attached to the marker that opens on click. Must be used inside ng-map-marker.
 - **MarkerTooltip** (`ng-marker-tooltip`): A tooltip that appears on marker hover. Must be used inside ng-map-marker.

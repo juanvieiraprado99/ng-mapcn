@@ -79,7 +79,7 @@
       "id": "markercontent",
       "title": "MarkerContent",
       "selector": "ng-marker-content",
-      "description": "Renders the visual content of a marker via content projection. If left empty, a default blue dot is rendered. Must be used inside ng-map-marker.",
+      "description": "Renders the visual content of a marker via content projection. If left empty, a default blue dot is rendered; it follows conditional content (shown while nothing is projected). Must be used inside ng-map-marker.",
       "inputs": [],
       "outputs": []
     },
