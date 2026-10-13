@@ -165,7 +165,7 @@ A container for marker-related components. Provides context for its children and
 
 `ng-marker-content`
 
-Renders the visual content of a marker via content projection. If left empty, a default blue dot is rendered. Must be used inside ng-map-marker.
+Renders the visual content of a marker via content projection. If left empty, a default blue dot is rendered; it follows conditional content (shown while nothing is projected). Must be used inside ng-map-marker.
 
 ### MarkerLabel
 

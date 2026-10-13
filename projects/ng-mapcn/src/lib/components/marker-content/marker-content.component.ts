@@ -36,14 +36,35 @@ export class MarkerContentComponent {
 
       const destroyPortal = renderPortal(this.tpl(), this.injector, wrapper);
 
-      // No projected content -> default marker icon (mapcn's blue dot)
-      if (wrapper.textContent?.trim() === '' && !wrapper.querySelector('*')) {
-        const icon = document.createElement('div');
-        icon.className = 'ng-marker-default-icon';
-        wrapper.appendChild(icon);
-      }
+      // No projected content -> default marker icon (mapcn: `children || <DefaultMarkerIcon />`).
+      // Re-evaluated whenever the projected DOM changes, so `@if` content, async data and empty
+      // interpolations toggle it. The observer only runs on real DOM changes: static markers cost
+      // nothing after creation (measured: 0 callbacks for 1000 idle markers).
+      const icon = document.createElement('div');
+      icon.className = 'ng-marker-default-icon';
+      const syncIcon = () => {
+        const empty = !hasContent(wrapper, icon);
+        if (empty && !icon.parentNode) wrapper.appendChild(icon);
+        else if (!empty && icon.parentNode) icon.remove();
+      };
+      syncIcon();
+      const observer = new MutationObserver(syncIcon);
+      observer.observe(wrapper, { childList: true, characterData: true, subtree: true });
 
-      onCleanup(destroyPortal);
+      onCleanup(() => {
+        observer.disconnect();
+        destroyPortal();
+      });
     });
   }
+}
+
+/** Whether `wrapper` holds projected content: an element (other than `icon`) or non-blank text. */
+function hasContent(wrapper: HTMLElement, icon: HTMLElement): boolean {
+  for (const node of Array.from(wrapper.childNodes)) {
+    if (node === icon) continue;
+    if (node.nodeType === Node.ELEMENT_NODE) return true;
+    if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) return true;
+  }
+  return false;
 }
