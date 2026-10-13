@@ -18,6 +18,7 @@ import {
 } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
+import { syncLayerProperties } from '../../utils/layer-properties';
 import { addMapLayers } from '../../utils/layers';
 import {
   buildArcCoordinates,
@@ -131,6 +132,9 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
    * creation (e.g. an `id` already in use) they must not touch the layers of another owner.
    */
   private readonly created = signal(false);
+  /** Paint/layout keys set on the visible layer, so keys removed from the inputs get reset. */
+  private appliedPaintKeys: ReadonlySet<string> = new Set();
+  private appliedLayoutKeys: ReadonlySet<string> = new Set();
 
   constructor() {
     // Add source and layers once the map style is loaded; re-runs after theme setStyle.
@@ -210,12 +214,20 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
       const layerId = this.layerId();
       if (!map.getLayer(layerId)) return;
 
-      for (const [key, value] of Object.entries(mergedPaint)) {
-        map.setPaintProperty(layerId, key as keyof MapArcLinePaint, value as never);
-      }
-      for (const [key, value] of Object.entries(mergedLayout)) {
-        map.setLayoutProperty(layerId, key as keyof MapArcLineLayout, value as never);
-      }
+      this.appliedPaintKeys = syncLayerProperties(
+        map,
+        layerId,
+        'paint',
+        mergedPaint,
+        this.appliedPaintKeys,
+      );
+      this.appliedLayoutKeys = syncLayerProperties(
+        map,
+        layerId,
+        'layout',
+        mergedLayout,
+        this.appliedLayoutKeys,
+      );
       const hitLayerId = this.hitLayerId();
       if (map.getLayer(hitLayerId)) {
         map.setPaintProperty(hitLayerId, 'line-width', hitWidth);

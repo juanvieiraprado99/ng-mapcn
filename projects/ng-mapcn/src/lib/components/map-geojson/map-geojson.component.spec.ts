@@ -547,4 +547,36 @@ describe('MapGeoJSONComponent', () => {
       expect(map.getLayer('geojson-fill-dup')).toBeDefined();
     });
   });
+
+  describe('removed paint keys', () => {
+    it('resets a fill paint key that is no longer in fillPaint', async () => {
+      const { fixture, map } = await renderLoaded({
+        fillPaint: { 'fill-color': '#ff0000', 'fill-opacity': 0.3 },
+      });
+      expect(map.getLayer(FILL).paint['fill-opacity']).toBe(0.3);
+
+      update(fixture, { fillPaint: { 'fill-color': '#ff0000' } });
+
+      expect(map.getLayer(FILL).paint['fill-opacity']).toBeUndefined();
+      expect(map.getLayer(FILL).paint['fill-color']).toBe('#ff0000');
+    });
+
+    it('resets a line paint key that is no longer in linePaint', async () => {
+      const { fixture, map } = await renderLoaded({ linePaint: { 'line-opacity': 0.5 } });
+      expect(map.getLayer(LINE).paint['line-opacity']).toBe(0.5);
+
+      update(fixture, { linePaint: {} });
+
+      expect(map.getLayer(LINE).paint['line-opacity']).toBeUndefined();
+      expect(map.getLayer(LINE).paint['line-width']).toBe(0.5);
+    });
+
+    it('falls back to the default value for a removed key that has one', async () => {
+      const { fixture, map } = await renderLoaded({ fillPaint: { 'fill-color': '#ff0000' } });
+
+      update(fixture, { fillPaint: {} });
+
+      expect(map.getLayer(FILL).paint['fill-color']).toBe('#d4d4d4');
+    });
+  });
 });

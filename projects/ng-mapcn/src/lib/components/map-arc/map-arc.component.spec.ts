@@ -521,4 +521,26 @@ describe('MapArcComponent', () => {
       expect(map.getLayer('arc-layer-dup')).toBeDefined();
     });
   });
+
+  describe('removed paint/layout keys', () => {
+    it('resets a paint key that is no longer in paint', async () => {
+      const { fixture, map } = await renderLoaded({ paint: { 'line-blur': 4 } });
+      expect(map.getLayer(LINE).paint['line-blur']).toBe(4);
+
+      update(fixture, { paint: {} });
+
+      expect(map.getLayer(LINE).paint['line-blur']).toBeUndefined();
+      expect(map.getLayer(LINE).paint['line-width']).toBe(2);
+    });
+
+    it('resets a layout key that is no longer in layout', async () => {
+      const { fixture, map } = await renderLoaded({ layout: { 'line-miter-limit': 4 } });
+      expect(map.getLayer(LINE).layout['line-miter-limit']).toBe(4);
+
+      update(fixture, { layout: {} });
+
+      expect(map.getLayer(LINE).layout['line-miter-limit']).toBeUndefined();
+      expect(map.getLayer(LINE).layout['line-cap']).toBe('round');
+    });
+  });
 });
