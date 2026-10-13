@@ -22,7 +22,7 @@ Class `MapComponent`. Provides `MapContextService` to its children. Child conten
 
 | Output           | Payload                                                                                                                             |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `viewportChange` | `MapViewport` (fires on every `move` except programmatic viewport sync)                                                             |
+| `viewportChange` | `MapViewport` (fires on every `move` except programmatic viewport sync; enters the Angular zone only while something listens)       |
 | `mapReady`       | MapLibre `Map` (on `load`)                                                                                                          |
 | `mapClick`       | `MapMouseEvent`                                                                                                                     |
 | `mapError`       | `Error` (MapLibre errors, and layer components that fail to add their source or layer, e.g. a duplicate `id` or unknown `beforeId`) |
@@ -64,14 +64,14 @@ Class `MapMarkerComponent`. The MapLibre `Marker` is created once; inputs are di
 | `rotationAlignment` | `MarkerOptions['rotationAlignment']` | `'auto'`    |                                |
 | `pitchAlignment`    | `MarkerOptions['pitchAlignment']`    | `'auto'`    |                                |
 
-| Output             | Payload                                                                      |
-| ------------------ | ---------------------------------------------------------------------------- |
-| `markerClick`      | `MouseEvent`                                                                 |
-| `markerMouseEnter` | `MouseEvent`                                                                 |
-| `markerMouseLeave` | `MouseEvent`                                                                 |
-| `dragStart`        | `{ lng: number; lat: number }`                                               |
-| `drag`             | `{ lng: number; lat: number }` (per frame, emitted outside the Angular zone) |
-| `dragEnd`          | `{ lng: number; lat: number }`                                               |
+| Output             | Payload                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| `markerClick`      | `MouseEvent`                                                                                     |
+| `markerMouseEnter` | `MouseEvent`                                                                                     |
+| `markerMouseLeave` | `MouseEvent`                                                                                     |
+| `dragStart`        | `{ lng: number; lat: number }`                                                                   |
+| `drag`             | `{ lng: number; lat: number }` (per frame; enters the Angular zone only while something listens) |
+| `dragEnd`          | `{ lng: number; lat: number }`                                                                   |
 
 Method: `getMarker(): Marker | null`.
 

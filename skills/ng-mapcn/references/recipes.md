@@ -98,7 +98,7 @@ Omit `ng-marker-content` to get the default dot. Style the content however you l
 readonly pos = signal({ lng: -46.63, lat: -23.55 });
 ```
 
-`dragEnd` emits `{ lng, lat }`, which matches the signal shape. `drag` also fires per frame outside the Angular zone.
+`dragEnd` emits `{ lng, lat }`, which matches the signal shape. `drag` fires on every frame of the drag; in zone.js apps each emission runs change detection, so prefer `dragEnd` unless the UI must follow the drag live.
 
 ## Standalone popup
 
