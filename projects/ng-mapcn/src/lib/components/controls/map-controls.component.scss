@@ -20,8 +20,9 @@
     top: 10px;
     left: 10px;
   }
+  // Clears the compact attribution below it (10px margin + 26px button), like mapcn's bottom-10.
   &--bottom-right {
-    bottom: 32px;
+    bottom: 40px;
     right: 10px;
   }
   &--bottom-left {

@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures';
+import { expect, minimalStyle, test } from './fixtures';
 import { gotoAndWaitForMap, mapCall, waitForMap } from './map-helpers';
 
 test.describe('map', () => {
@@ -38,5 +38,35 @@ test.describe('map', () => {
     await expect
       .poll(() => mapCall(page, 0, (map) => map.getZoom()), { message: 'zoom after Zoom in' })
       .toBeGreaterThan(before);
+  });
+
+  test('bottom-right controls sit above the attribution', async ({ page }) => {
+    // The fixture basemap has no sources, so MapLibre renders no attribution: serve one whose
+    // (empty) source carries the Carto credit, used by a layer so the control lists it.
+    await page.route(/style\.json$|\/styles\/[^/]+$/, (route) => {
+      const style = minimalStyle(false);
+      return route.fulfill({
+        json: {
+          ...style,
+          sources: {
+            credits: {
+              type: 'geojson',
+              data: { type: 'FeatureCollection', features: [] },
+              attribution: '© CARTO, © OpenStreetMap contributors',
+            },
+          },
+          layers: [...style.layers, { id: 'credits', type: 'circle', source: 'credits' }],
+        },
+      });
+    });
+    // The installation example uses the default <ng-map-controls /> in a short (320px) container.
+    await gotoAndWaitForMap(page, '/docs/installation', 0);
+    const map = page.locator('ng-map').first();
+    const controls = await map.locator('.ng-controls').boundingBox();
+    const attribution = await map.locator('.maplibregl-ctrl-attrib').boundingBox();
+
+    expect(controls).not.toBeNull();
+    expect(attribution).not.toBeNull();
+    expect(controls!.y + controls!.height).toBeLessThanOrEqual(attribution!.y);
   });
 });
