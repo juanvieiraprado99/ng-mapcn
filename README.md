@@ -98,7 +98,7 @@ MapLibre GL v6 ships as ES modules and loads its web worker from `maplibre-gl-wo
 { "glob": "maplibre-gl-shared.mjs", "input": "node_modules/maplibre-gl/dist", "output": "/" }
 ```
 
-If you serve the files from somewhere else (a CDN, a `deployUrl`), call MapLibre's own `setWorkerUrl('https://…/maplibre-gl-worker.mjs')` once at startup. MapLibre v6 requires WebGL2: without it the `Map` constructor throws a `GPUInitializationError`, which `<ng-map>` emits through `(mapError)`.
+Bundlers cannot resolve MapLibre's default worker location (`import.meta.url`); under `ng serve` it points into Vite's prebundled deps and the console shows `Worker failed to load`. So, before creating the first map, `<ng-map>` points MapLibre at `maplibre-gl-worker.mjs` resolved against `<base href>`, which works in `ng serve` and production builds alike. If you serve the files from somewhere else (a CDN, a `deployUrl`), call MapLibre's own `setWorkerUrl('https://…/maplibre-gl-worker.mjs')` before the first map is created; `<ng-map>` keeps a URL you already set. MapLibre v6 requires WebGL2: without it the `Map` constructor throws a `GPUInitializationError`, which `<ng-map>` emits through `(mapError)`.
 
 ### 2. Add a map
 
