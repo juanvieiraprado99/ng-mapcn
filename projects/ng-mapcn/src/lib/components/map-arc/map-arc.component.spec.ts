@@ -463,4 +463,62 @@ describe('MapArcComponent', () => {
       expect(map.getSource(SOURCE).setData).not.toHaveBeenCalled();
     });
   });
+
+  describe('creation failures', () => {
+    const FAIL_TEMPLATE = `
+      <ng-map (mapError)="mapError($event)">
+        <ng-map-arc id="dup" [data]="data" [paint]="{ 'line-color': '#111111' }" />
+        @if (showSecond) {
+          <ng-map-arc [id]="secondId" [data]="data" [beforeId]="beforeId" [paint]="secondPaint" />
+        }
+      </ng-map>
+    `;
+
+    async function renderFailing(props: Record<string, unknown>) {
+      const host = {
+        data: [ARC_A],
+        showSecond: true,
+        secondId: 'dup',
+        beforeId: undefined,
+        secondPaint: { 'line-color': '#222222' },
+        mapError: vi.fn(),
+        ...props,
+      };
+      const result = await renderMap(FAIL_TEMPLATE, {
+        imports: [MapArcComponent],
+        hostProps: host,
+      });
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      return { ...result, map: result.map!, host };
+    }
+
+    it('reports an id collision through mapError and leaves the owner untouched', async () => {
+      const { fixture, map, host } = await renderFailing({});
+
+      expect(() => loadAndSettle(fixture, map)).not.toThrow();
+      expect(host.mapError).toHaveBeenCalledTimes(1);
+      expect(host.mapError.mock.calls[0][0].message).toContain('already exists');
+
+      update(fixture, { secondPaint: { 'line-color': '#333333' } });
+      expect(map.getLayer('arc-layer-dup').paint['line-color']).toBe('#111111');
+      expect(map.listenerCount('click', 'arc-hit-layer-dup')).toBe(1);
+
+      update(fixture, { showSecond: false });
+      expect(map.getSource('arc-source-dup')).toBeDefined();
+      expect(map.getLayer('arc-layer-dup')).toBeDefined();
+    });
+
+    it('removes what it added when a later step fails (unknown beforeId)', async () => {
+      const { fixture, map, host } = await renderFailing({
+        secondId: 'other',
+        beforeId: 'missing',
+      });
+
+      expect(() => loadAndSettle(fixture, map)).not.toThrow();
+      expect(host.mapError).toHaveBeenCalledTimes(1);
+      expect(map.getSource('arc-source-other')).toBeUndefined();
+      expect(map.getLayer('arc-hit-layer-other')).toBeUndefined();
+      expect(map.getLayer('arc-layer-dup')).toBeDefined();
+    });
+  });
 });

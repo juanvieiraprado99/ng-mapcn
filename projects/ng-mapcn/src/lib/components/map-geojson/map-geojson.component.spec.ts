@@ -478,4 +478,73 @@ describe('MapGeoJSONComponent', () => {
       expect(host['featureHover']).toHaveBeenCalledTimes(3);
     });
   });
+
+  describe('creation failures', () => {
+    const FAIL_TEMPLATE = `
+      <ng-map (mapError)="mapError($event)">
+        <ng-map-geojson id="dup" [data]="data" [fillPaint]="{ 'fill-color': '#111111' }" [interactive]="true" />
+        @if (showSecond) {
+          <ng-map-geojson
+            [id]="secondId"
+            [data]="secondData"
+            [beforeId]="beforeId"
+            [fillPaint]="secondPaint"
+            [interactive]="true"
+          />
+        }
+      </ng-map>
+    `;
+
+    async function renderFailing(props: Record<string, unknown>) {
+      const host = {
+        data: DATA,
+        secondData: DATA,
+        showSecond: true,
+        secondId: 'dup',
+        beforeId: undefined,
+        secondPaint: { 'fill-color': '#222222' },
+        mapError: vi.fn(),
+        ...props,
+      };
+      const result = await renderMap(FAIL_TEMPLATE, {
+        imports: [MapGeoJSONComponent],
+        hostProps: host,
+      });
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      return { ...result, map: result.map!, host };
+    }
+
+    it('reports an id collision through mapError and leaves the owner untouched', async () => {
+      const { fixture, map, host } = await renderFailing({});
+
+      expect(() => loadAndSettle(fixture, map)).not.toThrow();
+      expect(host.mapError).toHaveBeenCalledTimes(1);
+      expect(host.mapError.mock.calls[0][0].message).toContain('already exists');
+
+      const ownSource = map.getSource('geojson-source-dup');
+      update(fixture, {
+        secondPaint: { 'fill-color': '#333333' },
+        secondData: { type: 'FeatureCollection', features: [] },
+      });
+      expect(map.getLayer('geojson-fill-dup').paint['fill-color']).toBe('#111111');
+      expect(ownSource.setData).not.toHaveBeenCalled();
+      expect(map.listenerCount('click', 'geojson-fill-dup')).toBe(1);
+
+      update(fixture, { showSecond: false });
+      expect(map.getSource('geojson-source-dup')).toBeDefined();
+      expect(map.getLayer('geojson-fill-dup')).toBeDefined();
+    });
+
+    it('reports a layer that cannot be added (unknown beforeId) without throwing', async () => {
+      const { fixture, map, host } = await renderFailing({
+        secondId: 'other',
+        beforeId: 'missing',
+      });
+
+      expect(() => loadAndSettle(fixture, map)).not.toThrow();
+      expect(host.mapError).toHaveBeenCalled();
+      expect(map.getLayer('geojson-fill-other')).toBeUndefined();
+      expect(map.getLayer('geojson-fill-dup')).toBeDefined();
+    });
+  });
 });

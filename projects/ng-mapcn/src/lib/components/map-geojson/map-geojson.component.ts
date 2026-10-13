@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import type * as GeoJSON from 'geojson';
 import {
+  type AddLayerObject,
   type FillLayerSpecification,
   type GeoJSONSource,
   type LineLayerSpecification,
@@ -19,6 +20,7 @@ import {
 } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
+import { addMapLayers } from '../../utils/layers';
 import { type MapGeoJSONEvent, mergeHoverPaint, nextId } from '../../utils/map-utils';
 
 export type MapGeoJSONData =
@@ -84,6 +86,11 @@ export class MapGeoJSONComponent {
   private readonly sourceRevision = signal(0);
   /** Data currently in the source, so re-runs of the data effect skip a no-op setData. */
   private appliedData: MapGeoJSONData | null = null;
+  /**
+   * Whether this component's own source exists. Gates the other effects: after a failed creation
+   * (e.g. an `id` already in use) they must not touch the source/layers of another owner.
+   */
+  private readonly created = signal(false);
 
   private readonly mergedFillPaint = computed<MapFillPaint>(() => {
     const defaults = GEOJSON_DEFAULT_COLORS[this.ctx.resolvedTheme()];
@@ -114,31 +121,41 @@ export class MapGeoJSONComponent {
       const promoteId = this.promoteId();
 
       const data = untracked(() => this.data());
-      map.addSource(sourceId, {
-        type: 'geojson',
-        // Untracked: data changes go through setData below, never a source re-create.
-        data: data as never,
-        ...(promoteId ? { promoteId } : {}),
-      });
+      const teardown = addMapLayers(
+        map,
+        (b) =>
+          b.addSource(sourceId, {
+            type: 'geojson',
+            // Untracked: data changes go through setData below, never a source re-create.
+            data: data as never,
+            ...(promoteId ? { promoteId } : {}),
+          }),
+        (error) => this.ctx.reportError(error),
+      );
+      if (!teardown) return;
       this.appliedData = data;
+      this.created.set(true);
       // The cleanup of a previous run removed the layers with the old source.
       this.sourceRevision.update((r) => r + 1);
 
       onCleanup(() => {
-        try {
-          if (map.getLayer(lineLayerId)) map.removeLayer(lineLayerId);
-          if (map.getLayer(fillLayerId)) map.removeLayer(fillLayerId);
-          if (map.getSource(sourceId)) map.removeSource(sourceId);
-        } catch {
-          // style may be mid-reload
+        this.created.set(false);
+        // The layers (added by the effect below) go first: a source in use cannot be removed.
+        for (const id of [lineLayerId, fillLayerId]) {
+          try {
+            if (map.getLayer(id)) map.removeLayer(id);
+          } catch {
+            // style may be mid-reload
+          }
         }
+        teardown();
       });
     });
 
     // Sync data when it changes.
     effect(() => {
       const data = this.data();
-      if (!this.ctx.isLoaded()) return;
+      if (!this.created()) return;
       const map = this.ctx.map();
       if (!map) return;
       const source = map.getSource(this.sourceId()) as GeoJSONSource | undefined;
@@ -150,13 +167,12 @@ export class MapGeoJSONComponent {
 
     // Sync layers and paint when visibility or styling changes.
     effect(() => {
-      if (!this.ctx.isLoaded()) return;
+      if (!this.created()) return;
       const map = this.ctx.map();
       if (!map) return;
 
       this.sourceRevision();
       const sourceId = this.sourceId();
-      if (!map.getSource(sourceId)) return;
 
       const fillLayerId = this.fillLayerId();
       const lineLayerId = this.lineLayerId();
@@ -166,20 +182,23 @@ export class MapGeoJSONComponent {
       const mergedLinePaint = this.mergedLinePaint();
       const beforeId = this.beforeId();
 
+      // Reported, not thrown: an exception escaping an effect aborts change detection.
+      const addLayer = (layer: AddLayerObject) => {
+        try {
+          map.addLayer(layer, beforeId);
+        } catch (error) {
+          this.ctx.reportError(error);
+        }
+      };
+
       if (showFill && !map.getLayer(fillLayerId)) {
-        map.addLayer(
-          { id: fillLayerId, type: 'fill', source: sourceId, paint: mergedFillPaint },
-          beforeId,
-        );
+        addLayer({ id: fillLayerId, type: 'fill', source: sourceId, paint: mergedFillPaint });
       } else if (!showFill && map.getLayer(fillLayerId)) {
         map.removeLayer(fillLayerId);
       }
 
       if (showLine && !map.getLayer(lineLayerId)) {
-        map.addLayer(
-          { id: lineLayerId, type: 'line', source: sourceId, paint: mergedLinePaint },
-          beforeId,
-        );
+        addLayer({ id: lineLayerId, type: 'line', source: sourceId, paint: mergedLinePaint });
       } else if (!showLine && map.getLayer(lineLayerId)) {
         map.removeLayer(lineLayerId);
       }
@@ -198,7 +217,7 @@ export class MapGeoJSONComponent {
 
     // Interaction handlers (bound to the fill layer).
     effect((onCleanup) => {
-      if (!this.ctx.isLoaded()) return;
+      if (!this.created()) return;
       const map = this.ctx.map();
       if (!map) return;
       if (!this.interactive() || this.fillPaint() === false) return;

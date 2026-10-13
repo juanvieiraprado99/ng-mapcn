@@ -7,6 +7,7 @@ import {
   input,
   NgZone,
   output,
+  signal,
   untracked,
 } from '@angular/core';
 import type * as GeoJSON from 'geojson';
@@ -17,6 +18,7 @@ import {
 } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
+import { addMapLayers } from '../../utils/layers';
 import {
   buildArcCoordinates,
   type MapArcDatum,
@@ -124,6 +126,11 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
   );
   /** Data currently in the source, so re-runs of the data effect skip a no-op setData. */
   private appliedData: GeoJSON.FeatureCollection<GeoJSON.LineString> | null = null;
+  /**
+   * Whether this component's own source and layers exist. Gates the sync effects: after a failed
+   * creation (e.g. an `id` already in use) they must not touch the layers of another owner.
+   */
+  private readonly created = signal(false);
 
   constructor() {
     // Add source and layers once the map style is loaded; re-runs after theme setStyle.
@@ -138,50 +145,51 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
       const beforeId = untracked(() => this.beforeId());
 
       const data = untracked(() => this.geoJSON());
-      map.addSource(sourceId, { type: 'geojson', data, promoteId: 'id' });
+      const teardown = addMapLayers(
+        map,
+        (b) => {
+          b.addSource(sourceId, { type: 'geojson', data, promoteId: 'id' });
+          b.addLayer(
+            {
+              id: hitLayerId,
+              type: 'line',
+              source: sourceId,
+              layout: DEFAULT_ARC_LAYOUT,
+              paint: {
+                'line-color': 'rgba(0, 0, 0, 0)',
+                'line-width': untracked(() => this.hitWidth()),
+                'line-opacity': 1,
+              },
+            },
+            beforeId,
+          );
+          b.addLayer(
+            {
+              id: layerId,
+              type: 'line',
+              source: sourceId,
+              layout: untracked(() => this.mergedLayout()),
+              paint: untracked(() => this.mergedPaint()),
+            },
+            beforeId,
+          );
+        },
+        (error) => this.ctx.reportError(error),
+      );
+      if (!teardown) return;
       this.appliedData = data;
-
-      map.addLayer(
-        {
-          id: hitLayerId,
-          type: 'line',
-          source: sourceId,
-          layout: DEFAULT_ARC_LAYOUT,
-          paint: {
-            'line-color': 'rgba(0, 0, 0, 0)',
-            'line-width': untracked(() => this.hitWidth()),
-            'line-opacity': 1,
-          },
-        },
-        beforeId,
-      );
-
-      map.addLayer(
-        {
-          id: layerId,
-          type: 'line',
-          source: sourceId,
-          layout: untracked(() => this.mergedLayout()),
-          paint: untracked(() => this.mergedPaint()),
-        },
-        beforeId,
-      );
+      this.created.set(true);
 
       onCleanup(() => {
-        try {
-          if (map.getLayer(layerId)) map.removeLayer(layerId);
-          if (map.getLayer(hitLayerId)) map.removeLayer(hitLayerId);
-          if (map.getSource(sourceId)) map.removeSource(sourceId);
-        } catch {
-          // style may be mid-reload
-        }
+        this.created.set(false);
+        teardown();
       });
     });
 
     // Sync features when data / curvature / samples change.
     effect(() => {
       const geoJSON = this.geoJSON();
-      if (!this.ctx.isLoaded()) return;
+      if (!this.created()) return;
       const map = this.ctx.map();
       if (!map) return;
       const source = map.getSource(this.sourceId()) as GeoJSONSource | undefined;
@@ -196,7 +204,7 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
       const mergedPaint = this.mergedPaint();
       const mergedLayout = this.mergedLayout();
       const hitWidth = this.hitWidth();
-      if (!this.ctx.isLoaded()) return;
+      if (!this.created()) return;
       const map = this.ctx.map();
       if (!map) return;
       const layerId = this.layerId();
@@ -216,7 +224,7 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
 
     // Interaction handlers (bound to the invisible hit layer).
     effect((onCleanup) => {
-      if (!this.ctx.isLoaded()) return;
+      if (!this.created()) return;
       const map = this.ctx.map();
       if (!map || !this.interactive()) return;
 

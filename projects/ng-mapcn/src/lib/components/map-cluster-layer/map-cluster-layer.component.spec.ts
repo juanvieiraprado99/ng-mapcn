@@ -487,4 +487,27 @@ describe('MapClusterLayerComponent', () => {
       expect(map.easeTo).not.toHaveBeenCalled();
     });
   });
+
+  describe('creation failures', () => {
+    it('reports a failed layer through mapError and removes what it added', async () => {
+      const host = { ...hostDefaults(), mapError: vi.fn() };
+      const result = await renderMap(
+        `<ng-map (mapError)="mapError($event)"><ng-map-cluster-layer [data]="data" /></ng-map>`,
+        { imports: [MapClusterLayerComponent], hostProps: host },
+      );
+      const map = result.map!;
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const addLayer = map.addLayer.bind(map);
+      vi.spyOn(map, 'addLayer').mockImplementation((layer: any, beforeId?: string) => {
+        if (layer.type === 'symbol') throw new Error('invalid text-font');
+        return addLayer(layer, beforeId);
+      });
+
+      expect(() => loadAndSettle(result.fixture, map)).not.toThrow();
+      expect(host.mapError).toHaveBeenCalledTimes(1);
+      expect(host.mapError.mock.calls[0][0].message).toBe('invalid text-font');
+      expect(map.getLayerOrder()).toEqual([]);
+      expect(Object.keys(map.getStyle().sources)).toEqual([]);
+    });
+  });
 });
