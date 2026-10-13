@@ -8,7 +8,9 @@ import {
   output,
   untracked,
 } from '@angular/core';
+import { outputFromObservable } from '@angular/core/rxjs-interop';
 import { Marker, type MarkerOptions, Point, type PointLike } from 'maplibre-gl';
+import { Subject } from 'rxjs';
 
 import { MapContextService } from '../../services/map-context.service';
 import { MarkerContextService } from './marker-context.service';
@@ -34,8 +36,9 @@ export class MapMarkerComponent {
   readonly markerMouseEnter = output<MouseEvent>();
   readonly markerMouseLeave = output<MouseEvent>();
   readonly dragStart = output<{ lng: number; lat: number }>();
-  // eslint-disable-next-line @angular-eslint/no-output-native -- public API (mapcn parity); renaming is breaking
-  readonly drag = output<{ lng: number; lat: number }>();
+  private readonly drag$ = new Subject<{ lng: number; lat: number }>();
+  /** Emits on every frame of a drag; backed by a Subject so idle drags skip the zone (`observed`). */
+  readonly drag = outputFromObservable(this.drag$);
   readonly dragEnd = output<{ lng: number; lat: number }>();
 
   private readonly mapCtx = inject(MapContextService);
@@ -60,8 +63,8 @@ export class MapMarkerComponent {
       const pitchAlignment = untracked(() => this.pitchAlignment());
 
       const el = document.createElement('div');
-      // Creation and listener registration outside the zone; low-frequency
-      // events re-enter via zone.run, `drag` (per-frame) stays outside.
+      // Creation and listener registration outside the zone; events re-enter via zone.run —
+      // `drag` (per-frame) only when someone listens.
       const marker = this.zone.runOutsideAngular(() => {
         const m = new Marker({
           element: el,
@@ -90,8 +93,9 @@ export class MapMarkerComponent {
           this.zone.run(() => this.dragStart.emit({ lng: ll.lng, lat: ll.lat }));
         });
         m.on('drag', () => {
+          if (!this.drag$.observed) return;
           const ll = m.getLngLat();
-          this.drag.emit({ lng: ll.lng, lat: ll.lat });
+          this.zone.run(() => this.drag$.next({ lng: ll.lng, lat: ll.lat }));
         });
         m.on('dragend', () => {
           const ll = m.getLngLat();

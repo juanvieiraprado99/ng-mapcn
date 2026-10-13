@@ -15,6 +15,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { outputFromObservable } from '@angular/core/rxjs-interop';
 import {
   getWorkerUrl,
   Map as MapLibreMap,
@@ -24,6 +25,7 @@ import {
   setWorkerUrl,
   type StyleSpecification,
 } from 'maplibre-gl';
+import { Subject } from 'rxjs';
 
 import { MAP_DEFAULT_STYLES } from '../../providers/map-styles.provider';
 import { MapContextService } from '../../services/map-context.service';
@@ -63,7 +65,12 @@ export class MapComponent {
   readonly options = input<Omit<MapOptions, 'container' | 'style'>>();
 
   // Outputs
-  readonly viewportChange = output<MapViewport>();
+  private readonly viewportChange$ = new Subject<MapViewport>();
+  /**
+   * Emits on every camera frame while the map moves. Backed by a Subject so the per-frame
+   * `move` handler can tell whether anyone listens (`observed`) before doing any work.
+   */
+  readonly viewportChange = outputFromObservable(this.viewportChange$);
   readonly mapReady = output<MapLibreMap>();
   readonly mapClick = output<MapMouseEvent>();
   readonly mapError = output<Error>();
@@ -222,11 +229,13 @@ export class MapComponent {
           this.ctx.setStyleLoadedFlag(false);
         });
 
-        // Fires every frame during pan/zoom — stays outside the zone; signal
-        // consumers still update, and zone apps avoid a CD storm.
+        // Fires once per frame during pan/zoom. Re-entering the zone costs one change detection per
+        // frame in zone.js apps (a no-op call in zoneless apps), so it happens only when someone
+        // listens — which needs it anyway to render the live value.
         m.on('move', () => {
-          if (this.internalUpdate) return;
-          this.viewportChange.emit(getViewport(m));
+          if (this.internalUpdate || !this.viewportChange$.observed) return;
+          const viewport = getViewport(m);
+          this.zone.run(() => this.viewportChange$.next(viewport));
         });
 
         m.on('click', (e) => this.zone.run(() => this.mapClick.emit(e)));
