@@ -1,10 +1,14 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideArrowRight } from '@ng-icons/lucide';
 
+import { BrandMarkComponent } from '@/layout/brand-mark';
 import { FooterComponent } from '@/layout/footer';
 import { AgentPromptComponent } from '@/shared/agent-prompt';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { PageHeaderImports } from '@/shared/page-header';
+import { GITHUB_URL } from '@/shared/site-navigation';
 
 import { AnalyticsExampleComponent } from './examples/analytics-example';
 import { ArcExampleComponent } from './examples/arc-example';
@@ -18,7 +22,9 @@ import { TrailExampleComponent } from './examples/trail-example';
   standalone: true,
   imports: [
     RouterLink,
+    NgIcon,
     ZardButtonComponent,
+    BrandMarkComponent,
     PageHeaderImports,
     AgentPromptComponent,
     FooterComponent,
@@ -29,9 +35,21 @@ import { TrailExampleComponent } from './examples/trail-example';
     FlytoExampleComponent,
     DeliveryExampleComponent,
   ],
+  viewProviders: [provideIcons({ lucideArrowRight })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-page-header>
+      <a
+        [href]="releasesUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="animate-fade-up animate-stagger bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground mb-2 inline-flex items-center gap-2 rounded-full border py-1 pr-3 pl-1 text-xs font-medium transition-colors"
+        style="--stagger: 0"
+      >
+        <app-brand-mark class="size-5" />
+        Now on MapLibre GL v6
+        <ng-icon name="lucideArrowRight" size="12" aria-hidden="true" />
+      </a>
       <app-page-header-heading>Beautiful maps, made simple</app-page-header-heading>
       <app-page-header-description>
         Ready to use, customizable map components for Angular.
@@ -104,6 +122,8 @@ import { TrailExampleComponent } from './examples/trail-example';
   `,
 })
 export class HomeComponent {
+  protected readonly releasesUrl = `${GITHUB_URL}/releases`;
+
   // Same grid footprint as the cards they stand in for, so nothing shifts when
   // the real example loads.
   private readonly placeholderBase = 'bg-card border-border/50 rounded-xl border shadow-sm';

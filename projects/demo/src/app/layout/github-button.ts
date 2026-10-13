@@ -1,9 +1,24 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+} from '@angular/core';
 
 import { ZardButtonComponent } from '@/shared/components/button';
-import { GITHUB_URL } from '@/shared/site-navigation';
+import { GITHUB_REPO, GITHUB_URL } from '@/shared/site-navigation';
 
-/** Icon-only link to the GitHub repository (no star count fetch). */
+const CACHE_KEY = 'ng-mapcn:github-stars';
+const CACHE_TTL_MS = 60 * 60 * 1000;
+const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+
+/**
+ * Link to the GitHub repository with its star count. The count is fetched in
+ * the browser only (the site is prerendered) and cached per session, since the
+ * unauthenticated GitHub API allows 60 requests an hour per IP. On any failure
+ * the button simply stays icon-only.
+ */
 @Component({
   selector: 'app-github-button',
   standalone: true,
@@ -17,7 +32,7 @@ import { GITHUB_URL } from '@/shared/site-navigation';
       [href]="url"
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="GitHub repository"
+      [attr.aria-label]="label()"
     >
       <svg viewBox="0 0 1024 1024" fill="currentColor" class="size-4" aria-hidden="true">
         <path
@@ -27,9 +42,69 @@ import { GITHUB_URL } from '@/shared/site-navigation';
           transform="scale(64)"
         />
       </svg>
+      @if (starsText(); as text) {
+        <span
+          class="animate-in fade-in-0 text-muted-foreground text-xs tabular-nums duration-300"
+          aria-hidden="true"
+          >{{ text }}</span
+        >
+      }
     </a>
   `,
 })
 export class GithubButtonComponent {
   protected readonly url = GITHUB_URL;
+  private readonly stars = signal<number | null>(null);
+
+  protected readonly starsText = computed(() => {
+    const stars = this.stars();
+    return stars === null ? null : compact.format(stars).toLowerCase();
+  });
+  protected readonly label = computed(() => {
+    const stars = this.stars();
+    return stars === null ? 'GitHub repository' : `GitHub repository, ${stars} stars`;
+  });
+
+  constructor() {
+    afterNextRender(() => void this.load());
+  }
+
+  private async load(): Promise<void> {
+    const cached = readCache();
+    if (cached !== null) {
+      this.stars.set(cached);
+      return;
+    }
+    try {
+      const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`, {
+        headers: { Accept: 'application/vnd.github+json' },
+      });
+      if (!response.ok) return;
+      const { stargazers_count: count } = (await response.json()) as { stargazers_count?: unknown };
+      if (typeof count !== 'number') return;
+      this.stars.set(count);
+      writeCache(count);
+    } catch {
+      // Offline or rate-limited: keep the icon-only button.
+    }
+  }
+}
+
+function readCache(): number | null {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { count, at } = JSON.parse(raw) as { count: unknown; at: number };
+    return typeof count === 'number' && Date.now() - at < CACHE_TTL_MS ? count : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(count: number): void {
+  try {
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ count, at: Date.now() }));
+  } catch {
+    // Storage blocked: the next page load just fetches again.
+  }
 }

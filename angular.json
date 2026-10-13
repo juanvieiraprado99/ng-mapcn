@@ -85,6 +85,11 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "prebundle": {
+              "exclude": ["ng-mapcn", "maplibre-gl"]
+            }
+          },
           "configurations": {
             "production": {
               "buildTarget": "demo:build:production"

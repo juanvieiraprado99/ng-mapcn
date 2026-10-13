@@ -71,4 +71,6 @@ export function docsNeighbours(href: string): {
   return { prev: docsOrder[index - 1], next: docsOrder[index + 1] };
 }
 
-export const GITHUB_URL = 'https://github.com/juanvieiraprado99/ng-mapcn';
+/** `owner/name`, for the GitHub REST API. */
+export const GITHUB_REPO = 'juanvieiraprado99/ng-mapcn';
+export const GITHUB_URL = `https://github.com/${GITHUB_REPO}`;

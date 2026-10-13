@@ -84,7 +84,16 @@ interface FooterLink {
         </div>
 
         <div class="mt-12 border-t pt-6">
-          <p class="text-muted-foreground text-xs">© {{ year }} ng-mapcn. All rights reserved.</p>
+          <p class="text-muted-foreground text-xs">
+            © {{ year }} ng-mapcn. Released under the
+            <a
+              [href]="githubUrl + '/blob/main/LICENSE'"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="hover:text-foreground underline underline-offset-4 transition-colors"
+              >MIT License</a
+            >.
+          </p>
         </div>
       </div>
     </footer>
