@@ -205,6 +205,14 @@ export class Map extends Evented {
     return this;
   });
 
+  /** The style as MapLibre serializes it; specs stub `basemapLayers` to emulate the basemap's own layers. */
+  basemapLayers: any[] = [];
+  getStyle = vi.fn(() => ({
+    version: 8,
+    sources: this.sources,
+    layers: [...this.basemapLayers, ...this.layers],
+  }));
+
   /** The requested style arrives: every source and layer is dropped, then `style.load` + `styledata`. */
   finishStyleLoad(): void {
     this.calls.push('styleLoaded');

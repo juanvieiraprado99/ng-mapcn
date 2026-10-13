@@ -188,6 +188,61 @@ describe('MapClusterLayerComponent', () => {
     });
   });
 
+  describe('count label font', () => {
+    async function countFontWith(basemapLayers: any[]) {
+      const result = await render();
+      result.map.basemapLayers = basemapLayers;
+      loadAndSettle(result.fixture, result.map);
+      return result.map.getLayer(idsOf(result.map).count).layout['text-font'];
+    }
+
+    it("reuses the basemap's own font so its glyph server can serve it", async () => {
+      const font = await countFontWith([
+        { id: 'water', type: 'fill' },
+        {
+          id: 'place',
+          type: 'symbol',
+          layout: { 'text-font': ['Montserrat Medium', 'Noto Sans Regular'] },
+        },
+      ]);
+
+      expect(font).toEqual(['Montserrat Medium', 'Noto Sans Regular']);
+    });
+
+    it('prefers an upright font over the italic one water labels use', async () => {
+      const font = await countFontWith([
+        { id: 'water-name', type: 'symbol', layout: { 'text-font': ['Montserrat Medium Italic'] } },
+        { id: 'place', type: 'symbol', layout: { 'text-font': ['Montserrat Medium'] } },
+      ]);
+
+      expect(font).toEqual(['Montserrat Medium']);
+    });
+
+    it('uses an italic font when it is the only one', async () => {
+      const font = await countFontWith([
+        { id: 'water-name', type: 'symbol', layout: { 'text-font': ['Noto Sans Italic'] } },
+      ]);
+
+      expect(font).toEqual(['Noto Sans Italic']);
+    });
+
+    it('unwraps a literal expression', async () => {
+      const font = await countFontWith([
+        { id: 'place', type: 'symbol', layout: { 'text-font': ['literal', ['Stadia Bold']] } },
+      ]);
+
+      expect(font).toEqual(['Stadia Bold']);
+    });
+
+    it('falls back to Noto Sans Regular when no basemap font is a literal', async () => {
+      const font = await countFontWith([
+        { id: 'place', type: 'symbol', layout: { 'text-font': ['get', 'font'] } },
+      ]);
+
+      expect(font).toEqual(['Noto Sans Regular']);
+    });
+  });
+
   describe('reconcile, do not recreate (invariant 2)', () => {
     it('updates colors, thresholds and pointColor through setPaintProperty only', async () => {
       const { fixture, map, ids } = await renderLoaded();
