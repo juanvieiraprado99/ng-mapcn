@@ -90,20 +90,22 @@ Must be placed inside `<ng-map-marker>`.
 
 ## ng-map-popup
 
-Class `MapPopupComponent`. Standalone popup at coordinates, opened on creation.
+Class `MapPopupComponent`. Standalone popup at coordinates, opened on creation (unless `open` is `false`).
 
-| Input          | Type      | Default  | Notes                  |
-| -------------- | --------- | -------- | ---------------------- |
-| `longitude`    | `number`  | required |                        |
-| `latitude`     | `number`  | required |                        |
-| `closeButton`  | `boolean` | `false`  | Library-drawn X button |
-| `offset`       | `Offset`  | `16`     |                        |
-| `maxWidth`     | `string`  | `'none'` |                        |
-| `closeOnClick` | `boolean` | `true`   | Creation only          |
+| Input          | Type                | Default  | Notes                                                                                                                         |
+| -------------- | ------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `longitude`    | `number`            | required |                                                                                                                               |
+| `latitude`     | `number`            | required |                                                                                                                               |
+| `closeButton`  | `boolean`           | `false`  | Library-drawn X button                                                                                                        |
+| `offset`       | `Offset`            | `16`     |                                                                                                                               |
+| `maxWidth`     | `string`            | `'none'` |                                                                                                                               |
+| `closeOnClick` | `boolean`           | `true`   | Creation only. Set `false` for hover popups                                                                                   |
+| `open`         | `boolean` (`model`) | `true`   | `[(open)]`: closing writes `false`, `true` reopens the same popup. A closed popup stays closed when only the position changes |
 
-| Output       | Payload |
-| ------------ | ------- |
-| `popupClose` | `void`  |
+| Output       | Payload                                      |
+| ------------ | -------------------------------------------- |
+| `popupClose` | `void` (user close or `open` set to `false`) |
+| `openChange` | `boolean` (the `[(open)]` binding)           |
 
 ## ng-map-route
 

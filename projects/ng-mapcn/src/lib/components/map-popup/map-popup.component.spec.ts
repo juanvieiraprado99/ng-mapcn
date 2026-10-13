@@ -244,5 +244,85 @@ describe('MapPopupComponent', () => {
       const { fixture } = await render();
       expect(() => fixture.destroy()).not.toThrow();
     });
+
+    it('does not report the teardown as a close (no emit on destroyed outputs)', async () => {
+      const { fixture, host } = await render();
+      const warn = vi.spyOn(console, 'warn');
+
+      update(fixture, { show: false });
+
+      expect(host['popupClose']).not.toHaveBeenCalled();
+      expect(warn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('open (two-way)', () => {
+    const OPEN_TEMPLATE = `
+      <ng-map>
+        <ng-map-popup [longitude]="lng" [latitude]="lat" [(open)]="open" (popupClose)="popupClose()">
+          <p class="body">Popup body</p>
+        </ng-map-popup>
+      </ng-map>
+    `;
+
+    async function renderOpen(open: boolean) {
+      const host: Record<string, any> = { lng: 10, lat: 20, open, popupClose: vi.fn() };
+      const result = await renderMap(OPEN_TEMPLATE, {
+        imports: [MapPopupComponent],
+        hostProps: host,
+      });
+      result.fixture.detectChanges();
+      return { ...result, host: result.fixture.componentInstance as Record<string, any> };
+    }
+
+    it('writes false back when the popup is closed by the map or the close button', async () => {
+      const { fixture, host } = await renderOpen(true);
+
+      fakeRegistry.popups[0].remove();
+      fixture.detectChanges();
+
+      expect(host['open']).toBe(false);
+      expect(host['popupClose']).toHaveBeenCalledTimes(1);
+    });
+
+    it('re-opens the same popup instance when open becomes true again', async () => {
+      const { fixture } = await renderOpen(true);
+      fakeRegistry.popups[0].remove();
+      fixture.detectChanges();
+
+      update(fixture, { open: true, lng: 30 });
+
+      expect(fakeRegistry.popups).toHaveLength(1);
+      expect(fakeRegistry.popups[0].isOpen()).toBe(true);
+      expect(fakeRegistry.popups[0].getLngLat()).toEqual({ lng: 30, lat: 20 });
+    });
+
+    it('closes the popup when open is set to false', async () => {
+      const { fixture, host } = await renderOpen(true);
+
+      update(fixture, { open: false });
+
+      expect(fakeRegistry.popups[0].isOpen()).toBe(false);
+      expect(host['popupClose']).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not show the popup while open starts as false', async () => {
+      const { fixture } = await renderOpen(false);
+      expect(fakeRegistry.popups[0].isOpen()).toBe(false);
+
+      update(fixture, { open: true });
+
+      expect(fakeRegistry.popups[0].isOpen()).toBe(true);
+    });
+
+    it('stays closed when only the position changes (mapcn parity)', async () => {
+      const { fixture } = await renderOpen(true);
+      fakeRegistry.popups[0].remove();
+      fixture.detectChanges();
+
+      update(fixture, { lng: 40 });
+
+      expect(fakeRegistry.popups[0].isOpen()).toBe(false);
+    });
   });
 });

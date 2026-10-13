@@ -2,7 +2,7 @@
 
 > Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
 
-Version: 22.0.0-beta.2 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
+Version: 22.0.0-beta.3 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
 
 ## Installation
 
@@ -219,13 +219,15 @@ A standalone popup component that can be placed anywhere on the map without a ma
 | `closeButton` | `boolean` | `false` | Shows a close button in the popup. |
 | `offset` | `Offset` | `16` | Pixel offset of the popup. |
 | `maxWidth` | `string` | `'none'` | CSS max-width of the popup container. |
-| `closeOnClick` | `boolean` | `true` | Closes the popup when the map is clicked. Applied at creation only. |
+| `closeOnClick` | `boolean` | `true` | Closes the popup when the map is clicked. Applied at creation only. Set false for popups that follow the hover. |
+| `open` | `boolean` | `true` | Whether the popup is shown. Two-way bindable with [(open)]: closing it writes false, setting true opens it again at the current position. |
 
 **Outputs**
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `popupClose` | `void` | — | Emits when the popup closes. |
+| `popupClose` | `void` | — | Emits when the popup closes, by the user or by setting open to false. |
+| `openChange` | `boolean` | — | Emits the new open state (the [(open)] binding). |
 
 ### MapRoute
 

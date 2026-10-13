@@ -100,7 +100,12 @@ const modeColor: ExpressionSpecification = [
           (arcHover)="onHover($event)"
         />
         @if (selected(); as sel) {
-          <ng-map-popup [longitude]="sel.longitude" [latitude]="sel.latitude" [offset]="12">
+          <ng-map-popup
+            [longitude]="sel.longitude"
+            [latitude]="sel.latitude"
+            [offset]="12"
+            [closeOnClick]="false"
+          >
             {{ sel.lane.origin }} → {{ sel.lane.destination }} · {{ sel.lane.volume }}
           </ng-map-popup>
         }
@@ -322,6 +327,7 @@ const MODE_COLOR_EXPRESSION: ExpressionSpecification = [
                 [longitude]="sel.longitude"
                 [latitude]="sel.latitude"
                 [offset]="12"
+                [closeOnClick]="false"
               >
                 <div
                   class="bg-popover text-popover-foreground flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs shadow-lg"
