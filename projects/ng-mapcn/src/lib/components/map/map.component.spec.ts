@@ -83,6 +83,23 @@ describe('MapComponent', () => {
       expect(map!.options.container).toBe(fixture.nativeElement.querySelector('.ng-map-canvas'));
     });
 
+    it('points MapLibre at the worker copied to the app root before creating the map', async () => {
+      // MapLibre's default (`import.meta.url`) breaks under the dev server's prebundled deps.
+      const { map } = await render();
+
+      expect(map!.workerUrlAtConstruction).toBe(
+        new URL('maplibre-gl-worker.mjs', document.baseURI).href,
+      );
+    });
+
+    it('keeps a worker URL the app already set with setWorkerUrl', async () => {
+      fakeRegistry.workerUrl = 'https://cdn.example.com/maplibre-gl-worker.mjs';
+
+      await render();
+
+      expect(fakeRegistry.workerUrl).toBe('https://cdn.example.com/maplibre-gl-worker.mjs');
+    });
+
     it('spreads [options] in but cannot override container or style', async () => {
       const { fixture, map } = await render({
         options: {

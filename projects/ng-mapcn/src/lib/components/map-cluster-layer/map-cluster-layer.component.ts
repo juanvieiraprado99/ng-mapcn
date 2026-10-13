@@ -9,7 +9,12 @@ import {
   untracked,
 } from '@angular/core';
 import type * as GeoJSON from 'geojson';
-import { type GeoJSONSource, type MapGeoJSONFeature, type MapMouseEvent } from 'maplibre-gl';
+import {
+  type GeoJSONSource,
+  type Map as MapLibreMap,
+  type MapGeoJSONFeature,
+  type MapMouseEvent,
+} from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
 import { nextId } from '../../utils/map-utils';
@@ -27,6 +32,35 @@ export interface ClusterClickEvent {
 
 const DEFAULT_CLUSTER_COLORS: [string, string, string] = ['#22c55e', '#eab308', '#ef4444'];
 const DEFAULT_CLUSTER_THRESHOLDS: [number, number] = [100, 750];
+/** Served by the Carto (default), OpenFreeMap and MapTiler glyph servers. */
+const FALLBACK_TEXT_FONT = ['Noto Sans Regular'];
+
+/**
+ * Font stack for the count labels. Glyph servers only serve their own fonts (Carto has no
+ * "Open Sans", Stadia only "Stadia *"), so reuse the first literal `text-font` of the
+ * basemap's own symbol layers, which its `glyphs` server is known to serve. Upright stacks win
+ * over italic ones (water labels usually come first).
+ */
+function basemapTextFont(map: MapLibreMap): string[] {
+  let italic: string[] | null = null;
+  for (const layer of map.getStyle()?.layers ?? []) {
+    if (layer.type !== 'symbol') continue;
+    const font = fontStack(layer.layout?.['text-font']);
+    if (!font) continue;
+    if (!/italic/i.test(font[0])) return font;
+    italic ??= font;
+  }
+  return italic ?? FALLBACK_TEXT_FONT;
+}
+
+/** A literal font stack (`[...]` or `['literal', [...]]`); data-driven expressions return null. */
+function fontStack(value: unknown): string[] | null {
+  if (!Array.isArray(value) || value.length === 0) return null;
+  if (value[0] === 'literal') return fontStack(value[1]);
+  if (!value.every((f) => typeof f === 'string')) return null;
+  // Expressions start with an operator (`get`, `case`, `coalesce`...); font names are capitalized.
+  return /^[a-z][a-z-]*$/.test(value[0]) ? null : value;
+}
 
 /**
  * Clustered point layer: cluster circles colored/sized by point count, a count
@@ -110,8 +144,7 @@ export class MapClusterLayerComponent {
         filter: ['has', 'point_count'],
         layout: {
           'text-field': '{point_count_abbreviated}',
-          // The basemap must provide glyphs for this font — the Carto defaults do.
-          'text-font': ['Open Sans'],
+          'text-font': basemapTextFont(map),
           'text-size': 12,
         },
         paint: { 'text-color': '#fff' },

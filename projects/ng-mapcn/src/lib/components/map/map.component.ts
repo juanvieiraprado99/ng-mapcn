@@ -1,4 +1,4 @@
-import { isPlatformBrowser } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -16,10 +16,12 @@ import {
   viewChild,
 } from '@angular/core';
 import {
+  getWorkerUrl,
   Map as MapLibreMap,
   type MapMouseEvent,
   type MapOptions,
   type ProjectionSpecification,
+  setWorkerUrl,
   type StyleSpecification,
 } from 'maplibre-gl';
 
@@ -33,6 +35,9 @@ import {
   type MapStylesConfig,
 } from '../../styles/map-styles';
 import { getViewport, type MapViewport } from '../../utils/map-utils';
+
+/** Worker file `ng add` copies to the build output root (`angular.json` assets). */
+const MAPLIBRE_WORKER_FILE = 'maplibre-gl-worker.mjs';
 
 @Component({
   selector: 'ng-map',
@@ -75,6 +80,7 @@ export class MapComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly zone = inject(NgZone);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly document = inject(DOCUMENT);
 
   private styleTimeoutRef: ReturnType<typeof setTimeout> | null = null;
   private initTimeoutRef: ReturnType<typeof setTimeout> | null = null;
@@ -171,6 +177,14 @@ export class MapComponent {
       ...(vp?.bearing !== undefined && { bearing: vp.bearing }),
       ...(vp?.pitch !== undefined && { pitch: vp.pitch }),
     };
+
+    // MapLibre v6 defaults to a worker next to its own module (`import.meta.url`), which bundlers
+    // do not resolve: under `ng serve` that points into Vite's prebundled deps and the worker fails
+    // to load. Use the copy `ng add` registers as an asset at the app root (resolved against
+    // <base href>), unless the app already called setWorkerUrl() (CDN, deployUrl).
+    if (!getWorkerUrl()) {
+      setWorkerUrl(new URL(MAPLIBRE_WORKER_FILE, this.document.baseURI).href);
+    }
 
     try {
       // Map creation and event registration run outside the zone: MapLibre

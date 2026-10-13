@@ -99,6 +99,8 @@ export class Map extends Evented {
     requestFullscreen: vi.fn(() => Promise.resolve()),
   });
   removed = false;
+  /** MapLibre's global worker URL when this map was constructed. */
+  readonly workerUrlAtConstruction = fakeRegistry.workerUrl;
 
   constructor(readonly options: any = {}) {
     super();
@@ -202,6 +204,14 @@ export class Map extends Evented {
     this.styleLoading = true;
     return this;
   });
+
+  /** The style as MapLibre serializes it; specs stub `basemapLayers` to emulate the basemap's own layers. */
+  basemapLayers: any[] = [];
+  getStyle = vi.fn(() => ({
+    version: 8,
+    sources: this.sources,
+    layers: [...this.basemapLayers, ...this.layers],
+  }));
 
   /** The requested style arrives: every source and layer is dropped, then `style.load` + `styledata`. */
   finishStyleLoad(): void {
@@ -466,6 +476,14 @@ export class Popup extends Evented {
   }
 }
 
+export function getWorkerUrl(): string {
+  return fakeRegistry.workerUrl;
+}
+
+export function setWorkerUrl(value: string): void {
+  fakeRegistry.workerUrl = value;
+}
+
 export type FakeMap = Map;
 export type FakeMarker = Marker;
 export type FakePopup = Popup;
@@ -476,14 +494,18 @@ export const fakeRegistry: {
   popups: FakePopup[];
   /** When set, the next `new Map()` throws it (then the field is cleared). */
   constructError: Error | null;
+  /** MapLibre's global worker URL (`''` until `setWorkerUrl` is called, like the real one). */
+  workerUrl: string;
   reset(): void;
 } = {
   maps: [],
   markers: [],
   popups: [],
   constructError: null,
+  workerUrl: '',
   reset() {
     this.constructError = null;
+    this.workerUrl = '';
     this.maps.length = 0;
     this.markers.length = 0;
     this.popups.length = 0;
