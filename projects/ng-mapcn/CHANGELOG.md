@@ -1,5 +1,16 @@
 # Changelog
 
+## [22.0.0-beta.4](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.3...v22.0.0-beta.4) (2026-10-13)
+
+
+### Bug Fixes
+
+* **geojson,arc:** reset paint/layout keys removed from the inputs ([#45](https://github.com/juanvieiraprado99/ng-mapcn/issues/45)) ([c9400c9](https://github.com/juanvieiraprado99/ng-mapcn/commit/c9400c965432e09d5ba7d8e6d441c89870f1e77e))
+* **map,marker:** emit viewportChange and drag inside the zone when observed ([#46](https://github.com/juanvieiraprado99/ng-mapcn/issues/46)) ([8fc97f3](https://github.com/juanvieiraprado99/ng-mapcn/commit/8fc97f3997734a1f02a6006eeaef2b3daa32d460))
+* **marker:** keep the default icon in sync with the projected content ([#51](https://github.com/juanvieiraprado99/ng-mapcn/issues/51)) ([b059074](https://github.com/juanvieiraprado99/ng-mapcn/commit/b059074742a8cf775f38694ed44342ea7f19d1c9))
+* **popup:** add a two-way open input so a closed ng-map-popup can be reopened ([#47](https://github.com/juanvieiraprado99/ng-mapcn/issues/47)) ([3d82aec](https://github.com/juanvieiraprado99/ng-mapcn/commit/3d82aec1fa7b104bba52b6c1a6cff378aac8aca7))
+* report layer creation failures instead of freezing change detection ([#44](https://github.com/juanvieiraprado99/ng-mapcn/issues/44)) ([79018e8](https://github.com/juanvieiraprado99/ng-mapcn/commit/79018e8d0ff345c6d724569c5f35b2a179951cc7))
+
 ## [22.0.0-beta.3](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.2...v22.0.0-beta.3) (2026-10-13)
 
 
