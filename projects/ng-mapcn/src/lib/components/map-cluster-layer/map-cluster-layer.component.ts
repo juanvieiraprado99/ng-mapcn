@@ -105,6 +105,8 @@ export class MapClusterLayerComponent {
   private appliedData: string | GeoJSON.FeatureCollection<GeoJSON.Point> | null = null;
   /** Whether the source and layers exist; gates the sync effects after a failed creation. */
   private readonly created = signal(false);
+  /** Cluster options currently in the source; re-clustering only runs when they really change. */
+  private appliedClusterOptions: { clusterRadius: number; clusterMaxZoom: number } | null = null;
 
   constructor() {
     // Add source and layers once the map style is loaded; re-runs after theme setStyle.
@@ -118,16 +120,14 @@ export class MapClusterLayerComponent {
       const pointColor = untracked(() => this.pointColor());
 
       const data = untracked(() => this.data());
+      const clusterOptions = {
+        clusterMaxZoom: untracked(() => this.clusterMaxZoom()),
+        clusterRadius: untracked(() => this.clusterRadius()),
+      };
       const teardown = addMapLayers(
         map,
         (b) => {
-          b.addSource(this.sourceId, {
-            type: 'geojson',
-            data,
-            cluster: true,
-            clusterMaxZoom: untracked(() => this.clusterMaxZoom()),
-            clusterRadius: untracked(() => this.clusterRadius()),
-          });
+          b.addSource(this.sourceId, { type: 'geojson', data, cluster: true, ...clusterOptions });
 
           b.addLayer({
             id: this.clusterLayerId,
@@ -173,6 +173,7 @@ export class MapClusterLayerComponent {
       );
       if (!teardown) return;
       this.appliedData = data;
+      this.appliedClusterOptions = clusterOptions;
       this.created.set(true);
 
       const handleClusterClick = (e: MapMouseEvent) => {
@@ -244,10 +245,10 @@ export class MapClusterLayerComponent {
       });
     });
 
-    // Update source data reactively (only for non-URL data)
+    // Update source data reactively — a new URL is fetched again by setData (beyond mapcn, which
+    // ignores URL changes; ng-map-geojson behaves the same way).
     effect(() => {
       const data = this.data();
-      if (typeof data === 'string') return;
       if (!this.created()) return;
       const map = this.ctx.map();
       if (!map) return;
@@ -256,6 +257,29 @@ export class MapClusterLayerComponent {
       if (!source || data === this.appliedData) return;
       source.setData(data);
       this.appliedData = data;
+    });
+
+    // Re-cluster when clusterRadius / clusterMaxZoom change (mapcn applies them at creation only).
+    // setClusterOptions re-runs the clustering in the worker, so it only runs on a real change —
+    // never for the values the source was just created with (load / theme switch).
+    effect(() => {
+      const clusterRadius = this.clusterRadius();
+      const clusterMaxZoom = this.clusterMaxZoom();
+      if (!this.created()) return;
+      const map = this.ctx.map();
+      if (!map) return;
+      const source = map.getSource(this.sourceId) as GeoJSONSource | undefined;
+      const applied = this.appliedClusterOptions;
+      if (
+        !source ||
+        (applied?.clusterRadius === clusterRadius && applied.clusterMaxZoom === clusterMaxZoom)
+      ) {
+        return;
+      }
+      this.appliedClusterOptions = { clusterRadius, clusterMaxZoom };
+      // MapLibre assigns `cluster` unconditionally: leaving it out would turn clustering off.
+      // Rejects when the source changed or was removed in the meantime.
+      source.setClusterOptions({ cluster: true, clusterRadius, clusterMaxZoom }).catch(() => {});
     });
 
     // Update layer paint when style props change

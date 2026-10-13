@@ -294,14 +294,74 @@ describe('MapClusterLayerComponent', () => {
       expect(structuralCalls(map)).toEqual([]);
     });
 
-    it('never calls setData for URL data', async () => {
+    it('loads a new URL through setData on the same source', async () => {
       const { fixture, map, ids } = await renderLoaded({ data: 'https://example.com/a.geojson' });
       const source = map.getSource(ids.source);
       expect(source.data).toBe('https://example.com/a.geojson');
+      map.calls.length = 0;
 
       update(fixture, { data: 'https://example.com/b.geojson' });
 
-      expect(source.setData).not.toHaveBeenCalled();
+      expect(source.setData).toHaveBeenCalledExactlyOnceWith('https://example.com/b.geojson');
+      expect(structuralCalls(map)).toEqual([]);
+    });
+
+    it('does not refetch the URL the source was created with after a theme switch', async () => {
+      const { fixture, map, ids } = await renderLoaded({ data: 'https://example.com/a.geojson' });
+
+      update(fixture, { theme: 'dark' });
+      reloadStyle(fixture, map);
+
+      expect(map.getSource(ids.source).setData).not.toHaveBeenCalled();
+    });
+
+    it('applies clusterRadius and clusterMaxZoom changes with setClusterOptions', async () => {
+      const { fixture, map, ids } = await renderLoaded();
+      const source = map.getSource(ids.source);
+      map.calls.length = 0;
+
+      update(fixture, { clusterRadius: 10 });
+      expect(source.setClusterOptions).toHaveBeenLastCalledWith({
+        // MapLibre sets `cluster` unconditionally: omitting it would turn clustering off.
+        cluster: true,
+        clusterRadius: 10,
+        clusterMaxZoom: 14,
+      });
+
+      update(fixture, { clusterMaxZoom: 8 });
+      expect(source.setClusterOptions).toHaveBeenLastCalledWith({
+        // MapLibre sets `cluster` unconditionally: omitting it would turn clustering off.
+        cluster: true,
+        clusterRadius: 10,
+        clusterMaxZoom: 8,
+      });
+      expect(source.setClusterOptions).toHaveBeenCalledTimes(2);
+      expect(structuralCalls(map)).toEqual([]);
+    });
+
+    it('does not re-cluster on creation or after a theme switch', async () => {
+      const { fixture, map, ids } = await renderLoaded({ clusterRadius: 30 });
+      expect(map.getSource(ids.source).setClusterOptions).not.toHaveBeenCalled();
+
+      update(fixture, { theme: 'dark' });
+      reloadStyle(fixture, map);
+
+      const recreated = map.getSource(ids.source);
+      expect(recreated.clusterRadius).toBe(30);
+      expect(recreated.setClusterOptions).not.toHaveBeenCalled();
+    });
+
+    it('creates the source with the current cluster options after a theme switch', async () => {
+      const { fixture, map, ids } = await renderLoaded();
+      update(fixture, { clusterRadius: 12, clusterMaxZoom: 6 });
+
+      update(fixture, { theme: 'dark' });
+      reloadStyle(fixture, map);
+
+      const recreated = map.getSource(ids.source);
+      expect(recreated.clusterRadius).toBe(12);
+      expect(recreated.clusterMaxZoom).toBe(6);
+      expect(recreated.setClusterOptions).not.toHaveBeenCalled();
     });
   });
 
