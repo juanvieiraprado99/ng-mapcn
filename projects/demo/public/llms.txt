@@ -2,7 +2,7 @@
 
 > Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
 
-Version: 22.0.0-beta.1 · License: MIT · npm: https://www.npmjs.com/package/ng-mapcn
+Version: 22.0.0-beta.2 · License: MIT · npm: https://www.npmjs.com/package/ng-mapcn
 
 ## Overview
 
@@ -58,6 +58,14 @@ npm install ng-mapcn maplibre-gl
 ```
 
 The `.maplibregl-popup-*` overrides are **required** — MapLibre injects its own popup chrome, which must be neutralized for popups and tooltips to render correctly.
+
+### Agent skill
+
+```bash
+npx skills add juanvieiraprado99/ng-mapcn
+```
+
+Installs the ng-mapcn agent skill (https://github.com/juanvieiraprado99/ng-mapcn/tree/main/skills/ng-mapcn) with the [skills.sh](https://skills.sh) CLI, so coding agents use the real API: selectors, inputs, outputs, setup, recipes and troubleshooting.
 
 ## Quick start
 

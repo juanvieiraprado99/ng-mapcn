@@ -25,6 +25,7 @@ ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map componen
 - **Signals-first**: standalone components, signal inputs/outputs, `effect()`-based reconciliation
 - **Copy-paste distribution**: `ng add ng-mapcn` copies the sources into your project (shadcn-style). Also usable as a regular npm package.
 - **SSR-safe**: nothing touches `window` or MapLibre during server render
+- **AI-ready**: an [agent skill](#ai-agent-skill) (`npx skills add juanvieiraprado99/ng-mapcn`) plus [`llms.txt`](https://ng-mapcn.vercel.app/llms.txt) teach coding agents the real API
 
 ## Compatibility
 
@@ -234,11 +235,15 @@ The docs site serves [`llms.txt`](https://ng-mapcn.vercel.app/llms.txt) (index) 
 
 ## AI agent skill
 
-Teach your coding agent (Claude Code, Cursor, Copilot, and others) how to use ng-mapcn with the [skills.sh](https://skills.sh) CLI:
+ng-mapcn ships an [agent skill](https://github.com/juanvieiraprado99/ng-mapcn/tree/main/skills/ng-mapcn) that teaches coding agents (Claude Code, Cursor, Codex, GitHub Copilot, Windsurf, Gemini and others) the library's real API: component selectors, inputs and outputs, setup for both install channels, copy-paste recipes and common pitfalls. Without it, agents tend to guess class names and selectors that do not exist.
+
+Install it with the [skills.sh](https://skills.sh) CLI, from your app's root:
 
 ```bash
 npx skills add juanvieiraprado99/ng-mapcn
 ```
+
+The CLI downloads the skill and configures it for your agent. Pass `--list` to see the skills in the repository without installing, or `--skill ng-mapcn` to install this one explicitly.
 
 ## Contributing
 
