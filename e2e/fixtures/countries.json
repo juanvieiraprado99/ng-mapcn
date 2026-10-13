@@ -6,7 +6,7 @@
       "id": 0,
       "properties": {
         "NAME": "United States of America",
-        "NAME_LONG": "United States of America",
+        "NAME_LONG": "United States",
         "ADMIN": "United States of America",
         "ISO_A3": "USA"
       },
@@ -248,7 +248,7 @@
       "id": 11,
       "properties": {
         "NAME": "Russia",
-        "NAME_LONG": "Russia",
+        "NAME_LONG": "Russian Federation",
         "ADMIN": "Russia",
         "ISO_A3": "RUS"
       },
