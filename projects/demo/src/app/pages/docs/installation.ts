@@ -72,11 +72,36 @@ export class MyMapComponent {}`;
           automatically switch between light and dark themes.
         </app-docs-note>
       </app-docs-section>
+
+      <app-docs-section title="AI agent skill">
+        <p>
+          Using a coding agent (Claude Code, Cursor, Codex, GitHub Copilot, Windsurf, Gemini and
+          others)? Install the
+          <a [href]="skillUrl" target="_blank" rel="noopener noreferrer" [class]="link"
+            >ng-mapcn skill</a
+          >
+          so it uses the real API (selectors, inputs, outputs, setup and recipes) instead of
+          guessing:
+        </p>
+        <app-code-block [code]="skillCommand" lang="bash" [showLineNumbers]="false" />
+        <p>
+          It works with the
+          <a href="https://skills.sh" target="_blank" rel="noopener noreferrer" [class]="link"
+            >skills.sh</a
+          >
+          CLI. Pass <code [class]="code">--list</code> to preview the skill, or
+          <code [class]="code">--skill ng-mapcn</code> to install it explicitly. Agents that do not
+          support skills can read
+          <a href="/llms-full.txt" target="_blank" [class]="link">llms-full.txt</a> instead.
+        </p>
+      </app-docs-section>
     </app-docs-page>
   `,
 })
 export class InstallationComponent {
   readonly usageCode = USAGE_CODE;
+  readonly skillCommand = 'npx skills add juanvieiraprado99/ng-mapcn';
+  readonly skillUrl = 'https://github.com/juanvieiraprado99/ng-mapcn/tree/main/skills/ng-mapcn';
 
   /** mapcn `DocsLink` / `DocsCode`. */
   protected readonly link = 'text-foreground font-medium underline underline-offset-4';

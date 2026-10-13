@@ -48,7 +48,15 @@ npm install ng-mapcn maplibre-gl
 @import 'maplibre-gl/dist/maplibre-gl.css'; // MapLibre base CSS
 \`\`\`
 
-The \`.maplibregl-popup-*\` overrides are **required** — MapLibre injects its own popup chrome, which must be neutralized for popups and tooltips to render correctly.`;
+The \`.maplibregl-popup-*\` overrides are **required** — MapLibre injects its own popup chrome, which must be neutralized for popups and tooltips to render correctly.
+
+### Agent skill
+
+\`\`\`bash
+npx skills add juanvieiraprado99/ng-mapcn
+\`\`\`
+
+Installs the ng-mapcn agent skill (${REPO_URL}/tree/main/skills/ng-mapcn) with the [skills.sh](https://skills.sh) CLI, so coding agents use the real API: selectors, inputs, outputs, setup, recipes and troubleshooting.`;
 
 const QUICK_START = `## Quick start
 
