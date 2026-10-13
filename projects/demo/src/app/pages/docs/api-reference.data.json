@@ -125,10 +125,12 @@
         { "name": "closeButton", "type": "boolean", "default": "false", "description": "Shows a close button in the popup." },
         { "name": "offset", "type": "Offset", "default": "16", "description": "Pixel offset of the popup." },
         { "name": "maxWidth", "type": "string", "default": "'none'", "description": "CSS max-width of the popup container." },
-        { "name": "closeOnClick", "type": "boolean", "default": "true", "description": "Closes the popup when the map is clicked. Applied at creation only." }
+        { "name": "closeOnClick", "type": "boolean", "default": "true", "description": "Closes the popup when the map is clicked. Applied at creation only. Set false for popups that follow the hover." },
+        { "name": "open", "type": "boolean", "default": "true", "description": "Whether the popup is shown. Two-way bindable with [(open)]: closing it writes false, setting true opens it again at the current position." }
       ],
       "outputs": [
-        { "name": "popupClose", "type": "void", "default": "", "description": "Emits when the popup closes." }
+        { "name": "popupClose", "type": "void", "default": "", "description": "Emits when the popup closes, by the user or by setting open to false." },
+        { "name": "openChange", "type": "boolean", "default": "", "description": "Emits the new open state (the [(open)] binding)." }
       ]
     },
     {

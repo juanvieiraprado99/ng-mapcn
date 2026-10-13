@@ -5,6 +5,7 @@ import {
   inject,
   Injector,
   input,
+  model,
   NgZone,
   output,
   signal,
@@ -12,7 +13,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { type Offset, Popup } from 'maplibre-gl';
+import { type Map as MapLibreMap, type Offset, Popup } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
 import { renderPortal } from '../../utils/portal';
@@ -38,7 +39,14 @@ export class MapPopupComponent {
    * MapLibre's Popup has no setter for it (mapcn parity: `closeOnClick` prop).
    */
   readonly closeOnClick = input(true);
+  /**
+   * Whether the popup is shown. Two-way bindable (`[(open)]`): closing it (map click, close
+   * button) writes `false`, and setting `true` opens the same popup again — at the current
+   * position. A closed popup stays closed when only its position changes (mapcn parity).
+   */
+  readonly open = model(true);
 
+  /** Emits whenever the popup closes, whether by the user or by setting `open` to false. */
   readonly popupClose = output<void>();
 
   private readonly injector = inject(Injector);
@@ -47,7 +55,11 @@ export class MapPopupComponent {
   private readonly tpl = viewChild.required<TemplateRef<unknown>>('tpl');
 
   /** The live popup and its content card; null until the map exists. */
-  private readonly instance = signal<{ popup: Popup; container: HTMLDivElement } | null>(null);
+  private readonly instance = signal<{
+    popup: Popup;
+    container: HTMLDivElement;
+    map: MapLibreMap;
+  } | null>(null);
 
   constructor() {
     // Create once when the map becomes available.
@@ -69,19 +81,36 @@ export class MapPopupComponent {
       popup.setMaxWidth(untracked(() => this.maxWidth()));
       popup.setDOMContent(container);
       popup.setLngLat([untracked(() => this.longitude()), untracked(() => this.latitude())]);
-      popup.addTo(map);
+      if (untracked(() => this.open())) popup.addTo(map);
       // 'close' fires from the map's event system (outside the zone) — re-enter
-      popup.on('close', () => this.zone.run(() => this.popupClose.emit()));
+      const onClose = () =>
+        this.zone.run(() => {
+          this.open.set(false);
+          this.popupClose.emit();
+        });
+      popup.on('close', onClose);
 
-      this.instance.set({ popup, container });
+      this.instance.set({ popup, container, map });
 
       onCleanup(() => {
         this.instance.set(null);
+        // Detach first: a teardown is not a user close, and the outputs are being destroyed.
+        popup.off('close', onClose);
         try {
           popup.remove();
         } catch {}
         destroyPortal();
       });
+    });
+
+    // Reconcile [(open)]: re-add the same popup or remove it.
+    effect(() => {
+      const open = this.open();
+      const instance = this.instance();
+      if (!instance) return;
+      const { popup, map } = instance;
+      if (open && !popup.isOpen()) popup.addTo(map);
+      else if (!open && popup.isOpen()) popup.remove();
     });
 
     // Reconcile position/offset/maxWidth with a field-by-field diff.

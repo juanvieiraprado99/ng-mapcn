@@ -16,28 +16,26 @@ import { MapComponent, MapPopupComponent } from 'ng-mapcn';
   template: \`
     <div class="relative h-[420px]">
       <ng-map [center]="[-74.006, 40.7128]" [zoom]="13">
-        @if (showPopup()) {
-          <ng-map-popup
-            [longitude]="-74.006"
-            [latitude]="40.7128"
-            [closeButton]="true"
-            (popupClose)="showPopup.set(false)"
-          >
-            <div class="space-y-2">
-              <h3 class="font-semibold">New York City</h3>
-              <p class="text-muted-foreground text-sm">
-                The city that never sleeps. Population: 8.3 million
-              </p>
-              <button
-                type="button"
-                (click)="showPopup.set(false)"
-                class="hover:bg-accent w-full rounded-md border px-3 py-1.5 text-sm font-medium"
-              >
-                Close
-              </button>
-            </div>
-          </ng-map-popup>
-        }
+        <ng-map-popup
+          [longitude]="-74.006"
+          [latitude]="40.7128"
+          [closeButton]="true"
+          [(open)]="showPopup"
+        >
+          <div class="space-y-2">
+            <h3 class="font-semibold">New York City</h3>
+            <p class="text-muted-foreground text-sm">
+              The city that never sleeps. Population: 8.3 million
+            </p>
+            <button
+              type="button"
+              (click)="showPopup.set(false)"
+              class="hover:bg-accent w-full rounded-md border px-3 py-1.5 text-sm font-medium"
+            >
+              Close
+            </button>
+          </div>
+        </ng-map-popup>
       </ng-map>
 
       @if (!showPopup()) {
@@ -83,38 +81,44 @@ export class StandalonePopupComponent {
           to display a popup at any location on the map. Unlike
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code>,
           standalone popups are not attached to markers and can be controlled
-          programmatically.
+          programmatically: bind
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[(open)]</code>
+          to a signal and closing the popup (close button or map click) writes
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">false</code>
+          back, while setting it to
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">true</code>
+          opens it again. For popups that follow the hover, set
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[closeOnClick]="false"</code>
+          so a click does not dismiss them.
         </span>
         <div class="relative h-full">
           <ng-map
             [center]="[-74.006, 40.7128]"
             [zoom]="13"
           >
-            @if (showPopup()) {
-              <ng-map-popup
-                [longitude]="-74.006"
-                [latitude]="40.7128"
-                [closeButton]="true"
-                (popupClose)="showPopup.set(false)"
-              >
-                <div class="space-y-2">
-                  <h3 class="font-semibold">New York City</h3>
-                  <p class="text-muted-foreground text-sm">
-                    The city that never sleeps. Population: 8.3 million
-                  </p>
-                  <button
-                    z-button
-                    zType="outline"
-                    zSize="sm"
-                    type="button"
-                    class="w-full"
-                    (click)="showPopup.set(false)"
-                  >
-                    Close
-                  </button>
-                </div>
-              </ng-map-popup>
-            }
+            <ng-map-popup
+              [longitude]="-74.006"
+              [latitude]="40.7128"
+              [closeButton]="true"
+              [(open)]="showPopup"
+            >
+              <div class="space-y-2">
+                <h3 class="font-semibold">New York City</h3>
+                <p class="text-muted-foreground text-sm">
+                  The city that never sleeps. Population: 8.3 million
+                </p>
+                <button
+                  z-button
+                  zType="outline"
+                  zSize="sm"
+                  type="button"
+                  class="w-full"
+                  (click)="showPopup.set(false)"
+                >
+                  Close
+                </button>
+              </div>
+            </ng-map-popup>
           </ng-map>
 
           @if (!showPopup()) {
