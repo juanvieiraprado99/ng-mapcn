@@ -6,6 +6,7 @@ import { ZardSeparatorComponent } from '@/shared/components/separator';
 import { mainNavItems } from '@/shared/site-navigation';
 
 import { BasemapPickerComponent } from './basemap-picker';
+import { BrandMarkComponent } from './brand-mark';
 import { CommandSearchComponent } from './command-search';
 import { GithubButtonComponent } from './github-button';
 import { LogoComponent } from './logo';
@@ -21,6 +22,7 @@ import { ThemeToggleComponent } from './theme-toggle';
     ZardButtonComponent,
     ZardSeparatorComponent,
     BasemapPickerComponent,
+    BrandMarkComponent,
     CommandSearchComponent,
     GithubButtonComponent,
     LogoComponent,
@@ -35,6 +37,13 @@ import { ThemeToggleComponent } from './theme-toggle';
       class="bg-background/85 supports-backdrop-filter:bg-background/70 sticky top-0 z-50 h-14 w-full backdrop-blur"
     >
       <nav class="container flex size-full items-center gap-2">
+        <a
+          routerLink="/"
+          class="-ml-1 flex size-8 items-center justify-center lg:hidden"
+          aria-label="ng-mapcn home"
+        >
+          <app-brand-mark class="size-6" />
+        </a>
         <app-mobile-nav />
         <app-logo class="hidden shrink-0 lg:flex" />
         <z-separator

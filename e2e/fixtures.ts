@@ -104,6 +104,13 @@ export const test = base.extend<{ network: NetworkState }>({
         if (url.hostname === 'router.project-osrm.org') {
           return route.fulfill({ json: osrmResponse(url.pathname) });
         }
+        // The header's GitHub button fetches the repository star count.
+        if (url.hostname === 'api.github.com') {
+          return route.fulfill({
+            json: { stargazers_count: 1234 },
+            headers: { 'access-control-allow-origin': '*' },
+          });
+        }
         const data = REMOTE_DATA.find(({ match }) => match.test(url.href));
         if (data) {
           return route.fulfill({
