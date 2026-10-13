@@ -1,5 +1,17 @@
 # Changelog
 
+## [22.0.0-beta.3](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.2...v22.0.0-beta.3) (2026-10-13)
+
+
+### Features
+
+* add ng-mapcn agent skill for skills.sh ([#27](https://github.com/juanvieiraprado99/ng-mapcn/issues/27)) ([41c79ba](https://github.com/juanvieiraprado99/ng-mapcn/commit/41c79ba0c2e1bdc9a6c5a426b95dee90cafc0a4e))
+
+
+### Bug Fixes
+
+* load the MapLibre worker under ng serve and render cluster count labels ([#30](https://github.com/juanvieiraprado99/ng-mapcn/issues/30)) ([3d1e25e](https://github.com/juanvieiraprado99/ng-mapcn/commit/3d1e25ef94ed205c0bded327907cd221983be757))
+
 ## [22.0.0-beta.2](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.1...v22.0.0-beta.2) (2026-10-12)
 
 
