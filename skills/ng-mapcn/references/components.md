@@ -174,15 +174,15 @@ Class `MapArcComponent<T extends MapArcDatum = MapArcDatum>`. Curved arcs; an in
 
 Class `MapClusterLayerComponent`. Cluster circles sized/colored by count, a count label, and unclustered point dots.
 
-| Input                | Type                                                 | Default                             | Notes                             |
-| -------------------- | ---------------------------------------------------- | ----------------------------------- | --------------------------------- |
-| `data`               | `string \| GeoJSON.FeatureCollection<GeoJSON.Point>` | required                            | String is a URL                   |
-| `clusterMaxZoom`     | `number`                                             | `14`                                |                                   |
-| `clusterRadius`      | `number`                                             | `50`                                | Pixels                            |
-| `clusterColors`      | `[string, string, string]`                           | `['#22c55e', '#eab308', '#ef4444']` | small, medium, large              |
-| `clusterThresholds`  | `[number, number]`                                   | `[100, 750]`                        | Point counts for medium and large |
-| `pointColor`         | `string`                                             | `'#3b82f6'`                         |                                   |
-| `zoomOnClusterClick` | `boolean`                                            | `true`                              |                                   |
+| Input                | Type                                                 | Default                             | Notes                                                     |
+| -------------------- | ---------------------------------------------------- | ----------------------------------- | --------------------------------------------------------- |
+| `data`               | `string \| GeoJSON.FeatureCollection<GeoJSON.Point>` | required                            | String is a URL; a new URL is fetched again via `setData` |
+| `clusterMaxZoom`     | `number`                                             | `14`                                | Runtime changes re-cluster (`setClusterOptions`)          |
+| `clusterRadius`      | `number`                                             | `50`                                | Pixels; runtime changes re-cluster                        |
+| `clusterColors`      | `[string, string, string]`                           | `['#22c55e', '#eab308', '#ef4444']` | small, medium, large                                      |
+| `clusterThresholds`  | `[number, number]`                                   | `[100, 750]`                        | Point counts for medium and large                         |
+| `pointColor`         | `string`                                             | `'#3b82f6'`                         |                                                           |
+| `zoomOnClusterClick` | `boolean`                                            | `true`                              |                                                           |
 
 | Output         | Payload                                                                                                 |
 | -------------- | ------------------------------------------------------------------------------------------------------- |

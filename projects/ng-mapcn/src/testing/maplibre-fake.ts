@@ -238,6 +238,7 @@ export class Map extends Evented {
       ...source,
       id,
       setData: vi.fn(),
+      setClusterOptions: vi.fn((_options: unknown) => Promise.resolve()),
       getClusterExpansionZoom: vi.fn((_clusterId: number) => Promise.resolve(0)),
     };
     return this;
