@@ -20,6 +20,7 @@ import {
 } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
+import { syncLayerProperties } from '../../utils/layer-properties';
 import { addMapLayers } from '../../utils/layers';
 import { type MapGeoJSONEvent, mergeHoverPaint, nextId } from '../../utils/map-utils';
 
@@ -91,6 +92,9 @@ export class MapGeoJSONComponent {
    * (e.g. an `id` already in use) they must not touch the source/layers of another owner.
    */
   private readonly created = signal(false);
+  /** Paint keys set on each layer, so keys removed from the inputs get reset. */
+  private appliedFillKeys: ReadonlySet<string> = new Set();
+  private appliedLineKeys: ReadonlySet<string> = new Set();
 
   private readonly mergedFillPaint = computed<MapFillPaint>(() => {
     const defaults = GEOJSON_DEFAULT_COLORS[this.ctx.resolvedTheme()];
@@ -204,14 +208,22 @@ export class MapGeoJSONComponent {
       }
 
       if (showFill && map.getLayer(fillLayerId)) {
-        for (const [key, value] of Object.entries(mergedFillPaint)) {
-          map.setPaintProperty(fillLayerId, key as keyof MapFillPaint, value as never);
-        }
+        this.appliedFillKeys = syncLayerProperties(
+          map,
+          fillLayerId,
+          'paint',
+          mergedFillPaint,
+          this.appliedFillKeys,
+        );
       }
       if (showLine && map.getLayer(lineLayerId)) {
-        for (const [key, value] of Object.entries(mergedLinePaint)) {
-          map.setPaintProperty(lineLayerId, key as keyof MapLinePaint, value as never);
-        }
+        this.appliedLineKeys = syncLayerProperties(
+          map,
+          lineLayerId,
+          'paint',
+          mergedLinePaint,
+          this.appliedLineKeys,
+        );
       }
     });
 
