@@ -232,6 +232,14 @@ Notes:
 
 The docs site serves [`llms.txt`](https://ng-mapcn.vercel.app/llms.txt) (index) and [`llms-full.txt`](https://ng-mapcn.vercel.app/llms-full.txt) (every component, input, output and default in one file), following the [llmstxt.org](https://llmstxt.org) convention. Point your coding agent at either instead of scraping the docs.
 
+## AI agent skill
+
+Teach your coding agent (Claude Code, Cursor, Copilot, and others) how to use ng-mapcn with the [skills.sh](https://skills.sh) CLI:
+
+```bash
+npx skills add juanvieiraprado99/ng-mapcn
+```
+
 ## Contributing
 
 Contributions are welcome. Please read the [contributing guide](https://github.com/juanvieiraprado99/ng-mapcn/blob/main/CONTRIBUTING.md) and the [code of conduct](https://github.com/juanvieiraprado99/ng-mapcn/blob/main/CODE_OF_CONDUCT.md). To report a vulnerability, follow the [security policy](https://github.com/juanvieiraprado99/ng-mapcn/blob/main/SECURITY.md) instead of opening a public issue.
