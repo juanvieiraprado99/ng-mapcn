@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fakeRegistry } from '../../../testing/maplibre-fake';
 import { loadMap, renderMap, setMapSize } from '../../../testing/render';
+import { trackZoneRun } from '../../../testing/zone';
 import { provideMapStyles } from '../../providers/map-styles.provider';
 import { blankMapStyle, defaultStyles } from '../../styles/map-styles';
 import { type MapComponent } from './map.component';
@@ -566,6 +567,29 @@ describe('MapComponent', () => {
 
       fixture.destroy();
       expect(cmp.getMap()).toBeNull();
+    });
+  });
+
+  describe('viewportChange and the Angular zone', () => {
+    it('emits inside the zone, so zone.js apps run change detection', async () => {
+      const { map, host } = await render();
+      const zone = trackZoneRun();
+      const insideAtEmit: boolean[] = [];
+      host['viewportChange'].mockImplementation(() => insideAtEmit.push(zone.inside));
+
+      map!.fire('move');
+
+      expect(insideAtEmit).toEqual([true]);
+    });
+
+    it('does not enter the zone on move when nothing listens to viewportChange', async () => {
+      const { map } = await renderMap('<ng-map />');
+      const zone = trackZoneRun();
+
+      map!.fire('move');
+      map!.fire('move');
+
+      expect(zone.runs).toBe(0);
     });
   });
 });

@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fakeRegistry } from '../../../testing/maplibre-fake';
 import { renderMap, update } from '../../../testing/render';
+import { trackZoneRun } from '../../../testing/zone';
 import { MapMarkerComponent } from './map-marker.component';
 
 const TEMPLATE = `
@@ -212,6 +213,31 @@ describe('MapMarkerComponent', () => {
       const { fixture } = await render();
       expect(() => fixture.destroy()).not.toThrow();
       expect(fakeRegistry.markers[0].calls.filter((c) => c === 'remove')).toHaveLength(1);
+    });
+  });
+
+  describe('drag and the Angular zone', () => {
+    it('emits drag inside the zone, so zone.js apps run change detection', async () => {
+      const { host } = await render({ draggable: true });
+      const zone = trackZoneRun();
+      const insideAtEmit: boolean[] = [];
+      host['drag'].mockImplementation(() => insideAtEmit.push(zone.inside));
+
+      fakeRegistry.markers[0].fire('drag');
+
+      expect(insideAtEmit).toEqual([true]);
+    });
+
+    it('does not enter the zone on drag when nothing listens to drag', async () => {
+      await renderMap(
+        '<ng-map><ng-map-marker [longitude]="0" [latitude]="0" [draggable]="true" /></ng-map>',
+        { imports: [MapMarkerComponent] },
+      );
+      const zone = trackZoneRun();
+
+      fakeRegistry.markers[0].fire('drag');
+
+      expect(zone.runs).toBe(0);
     });
   });
 });
