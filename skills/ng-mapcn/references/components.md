@@ -20,12 +20,12 @@ Class `MapComponent`. Provides `MapContextService` to its children. Child conten
 | `viewport`   | `Partial<MapViewport>`                     | `undefined` | Controlled viewport; applied with `jumpTo`, skipped while the map is moving                                                        |
 | `options`    | `Omit<MapOptions, 'container' \| 'style'>` | `undefined` | Extra MapLibre constructor options. Defaults before spreading: `renderWorldCopies: false`, `attributionControl: { compact: true }` |
 
-| Output           | Payload                                                                 |
-| ---------------- | ----------------------------------------------------------------------- |
-| `viewportChange` | `MapViewport` (fires on every `move` except programmatic viewport sync) |
-| `mapReady`       | MapLibre `Map` (on `load`)                                              |
-| `mapClick`       | `MapMouseEvent`                                                         |
-| `mapError`       | `Error`                                                                 |
+| Output           | Payload                                                                                                                             |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `viewportChange` | `MapViewport` (fires on every `move` except programmatic viewport sync)                                                             |
+| `mapReady`       | MapLibre `Map` (on `load`)                                                                                                          |
+| `mapClick`       | `MapMouseEvent`                                                                                                                     |
+| `mapError`       | `Error` (MapLibre errors, and layer components that fail to add their source or layer, e.g. a duplicate `id` or unknown `beforeId`) |
 
 Method: `getMap(): MapLibreMap | null` (escape hatch to the raw map).
 

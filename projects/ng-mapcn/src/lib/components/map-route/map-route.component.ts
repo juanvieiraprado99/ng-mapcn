@@ -7,11 +7,13 @@ import {
   input,
   NgZone,
   output,
+  signal,
   untracked,
 } from '@angular/core';
 import { type GeoJSONSource, type MapMouseEvent } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
+import { addMapLayers } from '../../utils/layers';
 import { nextId } from '../../utils/map-utils';
 
 @Component({
@@ -39,6 +41,11 @@ export class MapRouteComponent {
   private readonly layerId = computed(() => `${this.sourceId()}-layer`);
   /** Coordinates currently in the source, so re-runs of the data effect skip a no-op setData. */
   private appliedCoords: [number, number][] | null = null;
+  /**
+   * Whether this component's own source and layer exist. Gates the sync effects: after a failed
+   * creation (e.g. an `id` already in use) they must not touch the source/layer of another owner.
+   */
+  private readonly created = signal(false);
 
   constructor() {
     // Add source + layer once the map style is loaded; re-runs after theme setStyle
@@ -56,38 +63,38 @@ export class MapRouteComponent {
       const opacity = untracked(() => this.opacity());
       const da = untracked(() => this.dashArray());
 
-      map.addSource(sourceId, {
-        type: 'geojson',
-        data: this.toGeoJSON(coords),
-      });
-      this.appliedCoords = coords;
-
-      map.addLayer({
-        id: layerId,
-        type: 'line',
-        source: sourceId,
-        layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: {
-          'line-color': color,
-          'line-width': width,
-          'line-opacity': opacity,
-          ...(da ? { 'line-dasharray': da } : {}),
+      const teardown = addMapLayers(
+        map,
+        (b) => {
+          b.addSource(sourceId, { type: 'geojson', data: this.toGeoJSON(coords) });
+          b.addLayer({
+            id: layerId,
+            type: 'line',
+            source: sourceId,
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
+            paint: {
+              'line-color': color,
+              'line-width': width,
+              'line-opacity': opacity,
+              ...(da ? { 'line-dasharray': da } : {}),
+            },
+          });
         },
-      });
+        (error) => this.ctx.reportError(error),
+      );
+      if (!teardown) return;
+      this.appliedCoords = coords;
+      this.created.set(true);
 
       onCleanup(() => {
-        try {
-          if (map.getLayer(layerId)) map.removeLayer(layerId);
-        } catch {}
-        try {
-          if (map.getSource(sourceId)) map.removeSource(sourceId);
-        } catch {}
+        this.created.set(false);
+        teardown();
       });
     });
 
     // Interaction handlers — toggling [interactive] rebinds them without touching the layer.
     effect((onCleanup) => {
-      if (!this.ctx.isLoaded()) return;
+      if (!this.created()) return;
       const map = this.ctx.map();
       if (!map || !this.interactive()) return;
       const layerId = this.layerId();
@@ -119,7 +126,7 @@ export class MapRouteComponent {
     // Update GeoJSON data when coordinates change (no flicker)
     effect(() => {
       const coords = this.coordinates(); // always tracked
-      if (!this.ctx.isLoaded()) return;
+      if (!this.created()) return;
       const map = this.ctx.map();
       if (!map) return;
       const source = map.getSource(this.sourceId()) as GeoJSONSource | undefined;
@@ -135,7 +142,7 @@ export class MapRouteComponent {
       const width = this.width();
       const opacity = this.opacity();
       const da = this.dashArray();
-      if (!this.ctx.isLoaded()) return;
+      if (!this.created()) return;
       const map = this.ctx.map();
       const layerId = this.layerId();
       if (!map || !map.getLayer(layerId)) return;

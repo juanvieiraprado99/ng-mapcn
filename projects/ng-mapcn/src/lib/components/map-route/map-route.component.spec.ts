@@ -322,4 +322,56 @@ describe('MapRouteComponent', () => {
       expect(map.getSource(SOURCE).setData).not.toHaveBeenCalled();
     });
   });
+
+  describe('id collision', () => {
+    const DUP_TEMPLATE = `
+      <ng-map (mapError)="mapError($event)">
+        <ng-map-route id="dup" [coordinates]="coordinates" color="#111111" />
+        @if (showSecond) {
+          <ng-map-route id="dup" [coordinates]="coordinates" [color]="secondColor" (routeClick)="routeClick($event)" />
+        }
+      </ng-map>
+    `;
+
+    async function renderDuplicate() {
+      const host = {
+        coordinates: COORDS,
+        showSecond: true,
+        secondColor: '#222222',
+        mapError: vi.fn(),
+        routeClick: vi.fn(),
+      };
+      const result = await renderMap(DUP_TEMPLATE, {
+        imports: [MapRouteComponent],
+        hostProps: host,
+      });
+      return { ...result, map: result.map!, host };
+    }
+
+    it('reports the failure through mapError instead of breaking change detection', async () => {
+      const { fixture, map, host } = await renderDuplicate();
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      expect(() => loadAndSettle(fixture, map)).not.toThrow();
+
+      expect(host.mapError).toHaveBeenCalledTimes(1);
+      expect(host.mapError.mock.calls[0][0].message).toContain('already exists');
+      expect(map.getLayerOrder().filter((id) => id === 'dup-layer')).toHaveLength(1);
+    });
+
+    it('leaves the source and layer of the component that owns the id untouched', async () => {
+      const { fixture, map } = await renderDuplicate();
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      loadAndSettle(fixture, map);
+
+      update(fixture, { secondColor: '#333333' });
+      expect(map.getLayer('dup-layer').paint['line-color']).toBe('#111111');
+      // Only the owner's handler: the failed route binds nothing to a layer that is not its own.
+      expect(map.listenerCount('click', 'dup-layer')).toBe(1);
+
+      update(fixture, { showSecond: false });
+      expect(map.getSource('dup')).toBeDefined();
+      expect(map.getLayer('dup-layer')).toBeDefined();
+    });
+  });
 });

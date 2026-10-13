@@ -6,6 +6,7 @@ import {
   input,
   NgZone,
   output,
+  signal,
   untracked,
 } from '@angular/core';
 import type * as GeoJSON from 'geojson';
@@ -17,6 +18,7 @@ import {
 } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
+import { addMapLayers } from '../../utils/layers';
 import { nextId } from '../../utils/map-utils';
 
 export interface ClusterPointClickEvent {
@@ -101,6 +103,8 @@ export class MapClusterLayerComponent {
   private readonly unclusteredLayerId = `unclustered-point-${this.id}`;
   /** Data currently in the source, so re-runs of the data effect skip a no-op setData. */
   private appliedData: string | GeoJSON.FeatureCollection<GeoJSON.Point> | null = null;
+  /** Whether the source and layers exist; gates the sync effects after a failed creation. */
+  private readonly created = signal(false);
 
   constructor() {
     // Add source and layers once the map style is loaded; re-runs after theme setStyle.
@@ -114,54 +118,62 @@ export class MapClusterLayerComponent {
       const pointColor = untracked(() => this.pointColor());
 
       const data = untracked(() => this.data());
+      const teardown = addMapLayers(
+        map,
+        (b) => {
+          b.addSource(this.sourceId, {
+            type: 'geojson',
+            data,
+            cluster: true,
+            clusterMaxZoom: untracked(() => this.clusterMaxZoom()),
+            clusterRadius: untracked(() => this.clusterRadius()),
+          });
+
+          b.addLayer({
+            id: this.clusterLayerId,
+            type: 'circle',
+            source: this.sourceId,
+            filter: ['has', 'point_count'],
+            paint: {
+              'circle-color': this.clusterColorExpression(colors, thresholds),
+              'circle-radius': this.clusterRadiusExpression(thresholds),
+              'circle-stroke-width': 1,
+              'circle-stroke-color': '#fff',
+              'circle-opacity': 0.85,
+            },
+          });
+
+          b.addLayer({
+            id: this.clusterCountLayerId,
+            type: 'symbol',
+            source: this.sourceId,
+            filter: ['has', 'point_count'],
+            layout: {
+              'text-field': '{point_count_abbreviated}',
+              'text-font': basemapTextFont(map),
+              'text-size': 12,
+            },
+            paint: { 'text-color': '#fff' },
+          });
+
+          b.addLayer({
+            id: this.unclusteredLayerId,
+            type: 'circle',
+            source: this.sourceId,
+            filter: ['!', ['has', 'point_count']],
+            paint: {
+              'circle-color': pointColor,
+              'circle-radius': 5,
+              'circle-stroke-width': 2,
+              'circle-stroke-color': '#fff',
+            },
+          });
+        },
+        (error) => this.ctx.reportError(error),
+      );
+      if (!teardown) return;
       this.appliedData = data;
-      map.addSource(this.sourceId, {
-        type: 'geojson',
-        data,
-        cluster: true,
-        clusterMaxZoom: untracked(() => this.clusterMaxZoom()),
-        clusterRadius: untracked(() => this.clusterRadius()),
-      });
-
-      map.addLayer({
-        id: this.clusterLayerId,
-        type: 'circle',
-        source: this.sourceId,
-        filter: ['has', 'point_count'],
-        paint: {
-          'circle-color': this.clusterColorExpression(colors, thresholds),
-          'circle-radius': this.clusterRadiusExpression(thresholds),
-          'circle-stroke-width': 1,
-          'circle-stroke-color': '#fff',
-          'circle-opacity': 0.85,
-        },
-      });
-
-      map.addLayer({
-        id: this.clusterCountLayerId,
-        type: 'symbol',
-        source: this.sourceId,
-        filter: ['has', 'point_count'],
-        layout: {
-          'text-field': '{point_count_abbreviated}',
-          'text-font': basemapTextFont(map),
-          'text-size': 12,
-        },
-        paint: { 'text-color': '#fff' },
-      });
-
-      map.addLayer({
-        id: this.unclusteredLayerId,
-        type: 'circle',
-        source: this.sourceId,
-        filter: ['!', ['has', 'point_count']],
-        paint: {
-          'circle-color': pointColor,
-          'circle-radius': 5,
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#fff',
-        },
-      });
+      this.created.set(true);
 
       const handleClusterClick = (e: MapMouseEvent) => {
         const features = map.queryRenderedFeatures(e.point, {
@@ -227,14 +239,8 @@ export class MapClusterLayerComponent {
         map.off('mouseleave', this.clusterLayerId, cursorOff);
         map.off('mouseenter', this.unclusteredLayerId, cursorOn);
         map.off('mouseleave', this.unclusteredLayerId, cursorOff);
-        for (const id of [this.clusterCountLayerId, this.unclusteredLayerId, this.clusterLayerId]) {
-          try {
-            if (map.getLayer(id)) map.removeLayer(id);
-          } catch {}
-        }
-        try {
-          if (map.getSource(this.sourceId)) map.removeSource(this.sourceId);
-        } catch {}
+        this.created.set(false);
+        teardown();
       });
     });
 
@@ -242,7 +248,7 @@ export class MapClusterLayerComponent {
     effect(() => {
       const data = this.data();
       if (typeof data === 'string') return;
-      if (!this.ctx.isLoaded()) return;
+      if (!this.created()) return;
       const map = this.ctx.map();
       if (!map) return;
       const source = map.getSource(this.sourceId) as GeoJSONSource | undefined;
@@ -257,7 +263,7 @@ export class MapClusterLayerComponent {
       const colors = this.clusterColors();
       const thresholds = this.clusterThresholds();
       const pointColor = this.pointColor();
-      if (!this.ctx.isLoaded()) return;
+      if (!this.created()) return;
       const map = this.ctx.map();
       if (!map) return;
 

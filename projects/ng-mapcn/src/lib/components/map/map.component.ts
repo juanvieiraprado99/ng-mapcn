@@ -94,6 +94,8 @@ export class MapComponent {
   constructor() {
     afterNextRender(() => this.initializeMap());
 
+    this.ctx.setErrorHandler((error) => this.zone.run(() => this.mapError.emit(error)));
+
     // Theme sync — reacts to ThemeService.theme() or explicit theme input
     effect(() => {
       const resolved = this.resolvedTheme();
