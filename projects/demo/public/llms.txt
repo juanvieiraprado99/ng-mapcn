@@ -29,8 +29,8 @@ Docs pages: [Map](https://ng-mapcn.vercel.app/docs/components/map) · [Controls]
 - **MapPopup** (`ng-map-popup`): A standalone popup component that can be placed anywhere on the map without a marker. Must be used inside ng-map.
 - **MapRoute** (`ng-map-route`): Renders a line/route from the given coordinates. Must be used inside ng-map. Supports click and hover interactions.
 - **MapArc** (`ng-map-arc`): Renders curved lines between coordinate pairs using quadratic Bézier interpolation, with longitude unwrapping across the antimeridian. Must be used inside ng-map.
-- **MapGeoJSON** (`ng-map-geojson`): Renders GeoJSON polygons and lines with theme-aware monochrome defaults and declarative feature-state hover. Accepts a URL or an inline GeoJSON object. Must be used inside ng-map.
-- **MapClusterLayer** (`ng-map-cluster-layer`): Renders clustered points with MapLibre GL native clustering. Automatically styles cluster circles by point count, zooms in on cluster click. Must be used inside ng-map.
+- **MapGeoJSON** (`ng-map-geojson`): Renders GeoJSON polygons and lines with theme-aware monochrome defaults and declarative feature-state hover. Accepts a URL or an inline GeoJSON object. Generic over the feature properties: MapGeoJSONComponent<P>, with P inferred from data. Must be used inside ng-map.
+- **MapClusterLayer** (`ng-map-cluster-layer`): Renders clustered points with MapLibre GL native clustering. Automatically styles cluster circles by point count, zooms in on cluster click. Generic over the feature properties: MapClusterLayerComponent<P>, with P inferred from data. Must be used inside ng-map.
 
 Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint`, `blankMapStyle`, `defaultStyles`, `MapStylesConfig`, `provideMapStyles()`, `MAP_DEFAULT_STYLES`, and `MapContextService` (map / isLoaded / resolvedTheme signals, the equivalent of mapcn's `useMap()`).
 

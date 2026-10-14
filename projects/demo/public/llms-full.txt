@@ -309,13 +309,13 @@ Renders curved lines between coordinate pairs using quadratic Bézier interpolat
 
 `ng-map-geojson`
 
-Renders GeoJSON polygons and lines with theme-aware monochrome defaults and declarative feature-state hover. Accepts a URL or an inline GeoJSON object. Must be used inside ng-map.
+Renders GeoJSON polygons and lines with theme-aware monochrome defaults and declarative feature-state hover. Accepts a URL or an inline GeoJSON object. Generic over the feature properties: MapGeoJSONComponent<P>, with P inferred from data. Must be used inside ng-map.
 
 **Inputs**
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `data` | `MapGeoJSONData` | `required` | GeoJSON object or URL string. |
+| `data` | `MapGeoJSONData<P>` | `required` | GeoJSON object or URL string. P types the featureClick/featureHover payloads. |
 | `id` | `string` | `auto` | Optional stable id for the underlying source/layer. |
 | `promoteId` | `string` | — | Feature property used as feature id — required for hover feature-state. |
 | `fillPaint` | `FillLayerSpecification["paint"]` | `theme mono` | Fill paint properties. |
@@ -328,23 +328,25 @@ Renders GeoJSON polygons and lines with theme-aware monochrome defaults and decl
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `featureClick` | `MapGeoJSONEvent` | — | Emits { feature, longitude, latitude, originalEvent } on click. |
-| `featureHover` | `MapGeoJSONEvent \| null` | — | Emits on hover; null when the pointer leaves. |
+| `featureClick` | `MapGeoJSONEvent<P>` | — | Emits { feature, longitude, latitude, originalEvent } on click. |
+| `featureHover` | `MapGeoJSONEvent<P> \| null` | — | Emits on hover; null when the pointer leaves. |
 
 ### MapClusterLayer
 
 `ng-map-cluster-layer`
 
-Renders clustered points with MapLibre GL native clustering. Automatically styles cluster circles by point count, zooms in on cluster click. Must be used inside ng-map.
+Renders clustered points with MapLibre GL native clustering. Automatically styles cluster circles by point count, zooms in on cluster click. Generic over the feature properties: MapClusterLayerComponent<P>, with P inferred from data. Must be used inside ng-map.
 
 **Inputs**
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `data` | `MapGeoJSONData` | `required` | GeoJSON points (object or URL string). |
+| `data` | `string \| FeatureCollection<Point, P>` | `required` | GeoJSON points (object or URL string). P types the pointClick payload. |
+| `id` | `string` | `auto` | Optional stable id prefix for the source and layers: cluster-source-<id>, clusters-<id>, cluster-count-<id>, unclustered-point-<id>. Changing it re-creates them. |
+| `beforeId` | `string` | — | Insert the cluster layers before this layer id. Applied at creation only. |
 | `clusterMaxZoom` | `number` | `14` | Max zoom at which points are clustered. |
 | `clusterRadius` | `number` | `50` | Cluster radius in pixels. |
-| `clusterColors` | `[string, string, string]` | `['#22c55e', '#eab308', '#ef4444']` | Circle colors for small/medium/large clusters. |
+| `clusterColors` | `[string, string, string]` | `['#22c55e', '#eab308', '#ef4444']` | Circle colors for small/medium/large clusters. ng-mapcn defaults to green/yellow/red; mapcn uses ['#3b82f6', '#1d4ed8', '#1e3a8a']. |
 | `clusterThresholds` | `[number, number]` | `[100, 750]` | Point-count thresholds between color tiers. |
 | `pointColor` | `string` | `'#3b82f6'` | Color of unclustered points. |
 | `zoomOnClusterClick` | `boolean` | `true` | Zooms into a cluster when it is clicked. |
@@ -353,7 +355,7 @@ Renders clustered points with MapLibre GL native clustering. Automatically style
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `pointClick` | `ClusterPointClickEvent` | — | Emits { feature, coordinates } when an unclustered point is clicked. |
+| `pointClick` | `ClusterPointClickEvent<P>` | — | Emits { feature, coordinates } when an unclustered point is clicked. |
 | `clusterClick` | `ClusterClickEvent` | — | Emits { clusterId, coordinates, pointCount } when a cluster is clicked. |
 
 ## MapContextService
