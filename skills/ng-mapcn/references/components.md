@@ -17,6 +17,7 @@ Class `MapComponent`. Provides `MapContextService` to its children. Child conten
 | `projection` | `ProjectionSpecification`                  | `undefined` | MapLibre projection; clearing it resets to `{ type: 'mercator' }`                                                                  |
 | `theme`      | `'light' \| 'dark' \| 'auto'`              | `'auto'`    | `auto` follows `ThemeService`                                                                                                      |
 | `loading`    | `boolean`                                  | `false`     | Forces the loader overlay                                                                                                          |
+| `labels`     | `Partial<MapLabels>`                       | `undefined` | Overrides the loader's accessible name (`loading`), over `provideMapLabels()` and the English defaults                             |
 | `viewport`   | `Partial<MapViewport>`                     | `undefined` | Controlled viewport; applied with `jumpTo`, skipped while the map is moving                                                        |
 | `options`    | `Omit<MapOptions, 'container' \| 'style'>` | `undefined` | Extra MapLibre constructor options. Defaults before spreading: `renderWorldCopies: false`, `attributionControl: { compact: true }` |
 
@@ -44,10 +45,15 @@ Class `MapControlsComponent`. Custom button UI (not a MapLibre `IControl`).
 | `showCompass`    | `boolean`                                                      | `false`          |
 | `showLocate`     | `boolean`                                                      | `false`          |
 | `showFullscreen` | `boolean`                                                      | `false`          |
+| `labels`         | `Partial<MapLabels>`                                           | `undefined`      |
+| `className`      | `string`                                                       | `undefined`      |
 
-| Output         | Payload                                                                                                    |
-| -------------- | ---------------------------------------------------------------------------------------------------------- |
-| `locateChange` | `{ longitude: number; latitude: number }` (after a successful geolocation; the map flies there at zoom 14) |
+`labels` overrides the button titles and `aria-label`s (`zoomIn`, `zoomOut`, `resetNorth`, `locate`, `fullscreen`), over `provideMapLabels()` and the English defaults. `className` adds space-separated classes to the rendered `.ng-controls` element (reactive; built-in classes are kept).
+
+| Output         | Payload                                                                                                                                                                                                                      |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `locateChange` | `{ longitude: number; latitude: number }` (after a successful geolocation; the map flies there at zoom 14)                                                                                                                   |
+| `locateError`  | `GeolocationPositionError \| Error`: the geolocation error (permission denied, timeout, position unavailable), or an `Error` when the browser has no `navigator.geolocation` (insecure context). Never emitted on the server |
 
 ## ng-map-marker
 
@@ -81,26 +87,44 @@ Method: `getMarker(): Marker | null`.
 
 Must be placed inside `<ng-map-marker>`.
 
-| Selector            | Class                    | Inputs                                                                                         | Outputs            | Behavior                                                                                                                                                                            |
-| ------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ng-marker-content` | `MarkerContentComponent` | none                                                                                           | none               | Projects its content into the marker element. Empty content renders the default dot (`.ng-marker-default-icon`), re-evaluated when the content changes (`@if`, empty interpolation) |
-| `ng-marker-popup`   | `MarkerPopupComponent`   | none                                                                                           | `popupClose: void` | Popup attached to the marker (opens on marker click). Created with `closeButton: false`, `closeOnClick: false`, `maxWidth: 'none'`                                                  |
-| `ng-marker-tooltip` | `MarkerTooltipComponent` | `offset: Offset` (default `16`), `anchor: PositionAnchor` (default `undefined`, creation only) | none               | Shown on marker hover; `pointer-events: none`                                                                                                                                       |
-| `ng-marker-label`   | `MarkerLabelComponent`   | `position: 'top' \| 'bottom'` (default `'top'`)                                                | none               | CSS label (`.ng-marker-label`), meant to be placed inside `ng-marker-content`                                                                                                       |
+| Selector            | Class                    | Inputs                                                                                                              | Outputs            | Behavior                                                                                                                                                                                                           |
+| ------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ng-marker-content` | `MarkerContentComponent` | `className: string`                                                                                                 | none               | Projects its content into the marker element (`.ng-marker-content` wrapper). Empty content renders the default dot (`.ng-marker-default-icon`), re-evaluated when the content changes (`@if`, empty interpolation) |
+| `ng-marker-popup`   | `MarkerPopupComponent`   | see the table below                                                                                                 | `popupClose: void` | Popup attached to the marker (opens on marker click). Created once; `offset`, `maxWidth`, `closeButton`, `labels` and `className` are reconciled live. Destroying the component does not emit `popupClose`         |
+| `ng-marker-tooltip` | `MarkerTooltipComponent` | `offset: Offset` (default `16`), `anchor: PositionAnchor` (default `undefined`, creation only), `className: string` | none               | Shown on marker hover; `pointer-events: none`                                                                                                                                                                      |
+| `ng-marker-label`   | `MarkerLabelComponent`   | `position: 'top' \| 'bottom'` (default `'top'`)                                                                     | none               | CSS label (`.ng-marker-label`), meant to be placed inside `ng-marker-content`                                                                                                                                      |
+
+`className` (on `ng-marker-content`, `ng-marker-popup`, `ng-marker-tooltip`, `ng-map-popup` and `ng-map-controls`) adds space-separated classes to the element the library renders (`.ng-marker-content`, `.ng-popup-card`, `.ng-tooltip-pill`, `.ng-controls`). A `class` on the Angular host never reaches these elements, because their content is portaled into elements MapLibre owns. Changing the value swaps the classes on the live element; the built-in class is kept.
+
+`ng-marker-popup` inputs:
+
+| Input          | Type                 | Default     | Notes                                                                                                                          |
+| -------------- | -------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `closeButton`  | `boolean`            | `false`     | Library-drawn X button (`.ng-popup-close`)                                                                                     |
+| `offset`       | `Offset`             | `undefined` | Live via `setOffset`. Unset keeps the offset MapLibre derives from the marker; unsetting it later keeps the last value applied |
+| `anchor`       | `PositionAnchor`     | `undefined` | Creation only                                                                                                                  |
+| `maxWidth`     | `string`             | `'none'`    | Live via `setMaxWidth`                                                                                                         |
+| `closeOnClick` | `boolean`            | `false`     | Creation only. `true` closes the popup on a map click                                                                          |
+| `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button                                                                                         |
+| `className`    | `string`             | `undefined` | Classes for `.ng-popup-card`                                                                                                   |
 
 ## ng-map-popup
 
 Class `MapPopupComponent`. Standalone popup at coordinates, opened on creation (unless `open` is `false`).
 
-| Input          | Type                | Default  | Notes                                                                                                                         |
-| -------------- | ------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `longitude`    | `number`            | required |                                                                                                                               |
-| `latitude`     | `number`            | required |                                                                                                                               |
-| `closeButton`  | `boolean`           | `false`  | Library-drawn X button                                                                                                        |
-| `offset`       | `Offset`            | `16`     |                                                                                                                               |
-| `maxWidth`     | `string`            | `'none'` |                                                                                                                               |
-| `closeOnClick` | `boolean`           | `true`   | Creation only. Set `false` for hover popups                                                                                   |
-| `open`         | `boolean` (`model`) | `true`   | `[(open)]`: closing writes `false`, `true` reopens the same popup. A closed popup stays closed when only the position changes |
+| Input          | Type                 | Default     | Notes                                                                                                                         |
+| -------------- | -------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `longitude`    | `number`             | required    |                                                                                                                               |
+| `latitude`     | `number`             | required    |                                                                                                                               |
+| `closeButton`  | `boolean`            | `false`     | Library-drawn X button                                                                                                        |
+| `offset`       | `Offset`             | `16`        |                                                                                                                               |
+| `maxWidth`     | `string`             | `'none'`    |                                                                                                                               |
+| `closeOnClick` | `boolean`            | `true`      | Creation only. Set `false` for hover popups                                                                                   |
+| `open`         | `boolean` (`model`)  | `true`      | `[(open)]`: closing writes `false`, `true` reopens the same popup. A closed popup stays closed when only the position changes |
+| `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button                                                                                        |
+| `className`    | `string`             | `undefined` | Classes for `.ng-popup-card`. `ng-popup-passthrough` makes the popup ignore the pointer (see below)                           |
+
+Hover popups: set `[closeOnClick]="false"` and `className="ng-popup-passthrough"`. The popup sits next to the hovered point; if it captured the pointer, moving the cursor into it would fire the layer's `mouseleave` and close it. The rule `.maplibregl-popup:has(.ng-popup-passthrough)` (and its `.maplibregl-popup-content`) gets `pointer-events: none`. It ships in the library's `_utilities.scss`, and `ng add` appends it to a plain `styles.css`. It needs `:has()` (Chrome 105, Safari 15.4, Firefox 121).
 
 | Output       | Payload                                      |
 | ------------ | -------------------------------------------- |
@@ -111,29 +135,68 @@ Class `MapPopupComponent`. Standalone popup at coordinates, opened on creation (
 
 Class `MapRouteComponent`. A LineString layer.
 
-| Input         | Type                 | Default             | Notes                               |
-| ------------- | -------------------- | ------------------- | ----------------------------------- |
-| `coordinates` | `[number, number][]` | required            |                                     |
-| `id`          | `string`             | auto (`ng-route-N`) | Source id; layer id is `<id>-layer` |
-| `color`       | `string`             | `'#4285F4'`         |                                     |
-| `width`       | `number`             | `3`                 |                                     |
-| `opacity`     | `number`             | `0.8`               |                                     |
-| `dashArray`   | `[number, number]`   | `undefined`         | Dashed line when set                |
-| `interactive` | `boolean`            | `true`              |                                     |
+| Input             | Type                 | Default             | Notes                                                                         |
+| ----------------- | -------------------- | ------------------- | ----------------------------------------------------------------------------- |
+| `coordinates`     | `[number, number][]` | required            |                                                                               |
+| `id`              | `string`             | auto (`ng-route-N`) | Source id; layer id is `<id>-layer`                                           |
+| `color`           | `string`             | `'#4285F4'`         |                                                                               |
+| `width`           | `number`             | `3`                 |                                                                               |
+| `opacity`         | `number`             | `0.8`               |                                                                               |
+| `dashArray`       | `[number, number]`   | `undefined`         | Dashed line when set                                                          |
+| `interactive`     | `boolean`            | `true`              |                                                                               |
+| `beforeId`        | `string`             | `undefined`         | Layer to insert the route (and its progress line) before; creation only       |
+| `progress`        | `number`             | `undefined`         | Covered fraction (0 to 1, clamped). Drawn only by a child `ng-route-progress` |
+| `active`          | `boolean`            | `false`             | While `true`, the `active*` inputs override the base paint                    |
+| `activeColor`     | `string`             | `undefined`         | Falls back to `color`                                                         |
+| `activeWidth`     | `number`             | `undefined`         | Falls back to `width`                                                         |
+| `activeOpacity`   | `number`             | `undefined`         | Falls back to `opacity`                                                       |
+| `activeDashArray` | `[number, number]`   | `undefined`         | Falls back to `dashArray`                                                     |
 
-| Output       | Payload         |
-| ------------ | --------------- |
-| `routeClick` | `MapMouseEvent` |
+Paint changes (including `active`) go through `setPaintProperty`; the layer is never recreated. `active` does not move the layer to the top (mapcn does), so it keeps `beforeId` ordering.
+
+| Output            | Payload                                                                 |
+| ----------------- | ----------------------------------------------------------------------- |
+| `routeClick`      | `MapMouseEvent`                                                         |
+| `routeMouseEnter` | `MapMouseEvent` (only when `interactive`; the cursor becomes a pointer) |
+| `routeMouseLeave` | `MapMouseEvent`                                                         |
+
+### Route children
+
+Place them inside `<ng-map-route>`. They read the route through `RouteContextService`, which `ng-map-route` provides (exported for custom children: `coordinates`, `progress`, `layerId`, `beforeId`, `created`, `width` signals, plus `cumulative`, the cumulative vertex distances).
+
+`ng-route-progress` (`RouteProgressComponent`) draws the covered part, cut at `progress` of the cumulative haversine distance, as a second source and layer just above the route. Ids: source `<id>-layer-progress`, layer `<id>-layer-progress-layer`. Progress changes call `setData`; the layer is re-added after a theme switch.
+
+| Input       | Type               | Default       |
+| ----------- | ------------------ | ------------- |
+| `color`     | `string`           | `'#22c55e'`   |
+| `width`     | `number`           | route's width |
+| `opacity`   | `number`           | `1`           |
+| `dashArray` | `[number, number]` | `undefined`   |
+
+`ng-route-marker` (`RouteMarkerComponent`) is a marker placed along the route. It accepts the marker children (`ng-marker-content`, `ng-marker-popup`, `ng-marker-tooltip`, `ng-marker-label`). It is created once and moved with `setLngLat`.
+
+| Input | Type                                                         | Default   | Notes                                         |
+| ----- | ------------------------------------------------------------ | --------- | --------------------------------------------- |
+| `at`  | `RouteMarkerAt` = `'start' \| 'end' \| 'progress' \| number` | `'start'` | A number is a 0 to 1 fraction of the distance |
+
+```html
+<ng-map-route [coordinates]="coords" [progress]="0.4" [active]="selected()" activeColor="#2563eb">
+  <ng-route-progress color="#22c55e" />
+  <ng-route-marker at="progress"><ng-marker-content>🚚</ng-marker-content></ng-route-marker>
+</ng-map-route>
+```
 
 ## ng-map-geojson
 
-Class `MapGeoJSONComponent`. Fill and outline layers.
+Class `MapGeoJSONComponent<P = Record<string, unknown>>`. Fill and outline layers.
 
-`type MapGeoJSONData = GeoJSON.FeatureCollection | GeoJSON.Feature | GeoJSON.Geometry | string` (a string is a URL). Exported.
+`type MapGeoJSONData<P = GeoJSON.GeoJsonProperties> = GeoJSON.FeatureCollection<GeoJSON.Geometry, P> | GeoJSON.Feature<GeoJSON.Geometry, P> | GeoJSON.Geometry | string` (a string is a URL). Exported.
+
+Generic over the feature properties: `P` is inferred from `data`, so `featureClick` / `featureHover` carry typed `feature.properties`. When `data` is typed with an interface, type the handler with the same argument (`MapGeoJSONEvent<CountryProperties>`); a bare `MapGeoJSONEvent` does not compile, because an interface is not assignable to `Record<string, unknown>`. MapLibre serializes nested objects and arrays in rendered feature properties to JSON strings, so `P` is only accurate for flat properties.
 
 | Input            | Type                                       | Default               | Notes                                                                                                    |
 | ---------------- | ------------------------------------------ | --------------------- | -------------------------------------------------------------------------------------------------------- |
-| `data`           | `MapGeoJSONData`                           | required              |                                                                                                          |
+| `data`           | `MapGeoJSONData<P \| null>`                | required              |                                                                                                          |
 | `id`             | `string`                                   | auto (`ng-geojson-N`) |                                                                                                          |
 | `promoteId`      | `string`                                   | `undefined`           | Feature property promoted to the feature id. Needed for `fillHoverPaint` and stable hover/click payloads |
 | `fillPaint`      | `FillLayerSpecification['paint'] \| false` | `undefined`           | Merged onto theme defaults; `false` omits the fill layer                                                 |
@@ -144,10 +207,10 @@ Class `MapGeoJSONComponent`. Fill and outline layers.
 
 Paint defaults: fill color `#d4d4d4` (light) / `#404040` (dark); line color `#ffffff` (light) / `#171717` (dark), line width `0.5`.
 
-| Output         | Payload                                                  |
-| -------------- | -------------------------------------------------------- |
-| `featureClick` | `MapGeoJSONEvent`                                        |
-| `featureHover` | `MapGeoJSONEvent \| null` (null when the pointer leaves) |
+| Output         | Payload                                                     |
+| -------------- | ----------------------------------------------------------- |
+| `featureClick` | `MapGeoJSONEvent<P>`                                        |
+| `featureHover` | `MapGeoJSONEvent<P> \| null` (null when the pointer leaves) |
 
 ## ng-map-arc
 
@@ -172,22 +235,26 @@ Class `MapArcComponent<T extends MapArcDatum = MapArcDatum>`. Curved arcs; an in
 
 ## ng-map-cluster-layer
 
-Class `MapClusterLayerComponent`. Cluster circles sized/colored by count, a count label, and unclustered point dots.
+Class `MapClusterLayerComponent<P = Record<string, unknown>>`. Cluster circles sized/colored by count, a count label, and unclustered point dots. Generic like `ng-map-geojson`: `P` is inferred from `data` and types `pointClick`.
 
-| Input                | Type                                                 | Default                             | Notes                                                     |
-| -------------------- | ---------------------------------------------------- | ----------------------------------- | --------------------------------------------------------- |
-| `data`               | `string \| GeoJSON.FeatureCollection<GeoJSON.Point>` | required                            | String is a URL; a new URL is fetched again via `setData` |
-| `clusterMaxZoom`     | `number`                                             | `14`                                | Runtime changes re-cluster (`setClusterOptions`)          |
-| `clusterRadius`      | `number`                                             | `50`                                | Pixels; runtime changes re-cluster                        |
-| `clusterColors`      | `[string, string, string]`                           | `['#22c55e', '#eab308', '#ef4444']` | small, medium, large                                      |
-| `clusterThresholds`  | `[number, number]`                                   | `[100, 750]`                        | Point counts for medium and large                         |
-| `pointColor`         | `string`                                             | `'#3b82f6'`                         |                                                           |
-| `zoomOnClusterClick` | `boolean`                                            | `true`                              |                                                           |
+Ids derive from `id` (auto `ng-cluster-N`): source `cluster-source-<id>`, layers `clusters-<id>` (circles), `cluster-count-<id>` (labels) and `unclustered-point-<id>`.
 
-| Output         | Payload                                                                                                 |
-| -------------- | ------------------------------------------------------------------------------------------------------- |
-| `pointClick`   | `ClusterPointClickEvent` = `{ feature: GeoJSON.Feature<GeoJSON.Point>; coordinates: [number, number] }` |
-| `clusterClick` | `ClusterClickEvent` = `{ clusterId: number; coordinates: [number, number]; pointCount: number }`        |
+| Input                | Type                                                            | Default                             | Notes                                                                                         |
+| -------------------- | --------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------- |
+| `data`               | `string \| GeoJSON.FeatureCollection<GeoJSON.Point, P \| null>` | required                            | String is a URL; a new URL is fetched again via `setData`                                     |
+| `id`                 | `string`                                                        | auto (`ng-cluster-N`)               | Changing it re-creates the source and layers                                                  |
+| `beforeId`           | `string`                                                        | `undefined`                         | Layer to insert the three layers before; creation only                                        |
+| `clusterMaxZoom`     | `number`                                                        | `14`                                | Runtime changes re-cluster (`setClusterOptions`)                                              |
+| `clusterRadius`      | `number`                                                        | `50`                                | Pixels; runtime changes re-cluster                                                            |
+| `clusterColors`      | `[string, string, string]`                                      | `['#22c55e', '#eab308', '#ef4444']` | small, medium, large. mapcn uses `['#3b82f6', '#1d4ed8', '#1e3a8a']`; pass those for its look |
+| `clusterThresholds`  | `[number, number]`                                              | `[100, 750]`                        | Point counts for medium and large                                                             |
+| `pointColor`         | `string`                                                        | `'#3b82f6'`                         |                                                                                               |
+| `zoomOnClusterClick` | `boolean`                                                       | `true`                              |                                                                                               |
+
+| Output         | Payload                                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------- |
+| `pointClick`   | `ClusterPointClickEvent<P>` = `{ feature: GeoJSON.Feature<GeoJSON.Point, P>; coordinates: [number, number] }` |
+| `clusterClick` | `ClusterClickEvent` = `{ clusterId: number; coordinates: [number, number]; pointCount: number }`              |
 
 ## Services
 
@@ -233,6 +300,26 @@ defaultStyles: Record<'light' | 'dark', string> = {
 blankMapStyle: StyleSpecification; // no sources, one transparent background layer
 ```
 
+```ts
+provideMapLabels(
+  source: Partial<MapLabels> | Signal<Partial<MapLabels> | undefined> | (() => Signal<Partial<MapLabels> | undefined>),
+): Provider
+```
+
+Translates the control buttons, the loader and the popup close button. Same three forms as `provideMapStyles`; a signal relabels every map when the locale changes. Missing keys fall back to `DEFAULT_MAP_LABELS` (English). A `labels` input on `ng-map`, `ng-map-controls`, `ng-map-popup` and `ng-marker-popup` wins over the provider. `MAP_LABELS` is the underlying `InjectionToken<Signal<Partial<MapLabels> | undefined>>`; `injectMapLabels(override?)` resolves defaults, then provider, then override, in an injection context.
+
+```ts
+interface MapLabels {
+  zoomIn: string; // 'Zoom in'
+  zoomOut: string; // 'Zoom out'
+  resetNorth: string; // 'Reset north'
+  locate: string; // 'My location'
+  fullscreen: string; // 'Toggle fullscreen'
+  loading: string; // 'Loading map' (loader aria-label)
+  closePopup: string; // 'Close popup'
+}
+```
+
 ## Utils and types
 
 ```ts
@@ -269,4 +356,9 @@ mergeHoverPaint<T extends Record<string, unknown>>(paint: T, hoverPaint: T | und
 // wraps each overridden property in ["case", ["boolean", ["feature-state", "hover"], false], hover, base]; needs promoteId on the source
 buildArcCoordinates(from, to, curvature: number, samples: number): [number, number][];
 // quadratic Bezier in lng/lat space; unwraps the destination longitude across the antimeridian
+cumulativeLengths(coordinates): number[];
+// haversine distance in meters at each vertex; compute once per path and pass it to the two below
+sliceLineByProgress(coordinates, progress: number, cumulative?): [number, number][];
+// the covered part, ending with a point interpolated (linearly in lng/lat) inside the cut segment
+pointAlongLine(coordinates, fraction: number, cumulative?): [number, number] | null;
 ```

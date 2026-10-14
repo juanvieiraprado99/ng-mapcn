@@ -59,14 +59,15 @@ Coordinates are always `[longitude, latitude]`.
 | Selector                                               | Purpose                        | Key inputs / outputs                                                                                                                               |
 | ------------------------------------------------------ | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ng-map`                                               | Map host                       | `center`, `zoom`, `theme`, `styles`, `blank`, `projection`, `viewport`, `loading`, `options`; `viewportChange`, `mapReady`, `mapClick`, `mapError` |
-| `ng-map-controls`                                      | Zoom/compass/locate/fullscreen | `position`, `showZoom`, `showCompass`, `showLocate`, `showFullscreen`; `locateChange`                                                              |
+| `ng-map-controls`                                      | Zoom/compass/locate/fullscreen | `position`, `showZoom`, `showCompass`, `showLocate`, `showFullscreen`, `labels`; `locateChange`, `locateError`                                     |
 | `ng-map-marker`                                        | Marker                         | `longitude`, `latitude`, `draggable`, `offset`, `rotation`; `markerClick`, `dragEnd`                                                               |
-| `ng-marker-content` / `-popup` / `-tooltip` / `-label` | Marker children                | content, click popup, hover tooltip, label                                                                                                         |
-| `ng-map-popup`                                         | Popup at coordinates           | `longitude`, `latitude`, `closeButton`; `popupClose`                                                                                               |
-| `ng-map-route`                                         | Line layer                     | `coordinates`, `color`, `width`, `dashArray`; `routeClick`                                                                                         |
+| `ng-marker-content` / `-popup` / `-tooltip` / `-label` | Marker children                | content, click popup (`closeButton`, `offset`, `anchor`, `maxWidth`, `closeOnClick`), hover tooltip, label                                         |
+| `ng-map-popup`                                         | Popup at coordinates           | `longitude`, `latitude`, `closeButton`, `closeOnClick`, `className`; `popupClose`                                                                  |
+| `ng-map-route`                                         | Line layer                     | `coordinates`, `color`, `width`, `dashArray`, `progress`, `active`, `beforeId`; `routeClick`, `routeMouseEnter`, `routeMouseLeave`                 |
+| `ng-route-progress` / `ng-route-marker`                | Route children                 | covered line (`color`, `width`); marker at `start`, `end`, `progress` or a fraction                                                                |
 | `ng-map-geojson`                                       | Fill + line layers             | `data`, `promoteId`, `fillPaint`, `fillHoverPaint`, `interactive`; `featureClick`, `featureHover`                                                  |
 | `ng-map-arc`                                           | Curved arcs                    | `data`, `curvature`, `paint`, `hoverPaint`; `arcClick`, `arcHover`                                                                                 |
-| `ng-map-cluster-layer`                                 | Clustered points               | `data`, `clusterColors`, `pointColor`; `pointClick`, `clusterClick`                                                                                |
+| `ng-map-cluster-layer`                                 | Clustered points               | `data`, `id`, `beforeId`, `clusterColors`, `pointColor`; `pointClick`, `clusterClick`                                                              |
 
 Full inputs, types and defaults: `references/components.md`.
 
@@ -74,10 +75,10 @@ Full inputs, types and defaults: `references/components.md`.
 
 - Give the map's parent an explicit height; `<ng-map>` fills its parent.
 - Pass new array/object references to update `data` / `coordinates`; do not mutate in place.
-- Inputs are reconciled by diff; MapLibre objects are not recreated. `anchor` (marker, tooltip) and `beforeId` and `closeOnClick` apply at creation only.
+- Inputs are reconciled by diff; MapLibre objects are not recreated. `anchor` (marker, tooltip, marker popup), `beforeId` and `closeOnClick` apply at creation only.
 - Theme switches call `setStyle`, which wipes custom sources and layers. Gate custom layer code on `isLoaded()` and re-add inside the effect.
 - Theme comes from the `theme` input, else the `dark`/`light` class or `data-theme` on `<html>`, else `prefers-color-scheme`. Any toggle that sets a `dark` class works; `ThemeService` is optional.
-- Popup/tooltip content is wrapped in `.ng-popup-card` / `.ng-tooltip-pill` automatically; just project your content.
+- Popup/tooltip content is wrapped in `.ng-popup-card` / `.ng-tooltip-pill` automatically; just project your content. A `class` on the Angular host does not reach that wrapper: use the `className` input. Hover popups need `className="ng-popup-passthrough"`.
 - Controlled viewport: bind `[viewport]` and `(viewportChange)` together.
 - The global `.maplibregl-popup-*` overrides and `maplibre-gl.css` are required.
 - Many points: use `ng-map-cluster-layer` or `ng-map-geojson` (GPU), not hundreds of `ng-map-marker` (one DOM element each).
