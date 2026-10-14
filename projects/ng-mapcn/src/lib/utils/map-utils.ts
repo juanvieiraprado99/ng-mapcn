@@ -76,8 +76,9 @@ export function mergeHoverPaint<T extends Record<string, unknown>>(
  * Build the coordinates of a curved arc between two points as a quadratic
  * Bézier in lng/lat space, unwrapping the destination longitude so arcs that
  * cross the antimeridian (e.g. Tokyo -> San Francisco) curve the short way.
- * Resulting longitudes may leave [-180, 180]; MapLibre renders them correctly
- * on the globe, and on mercator with world copies.
+ * Resulting longitudes may leave [-180, 180]. MapLibre still renders them on
+ * the globe and on mercator, even a single world (`renderWorldCopies:
+ * false`): its GeoJSON source moves the part past ±180 into the visible world.
  */
 export function buildArcCoordinates(
   from: [number, number],
