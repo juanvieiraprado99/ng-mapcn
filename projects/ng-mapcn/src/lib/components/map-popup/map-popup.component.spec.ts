@@ -325,4 +325,45 @@ describe('MapPopupComponent', () => {
       expect(fakeRegistry.popups[0].isOpen()).toBe(false);
     });
   });
+
+  describe('className', () => {
+    it('applies the initial classes and keeps the built-in class', async () => {
+      const { fixture } = await renderMap(
+        `<ng-map><ng-map-popup [longitude]="1" [latitude]="2" [className]="cls"><p>x</p></ng-map-popup></ng-map>`,
+        {
+          imports: [MapPopupComponent],
+          hostProps: { cls: 'w-64 p-0' },
+        },
+      );
+      await fixture.whenStable();
+      const el = fakeRegistry.popups[0].getContent() as HTMLElement;
+      expect(el.classList).toContain('ng-popup-card');
+      expect(el.classList).toContain('w-64');
+      expect(el.classList).toContain('p-0');
+    });
+
+    it('swaps classes when the input changes, without dropping the built-in class', async () => {
+      const { fixture } = await renderMap(
+        `<ng-map><ng-map-popup [longitude]="1" [latitude]="2" [className]="cls"><p>x</p></ng-map-popup></ng-map>`,
+        {
+          imports: [MapPopupComponent],
+          hostProps: { cls: 'a b' },
+        },
+      );
+      await fixture.whenStable();
+      const before = fakeRegistry.popups[0].getContent() as HTMLElement;
+      update(fixture, { cls: 'b c ng-popup-card' });
+      await fixture.whenStable();
+      const el = fakeRegistry.popups[0].getContent() as HTMLElement;
+      expect(el).toBe(before);
+      expect(el.classList).not.toContain('a');
+      expect(el.classList).toContain('b');
+      expect(el.classList).toContain('c');
+      expect(el.classList).toContain('ng-popup-card');
+
+      update(fixture, { cls: undefined });
+      await fixture.whenStable();
+      expect(el.className).toBe('ng-popup-card');
+    });
+  });
 });

@@ -356,4 +356,45 @@ describe('MapControlsComponent', () => {
       }).toThrow(/MapContextService/);
     });
   });
+
+  describe('className', () => {
+    it('applies the initial classes and keeps the built-in class', async () => {
+      const { fixture } = await renderMap(
+        `<ng-map><ng-map-controls position="top-left" [className]="cls" /></ng-map>`,
+        {
+          imports: [MapControlsComponent],
+          hostProps: { cls: 'w-64 p-0' },
+        },
+      );
+      await fixture.whenStable();
+      const el = fixture.nativeElement.querySelector('.ng-controls') as HTMLElement;
+      expect(el.classList).toContain('ng-controls');
+      expect(el.classList).toContain('w-64');
+      expect(el.classList).toContain('p-0');
+    });
+
+    it('swaps classes when the input changes, without dropping the built-in class', async () => {
+      const { fixture } = await renderMap(
+        `<ng-map><ng-map-controls position="top-left" [className]="cls" /></ng-map>`,
+        {
+          imports: [MapControlsComponent],
+          hostProps: { cls: 'a b' },
+        },
+      );
+      await fixture.whenStable();
+      const before = fixture.nativeElement.querySelector('.ng-controls') as HTMLElement;
+      update(fixture, { cls: 'b c ng-controls' });
+      await fixture.whenStable();
+      const el = fixture.nativeElement.querySelector('.ng-controls') as HTMLElement;
+      expect(el).toBe(before);
+      expect(el.classList).not.toContain('a');
+      expect(el.classList).toContain('b');
+      expect(el.classList).toContain('c');
+      expect(el.classList).toContain('ng-controls');
+
+      update(fixture, { cls: undefined });
+      await fixture.whenStable();
+      expect(el.className).toBe('ng-controls ng-controls--top-left');
+    });
+  });
 });

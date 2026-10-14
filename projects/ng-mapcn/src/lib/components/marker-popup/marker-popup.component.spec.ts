@@ -86,4 +86,45 @@ describe('MarkerPopupComponent', () => {
     const { fixture } = await render();
     expect(() => fixture.destroy()).not.toThrow();
   });
+
+  describe('className', () => {
+    it('applies the initial classes and keeps the built-in class', async () => {
+      const { fixture } = await renderMap(
+        `<ng-map><ng-map-marker [longitude]="1" [latitude]="2"><ng-marker-popup [className]="cls"><p>x</p></ng-marker-popup></ng-map-marker></ng-map>`,
+        {
+          imports: [MapMarkerComponent, MarkerPopupComponent],
+          hostProps: { cls: 'w-64 p-0' },
+        },
+      );
+      await fixture.whenStable();
+      const el = fakeRegistry.popups[0].getContent() as HTMLElement;
+      expect(el.classList).toContain('ng-popup-card');
+      expect(el.classList).toContain('w-64');
+      expect(el.classList).toContain('p-0');
+    });
+
+    it('swaps classes when the input changes, without dropping the built-in class', async () => {
+      const { fixture } = await renderMap(
+        `<ng-map><ng-map-marker [longitude]="1" [latitude]="2"><ng-marker-popup [className]="cls"><p>x</p></ng-marker-popup></ng-map-marker></ng-map>`,
+        {
+          imports: [MapMarkerComponent, MarkerPopupComponent],
+          hostProps: { cls: 'a b' },
+        },
+      );
+      await fixture.whenStable();
+      const before = fakeRegistry.popups[0].getContent() as HTMLElement;
+      update(fixture, { cls: 'b c ng-popup-card' });
+      await fixture.whenStable();
+      const el = fakeRegistry.popups[0].getContent() as HTMLElement;
+      expect(el).toBe(before);
+      expect(el.classList).not.toContain('a');
+      expect(el.classList).toContain('b');
+      expect(el.classList).toContain('c');
+      expect(el.classList).toContain('ng-popup-card');
+
+      update(fixture, { cls: undefined });
+      await fixture.whenStable();
+      expect(el.className).toBe('ng-popup-card');
+    });
+  });
 });

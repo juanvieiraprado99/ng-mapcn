@@ -17,6 +17,7 @@ import { type Map as MapLibreMap } from 'maplibre-gl';
 
 import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MapContextService } from '../../services/map-context.service';
+import { classTokens } from '../../utils/class-name';
 
 @Component({
   selector: 'ng-map-controls',
@@ -36,6 +37,8 @@ export class MapControlsComponent {
 
   /** Per-component label overrides, merged over `provideMapLabels` and the English defaults. */
   readonly labels = input<Partial<MapLabels>>();
+  /** Extra space-separated classes for the rendered `.ng-controls` element (reactive; built-in classes are kept). */
+  readonly className = input<string>();
 
   /** Emitted after a successful geolocation (mapcn `onLocate`). */
   readonly locateChange = output<{ longitude: number; latitude: number }>();
@@ -58,6 +61,12 @@ export class MapControlsComponent {
       'bottom-right': 'ng-controls--bottom-right',
     };
     return map[this.position()] ?? 'ng-controls--bottom-right';
+  });
+
+  /** Position modifier plus the consumer's classes; the static `ng-controls` stays in the template. */
+  protected readonly rootClass = computed(() => {
+    const extra = classTokens(this.className(), ['ng-controls', this.positionClass()]);
+    return [this.positionClass(), ...extra].join(' ');
   });
 
   // Hierarchical DI — throws when placed outside <ng-map>, like mapcn's useMap()

@@ -177,4 +177,51 @@ describe('MarkerContentComponent', () => {
       expect(disconnect).toHaveBeenCalled();
     });
   });
+
+  describe('className', () => {
+    it('applies the initial classes and keeps the built-in class', async () => {
+      const { fixture } = await renderMap(
+        `<ng-map><ng-map-marker [longitude]="1" [latitude]="2"><ng-marker-content [className]="cls"><span class="pin">x</span></ng-marker-content></ng-map-marker></ng-map>`,
+        {
+          imports: IMPORTS,
+          hostProps: { cls: 'w-64 p-0' },
+        },
+      );
+      await fixture.whenStable();
+      const el = fakeRegistry.markers[0]
+        .getElement()
+        .querySelector('.ng-marker-content') as HTMLElement;
+      expect(el.classList).toContain('ng-marker-content');
+      expect(el.classList).toContain('w-64');
+      expect(el.classList).toContain('p-0');
+    });
+
+    it('swaps classes when the input changes, without dropping the built-in class', async () => {
+      const { fixture } = await renderMap(
+        `<ng-map><ng-map-marker [longitude]="1" [latitude]="2"><ng-marker-content [className]="cls"><span class="pin">x</span></ng-marker-content></ng-map-marker></ng-map>`,
+        {
+          imports: IMPORTS,
+          hostProps: { cls: 'a b' },
+        },
+      );
+      await fixture.whenStable();
+      const before = fakeRegistry.markers[0]
+        .getElement()
+        .querySelector('.ng-marker-content') as HTMLElement;
+      update(fixture, { cls: 'b c ng-marker-content' });
+      await fixture.whenStable();
+      const el = fakeRegistry.markers[0]
+        .getElement()
+        .querySelector('.ng-marker-content') as HTMLElement;
+      expect(el).toBe(before);
+      expect(el.classList).not.toContain('a');
+      expect(el.classList).toContain('b');
+      expect(el.classList).toContain('c');
+      expect(el.classList).toContain('ng-marker-content');
+
+      update(fixture, { cls: undefined });
+      await fixture.whenStable();
+      expect(el.className).toBe('ng-marker-content');
+    });
+  });
 });

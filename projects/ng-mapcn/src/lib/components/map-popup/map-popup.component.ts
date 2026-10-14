@@ -17,6 +17,7 @@ import { type Map as MapLibreMap, type Offset, Popup } from 'maplibre-gl';
 
 import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MapContextService } from '../../services/map-context.service';
+import { applyClassName } from '../../utils/class-name';
 import { renderPortal } from '../../utils/portal';
 
 /**
@@ -42,6 +43,8 @@ export class MapPopupComponent {
   readonly closeOnClick = input(true);
   /** Label overrides (`closePopup`), merged over `provideMapLabels` and the English defaults. */
   readonly labels = input<Partial<MapLabels>>();
+  /** Extra space-separated classes for the rendered `.ng-popup-card` element (reactive; built-in classes are kept). */
+  readonly className = input<string>();
   /**
    * Whether the popup is shown. Two-way bindable (`[(open)]`): closing it (map click, close
    * button) writes `false`, and setting `true` opens the same popup again — at the current
@@ -105,6 +108,15 @@ export class MapPopupComponent {
         } catch {}
         destroyPortal();
       });
+    });
+
+    // Reconcile className on the live element (no recreation).
+    let applied: string[] = [];
+    effect(() => {
+      const el = this.instance()?.container;
+      const value = this.className();
+      if (!el) return;
+      applied = untracked(() => applyClassName(el, value, applied, ['ng-popup-card']));
     });
 
     // Reconcile [(open)]: re-add the same popup or remove it.
