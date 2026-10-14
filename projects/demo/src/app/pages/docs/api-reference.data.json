@@ -48,7 +48,8 @@
         { "name": "showFullscreen", "type": "boolean", "default": "false", "description": "Show fullscreen toggle button." }
       ],
       "outputs": [
-        { "name": "locateChange", "type": "{ longitude: number; latitude: number }", "default": "", "description": "Emits the user position after a successful locate." }
+        { "name": "locateChange", "type": "{ longitude: number; latitude: number }", "default": "", "description": "Emits the user position after a successful locate." },
+        { "name": "locateError", "type": "GeolocationPositionError | Error", "default": "", "description": "Emits when locating fails (denied, timeout) or when the browser has no geolocation." }
       ]
     },
     {

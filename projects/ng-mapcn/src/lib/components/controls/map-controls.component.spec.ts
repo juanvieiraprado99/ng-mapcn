@@ -15,6 +15,7 @@ const TEMPLATE = `
         [showLocate]="showLocate"
         [showFullscreen]="showFullscreen"
         (locateChange)="locateChange($event)"
+        (locateError)="locateError($event)"
       />
     }
   </ng-map>
@@ -29,6 +30,7 @@ function hostDefaults(): Record<string, any> {
     showLocate: false,
     showFullscreen: false,
     locateChange: vi.fn(),
+    locateError: vi.fn(),
   };
 }
 
@@ -197,14 +199,16 @@ describe('MapControlsComponent', () => {
       expect(getCurrentPosition).toHaveBeenCalledTimes(1);
     });
 
-    it('does nothing when the browser has no geolocation', async () => {
-      const { fixture, map } = await render({ showLocate: true });
+    it('emits locateError when the browser has no geolocation', async () => {
+      const { fixture, map, host } = await render({ showLocate: true });
 
       expect(() => button(fixture, 'My location').click()).not.toThrow();
       fixture.detectChanges();
 
       expect(button(fixture, 'My location').disabled).toBe(false);
       expect(map.flyTo).not.toHaveBeenCalled();
+      expect(host['locateError']).toHaveBeenCalledTimes(1);
+      expect(host['locateError'].mock.calls[0][0]).toBeInstanceOf(Error);
     });
 
     it('ignores a position that arrives after the controls were destroyed', async () => {
@@ -220,17 +224,19 @@ describe('MapControlsComponent', () => {
       expect(host['locateChange']).not.toHaveBeenCalled();
     });
 
-    it('resets the locating state on error without emitting', async () => {
+    it('resets the locating state and emits locateError on error', async () => {
       const getCurrentPosition = vi.fn();
       stubGeolocation(getCurrentPosition);
       const { fixture, map, host } = await render({ showLocate: true });
 
       button(fixture, 'My location').click();
       fixture.detectChanges();
-      getCurrentPosition.mock.calls[0][1]({ code: 1 });
+      const error = { code: 1, message: 'denied' };
+      getCurrentPosition.mock.calls[0][1](error);
       fixture.detectChanges();
 
       expect(button(fixture, 'My location').disabled).toBe(false);
+      expect(host['locateError']).toHaveBeenCalledWith(error);
       expect(map.flyTo).not.toHaveBeenCalled();
       expect(host['locateChange']).not.toHaveBeenCalled();
     });
