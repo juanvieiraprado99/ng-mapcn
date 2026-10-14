@@ -1,5 +1,12 @@
 # Changelog
 
+## [22.0.0-beta.5](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.4...v22.0.0-beta.5) (2026-10-14)
+
+
+### Bug Fixes
+
+* **controls:** keep bottom-right controls clear of the attribution ([#54](https://github.com/juanvieiraprado99/ng-mapcn/issues/54)) ([054656f](https://github.com/juanvieiraprado99/ng-mapcn/commit/054656fedf589a5b96ec3acc365722a35a340f7d))
+
 ## [22.0.0-beta.4](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.3...v22.0.0-beta.4) (2026-10-13)
 
 
