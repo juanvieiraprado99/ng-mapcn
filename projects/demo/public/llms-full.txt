@@ -126,6 +126,7 @@ Renders map control buttons: zoom, compass, locate, and fullscreen. Must be used
 | `showLocate` | `boolean` | `false` | Show geolocate button. |
 | `showFullscreen` | `boolean` | `false` | Show fullscreen toggle button. |
 | `labels` | `Partial<MapLabels>` | — | Label overrides (zoomIn, zoomOut, resetNorth, locate, fullscreen), merged over provideMapLabels() and the English defaults. |
+| `className` | `string` | — | Extra space-separated classes added to the rendered .ng-controls element. Reactive; the built-in class is always kept. |
 
 **Outputs**
 
@@ -170,6 +171,12 @@ A container for marker-related components. Provides context for its children and
 
 Renders the visual content of a marker via content projection. If left empty, a default blue dot is rendered; it follows conditional content (shown while nothing is projected). Must be used inside ng-map-marker.
 
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `className` | `string` | — | Extra space-separated classes added to the rendered .ng-marker-content element. Reactive; the built-in class is always kept. |
+
 ### MarkerLabel
 
 `ng-marker-label`
@@ -187,6 +194,12 @@ An always-visible text label above or below the marker. Must be used inside ng-m
 `ng-marker-popup`
 
 A popup attached to the marker that opens on click. Must be used inside ng-map-marker.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `className` | `string` | — | Extra space-separated classes added to the rendered .ng-popup-card element. Reactive; the built-in class is always kept. |
 
 **Outputs**
 
@@ -206,6 +219,7 @@ A tooltip that appears on marker hover. Must be used inside ng-map-marker.
 |---|---|---|---|
 | `offset` | `Offset` | `16` | Pixel distance between the marker and the tooltip. |
 | `anchor` | `PositionAnchor` | — | Which side of the coordinates the tooltip anchors to. |
+| `className` | `string` | — | Extra space-separated classes added to the rendered .ng-tooltip-pill element. Reactive; the built-in class is always kept. |
 
 ### MapPopup
 
@@ -224,6 +238,7 @@ A standalone popup component that can be placed anywhere on the map without a ma
 | `maxWidth` | `string` | `'none'` | CSS max-width of the popup container. |
 | `closeOnClick` | `boolean` | `true` | Closes the popup when the map is clicked. Applied at creation only. Set false for popups that follow the hover. |
 | `labels` | `Partial<MapLabels>` | — | Label overrides (closePopup), merged over provideMapLabels() and the English defaults. |
+| `className` | `string` | — | Extra space-separated classes added to the rendered .ng-popup-card element. Reactive; the built-in class is always kept. |
 | `open` | `boolean` | `true` | Whether the popup is shown. Two-way bindable with [(open)]: closing it writes false, setting true opens it again at the current position. |
 
 **Outputs**

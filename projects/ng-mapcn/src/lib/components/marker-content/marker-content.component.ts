@@ -4,10 +4,14 @@ import {
   effect,
   inject,
   Injector,
+  input,
+  signal,
   type TemplateRef,
+  untracked,
   viewChild,
 } from '@angular/core';
 
+import { applyClassName } from '../../utils/class-name';
 import { renderPortal } from '../../utils/portal';
 import { MarkerContextService } from '../map-marker/marker-context.service';
 
@@ -17,9 +21,14 @@ import { MarkerContextService } from '../map-marker/marker-context.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MarkerContentComponent {
+  /** Extra space-separated classes for the rendered `.ng-marker-content` element (reactive; built-in classes are kept). */
+  readonly className = input<string>();
+
   private readonly injector = inject(Injector);
   private readonly markerCtx = inject(MarkerContextService);
   private readonly tpl = viewChild.required<TemplateRef<unknown>>('tpl');
+
+  private readonly wrapperEl = signal<HTMLElement | null>(null);
 
   constructor() {
     effect((onCleanup) => {
@@ -33,6 +42,7 @@ export class MarkerContentComponent {
       const wrapper = document.createElement('div');
       wrapper.className = 'ng-marker-content';
       host.appendChild(wrapper);
+      this.wrapperEl.set(wrapper);
 
       const destroyPortal = renderPortal(this.tpl(), this.injector, wrapper);
 
@@ -52,9 +62,19 @@ export class MarkerContentComponent {
       observer.observe(wrapper, { childList: true, characterData: true, subtree: true });
 
       onCleanup(() => {
+        this.wrapperEl.set(null);
         observer.disconnect();
         destroyPortal();
       });
+    });
+
+    // Reconcile className on the live element (no recreation).
+    let applied: string[] = [];
+    effect(() => {
+      const el = this.wrapperEl();
+      const value = this.className();
+      if (!el) return;
+      applied = untracked(() => applyClassName(el, value, applied, ['ng-marker-content']));
     });
   }
 }

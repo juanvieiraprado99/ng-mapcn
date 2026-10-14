@@ -13,6 +13,7 @@ import {
 import { type Offset, Popup, type PositionAnchor } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
+import { applyClassName } from '../../utils/class-name';
 import { renderPortal } from '../../utils/portal';
 import { MarkerContextService } from '../map-marker/marker-context.service';
 
@@ -25,12 +26,15 @@ export class MarkerTooltipComponent {
   readonly offset = input<Offset>(16);
   /** Applied at creation only — MapLibre's Popup has no anchor setter (mapcn parity). */
   readonly anchor = input<PositionAnchor>();
+  /** Extra space-separated classes for the rendered `.ng-tooltip-pill` element (reactive; built-in classes are kept). */
+  readonly className = input<string>();
 
   private readonly injector = inject(Injector);
   private readonly mapCtx = inject(MapContextService);
   private readonly markerCtx = inject(MarkerContextService);
   private readonly tpl = viewChild.required<TemplateRef<unknown>>('tpl');
   private readonly popup = signal<Popup | null>(null);
+  private readonly pillEl = signal<HTMLElement | null>(null);
 
   constructor() {
     effect((onCleanup) => {
@@ -41,6 +45,7 @@ export class MarkerTooltipComponent {
       const container = document.createElement('div');
       container.className = 'ng-tooltip-pill';
       container.style.pointerEvents = 'none';
+      this.pillEl.set(container);
       const destroyPortal = renderPortal(this.tpl(), this.injector, container);
 
       const popup = new Popup({
@@ -72,6 +77,7 @@ export class MarkerTooltipComponent {
         popup.remove();
         destroyPortal();
         this.popup.set(null);
+        this.pillEl.set(null);
       });
     });
 
@@ -79,6 +85,15 @@ export class MarkerTooltipComponent {
     effect(() => {
       const offset = this.offset();
       this.popup()?.setOffset(offset ?? 16);
+    });
+
+    // Reconcile className on the live element (no recreation).
+    let applied: string[] = [];
+    effect(() => {
+      const el = this.pillEl();
+      const value = this.className();
+      if (!el) return;
+      applied = untracked(() => applyClassName(el, value, applied, ['ng-tooltip-pill']));
     });
   }
 }
