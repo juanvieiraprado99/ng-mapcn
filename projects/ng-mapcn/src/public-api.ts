@@ -24,6 +24,7 @@ export * from './lib/services';
 
 // ── Providers ─────────────────────────────────────────────────────────────────
 
+export * from './lib/providers/map-labels.provider';
 export * from './lib/providers/map-styles.provider';
 
 // ── Utils & types ─────────────────────────────────────────────────────────────

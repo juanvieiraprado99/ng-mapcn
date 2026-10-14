@@ -4,8 +4,8 @@
       <button
         class="ng-control-btn"
         type="button"
-        title="Zoom in"
-        aria-label="Zoom in"
+        [title]="l().zoomIn"
+        [attr.aria-label]="l().zoomIn"
         (click)="zoomIn()"
       >
         <svg
@@ -24,8 +24,8 @@
       <button
         class="ng-control-btn ng-control-btn--divider"
         type="button"
-        title="Zoom out"
-        aria-label="Zoom out"
+        [title]="l().zoomOut"
+        [attr.aria-label]="l().zoomOut"
         (click)="zoomOut()"
       >
         <svg
@@ -47,8 +47,8 @@
         class="ng-control-btn"
         [class.ng-control-btn--divider]="showZoom()"
         type="button"
-        title="Reset north"
-        aria-label="Reset north"
+        [title]="l().resetNorth"
+        [attr.aria-label]="l().resetNorth"
         (click)="resetNorthPitch()"
       >
         <svg
@@ -72,8 +72,8 @@
         [class.ng-control-btn--divider]="showZoom() || showCompass()"
         [disabled]="locating()"
         type="button"
-        title="My location"
-        aria-label="My location"
+        [title]="l().locate"
+        [attr.aria-label]="l().locate"
         [attr.aria-busy]="locating()"
         (click)="locate()"
       >
@@ -115,8 +115,8 @@
         class="ng-control-btn"
         [class.ng-control-btn--divider]="showZoom() || showCompass() || showLocate()"
         type="button"
-        title="Toggle fullscreen"
-        aria-label="Toggle fullscreen"
+        [title]="l().fullscreen"
+        [attr.aria-label]="l().fullscreen"
         [attr.aria-pressed]="isFullscreen()"
         (click)="toggleFullscreen()"
       >

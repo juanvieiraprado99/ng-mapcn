@@ -87,6 +87,19 @@ interface ApiSection {
         <app-code-block [code]="provideStylesCode" />
         <app-prop-table nameLabel="Argument" [rows]="provideStylesRows" />
       </app-docs-section>
+
+      <app-docs-section title="provideMapLabels()" anchor="providemaplabels">
+        <p>
+          Translates the control buttons, the loader and the popup close button through the
+          <code [class]="code">MAP_LABELS</code> token. Partial labels merge over the English
+          defaults; pass a signal to follow the active locale. A
+          <code [class]="code">labels</code> input on <code [class]="code">ng-map</code>,
+          <code [class]="code">ng-map-controls</code> and
+          <code [class]="code">ng-map-popup</code> overrides it per component.
+        </p>
+        <app-code-block [code]="provideLabelsCode" />
+        <app-prop-table nameLabel="Argument" [rows]="provideLabelsRows" />
+      </app-docs-section>
     </app-docs-page>
   `,
 })
@@ -94,6 +107,8 @@ export class ApiReferenceComponent {
   readonly anatomyCode = apiData.anatomyCode;
   readonly provideStylesCode = apiData.provideStylesCode;
 
+  readonly provideLabelsCode = apiData.provideLabelsCode;
+  readonly provideLabelsRows: PropRow[] = apiData.provideLabelsRows;
   readonly provideStylesRows: PropRow[] = apiData.provideStylesRows;
   readonly contextRows: PropRow[] = apiData.contextRows;
   readonly sections: ApiSection[] = apiData.sections;

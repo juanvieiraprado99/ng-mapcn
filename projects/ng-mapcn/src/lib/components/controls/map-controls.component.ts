@@ -15,6 +15,7 @@ import {
 } from '@angular/core';
 import { type Map as MapLibreMap } from 'maplibre-gl';
 
+import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MapContextService } from '../../services/map-context.service';
 
 @Component({
@@ -32,6 +33,9 @@ export class MapControlsComponent {
   readonly showCompass = input(false);
   readonly showLocate = input(false);
   readonly showFullscreen = input(false);
+
+  /** Per-component label overrides, merged over `provideMapLabels` and the English defaults. */
+  readonly labels = input<Partial<MapLabels>>();
 
   /** Emitted after a successful geolocation (mapcn `onLocate`). */
   readonly locateChange = output<{ longitude: number; latitude: number }>();
@@ -57,6 +61,7 @@ export class MapControlsComponent {
   });
 
   // Hierarchical DI — throws when placed outside <ng-map>, like mapcn's useMap()
+  protected readonly l = injectMapLabels(this.labels);
   private readonly ctx = inject(MapContextService);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private destroyed = false;

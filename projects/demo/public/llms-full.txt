@@ -97,6 +97,7 @@ The root container component that initializes MapLibre GL and provides context t
 | `projection` | `ProjectionSpecification` | — | Map projection, e.g. { type: 'globe' }. |
 | `theme` | `'light' \| 'dark' \| 'auto'` | `'auto'` | Force a theme, or 'auto' to follow the dark/light class on <html>. |
 | `loading` | `boolean` | `false` | Shows the loading overlay. |
+| `labels` | `Partial<MapLabels>` | — | Label overrides (loading), merged over provideMapLabels() and the English defaults. |
 | `viewport` | `Partial<MapViewport>` | — | Controlled viewport ({ center, zoom, bearing, pitch }). Pair with viewportChange. |
 | `options` | `Omit<MapOptions, 'container' \| 'style'>` | — | Extra MapLibre MapOptions (scrollZoom, dragRotate, …) passed to the map constructor. |
 
@@ -124,6 +125,7 @@ Renders map control buttons: zoom, compass, locate, and fullscreen. Must be used
 | `showCompass` | `boolean` | `false` | Show compass button (resets bearing). |
 | `showLocate` | `boolean` | `false` | Show geolocate button. |
 | `showFullscreen` | `boolean` | `false` | Show fullscreen toggle button. |
+| `labels` | `Partial<MapLabels>` | — | Label overrides (zoomIn, zoomOut, resetNorth, locate, fullscreen), merged over provideMapLabels() and the English defaults. |
 
 **Outputs**
 
@@ -221,6 +223,7 @@ A standalone popup component that can be placed anywhere on the map without a ma
 | `offset` | `Offset` | `16` | Pixel offset of the popup. |
 | `maxWidth` | `string` | `'none'` | CSS max-width of the popup container. |
 | `closeOnClick` | `boolean` | `true` | Closes the popup when the map is clicked. Applied at creation only. Set false for popups that follow the hover. |
+| `labels` | `Partial<MapLabels>` | — | Label overrides (closePopup), merged over provideMapLabels() and the English defaults. |
 | `open` | `boolean` | `true` | Whether the popup is shown. Two-way bindable with [(open)]: closing it writes false, setting true opens it again at the current position. |
 
 **Outputs**
@@ -369,6 +372,42 @@ export const appConfig: ApplicationConfig = {
 | `MapStylesConfig` | `{ light?: string \| StyleSpecification; dark?: string \| StyleSpecification }` | — | Per-theme basemap. A theme left undefined falls back to the Carto default for that theme. |
 | `provideMapStyles(source)` | `MapStylesConfig \| Signal<MapStylesConfig \| undefined> \| (() => Signal<MapStylesConfig \| undefined>)` | — | Provider for the app-wide basemap. The factory form runs in an injection context, so it can inject() a service holding the signal. |
 | `MAP_DEFAULT_STYLES` | `InjectionToken<Signal<MapStylesConfig \| undefined>>` | — | The token itself, if you want to provide it by hand. |
+
+## provideMapLabels()
+
+Translates the control buttons, the loader and the popup close button through the `MAP_LABELS` token. Partial labels merge over the English defaults; pass a signal to follow the active locale. A `labels` input on `ng-map`, `ng-map-controls` and `ng-map-popup` overrides it per component.
+
+```ts
+import { inject } from '@angular/core';
+import { provideMapLabels } from 'ng-mapcn';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // Static (partial) labels merge over the English defaults...
+    provideMapLabels({
+      zoomIn: 'Aproximar',
+      zoomOut: 'Afastar',
+      resetNorth: 'Apontar para o norte',
+      locate: 'Minha localização',
+      fullscreen: 'Tela cheia',
+      loading: 'Carregando mapa',
+      closePopup: 'Fechar',
+    }),
+
+    // ...or a signal, so the labels follow the active locale
+    provideMapLabels(() => inject(I18nService).mapLabels),
+  ],
+};
+
+// Per component: <ng-map-controls [labels]="{ zoomIn: 'Acercar' }" />
+```
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `MapLabels` | `{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup: string }` | — | Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup'. |
+| `provideMapLabels(source)` | `Partial<MapLabels> \| Signal<Partial<MapLabels> \| undefined> \| (() => Signal<Partial<MapLabels> \| undefined>)` | — | Provider for app-wide labels; missing keys fall back to the English defaults. The factory form runs in an injection context, so it can inject() a service holding the signal. |
+| `MAP_LABELS` | `InjectionToken<Signal<Partial<MapLabels> \| undefined>>` | — | The token itself, if you want to provide it by hand. |
+| `DEFAULT_MAP_LABELS` | `MapLabels` | — | The English defaults. |
 
 ## Basemaps
 

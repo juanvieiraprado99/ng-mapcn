@@ -13,6 +13,7 @@ Angular port of [mapcn](https://mapcn.dev): composable MapLibre GL v6 map compon
 - npm: `npm i ng-mapcn maplibre-gl` (`@types/geojson` comes with it). Then add `maplibre-gl/dist/maplibre-gl.css` to `angular.json` `styles`, the worker assets (`references/troubleshooting.md`), and in global `styles.scss`: `@use 'ng-mapcn/src/lib/styles/index' as *;` and `@use 'ng-mapcn/styles.scss' as *;`.
 - Which one does the app use? Sources in `src/app/components/ui/map` (or another `--path`) → copy-paste; otherwise import from `'ng-mapcn'`.
 - Optional app-wide basemap: `provideMapStyles({ light, dark })` in `app.config.ts`.
+- Optional translations: `provideMapLabels({ zoomIn: "Aproximar", ... })` (partial; keys zoomIn, zoomOut, resetNorth, locate, fullscreen, loading, closePopup), or a `[labels]` input on `ng-map`, `ng-map-controls`, `ng-map-popup`.
 
 ## Minimal example
 

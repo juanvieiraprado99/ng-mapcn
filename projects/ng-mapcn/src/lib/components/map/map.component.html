@@ -1,7 +1,7 @@
 <div #mapContainer class="ng-map-canvas"></div>
 
 @if (!isLoaded() || loading()) {
-  <div class="ng-map-loader" role="status" aria-label="Loading map">
+  <div class="ng-map-loader" role="status" [attr.aria-label]="l().loading">
     <span class="ng-map-loader__dot"></span>
     <span class="ng-map-loader__dot"></span>
     <span class="ng-map-loader__dot"></span>

@@ -6,6 +6,13 @@
     { "name": "provideMapStyles(source)", "type": "MapStylesConfig | Signal<MapStylesConfig | undefined> | (() => Signal<MapStylesConfig | undefined>)", "default": "", "description": "Provider for the app-wide basemap. The factory form runs in an injection context, so it can inject() a service holding the signal." },
     { "name": "MAP_DEFAULT_STYLES", "type": "InjectionToken<Signal<MapStylesConfig | undefined>>", "default": "", "description": "The token itself, if you want to provide it by hand." }
   ],
+  "provideLabelsCode": "import { inject } from '@angular/core';\nimport { provideMapLabels } from 'ng-mapcn';\n\nexport const appConfig: ApplicationConfig = {\n  providers: [\n    // Static (partial) labels merge over the English defaults...\n    provideMapLabels({\n      zoomIn: 'Aproximar',\n      zoomOut: 'Afastar',\n      resetNorth: 'Apontar para o norte',\n      locate: 'Minha localização',\n      fullscreen: 'Tela cheia',\n      loading: 'Carregando mapa',\n      closePopup: 'Fechar',\n    }),\n\n    // ...or a signal, so the labels follow the active locale\n    provideMapLabels(() => inject(I18nService).mapLabels),\n  ],\n};\n\n// Per component: <ng-map-controls [labels]=\"{ zoomIn: 'Acercar' }\" />",
+  "provideLabelsRows": [
+    { "name": "MapLabels", "type": "{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup: string }", "default": "", "description": "Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup'." },
+    { "name": "provideMapLabels(source)", "type": "Partial<MapLabels> | Signal<Partial<MapLabels> | undefined> | (() => Signal<Partial<MapLabels> | undefined>)", "default": "", "description": "Provider for app-wide labels; missing keys fall back to the English defaults. The factory form runs in an injection context, so it can inject() a service holding the signal." },
+    { "name": "MAP_LABELS", "type": "InjectionToken<Signal<Partial<MapLabels> | undefined>>", "default": "", "description": "The token itself, if you want to provide it by hand." },
+    { "name": "DEFAULT_MAP_LABELS", "type": "MapLabels", "default": "", "description": "The English defaults." }
+  ],
   "contextRows": [
     { "name": "map()", "type": "Signal<Map | null>", "default": "", "description": "The raw maplibre-gl Map instance, or null before init." },
     { "name": "isLoaded()", "type": "Signal<boolean>", "default": "", "description": "True when the style is loaded and layers can be added. Gates every source/layer operation." },
@@ -25,6 +32,8 @@
         { "name": "projection", "type": "ProjectionSpecification", "default": "", "description": "Map projection, e.g. { type: 'globe' }." },
         { "name": "theme", "type": "'light' | 'dark' | 'auto'", "default": "'auto'", "description": "Force a theme, or 'auto' to follow the dark/light class on <html>." },
         { "name": "loading", "type": "boolean", "default": "false", "description": "Shows the loading overlay." },
+        { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (loading), merged over provideMapLabels() and the English defaults." }
+,
         { "name": "viewport", "type": "Partial<MapViewport>", "default": "", "description": "Controlled viewport ({ center, zoom, bearing, pitch }). Pair with viewportChange." },
         { "name": "options", "type": "Omit<MapOptions, 'container' | 'style'>", "default": "", "description": "Extra MapLibre MapOptions (scrollZoom, dragRotate, …) passed to the map constructor." }
       ],
@@ -45,7 +54,9 @@
         { "name": "showZoom", "type": "boolean", "default": "true", "description": "Show zoom in/out buttons." },
         { "name": "showCompass", "type": "boolean", "default": "false", "description": "Show compass button (resets bearing)." },
         { "name": "showLocate", "type": "boolean", "default": "false", "description": "Show geolocate button." },
-        { "name": "showFullscreen", "type": "boolean", "default": "false", "description": "Show fullscreen toggle button." }
+        { "name": "showFullscreen", "type": "boolean", "default": "false", "description": "Show fullscreen toggle button." },
+        { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (zoomIn, zoomOut, resetNorth, locate, fullscreen), merged over provideMapLabels() and the English defaults." }
+
       ],
       "outputs": [
         { "name": "locateChange", "type": "{ longitude: number; latitude: number }", "default": "", "description": "Emits the user position after a successful locate." },
@@ -127,6 +138,7 @@
         { "name": "offset", "type": "Offset", "default": "16", "description": "Pixel offset of the popup." },
         { "name": "maxWidth", "type": "string", "default": "'none'", "description": "CSS max-width of the popup container." },
         { "name": "closeOnClick", "type": "boolean", "default": "true", "description": "Closes the popup when the map is clicked. Applied at creation only. Set false for popups that follow the hover." },
+        { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (closePopup), merged over provideMapLabels() and the English defaults." },
         { "name": "open", "type": "boolean", "default": "true", "description": "Whether the popup is shown. Two-way bindable with [(open)]: closing it writes false, setting true opens it again at the current position." }
       ],
       "outputs": [

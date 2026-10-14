@@ -174,6 +174,24 @@ export const appConfig: ApplicationConfig = {
 
 Precedence: `[styles]` → `[blank]` → `provideMapStyles()` → Carto default.
 
+### Labels and translations
+
+Control tooltips, the loader and the popup close button are English by default. Override them app-wide with `provideMapLabels()` (static value, signal or factory; missing keys keep the English default), or per component with the `labels` input on `ng-map`, `ng-map-controls` and `ng-map-popup`:
+
+```ts
+import { provideMapLabels } from 'ng-mapcn';
+
+provideMapLabels({
+  zoomIn: 'Aproximar',
+  zoomOut: 'Afastar',
+  loading: 'Carregando mapa',
+  closePopup: 'Fechar',
+});
+// follow the active locale: provideMapLabels(() => inject(I18nService).mapLabels)
+```
+
+Keys: `zoomIn`, `zoomOut`, `resetNorth`, `locate`, `fullscreen`, `loading`, `closePopup`.
+
 | Provider        | Style URL                                                                                                                                                                                         | API key                |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
 | Carto (default) | `https://basemaps.cartocdn.com/gl/{positron\|dark-matter\|voyager}-gl-style/style.json`                                                                                                           | no                     |

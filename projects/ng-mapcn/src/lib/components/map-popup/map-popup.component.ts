@@ -15,6 +15,7 @@ import {
 } from '@angular/core';
 import { type Map as MapLibreMap, type Offset, Popup } from 'maplibre-gl';
 
+import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MapContextService } from '../../services/map-context.service';
 import { renderPortal } from '../../utils/portal';
 
@@ -39,6 +40,8 @@ export class MapPopupComponent {
    * MapLibre's Popup has no setter for it (mapcn parity: `closeOnClick` prop).
    */
   readonly closeOnClick = input(true);
+  /** Label overrides (`closePopup`), merged over `provideMapLabels` and the English defaults. */
+  readonly labels = input<Partial<MapLabels>>();
   /**
    * Whether the popup is shown. Two-way bindable (`[(open)]`): closing it (map click, close
    * button) writes `false`, and setting `true` opens the same popup again — at the current
@@ -50,6 +53,7 @@ export class MapPopupComponent {
   readonly popupClose = output<void>();
 
   private readonly injector = inject(Injector);
+  private readonly l = injectMapLabels(this.labels);
   private readonly mapCtx = inject(MapContextService);
   private readonly zone = inject(NgZone);
   private readonly tpl = viewChild.required<TemplateRef<unknown>>('tpl');
@@ -137,20 +141,22 @@ export class MapPopupComponent {
       if (!instance) return;
       const { popup, container } = instance;
 
+      const label = this.l().closePopup;
       const existing = container.querySelector('.ng-popup-close');
+      existing?.setAttribute('aria-label', label);
       if (showClose && !existing) {
-        container.appendChild(this.createCloseButton(popup));
+        container.appendChild(this.createCloseButton(popup, label));
       } else if (!showClose && existing) {
         existing.remove();
       }
     });
   }
 
-  private createCloseButton(popup: Popup): HTMLButtonElement {
+  private createCloseButton(popup: Popup, label: string): HTMLButtonElement {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'ng-popup-close';
-    btn.setAttribute('aria-label', 'Close popup');
+    btn.setAttribute('aria-label', label);
     btn.appendChild(createCloseIcon());
     btn.addEventListener('click', () => popup.remove());
     return btn;

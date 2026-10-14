@@ -240,6 +240,16 @@ ${api.provideStylesCode}
 
 ${propTable(api.provideStylesRows)}
 
+## provideMapLabels()
+
+Translates the control buttons, the loader and the popup close button through the \`MAP_LABELS\` token. Partial labels merge over the English defaults; pass a signal to follow the active locale. A \`labels\` input on \`ng-map\`, \`ng-map-controls\` and \`ng-map-popup\` overrides it per component.
+
+\`\`\`ts
+${api.provideLabelsCode}
+\`\`\`
+
+${propTable(api.provideLabelsRows)}
+
 ${BASEMAPS}
 
 ${THEMING}

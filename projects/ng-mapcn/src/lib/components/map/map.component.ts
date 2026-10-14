@@ -27,6 +27,7 @@ import {
 } from 'maplibre-gl';
 import { Subject } from 'rxjs';
 
+import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MAP_DEFAULT_STYLES } from '../../providers/map-styles.provider';
 import { MapContextService } from '../../services/map-context.service';
 import { ThemeService } from '../../services/theme.service';
@@ -60,6 +61,8 @@ export class MapComponent {
   readonly projection = input<ProjectionSpecification>();
   readonly theme = input<'light' | 'dark' | 'auto'>('auto');
   readonly loading = input(false);
+  /** Per-map label overrides, merged over `provideMapLabels` and the English defaults. */
+  readonly labels = input<Partial<MapLabels>>();
   readonly viewport = input<Partial<MapViewport>>();
   /** Extra MapLibre options passed through to the constructor (mapcn spreads these in React). */
   readonly options = input<Omit<MapOptions, 'container' | 'style'>>();
@@ -78,6 +81,7 @@ export class MapComponent {
   // Internal state exposed to template
   protected readonly mapInstance = signal<MapLibreMap | null>(null);
 
+  protected readonly l = injectMapLabels(this.labels);
   private readonly ctx = inject(MapContextService);
   /** Load gate shared with the child components (map `load` + debounced `styledata`). */
   protected readonly isLoaded = this.ctx.isLoaded;
