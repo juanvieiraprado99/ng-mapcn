@@ -180,13 +180,16 @@ ${pkg.license ?? 'MIT'}
 
 // ── llms-full.txt ────────────────────────────────────────────────────────────
 
+// A bare `|` ends a table cell even inside backticks (GFM), so escape it.
+const cell = (text) => String(text).replaceAll('|', '\\|');
+
 const propTable = (rows) =>
   [
     '| Name | Type | Default | Description |',
     '|---|---|---|---|',
     ...rows.map(
       (r) =>
-        `| \`${r.name}\` | \`${r.type}\` | ${r.default ? `\`${r.default}\`` : '—'} | ${r.description} |`,
+        `| \`${cell(r.name)}\` | \`${cell(r.type)}\` | ${r.default ? `\`${cell(r.default)}\`` : '—'} | ${cell(r.description)} |`,
     ),
   ].join('\n');
 

@@ -95,10 +95,10 @@ The root container component that initializes MapLibre GL and provides context t
 | `styles` | `MapStylesConfig` | `CARTO` | Custom style URLs or style objects for light and dark themes. |
 | `blank` | `boolean` | `false` | Swaps the basemap for a transparent, tile-less canvas. Add your own layers on top. |
 | `projection` | `ProjectionSpecification` | — | Map projection, e.g. { type: 'globe' }. |
-| `theme` | `'light' | 'dark' | 'auto'` | `'auto'` | Force a theme, or 'auto' to follow the dark/light class on <html>. |
+| `theme` | `'light' \| 'dark' \| 'auto'` | `'auto'` | Force a theme, or 'auto' to follow the dark/light class on <html>. |
 | `loading` | `boolean` | `false` | Shows the loading overlay. |
 | `viewport` | `Partial<MapViewport>` | — | Controlled viewport ({ center, zoom, bearing, pitch }). Pair with viewportChange. |
-| `options` | `Omit<MapOptions, 'container' | 'style'>` | — | Extra MapLibre MapOptions (scrollZoom, dragRotate, …) passed to the map constructor. |
+| `options` | `Omit<MapOptions, 'container' \| 'style'>` | — | Extra MapLibre MapOptions (scrollZoom, dragRotate, …) passed to the map constructor. |
 
 **Outputs**
 
@@ -119,7 +119,7 @@ Renders map control buttons: zoom, compass, locate, and fullscreen. Must be used
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `position` | `'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'` | `'bottom-right'` | Corner of the map to place the controls in. |
+| `position` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'bottom-right'` | Corner of the map to place the controls in. |
 | `showZoom` | `boolean` | `true` | Show zoom in/out buttons. |
 | `showCompass` | `boolean` | `false` | Show compass button (resets bearing). |
 | `showLocate` | `boolean` | `false` | Show geolocate button. |
@@ -130,7 +130,7 @@ Renders map control buttons: zoom, compass, locate, and fullscreen. Must be used
 | Name | Type | Default | Description |
 |---|---|---|---|
 | `locateChange` | `{ longitude: number; latitude: number }` | — | Emits the user position after a successful locate. |
-| `locateError` | `GeolocationPositionError | Error` | — | Emits when locating fails (denied, timeout) or when the browser has no geolocation. |
+| `locateError` | `GeolocationPositionError \| Error` | — | Emits when locating fails (denied, timeout) or when the browser has no geolocation. |
 
 ### MapMarker
 
@@ -148,8 +148,8 @@ A container for marker-related components. Provides context for its children and
 | `offset` | `PointLike` | — | Pixel offset applied to the marker element. |
 | `rotation` | `number` | `0` | Rotation of the marker in degrees. |
 | `anchor` | `PositionAnchor` | — | Part of the marker element positioned at the coordinates. |
-| `rotationAlignment` | `'map' | 'viewport' | 'auto'` | `'auto'` | How the marker rotates with the map. |
-| `pitchAlignment` | `'map' | 'viewport' | 'auto'` | `'auto'` | How the marker tilts with the map pitch. |
+| `rotationAlignment` | `'map' \| 'viewport' \| 'auto'` | `'auto'` | How the marker rotates with the map. |
+| `pitchAlignment` | `'map' \| 'viewport' \| 'auto'` | `'auto'` | How the marker tilts with the map pitch. |
 
 **Outputs**
 
@@ -178,7 +178,7 @@ An always-visible text label above or below the marker. Must be used inside ng-m
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `position` | `'top' | 'bottom'` | `'top'` | Side of the marker the label appears on. |
+| `position` | `'top' \| 'bottom'` | `'top'` | Side of the marker the label appears on. |
 
 ### MarkerPopup
 
@@ -279,7 +279,7 @@ Renders curved lines between coordinate pairs using quadratic Bézier interpolat
 | Name | Type | Default | Description |
 |---|---|---|---|
 | `arcClick` | `MapArcEvent` | — | Emits { arc, longitude, latitude, originalEvent } when an arc is clicked. |
-| `arcHover` | `MapArcEvent | null` | — | Emits on hover; null when the pointer leaves. |
+| `arcHover` | `MapArcEvent \| null` | — | Emits on hover; null when the pointer leaves. |
 
 ### MapGeoJSON
 
@@ -305,7 +305,7 @@ Renders GeoJSON polygons and lines with theme-aware monochrome defaults and decl
 | Name | Type | Default | Description |
 |---|---|---|---|
 | `featureClick` | `MapGeoJSONEvent` | — | Emits { feature, longitude, latitude, originalEvent } on click. |
-| `featureHover` | `MapGeoJSONEvent | null` | — | Emits on hover; null when the pointer leaves. |
+| `featureHover` | `MapGeoJSONEvent \| null` | — | Emits on hover; null when the pointer leaves. |
 
 ### MapClusterLayer
 
@@ -338,9 +338,9 @@ Component-scoped service provided by `ng-map` — the Angular equivalent of mapc
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `map()` | `Signal<Map | null>` | — | The raw maplibre-gl Map instance, or null before init. |
+| `map()` | `Signal<Map \| null>` | — | The raw maplibre-gl Map instance, or null before init. |
 | `isLoaded()` | `Signal<boolean>` | — | True when the style is loaded and layers can be added. Gates every source/layer operation. |
-| `resolvedTheme()` | `Signal<'light' | 'dark'>` | — | Theme currently applied to the map. |
+| `resolvedTheme()` | `Signal<'light' \| 'dark'>` | — | Theme currently applied to the map. |
 
 ## provideMapStyles()
 
@@ -366,9 +366,9 @@ export const appConfig: ApplicationConfig = {
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `MapStylesConfig` | `{ light?: string | StyleSpecification; dark?: string | StyleSpecification }` | — | Per-theme basemap. A theme left undefined falls back to the Carto default for that theme. |
-| `provideMapStyles(source)` | `MapStylesConfig | Signal<MapStylesConfig | undefined> | (() => Signal<MapStylesConfig | undefined>)` | — | Provider for the app-wide basemap. The factory form runs in an injection context, so it can inject() a service holding the signal. |
-| `MAP_DEFAULT_STYLES` | `InjectionToken<Signal<MapStylesConfig | undefined>>` | — | The token itself, if you want to provide it by hand. |
+| `MapStylesConfig` | `{ light?: string \| StyleSpecification; dark?: string \| StyleSpecification }` | — | Per-theme basemap. A theme left undefined falls back to the Carto default for that theme. |
+| `provideMapStyles(source)` | `MapStylesConfig \| Signal<MapStylesConfig \| undefined> \| (() => Signal<MapStylesConfig \| undefined>)` | — | Provider for the app-wide basemap. The factory form runs in an injection context, so it can inject() a service holding the signal. |
+| `MAP_DEFAULT_STYLES` | `InjectionToken<Signal<MapStylesConfig \| undefined>>` | — | The token itself, if you want to provide it by hand. |
 
 ## Basemaps
 
