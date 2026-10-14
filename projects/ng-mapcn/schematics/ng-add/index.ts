@@ -37,6 +37,16 @@ const GLOBAL_CSS = `
 }
 `;
 
+// Non-interactive (hover tooltip) popups. A styles.scss consumer already gets this rule from the
+// copied styles via the @use line, so it is only appended to plain CSS files.
+const PASSTHROUGH_CSS = `
+/* ng-mapcn — className="ng-popup-passthrough" popups ignore the pointer */
+.maplibregl-popup:has(.ng-popup-passthrough),
+.maplibregl-popup:has(.ng-popup-passthrough) .maplibregl-popup-content {
+  pointer-events: none !important;
+}
+`;
+
 interface NgAddOptions {
   project?: string;
   path: string;
@@ -150,6 +160,9 @@ function appendGlobalStyles(options: NgAddOptions): Rule {
     let addition = '';
     if (!current.includes('.maplibregl-popup-content')) {
       addition += GLOBAL_CSS;
+    }
+    if (!stylesPath.endsWith('.scss') && !current.includes('.ng-popup-passthrough')) {
+      addition += PASSTHROUGH_CSS;
     }
     if (stylesPath.endsWith('.scss')) {
       // Component styles are self-contained; the shared tokens/utilities live

@@ -96,9 +96,10 @@ type CountryFeatureCollection = GeoJSON.FeatureCollection<GeoJSON.Geometry, Coun
             [latitude]="info.lat"
             [offset]="12"
             [closeOnClick]="false"
+            className="ng-popup-passthrough"
           >
             <div
-              class="map-popup-surface bg-popover text-popover-foreground pointer-events-none relative rounded-md border p-2 shadow-md"
+              class="map-popup-surface bg-popover text-popover-foreground relative rounded-md border p-2 shadow-md"
             >
               <p class="text-xs font-medium">{{ info.name }}</p>
               <div class="flex items-center justify-between gap-4 pt-1">

@@ -130,6 +130,16 @@
   color: #111111;
 }
 
+// ── Non-interactive popups ────────────────────────────────────────────────────
+// `className="ng-popup-passthrough"` on ng-map-popup / ng-marker-popup makes the whole
+// MapLibre popup (wrapper and content) ignore the pointer. Use it for hover tooltips: the popup
+// sits next to the hovered point, and capturing the cursor would fire the layer's mouseleave.
+
+.maplibregl-popup:has(.ng-popup-passthrough),
+.maplibregl-popup:has(.ng-popup-passthrough) .maplibregl-popup-content {
+  pointer-events: none !important;
+}
+
 // ── Generic utility ───────────────────────────────────────────────────────────
 
 .ng-sr-only {

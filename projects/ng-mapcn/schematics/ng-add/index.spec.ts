@@ -250,8 +250,20 @@ describe('ng-add schematic', () => {
       expect(css).not.toContain('@use');
     });
 
+    it('appends the passthrough popup rule for a styles.css project only', async () => {
+      const css = (
+        await run({}, createTree({ styles: { path: 'src/styles.css', content: 'body {}\n' } }))
+      ).readContent('src/styles.css');
+      expect(css).toContain('.maplibregl-popup:has(.ng-popup-passthrough)');
+      expect(css).toContain('pointer-events: none !important;');
+
+      // scss gets it from the copied styles via the @use line
+      const scss = (await run()).readContent('src/styles.scss');
+      expect(scss).not.toContain('ng-popup-passthrough');
+    });
+
     it('does not append the overrides again when they are already present', async () => {
-      const content = '.maplibregl-popup-content { padding: 0; }\n';
+      const content = '.maplibregl-popup-content { padding: 0; }\n.ng-popup-passthrough {}\n';
       const tree = await run({}, createTree({ styles: { path: 'src/styles.css', content } }));
 
       expect(tree.readContent('src/styles.css')).toBe(content);
