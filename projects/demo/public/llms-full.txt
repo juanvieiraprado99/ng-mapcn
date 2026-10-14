@@ -258,7 +258,7 @@ A standalone popup component that can be placed anywhere on the map without a ma
 
 `ng-map-route`
 
-Renders a line/route from the given coordinates. Must be used inside ng-map. Supports click and hover interactions.
+Renders a line/route from the given coordinates. Must be used inside ng-map. Supports click and hover interactions, an active (highlighted) state and a covered-progress line via child ng-route-progress / ng-route-marker components.
 
 **Inputs**
 
@@ -271,12 +271,48 @@ Renders a line/route from the given coordinates. Must be used inside ng-map. Sup
 | `opacity` | `number` | `0.8` | Line opacity. |
 | `dashArray` | `number[]` | — | Dash pattern, e.g. [2, 2]. |
 | `interactive` | `boolean` | `true` | Enables pointer events on the line. |
+| `beforeId` | `string` | — | Id of an existing layer to insert the route (and its progress line) below. Applied at creation only. |
+| `progress` | `number` | — | Covered fraction of the route (0 to 1). Drawn by a child ng-route-progress and followed by ng-route-marker at="progress". |
+| `active` | `boolean` | `false` | Highlights the route: the active* inputs override the base paint while true. |
+| `activeColor` | `string` | — | Line color while active. Falls back to color. |
+| `activeWidth` | `number` | — | Line width while active. Falls back to width. |
+| `activeOpacity` | `number` | — | Line opacity while active. Falls back to opacity. |
+| `activeDashArray` | `number[]` | — | Dash pattern while active. Falls back to dashArray. |
 
 **Outputs**
 
 | Name | Type | Default | Description |
 |---|---|---|---|
 | `routeClick` | `MapMouseEvent` | — | Emits when the route is clicked. |
+| `routeMouseEnter` | `MapMouseEvent` | — | Emits when the pointer enters the route (the cursor becomes a pointer). |
+| `routeMouseLeave` | `MapMouseEvent` | — | Emits when the pointer leaves the route. |
+
+### RouteProgress
+
+`ng-route-progress`
+
+Draws the covered part of the parent ng-map-route, as set by its progress input (computed by cumulative distance along the line). Use inside ng-map-route.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `color` | `string` | `'#22c55e'` | Color of the covered line. |
+| `width` | `number` | `route width` | Width of the covered line in pixels. |
+| `opacity` | `number` | `1` | Opacity of the covered line. |
+| `dashArray` | `number[]` | — | Dash pattern of the covered line. |
+
+### RouteMarker
+
+`ng-route-marker`
+
+A marker placed along the parent ng-map-route. Project ng-marker-content (and label, popup, tooltip) into it. Created once and moved as progress or coordinates change.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `at` | `'start' \| 'end' \| 'progress' \| number` | `'start'` | Position on the route: its start, end, the current progress, or a fraction between 0 and 1 of the total distance. |
 
 ### MapArc
 

@@ -41,7 +41,7 @@ const EXPECTED_MAPS: Record<string, number> = {
   '/docs/components/controls': 1,
   '/docs/components/markers': 3,
   '/docs/components/popups': 1,
-  '/docs/components/routes': 2,
+  '/docs/components/routes': 3,
   '/docs/components/arcs': 2,
   '/docs/components/geojson': 2,
   '/docs/components/clusters': 1,

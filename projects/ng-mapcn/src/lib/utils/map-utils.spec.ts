@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildArcCoordinates, getViewport, mergeHoverPaint, nextId } from './map-utils';
+import {
+  buildArcCoordinates,
+  cumulativeLengths,
+  getViewport,
+  mergeHoverPaint,
+  nextId,
+  pointAlongLine,
+  sliceLineByProgress,
+} from './map-utils';
 
 describe('nextId', () => {
   it('returns ids with the given prefix', () => {
@@ -109,5 +117,86 @@ describe('buildArcCoordinates', () => {
   it('bends towards negative y for negative curvature', () => {
     const points = buildArcCoordinates([0, 0], [10, 0], -0.2, 16);
     expect(points[8][1]).toBeLessThan(0);
+  });
+});
+
+describe('sliceLineByProgress / pointAlongLine', () => {
+  // Segment 1 is 1 degree long, segment 2 is 3 degrees (total 4).
+  const line: [number, number][] = [
+    [0, 0],
+    [1, 0],
+    [4, 0],
+  ];
+
+  it('gives identical results with a precomputed cumulative array', () => {
+    const wiggly: [number, number][] = [
+      [0, 0],
+      [1, 1],
+      [1, 1],
+      [3, 2],
+      [4, -1],
+      [10, 5],
+    ];
+    const cum = cumulativeLengths(wiggly);
+    expect(cum).toHaveLength(wiggly.length);
+    expect(cum[0]).toBe(0);
+    for (let i = 0; i <= 40; i++) {
+      const f = i / 40;
+      expect(sliceLineByProgress(wiggly, f, cum)).toEqual(sliceLineByProgress(wiggly, f));
+      expect(pointAlongLine(wiggly, f, cum)).toEqual(pointAlongLine(wiggly, f));
+    }
+    expect(cumulativeLengths([])).toEqual([]);
+  });
+
+  it('returns the first vertex only at progress 0', () => {
+    expect(sliceLineByProgress(line, 0)).toEqual([[0, 0]]);
+    expect(pointAlongLine(line, 0)).toEqual([0, 0]);
+  });
+
+  it('returns the whole line (a copy) at progress 1', () => {
+    const out = sliceLineByProgress(line, 1);
+    expect(out).toEqual(line);
+    expect(out).not.toBe(line);
+    expect(pointAlongLine(line, 1)).toEqual([4, 0]);
+  });
+
+  it('interpolates inside a segment', () => {
+    const two: [number, number][] = [
+      [0, 0],
+      [2, 0],
+    ];
+    const out = sliceLineByProgress(two, 0.5);
+    expect(out).toHaveLength(2);
+    expect(out[1][0]).toBeCloseTo(1, 6);
+    expect(pointAlongLine(two, 0.5)![0]).toBeCloseTo(1, 6);
+  });
+
+  it('weights by distance, not by vertex count (uneven segments)', () => {
+    const early = sliceLineByProgress(line, 0.125);
+    expect(early).toHaveLength(2);
+    expect(early[1][0]).toBeCloseTo(0.5, 6);
+    const half = sliceLineByProgress(line, 0.5);
+    expect(half).toHaveLength(3);
+    expect(half[1]).toEqual([1, 0]);
+    expect(half[2][0]).toBeCloseTo(2, 6);
+  });
+
+  it('clamps out-of-range and non-finite progress', () => {
+    expect(sliceLineByProgress(line, -1)).toEqual([[0, 0]]);
+    expect(sliceLineByProgress(line, 7)).toEqual(line);
+    expect(pointAlongLine(line, Number.NaN)).toEqual([0, 0]);
+  });
+
+  it('handles degenerate inputs', () => {
+    expect(sliceLineByProgress([], 0.5)).toEqual([]);
+    expect(pointAlongLine([], 0.5)).toBeNull();
+    expect(sliceLineByProgress([[3, 4]], 0.5)).toEqual([[3, 4]]);
+    expect(pointAlongLine([[3, 4]], 0.5)).toEqual([3, 4]);
+    const same: [number, number][] = [
+      [1, 1],
+      [1, 1],
+    ];
+    expect(sliceLineByProgress(same, 0.5)).toEqual([[1, 1]]);
+    expect(pointAlongLine(same, 0.5)).toEqual([1, 1]);
   });
 });
