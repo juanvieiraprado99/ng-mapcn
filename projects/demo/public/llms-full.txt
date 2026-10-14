@@ -199,6 +199,12 @@ A popup attached to the marker that opens on click. Must be used inside ng-map-m
 
 | Name | Type | Default | Description |
 |---|---|---|---|
+| `closeButton` | `boolean` | `false` | Shows a close button in the popup. |
+| `offset` | `Offset` | — | Pixel offset from the marker. Reconciled live via setOffset; MapLibre's default when unset. |
+| `anchor` | `PositionAnchor` | — | Which side of the marker the popup anchors to. Applied at creation only. |
+| `maxWidth` | `string` | `'none'` | CSS max-width of the popup container. Reconciled live via setMaxWidth. |
+| `closeOnClick` | `boolean` | `false` | Closes the popup when the map is clicked. Applied at creation only. |
+| `labels` | `Partial<MapLabels>` | — | Label overrides (closePopup), merged over provideMapLabels() and the English defaults. |
 | `className` | `string` | — | Extra space-separated classes added to the rendered .ng-popup-card element. Reactive; the built-in class is always kept. |
 
 **Outputs**
