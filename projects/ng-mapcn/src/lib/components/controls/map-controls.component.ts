@@ -36,6 +36,12 @@ export class MapControlsComponent {
   /** Emitted after a successful geolocation (mapcn `onLocate`). */
   readonly locateChange = output<{ longitude: number; latitude: number }>();
 
+  /**
+   * Emitted when the locate request fails (permission denied, timeout, unavailable position),
+   * or with an `Error` when the browser has no geolocation (insecure context).
+   */
+  readonly locateError = output<GeolocationPositionError | Error>();
+
   protected readonly compassSvg = viewChild<ElementRef<SVGElement>>('compassSvg');
   protected readonly locating = signal(false);
   protected readonly isFullscreen = signal(false);
@@ -103,8 +109,12 @@ export class MapControlsComponent {
 
   protected locate(): void {
     const map = this.ctx.map();
-    // Geolocation is missing on the server and in insecure contexts.
-    if (!map || this.locating() || !this.isBrowser || !navigator.geolocation) return;
+    if (!map || this.locating() || !this.isBrowser) return;
+    // Geolocation is missing in insecure contexts.
+    if (!navigator.geolocation) {
+      this.locateError.emit(new Error('Geolocation is not available in this browser.'));
+      return;
+    }
     this.locating.set(true);
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
@@ -117,7 +127,11 @@ export class MapControlsComponent {
         this.locateChange.emit({ longitude: coords.longitude, latitude: coords.latitude });
         this.locating.set(false);
       },
-      () => this.locating.set(false),
+      (error) => {
+        if (this.destroyed) return;
+        this.locating.set(false);
+        this.locateError.emit(error);
+      },
       { enableHighAccuracy: true, timeout: 10000 },
     );
   }

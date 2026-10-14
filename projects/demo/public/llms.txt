@@ -2,7 +2,7 @@
 
 > Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
 
-Version: 22.0.0-beta.3 · License: MIT · npm: https://www.npmjs.com/package/ng-mapcn
+Version: 22.0.0-beta.5 · License: MIT · npm: https://www.npmjs.com/package/ng-mapcn
 
 ## Overview
 
