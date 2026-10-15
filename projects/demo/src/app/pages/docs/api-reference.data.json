@@ -89,7 +89,7 @@
         { "name": "keyboardStepLarge", "type": "number", "default": "50", "description": "Pixels per arrow key press while Shift is held." }
       ],
       "outputs": [
-        { "name": "markerClick", "type": "MouseEvent", "default": "", "description": "Emits when the marker is clicked, or when Enter or Space is pressed on the focused marker. A marker with this handler becomes a role=button tab stop." },
+        { "name": "markerClick", "type": "MouseEvent", "default": "", "description": "Emits when the marker is clicked, or when Enter or Space (on keyup) is pressed on the focused marker, also with ng-marker-popup. Give icon-only clickable markers their own ariaLabel. A marker with this handler becomes a role=button tab stop." },
         { "name": "markerMouseEnter", "type": "MouseEvent", "default": "", "description": "Emits when the pointer enters the marker." },
         { "name": "markerMouseLeave", "type": "MouseEvent", "default": "", "description": "Emits when the pointer leaves the marker." },
         { "name": "dragStart", "type": "{ lng: number; lat: number }", "default": "", "description": "Emits when dragging starts." },

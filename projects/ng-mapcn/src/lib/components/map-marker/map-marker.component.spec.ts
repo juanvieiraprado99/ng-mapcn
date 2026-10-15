@@ -6,6 +6,7 @@ import { fakeRegistry } from '../../../testing/maplibre-fake';
 import { renderMap, update } from '../../../testing/render';
 import { trackZoneRun } from '../../../testing/zone';
 import { MarkerContentComponent } from '../marker-content/marker-content.component';
+import { MarkerPopupComponent } from '../marker-popup/marker-popup.component';
 import { MapMarkerComponent } from './map-marker.component';
 
 const TEMPLATE = `
@@ -252,7 +253,7 @@ describe('MapMarkerComponent', () => {
         ...hostProps,
       };
       const result = await renderMap(template, {
-        imports: [MapMarkerComponent, MarkerContentComponent],
+        imports: [MapMarkerComponent, MarkerContentComponent, MarkerPopupComponent],
         hostProps: host,
       });
       return { ...result, host, el: fakeRegistry.markers[0].getElement() };
@@ -277,6 +278,7 @@ describe('MapMarkerComponent', () => {
 
       el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
       el.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+      el.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', bubbles: true }));
       expect(host['click']).toHaveBeenCalledTimes(2);
       expect(host['click'].mock.calls[0][0]).toBeInstanceOf(MouseEvent);
     });
@@ -322,15 +324,81 @@ describe('MapMarkerComponent', () => {
       expect(marker.getLngLat()).toEqual({ lng: 2, lat: 7 });
     });
 
-    it('ignores arrow keys when not draggable and removes its keydown listener on destroy', async () => {
-      const { el, fixture } = await renderA11y(
+    it('ignores arrow keys when not draggable', async () => {
+      const { el } = await renderA11y(
         `<ng-map><ng-map-marker [longitude]="1" [latitude]="2" (markerClick)="click($event)"><ng-marker-content /></ng-map-marker></ng-map>`,
       );
-      const marker = fakeRegistry.markers[0];
       el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-      expect(marker.getLngLat()).toEqual({ lng: 1, lat: 2 });
+      expect(fakeRegistry.markers[0].getLngLat()).toEqual({ lng: 1, lat: 2 });
+    });
+
+    it('removes its key listeners and attributes on destroy', async () => {
+      const { el, fixture, host } = await renderA11y(
+        `<ng-map><ng-map-marker [longitude]="1" [latitude]="2" [draggable]="true" (markerClick)="click($event)"><ng-marker-content /></ng-map-marker></ng-map>`,
+      );
+      const remove = vi.spyOn(el, 'removeEventListener');
       fixture.destroy();
+      const removed = remove.mock.calls.map((c) => c[0]);
+      expect(removed).toEqual(expect.arrayContaining(['keydown', 'keyup', 'blur']));
       expect(el.hasAttribute('role')).toBe(false);
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      expect(host['click']).not.toHaveBeenCalled();
+    });
+
+    it('ignores held Enter and activates Space on keyup', async () => {
+      const { el, host } = await renderA11y(
+        `<ng-map><ng-map-marker [longitude]="1" [latitude]="2" (markerClick)="click($event)"><ng-marker-content /></ng-map-marker></ng-map>`,
+      );
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', repeat: true, bubbles: true }));
+      expect(host['click']).not.toHaveBeenCalled();
+
+      const down = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+      el.dispatchEvent(down);
+      expect(down.defaultPrevented).toBe(true);
+      expect(host['click']).not.toHaveBeenCalled();
+      el.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', bubbles: true }));
+      expect(host['click']).toHaveBeenCalledTimes(1);
+    });
+
+    it('emits markerClick on Enter and Space with a popup, without a DOM click', async () => {
+      const { el, host } = await renderA11y(
+        `<ng-map><ng-map-marker [longitude]="1" [latitude]="2" (markerClick)="click($event)"><ng-marker-content /><ng-marker-popup>Hi</ng-marker-popup></ng-map-marker></ng-map>`,
+      );
+      const domClick = vi.fn();
+      el.addEventListener('click', domClick);
+      const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+      el.dispatchEvent(enter);
+      expect(enter.defaultPrevented).toBe(false); // MapLibre's keypress toggle must still run
+      expect(host['click']).toHaveBeenCalledTimes(1);
+      expect(host['click'].mock.calls[0][0]).toBeInstanceOf(MouseEvent);
+
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+      el.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', bubbles: true }));
+      expect(host['click']).toHaveBeenCalledTimes(2);
+      // a DOM click would reach the map and toggle the popup a second time
+      expect(domClick).not.toHaveBeenCalled();
+    });
+
+    it('gives nested interactive content no role or aria-label', async () => {
+      const { el } = await renderA11y(
+        `<ng-map><ng-map-marker [longitude]="1" [latitude]="2" ariaLabel="Station" (markerClick)="click($event)"><ng-marker-content><button type="button">Open</button></ng-marker-content></ng-map-marker></ng-map>`,
+      );
+      expect(el.hasAttribute('role')).toBe(false);
+      expect(el.hasAttribute('aria-label')).toBe(false);
+      expect(el.hasAttribute('tabindex')).toBe(false);
+    });
+
+    it('clamps latitude and wraps longitude of keyboard drags', async () => {
+      const { el } = await renderA11y(
+        `<ng-map><ng-map-marker [longitude]="179.5" [latitude]="85" [draggable]="true"><ng-marker-content /></ng-map-marker></ng-map>`,
+      );
+      const marker = fakeRegistry.markers[0];
+      el.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowUp', shiftKey: true, bubbles: true }),
+      );
+      expect(marker.getLngLat().lat).toBe(85.05);
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      expect(marker.getLngLat().lng).toBeCloseTo(-179.5);
     });
   });
 });

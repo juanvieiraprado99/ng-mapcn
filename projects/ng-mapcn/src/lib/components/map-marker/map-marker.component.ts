@@ -17,6 +17,13 @@ import { injectMapLabels, type MapLabels } from '../../providers/map-labels.prov
 import { MapContextService } from '../../services/map-context.service';
 import { MarkerContextService } from './marker-context.service';
 
+/** Web Mercator latitude limit. */
+const MAX_LAT = 85.05;
+
+function wrapLng(lng: number): number {
+  return ((((lng + 180) % 360) + 360) % 360) - 180;
+}
+
 /** Arrow key -> screen-space direction of a keyboard drag step. */
 const ARROWS: Record<string, [number, number]> = {
   ArrowUp: [0, -1],
@@ -145,14 +152,32 @@ export class MapMarkerComponent {
 
         // Keyboard alternative (only when the marker element itself has focus, so inner
         // controls keep their own keys): Enter/Space click, arrow keys drag.
+        const activate = () => {
+          if (!this.click$.observed) return;
+          if (this.markerCtx.hasPopup()) {
+            // MapLibre toggles the popup on these keys itself; a DOM click would reach the map
+            // and toggle it a second time, so emit the output directly.
+            this.zone.run(() => this.click$.next(new MouseEvent('click')));
+          } else {
+            el.click();
+          }
+        };
+        let spaceDown = false;
         const onKeydown = (e: KeyboardEvent) => {
           if (e.target !== el || e.altKey || e.ctrlKey || e.metaKey) return;
           const key = e.key;
-          if (key === 'Enter' || key === ' ' || key === 'Spacebar') {
-            // With a popup MapLibre toggles it on these keys itself.
-            if (this.markerCtx.hasPopup() || !this.click$.observed) return;
-            e.preventDefault();
-            el.click();
+          if (key === 'Enter') {
+            if (e.repeat || !this.click$.observed) return;
+            if (!this.markerCtx.hasPopup()) e.preventDefault();
+            activate();
+            return;
+          }
+          if (key === ' ' || key === 'Spacebar') {
+            if (!this.click$.observed) return;
+            // Like a native button: activates on keyup. Stop the page scroll (not with a popup:
+            // cancelling keydown would also cancel MapLibre's keypress toggle).
+            if (!this.markerCtx.hasPopup()) e.preventDefault();
+            spaceDown = true;
             return;
           }
           const dir = ARROWS[key];
@@ -163,12 +188,25 @@ export class MapMarkerComponent {
           const step = e.shiftKey ? this.keyboardStepLarge() : this.keyboardStep();
           const p = map.project(m.getLngLat());
           emitDragStart();
-          m.setLngLat(map.unproject([p.x + dir[0] * step, p.y + dir[1] * step]));
+          const next = map.unproject([p.x + dir[0] * step, p.y + dir[1] * step]);
+          m.setLngLat([wrapLng(next.lng), Math.max(-MAX_LAT, Math.min(MAX_LAT, next.lat))]);
           emitDrag();
           emitDragEnd();
         };
+        const onKeyup = (e: KeyboardEvent) => {
+          if (e.target !== el || (e.key !== ' ' && e.key !== 'Spacebar') || !spaceDown) return;
+          spaceDown = false;
+          activate();
+        };
+        const onBlur = () => (spaceDown = false);
         el.addEventListener('keydown', onKeydown);
-        keydownCleanup = () => el.removeEventListener('keydown', onKeydown);
+        el.addEventListener('keyup', onKeyup);
+        el.addEventListener('blur', onBlur);
+        keydownCleanup = () => {
+          el.removeEventListener('keydown', onKeydown);
+          el.removeEventListener('keyup', onKeyup);
+          el.removeEventListener('blur', onBlur);
+        };
 
         return m;
       });
