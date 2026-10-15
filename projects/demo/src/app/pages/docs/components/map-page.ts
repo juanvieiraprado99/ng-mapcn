@@ -304,6 +304,10 @@ export class CustomStyleMapComponent {
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService.fitBounds()</code>
           imperatively. It does not fight a controlled
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewport</code>.
+          A draggable marker bound to signals refits continuously while
+          dragged: pass explicit
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code>
+          for that case.
         </span>
         <div class="relative h-full">
           <button

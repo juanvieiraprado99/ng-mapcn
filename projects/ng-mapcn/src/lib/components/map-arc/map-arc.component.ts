@@ -142,7 +142,11 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
     // Contributes to the map's declarative fit-to-bounds (`<ng-map [fitBounds]>`).
     inject(DestroyRef).onDestroy(
       this.ctx.registerBounds(() =>
-        coordinatesBounds(this.data().flatMap((arc) => [arc.from, arc.to])),
+        coordinatesBounds(
+          this.data().flatMap((arc) =>
+            buildArcCoordinates(arc.from, arc.to, this.curvature(), this.samples()),
+          ),
+        ),
       ),
     );
 

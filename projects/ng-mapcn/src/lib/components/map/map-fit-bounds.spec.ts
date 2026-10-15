@@ -173,6 +173,19 @@ describe('ng-map [fitBounds]', () => {
     expect(lastFit(map)[0]).toEqual([-20, -30, 40, 20]);
   });
 
+  it('fits the unwrapped curve of an antimeridian arc, not a world-spanning box', async () => {
+    const { fixture, map } = await render({
+      markers: [],
+      arcs: [{ id: 'a', from: [170, 0], to: [-170, 0] }],
+    });
+    await loadAndSettle(fixture, map);
+    const [w, s, e, n] = lastFit(map)[0];
+    expect(w).toBe(170);
+    expect(e).toBe(190);
+    // The curve bulges away from the straight line, so the box has height.
+    expect(Math.abs(n - s)).toBeGreaterThan(0);
+  });
+
   it('refits when a child appears or disappears', async () => {
     const { fixture, map } = await render();
     await loadAndSettle(fixture, map);

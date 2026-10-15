@@ -100,7 +100,7 @@ The root container component that initializes MapLibre GL and provides context t
 | `loading` | `boolean` | `false` | Shows the loading overlay. |
 | `labels` | `Partial<MapLabels>` | — | Label overrides (loading), merged over provideMapLabels() and the English defaults. |
 | `viewport` | `Partial<MapViewport>` | — | Controlled viewport ({ center, zoom, bearing, pitch }). Pair with viewportChange. |
-| `fitBounds` | `MapFitBoundsOptions` | — | Fits the camera to bounds ({ bounds?, padding?, maxZoom?, duration?, animate? }). Without bounds it fits the union of the children's data (markers, GeoJSON, routes, arcs, clusters, heatmaps). Runs after load and refits only when the bounds change; the first fit never animates; maxZoom defaults to 16. Imperative form: MapContextService.fitBounds(). |
+| `fitBounds` | `MapFitBoundsOptions` | — | Fits the camera to bounds ({ bounds?, padding?, maxZoom?, duration?, animate? }). Without bounds it fits the union of the children's data (markers, GeoJSON, routes, arcs, clusters, heatmaps). Runs after load and refits only when the bounds change; the first fit never animates; maxZoom defaults to 16. A draggable marker bound to signals refits while dragged: pass explicit bounds for that case. Imperative form: MapContextService.fitBounds(). |
 | `options` | `Omit<MapOptions, 'container' \| 'style'>` | — | Extra MapLibre MapOptions (scrollZoom, dragRotate, …) passed to the map constructor. |
 
 **Outputs**

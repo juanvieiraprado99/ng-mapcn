@@ -37,7 +37,7 @@
         { "name": "loading", "type": "boolean", "default": "false", "description": "Shows the loading overlay." },
         { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (loading), merged over provideMapLabels() and the English defaults." },
         { "name": "viewport", "type": "Partial<MapViewport>", "default": "", "description": "Controlled viewport ({ center, zoom, bearing, pitch }). Pair with viewportChange." },
-        { "name": "fitBounds", "type": "MapFitBoundsOptions", "default": "", "description": "Fits the camera to bounds ({ bounds?, padding?, maxZoom?, duration?, animate? }). Without bounds it fits the union of the children's data (markers, GeoJSON, routes, arcs, clusters, heatmaps). Runs after load and refits only when the bounds change; the first fit never animates; maxZoom defaults to 16. Imperative form: MapContextService.fitBounds()." },
+        { "name": "fitBounds", "type": "MapFitBoundsOptions", "default": "", "description": "Fits the camera to bounds ({ bounds?, padding?, maxZoom?, duration?, animate? }). Without bounds it fits the union of the children's data (markers, GeoJSON, routes, arcs, clusters, heatmaps). Runs after load and refits only when the bounds change; the first fit never animates; maxZoom defaults to 16. A draggable marker bound to signals refits while dragged: pass explicit bounds for that case. Imperative form: MapContextService.fitBounds()." },
         { "name": "options", "type": "Omit<MapOptions, 'container' | 'style'>", "default": "", "description": "Extra MapLibre MapOptions (scrollZoom, dragRotate, …) passed to the map constructor." }
       ],
       "outputs": [
