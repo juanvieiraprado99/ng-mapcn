@@ -89,7 +89,10 @@ export class StandalonePopupComponent {
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">true</code>
           opens it again. For popups that follow the hover, set
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[closeOnClick]="false"</code>
-          so a click does not dismiss them.
+          so a click does not dismiss them, and add
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">className="ng-popup-passthrough"</code>
+          so the popup lets the pointer through to the map. Without it the cursor can move into the
+          popup, the layer's mouseleave fires and the popup disappears.
         </span>
         <div class="relative h-full">
           <ng-map
