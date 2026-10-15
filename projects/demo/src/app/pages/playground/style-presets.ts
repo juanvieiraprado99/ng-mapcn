@@ -21,6 +21,10 @@ export interface StylePreset {
   stylesCode?: { name: string; declaration: string };
   /** The basemap exposes the `carto` vector source that `ng-map-fill-extrusion` waits for. */
   hasCartoSource?: boolean;
+  /** Basemap whose style needs the user's API key (read from the header's basemap picker). */
+  keyed?: 'maptiler' | 'stadia';
+  /** Building source of a non-Carto vector basemap, passed to `ng-map-fill-extrusion`. */
+  buildingSource?: { source: string; sourceLayer: string };
   blank?: boolean;
   projection?: 'mercator' | 'globe';
   pitch?: number;
@@ -34,6 +38,26 @@ const CARTO = {
   light: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
   dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
 };
+
+/** Stands in for the user's key in the printed snippets; swapped for the real key at runtime. */
+export const KEY_PLACEHOLDER = 'YOUR_API_KEY';
+
+/** Styles ready for `<ng-map>`: the placeholder becomes the user's key, `undefined` = no key yet. */
+export function resolveStyles(preset: StylePreset, key: string | undefined): StylePreset['styles'] {
+  if (!preset.styles || !preset.keyed) return preset.styles;
+  if (!key) return preset.keyed === 'stadia' ? withKey(preset.styles, '') : undefined;
+  return withKey(preset.styles, key);
+}
+
+function withKey(styles: NonNullable<StylePreset['styles']>, key: string) {
+  const swap = (style: string | StyleSpecification) =>
+    typeof style === 'string'
+      ? style
+          .replace(`?key=${KEY_PLACEHOLDER}`, key ? `?key=${key}` : '')
+          .replace(`?api_key=${KEY_PLACEHOLDER}`, key ? `?api_key=${key}` : '')
+      : style;
+  return { light: swap(styles.light), dark: swap(styles.dark) };
+}
 
 export const STYLE_PRESETS: readonly StylePreset[] = [
   {
@@ -72,6 +96,30 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     note: '© OpenStreetMap contributors. Dev/demo only (OSM tile usage policy).',
     styles: { light: OSM_RASTER_STYLE, dark: OSM_RASTER_STYLE },
     stylesCode: { name: 'OSM_STYLE', declaration: OSM_RASTER_STYLE_CODE },
+  },
+  {
+    id: 'maptiler',
+    label: 'MapTiler',
+    description: 'MapTiler Streets vector tiles, light and dark. Needs your API key.',
+    styles: {
+      light: `https://api.maptiler.com/maps/streets-v2/style.json?key=${KEY_PLACEHOLDER}`,
+      dark: `https://api.maptiler.com/maps/streets-v2-dark/style.json?key=${KEY_PLACEHOLDER}`,
+    },
+    keyed: 'maptiler',
+    buildingSource: { source: 'openmaptiles', sourceLayer: 'building' },
+    note: 'Paste your key in the header map style picker. © MapTiler, © OpenStreetMap contributors.',
+  },
+  {
+    id: 'stadia',
+    label: 'Stadia Maps',
+    description: 'Alidade Smooth vector tiles, light and dark. Key optional on localhost.',
+    styles: {
+      light: `https://tiles.stadiamaps.com/styles/alidade_smooth.json?api_key=${KEY_PLACEHOLDER}`,
+      dark: `https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json?api_key=${KEY_PLACEHOLDER}`,
+    },
+    keyed: 'stadia',
+    buildingSource: { source: 'openmaptiles', sourceLayer: 'building' },
+    note: '© Stadia Maps, © OpenMapTiles, © OpenStreetMap contributors.',
   },
   {
     id: 'blank',
@@ -151,13 +199,13 @@ export interface MapView {
 }
 
 /** Runtime inputs for `<ng-map>`. Camera changes go through the controlled `viewport`. */
-export function mapInputs(state: MapState, view: MapView) {
+export function mapInputs(state: MapState, view: MapView, key?: string) {
   const preset = findPreset(state.presetId);
   return {
     center: view.center,
     zoom: view.zoom,
     theme: state.theme,
-    styles: preset.styles,
+    styles: resolveStyles(preset, key),
     blank: !!preset.blank,
     projection: state.projection === 'globe' ? ({ type: 'globe' } as const) : undefined,
     viewport: {
