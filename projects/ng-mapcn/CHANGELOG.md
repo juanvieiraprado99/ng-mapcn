@@ -1,5 +1,24 @@
 # Changelog
 
+## [22.0.0-beta.7](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.6...v22.0.0-beta.7) (2026-10-15)
+
+
+### Features
+
+* **3d:** fill-extrusion buildings and terrain/hillshade ([#80](https://github.com/juanvieiraprado99/ng-mapcn/issues/80)) ([52c74ba](https://github.com/juanvieiraprado99/ng-mapcn/commit/52c74baee84d6179e2d9d1ee39ba9a00f92415aa))
+* **demo:** interactive playground and style gallery ([#82](https://github.com/juanvieiraprado99/ng-mapcn/issues/82)) ([0a338c7](https://github.com/juanvieiraprado99/ng-mapcn/commit/0a338c75b86fd7f87e32fd41566917adb7ec4335))
+* **draw:** ng-map-draw for points, lines and polygons (optional ng-mapcn/draw entry) ([#81](https://github.com/juanvieiraprado99/ng-mapcn/issues/81)) ([b994f04](https://github.com/juanvieiraprado99/ng-mapcn/commit/b994f041730131729e577bca21833aa367919ebf))
+* **heatmap:** add ng-map-heatmap declarative heatmap layer ([#74](https://github.com/juanvieiraprado99/ng-mapcn/issues/74)) ([21df063](https://github.com/juanvieiraprado99/ng-mapcn/commit/21df063b1107e11015ba59757e54142983b5364c))
+* **map:** declarative fit-to-bounds via [fitBounds] ([#76](https://github.com/juanvieiraprado99/ng-mapcn/issues/76)) ([795c044](https://github.com/juanvieiraprado99/ng-mapcn/commit/795c0447a472f7b826d90eca31441ec92b017a67))
+* **marker:** keyboard access for markers, tooltips and drag, plus demo a11y fixes ([#84](https://github.com/juanvieiraprado99/ng-mapcn/issues/84)) ([7da1b14](https://github.com/juanvieiraprado99/ng-mapcn/commit/7da1b142697ce1836224b34ec661b6862fddf22a))
+* **popup:** keyboard-accessible popups plus SSR/hydration and axe e2e checks ([#77](https://github.com/juanvieiraprado99/ng-mapcn/issues/77)) ([707c408](https://github.com/juanvieiraprado99/ng-mapcn/commit/707c408da917ba7f83b0556b3a16cadbaac79496))
+* **sources:** raster/vector tile sources and image overlay ([#79](https://github.com/juanvieiraprado99/ng-mapcn/issues/79)) ([7ffce18](https://github.com/juanvieiraprado99/ng-mapcn/commit/7ffce18bd3a1df7a2ddc9bbbc523e608deed87b4))
+
+
+### Bug Fixes
+
+* **demo:** playground review fixes and OpenStreetMap style preset ([#83](https://github.com/juanvieiraprado99/ng-mapcn/issues/83)) ([27a827b](https://github.com/juanvieiraprado99/ng-mapcn/commit/27a827bf6b1cd24fc16f37b8d36d14abc284d7cd))
+
 ## [22.0.0-beta.6](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.5...v22.0.0-beta.6) (2026-10-15)
 
 
