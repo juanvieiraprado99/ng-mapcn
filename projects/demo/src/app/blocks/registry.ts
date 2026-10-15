@@ -105,6 +105,15 @@ export const BLOCKS: BlockMeta[] = [
     files: [{ path: 'pmtiles/pmtiles.ts' }],
   },
   {
+    name: 'city-3d',
+    title: '3D City',
+    description:
+      '3D buildings colored by height, with optional terrain and hillshade, on the Carto basemap.',
+    iframeHeight: '720px',
+    zard: [],
+    files: [{ path: 'city-3d/city-3d.ts' }],
+  },
+  {
     name: 'logistics-network',
     title: 'Logistics Network',
     description: 'Domestic logistics map with a sidebar of stats.',
@@ -149,6 +158,7 @@ export const BLOCK_COMPONENTS: Record<string, () => Promise<Type<unknown>>> = {
     import('./uptime-monitor/uptime-monitor').then((m) => m.UptimeMonitorBlockComponent),
   heatmap: () => import('./heatmap/heatmap').then((m) => m.HeatmapBlockComponent),
   pmtiles: () => import('./pmtiles/pmtiles').then((m) => m.PmtilesBlockComponent),
+  'city-3d': () => import('./city-3d/city-3d').then((m) => m.City3dBlockComponent),
   'logistics-network': () =>
     import('./logistics-network/logistics-network').then((m) => m.LogisticsNetworkBlockComponent),
   'store-locator': () =>

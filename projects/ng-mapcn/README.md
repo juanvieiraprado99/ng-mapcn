@@ -13,7 +13,7 @@
   <a href="https://bundlephobia.com/package/ng-mapcn"><img src="https://img.shields.io/bundlephobia/minzip/ng-mapcn" alt="bundle size" /></a>
 </p>
 
-ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map components for Angular. It is built for Angular apps that need theme-aware maps (markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, raster/vector tile sources, image overlays) without API keys or a paid tile provider. It is an Angular port of the [mapcn](https://mapcn.dev) API, with MapLibre GL as the rendering engine and the copy-paste ownership model of [shadcn/ui](https://ui.shadcn.com): `ng add ng-mapcn` copies the sources into your project so you own the code.
+ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map components for Angular. It is built for Angular apps that need theme-aware maps (markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, raster/vector tile sources, image overlays, 3D buildings and terrain) without API keys or a paid tile provider. It is an Angular port of the [mapcn](https://mapcn.dev) API, with MapLibre GL as the rendering engine and the copy-paste ownership model of [shadcn/ui](https://ui.shadcn.com): `ng add ng-mapcn` copies the sources into your project so you own the code.
 
 **[Docs](https://ng-mapcn.vercel.app/docs)** · **[Blocks gallery](https://ng-mapcn.vercel.app/blocks)** · **[Installation](https://ng-mapcn.vercel.app/docs/installation)** · **[API reference](https://ng-mapcn.vercel.app/docs/api-reference)**
 
@@ -21,7 +21,7 @@ ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map componen
 
 - **MapLibre GL JS v6** under the hood, no API keys required (Carto basemaps)
 - **Theme-aware**: follows the `dark`/`light` class or `data-theme` attribute on `<html>` (or `prefers-color-scheme`) and swaps the basemap at runtime
-- **Composable**: declare markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, tile sources (raster, vector, PMTiles) and image overlays as children of `<ng-map>`
+- **Composable**: declare markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, tile sources (raster, vector, PMTiles), image overlays, 3D buildings and terrain as children of `<ng-map>`
 - **Signals-first**: standalone components, signal inputs/outputs, `effect()`-based reconciliation
 - **Copy-paste distribution**: `ng add ng-mapcn` copies the sources into your project (shadcn-style). Also usable as a regular npm package.
 - **SSR-safe**: nothing touches `window` or MapLibre during server render
@@ -130,7 +130,7 @@ import { MapComponent, MapMarkerComponent, MarkerPopupComponent } from 'ng-mapcn
 export class AppMap {}
 ```
 
-The map fills its parent, so give the parent an explicit height. More building blocks (controls, routes, GeoJSON, arcs, clusters, heatmaps) are listed below and in the [blocks gallery](https://ng-mapcn.vercel.app/blocks).
+The map fills its parent, so give the parent an explicit height. More building blocks (controls, routes, GeoJSON, arcs, clusters, heatmaps, 3D) are listed below and in the [blocks gallery](https://ng-mapcn.vercel.app/blocks).
 
 ## Components
 
@@ -150,6 +150,8 @@ The map fills its parent, so give the parent an explicit height. More building b
 | `ng-map-raster-source`                                      | Raster tile source (XYZ/TMS/WMS) plus its raster layer: `tiles`/`url`, `tileSize`, `opacity`, `visible`, `beforeId`.                                                                                                                                                                               |
 | `ng-map-vector-source`                                      | Vector tile source (MVT, TileJSON, `pmtiles://`), source only; draw it with layers that wait for it via `MapContextService.hasSource(id)`.                                                                                                                                                         |
 | `ng-map-image-overlay`                                      | Image pinned to four corner coordinates, with `opacity`, `visible` and `beforeId`; `url` and `coordinates` update in place.                                                                                                                                                                        |
+| `ng-map-fill-extrusion`                                     | 3D extrusion of polygons (3D buildings): defaults to the Carto `building` layer (`render_height`), or any source by id; `color`, `opacity`, `minZoom`, `filter`, `beforeId`.                                                                                                                       |
+| `ng-map-terrain`                                            | 3D terrain from a `raster-dem` source (public Terrarium tiles by default) with `exaggeration` and an optional `hillshade`; re-applied after a theme switch.                                                                                                                                        |
 
 Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint`, `blankMapStyle`, `defaultStyles`, and `MapContextService` (map / isLoaded / resolvedTheme signals and the `hasSource(id)` source registry for advanced layer work via `inject`).
 

@@ -80,6 +80,46 @@ describe('maplibre-fake', () => {
     expect(map.calls).toContain('setLayerZoomRange:l');
   });
 
+  it('setTerrain/getTerrain keep the terrain, require the source and are not structural', () => {
+    const map = createMap();
+    expect(map.getTerrain()).toBeNull();
+    expect(() => map.setTerrain({ source: 'dem' })).toThrow('no source with ID: dem');
+
+    map.addSource('dem', { type: 'raster-dem', tiles: ['a'] } as any);
+    expect(map.setTerrain({ source: 'dem', exaggeration: 2 })).toBe(map);
+
+    expect(map.getTerrain()).toEqual({ source: 'dem', exaggeration: 2 });
+    expect(map.setTerrain).toHaveBeenLastCalledWith({ source: 'dem', exaggeration: 2 });
+    expect(map.calls).toContain('setTerrain:dem');
+
+    map.setTerrain(null);
+    expect(map.getTerrain()).toBeNull();
+    expect(map.calls).toContain('setTerrain:null');
+  });
+
+  it('the terrain is style-level: finishing a style load drops it', () => {
+    const map = createMap();
+    map.addSource('dem', { type: 'raster-dem', tiles: ['a'] } as any);
+    map.setTerrain({ source: 'dem' });
+
+    map.setStyle('https://example.com/style.json');
+    expect(map.getTerrain()).not.toBeNull();
+    map.finishStyleLoad();
+
+    expect(map.getTerrain()).toBeNull();
+  });
+
+  it('setFilter stores the filter on the layer', () => {
+    const map = createMap();
+    map.addSource('s', geojsonSource());
+    map.addLayer({ id: 'l', type: 'fill-extrusion', source: 's' } as any);
+
+    map.setFilter('l', ['==', ['get', 'a'], 1]);
+
+    expect(map.getLayer('l').filter).toEqual(['==', ['get', 'a'], 1]);
+    expect(map.calls).toContain('setFilter:l');
+  });
+
   it('tile and image sources expose the in-place updaters as spies', () => {
     const map = createMap();
     map.addSource('t', { type: 'raster', tiles: ['a'] } as any);

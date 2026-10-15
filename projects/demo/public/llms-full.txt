@@ -483,6 +483,56 @@ Georeferenced image pinned to four corner coordinates, drawn as a raster layer. 
 | `beforeId` | `string` | — | Insert the layer before this layer id. Applied at creation only. |
 | `paint` | `RasterLayerSpecification["paint"]` | — | Escape hatch: raster paint properties merged last (e.g. raster-fade-duration: 0 to avoid a flash on url change). |
 
+### MapFillExtrusion
+
+`ng-map-fill-extrusion`
+
+3D extrusion of polygons (fill-extrusion layer), e.g. 3D buildings. Creates only the layer: the source is a basemap source or one added by a source component or the application, and the layer waits for it. Re-added after a theme switch. Must be used inside ng-map.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `id` | `string` | `auto` | Layer id prefix; the layer is fill-extrusion-layer-<id>. Changing it re-creates the layer. |
+| `source` | `string` | `'carto'` | Id of the source to extrude: the Carto basemap's vector source, a tile source component or an application source. The layer is added once map.getSource(source) exists. |
+| `sourceLayer` | `string` | `'building' for 'carto', else none` | Layer of a vector source. Omit for GeoJSON sources. |
+| `heightProperty` | `string` | `'render_height'` | Feature property with the height in meters. |
+| `baseProperty` | `string` | `'render_min_height'` | Feature property with the base height in meters. |
+| `color` | `string \| expression` | `theme gray` | Fill color; defaults to a theme-aware gray (defaultExtrusionColors). |
+| `opacity` | `number` | `0.8` | Layer opacity, 0..1. |
+| `minZoom` | `number` | `14` | Minimum zoom at which the extrusion is drawn (the Carto tiles stop at 14). |
+| `maxZoom` | `number` | `24` | Zoom from which the extrusion is no longer drawn. |
+| `filter` | `FilterSpecification \| null` | `['!=', ['get', 'hide_3d'], true]` | MapLibre filter, updated with setFilter. null removes the default filter. |
+| `beforeId` | `string` | — | Insert the layer before this layer id. Applied at creation only. |
+| `paint` | `FillExtrusionLayerSpecification["paint"]` | — | Escape hatch: fill-extrusion paint properties merged last. |
+
+### MapTerrain
+
+`ng-map-terrain`
+
+3D terrain from a raster-dem source (map.setTerrain) with an optional hillshade layer. The terrain is style-level state: it is re-applied after a theme switch and disabled on teardown. One terrain per map. Must be used inside ng-map.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `id` | `string` | `auto` | Id prefix: DEM source terrain-source-<id>, hillshade source terrain-hillshade-source-<id>, hillshade layer terrain-hillshade-<id>. Changing it re-creates all. |
+| `tiles` | `string[]` | `public Terrarium tiles` | Elevation tile URL templates. Applied at creation. |
+| `url` | `string` | — | TileJSON URL, instead of tiles (takes precedence). Applied at creation. |
+| `encoding` | `'terrarium' \| 'mapbox'` | `'terrarium'` | Encoding of the elevation tiles. Applied at creation. |
+| `tileSize` | `number` | `256` | Tile size in pixels. Applied at creation. |
+| `minzoom` | `number` | — | Minimum zoom of the elevation tiles. Applied at creation. |
+| `maxzoom` | `number` | `15 for the default tiles` | Maximum zoom of the elevation tiles. Applied at creation. |
+| `attribution` | `string` | `Mapzen / AWS for the default tiles` | Attribution for the map attribution control. Applied at creation. |
+| `exaggeration` | `number` | `1` | How tall the terrain looks. Changing it calls setTerrain again. |
+| `hillshade` | `boolean` | `false` | Draw a hillshade layer (with its own DEM source). Added and removed on toggle; the terrain is untouched. |
+| `hillshadeExaggeration` | `number` | — | Hillshade intensity, 0..1 (MapLibre default 0.5). |
+| `hillshadeShadowColor` | `string` | — | Hillshade color of the shaded slopes. |
+| `hillshadeHighlightColor` | `string` | — | Hillshade color of the lit slopes. |
+| `hillshadeAccentColor` | `string` | — | Hillshade accent color for steep slopes. |
+| `hillshadePaint` | `HillshadeLayerSpecification["paint"]` | — | Escape hatch: hillshade paint properties merged last. |
+| `beforeId` | `string` | — | Insert the hillshade layer before this layer id. Applied when the layer is created only. |
+
 ## MapContextService
 
 Component-scoped service provided by `ng-map` — the Angular equivalent of mapcn's `useMap()` hook. Inject it in any component projected inside `ng-map` to reach the raw map.
@@ -592,7 +642,7 @@ The map is created in `afterNextRender` (browser-only, after hydration) and ever
 ## Key Features
 
 - **MapLibre GL JS v6** under the hood — no API keys required (Carto basemaps)
-- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, tile sources and image overlays are children of `<ng-map>`
+- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, tile sources, image overlays, 3D buildings and terrain are children of `<ng-map>`
 - **Signals-first** — standalone components, `input()`/`output()`, `effect()`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
 - **SSR-safe** — the map is created in `afterNextRender`; nothing touches `document` on the server

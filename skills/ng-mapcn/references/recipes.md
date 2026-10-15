@@ -2,7 +2,7 @@
 
 Copy-paste examples. Import from `'ng-mapcn'` (or from the folder `ng add` copied into your app). Every map needs a parent with an explicit height. Coordinates are `[longitude, latitude]`.
 
-Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Tile sources](#tile-sources) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading)
+Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Tile sources](#tile-sources) | [3D buildings and terrain](#3d-buildings-and-terrain) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading)
 
 ## Controls
 
@@ -347,6 +347,25 @@ export class ParcelsLayerComponent {
 
 PMTiles needs the protocol registered once in the browser, before the source is added (`npm i pmtiles`; the library does not bundle it): `addProtocol('pmtiles', new Protocol().tile)` with `addProtocol` from `maplibre-gl` and `Protocol` from `pmtiles`. The archive must be served with HTTP range support. Tile `tiles`/`url`, image `url`/`coordinates` and `opacity`/`visible` update in place; `tileSize`, zoom range, `bounds`, `scheme`, `attribution` and `promoteId` are read at creation (change the `id` to rebuild).
 
+## 3D buildings and terrain
+
+```html
+<ng-map
+  [center]="[-74.0134, 40.7061]"
+  [zoom]="15.5"
+  [options]="{ pitch: 60, bearing: -20, maxPitch: 85 }"
+>
+  <!-- Carto basemap buildings: source "carto", layer "building", render_height. Needs zoom >= 14. -->
+  <ng-map-fill-extrusion id="buildings" [opacity]="0.8" />
+  <!-- Public Terrarium tiles by default; the hillshade has its own DEM source. -->
+  <ng-map-terrain id="relief" [exaggeration]="1.5" [hillshade]="true" />
+</ng-map>
+```
+
+Own data: `<ng-map-fill-extrusion source="footprints" sourceLayer="footprints" heightProperty="floors" [paint]="{ 'fill-extrusion-height': ['*', ['get', 'floors'], 3.2] }" />` next to an `ng-map-vector-source id="footprints"`. A GeoJSON source needs no `sourceLayer`. Another DEM provider: `<ng-map-terrain [tiles]="[...]" encoding="mapbox" [tileSize]="512" [maxzoom]="12" />`.
+
+Gotchas: the map needs a pitch to look 3D (`pitch` is an `options` entry, not an `ng-map` input). `ng-map-fill-extrusion` does nothing on basemaps without a vector source (`blank`, raster): extrude a source of your own. Terrain is lost on a theme `setStyle` and re-applied automatically; only one terrain per map; changing `exaggeration` rebuilds the terrain mesh.
+
 ## Controlled viewport and raw map
 
 ```ts
@@ -453,7 +472,7 @@ export class PointsLayerComponent {
 
 Use it as a child: `<ng-map><app-points-layer /></ng-map>`. When the theme changes, `isLoaded()` drops to false (cleanup runs) and back to true (layers are re-added). Use `ctx.resolvedTheme()` inside the effect for theme-specific colors.
 
-Layer order: `map.addLayer(spec, beforeId)` places a layer under `beforeId`. Library layer ids are `<id>-layer` (route; its progress line is `<id>-layer-progress-layer`), `geojson-fill-<id>` / `geojson-line-<id>` (geojson), `arc-layer-<id>` (arc) and `clusters-<id>` / `cluster-count-<id>` / `unclustered-point-<id>` (cluster), `heatmap-layer-<id>` (heatmap; source `heatmap-source-<id>`), where `<id>` is the component's `id` input. Every layer component also takes `beforeId` (creation only).
+Layer order: `map.addLayer(spec, beforeId)` places a layer under `beforeId`. Library layer ids are `<id>-layer` (route; its progress line is `<id>-layer-progress-layer`), `geojson-fill-<id>` / `geojson-line-<id>` (geojson), `arc-layer-<id>` (arc) and `clusters-<id>` / `cluster-count-<id>` / `unclustered-point-<id>` (cluster), `heatmap-layer-<id>` (heatmap; source `heatmap-source-<id>`), `fill-extrusion-layer-<id>` (fill-extrusion), `terrain-source-<id>` / `terrain-hillshade-source-<id>` / `terrain-hillshade-<id>` (terrain), where `<id>` is the component's `id` input. Every layer component also takes `beforeId` (creation only).
 
 ## Lazy loading
 

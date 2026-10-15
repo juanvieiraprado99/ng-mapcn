@@ -2,7 +2,7 @@
 
 All components are standalone, `OnPush`, and use signal inputs/outputs. Everything below is exported from `ng-mapcn` (or from the folder `ng add` copied into your app). Coordinates are `[longitude, latitude]`.
 
-Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
+Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
 
 ## ng-map
 
@@ -338,6 +338,51 @@ Class `MapImageOverlayComponent`. An `image` source pinned to four corners plus 
 | `paint`       | `RasterLayerSpecification['paint']` | `undefined` | Escape hatch, e.g. `{ 'raster-fade-duration': 0 }` to avoid a flash on `url` change |
 
 Also exported: `ImageOverlayCoordinates`, `TileBounds`, `TileScheme`.
+
+## ng-map-fill-extrusion
+
+Class `MapFillExtrusionComponent`. One MapLibre `fill-extrusion` layer, `fill-extrusion-layer-<id>` (auto `ng-fill-extrusion-N`). It creates no source: the layer is added once `map.getSource(source)` exists (a basemap source, a tile source component, or an application source announced by `sourcedata`) and re-added after a theme switch.
+
+Defaults target the Carto basemaps (verified in Positron and Dark Matter): vector source `carto`, source layer `building` with `render_height`, `render_min_height` and `hide_3d`, tiles up to zoom 14.
+
+| Input            | Type                                       | Default                             | Notes                                                  |
+| ---------------- | ------------------------------------------ | ----------------------------------- | ------------------------------------------------------ |
+| `id`             | `string`                                   | auto                                | Changing it re-creates the layer                       |
+| `source`         | `string`                                   | `'carto'`                           | Changing it re-creates the layer                       |
+| `sourceLayer`    | `string`                                   | `'building'` for `carto`, else none | Vector sources only; omit for GeoJSON                  |
+| `heightProperty` | `string`                                   | `'render_height'`                   | Meters; `coalesce(to-number(get), 0)`                  |
+| `baseProperty`   | `string`                                   | `'render_min_height'`               | Meters                                                 |
+| `color`          | `string \| expression`                     | `defaultExtrusionColors[theme]`     | Theme-aware gray (`light` `#d1d5db`, `dark` `#3f3f46`) |
+| `opacity`        | `number`                                   | `0.8`                               |                                                        |
+| `minZoom`        | `number`                                   | `14`                                | `setLayerZoomRange` on change                          |
+| `maxZoom`        | `number`                                   | `24`                                |                                                        |
+| `filter`         | `FilterSpecification \| null`              | `['!=', ['get', 'hide_3d'], true]`  | `setFilter` on change; `null` = no filter              |
+| `beforeId`       | `string`                                   | `undefined`                         | Creation only                                          |
+| `paint`          | `FillExtrusionLayerSpecification['paint']` | `undefined`                         | Escape hatch, merged last over every input above       |
+
+No outputs. Also exported: `defaultExtrusionColors`, `CARTO_SOURCE_ID`.
+
+## ng-map-terrain
+
+Class `MapTerrainComponent`. A `raster-dem` source `terrain-source-<id>` (auto id `ng-terrain-N`, announced through `hasSource`) plus `map.setTerrain({ source, exaggeration })`. With `hillshade` it also adds a hillshade layer `terrain-hillshade-<id>` over its own source `terrain-hillshade-source-<id>` (MapLibre warns if hillshade and terrain share a source). The terrain is style-level: it is disabled on teardown (only if it is this one) and re-enabled, with the sources, after a theme switch. One terrain per map.
+
+| Input                                                                       | Type                                   | Default                         | Notes                                                     |
+| --------------------------------------------------------------------------- | -------------------------------------- | ------------------------------- | --------------------------------------------------------- |
+| `id`                                                                        | `string`                               | auto                            | Changing it re-creates everything                         |
+| `tiles`                                                                     | `string[]`                             | public Terrarium tiles (AWS)    | Creation only (`defaultTerrainTiles`)                     |
+| `url`                                                                       | `string`                               | `undefined`                     | TileJSON, takes precedence over `tiles`; creation only    |
+| `encoding`                                                                  | `'terrarium' \| 'mapbox'`              | `'terrarium'`                   | Creation only                                             |
+| `tileSize`                                                                  | `number`                               | `256` (none with `url`)         | Creation only                                             |
+| `minzoom` / `maxzoom`                                                       | `number`                               | `maxzoom` 15 with default tiles | Creation only                                             |
+| `attribution`                                                               | `string`                               | Mapzen / AWS for default tiles  | Creation only                                             |
+| `exaggeration`                                                              | `number`                               | `1`                             | Calls `setTerrain` again when changed (rebuilds the mesh) |
+| `hillshade`                                                                 | `boolean`                              | `false`                         | Adds/removes the hillshade layer and its source           |
+| `hillshadeExaggeration`                                                     | `number`                               | `undefined`                     | 0..1, MapLibre default 0.5                                |
+| `hillshadeShadowColor` / `hillshadeHighlightColor` / `hillshadeAccentColor` | `string`                               | `undefined`                     | Only defined values are set                               |
+| `hillshadePaint`                                                            | `HillshadeLayerSpecification['paint']` | `undefined`                     | Escape hatch, merged last                                 |
+| `beforeId`                                                                  | `string`                               | `undefined`                     | Hillshade layer, at its creation only                     |
+
+No outputs. Also exported: `defaultTerrainTiles`, `TerrainEncoding`.
 
 ## Services
 
