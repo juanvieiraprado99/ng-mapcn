@@ -2,7 +2,7 @@
 
 Copy-paste examples. Import from `'ng-mapcn'` (or from the folder `ng add` copied into your app). Every map needs a parent with an explicit height. Coordinates are `[longitude, latitude]`.
 
-Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Tile sources](#tile-sources) | [3D buildings and terrain](#3d-buildings-and-terrain) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading)
+Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Tile sources](#tile-sources) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading) | [Fit to data](#fit-to-data) | [3D buildings and terrain](#3d-buildings-and-terrain)
 
 ## Controls
 
@@ -346,6 +346,33 @@ export class ParcelsLayerComponent {
 ```
 
 PMTiles needs the protocol registered once in the browser, before the source is added (`npm i pmtiles`; the library does not bundle it): `addProtocol('pmtiles', new Protocol().tile)` with `addProtocol` from `maplibre-gl` and `Protocol` from `pmtiles`. The archive must be served with HTTP range support. Tile `tiles`/`url`, image `url`/`coordinates` and `opacity`/`visible` update in place; `tileSize`, zoom range, `bounds`, `scheme`, `attribution` and `promoteId` are read at creation (change the `id` to rebuild).
+
+## Fit to data
+
+```ts
+@Component({
+  selector: 'app-fit-map',
+  imports: [MapComponent, MapMarkerComponent, MarkerContentComponent],
+  template: `
+    <div style="height: 400px">
+      <ng-map [fitBounds]="{ padding: 48, maxZoom: 14 }">
+        @for (place of places(); track place.id) {
+          <ng-map-marker [longitude]="place.lng" [latitude]="place.lat">
+            <ng-marker-content
+              ><div class="size-3 rounded-full bg-blue-500"></div
+            ></ng-marker-content>
+          </ng-map-marker>
+        }
+      </ng-map>
+    </div>
+  `,
+})
+export class FitMap {
+  readonly places = signal([{ id: 1, lng: 2.35, lat: 48.85 }]);
+}
+```
+
+The map fits once loaded and again whenever the union of the children's bounds changes (a batch of changes fits once). Pass `bounds` for explicit bounds, or inject `MapContextService` in a child and call `fitBounds({ padding: 48 })` (returns `false` when not loaded or there is nothing to fit). A single point zooms to `maxZoom` (default 16). Data given as a URL is not fetched, so it does not contribute.
 
 ## 3D buildings and terrain
 

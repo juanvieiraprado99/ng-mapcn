@@ -16,7 +16,7 @@ import { type Offset, Popup, type PositionAnchor } from 'maplibre-gl';
 
 import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { applyClassName } from '../../utils/class-name';
-import { createPopupCloseButton } from '../../utils/popup-close-button';
+import { closePopupOnEscape, createPopupCloseButton } from '../../utils/popup-close-button';
 import { renderPortal } from '../../utils/portal';
 import { MarkerContextService } from '../map-marker/marker-context.service';
 
@@ -80,10 +80,21 @@ export class MarkerPopupComponent {
         ...(anchor !== undefined && { anchor }),
       });
       popup.setDOMContent(container);
+      // Escape closes and hands focus back to the marker (only when focus was inside the card).
+      closePopupOnEscape(popup, container, (hadFocus) => {
+        if (hadFocus) marker.getElement().focus();
+      });
       // 'close' fires from the map's event system (outside the zone) — re-enter
       const onClose = () => this.zone.run(() => this.popupClose.emit());
       popup.on('close', onClose);
       marker.setPopup(popup);
+      // MapLibre leaves custom marker elements to the app but makes them focusable (tabindex) once
+      // they have a popup; announce them as a popup button unless the app chose a role itself.
+      const el = marker.getElement();
+      const setRole = !el.hasAttribute('role');
+      if (setRole) el.setAttribute('role', 'button');
+      const setHaspopup = !el.hasAttribute('aria-haspopup');
+      if (setHaspopup) el.setAttribute('aria-haspopup', 'dialog');
       this.appliedOffset = offset === undefined ? undefined : JSON.stringify(offset);
       this.instance.set({ popup, container });
 
@@ -92,6 +103,8 @@ export class MarkerPopupComponent {
         // Detach first: a teardown is not a user close, and the outputs are being destroyed.
         popup.off('close', onClose);
         marker.setPopup(null);
+        if (setRole) el.removeAttribute('role');
+        if (setHaspopup) el.removeAttribute('aria-haspopup');
         popup.remove();
         destroyPortal();
       });

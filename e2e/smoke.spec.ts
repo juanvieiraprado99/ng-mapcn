@@ -1,60 +1,12 @@
 import type { Locator, Page } from '@playwright/test';
 
-import { BLOCKS } from '../projects/demo/src/app/blocks/registry';
 import { expect, test } from './fixtures';
+import { EXPECTED_MAPS, ROUTES } from './routes';
 
 /**
  * Production smoke test: every page of the shipped bundle loads, every map on it becomes ready,
  * nothing logs an error and nothing reaches the network outside the fixtures.
  */
-const DOCS_PAGES = [
-  '/docs',
-  '/docs/installation',
-  '/docs/api-reference',
-  '/docs/basemaps',
-  ...[
-    'map',
-    'controls',
-    'markers',
-    'popups',
-    'routes',
-    'arcs',
-    'geojson',
-    'clusters',
-    'heatmap',
-    'tile-sources',
-    '3d',
-    'advanced',
-  ].map((name) => `/docs/components/${name}`),
-];
-
-const ROUTES = ['/', ...DOCS_PAGES, '/blocks', ...BLOCKS.map((block) => `/view/${block.name}`)];
-
-/**
- * How many maps each route renders (block previews on /blocks are iframes). Asserted as a minimum,
- * so a page that silently stops rendering its maps fails instead of passing with nothing to check.
- */
-const EXPECTED_MAPS: Record<string, number> = {
-  '/': 6,
-  '/docs': 0,
-  '/docs/installation': 1,
-  '/docs/api-reference': 0,
-  '/docs/basemaps': 5,
-  '/docs/components/map': 4,
-  '/docs/components/controls': 1,
-  '/docs/components/markers': 3,
-  '/docs/components/popups': 1,
-  '/docs/components/routes': 3,
-  '/docs/components/arcs': 2,
-  '/docs/components/geojson': 2,
-  '/docs/components/clusters': 1,
-  '/docs/components/heatmap': 1,
-  '/docs/components/tile-sources': 3,
-  '/docs/components/3d': 2,
-  '/docs/components/advanced': 4,
-  '/blocks': BLOCKS.length, // one iframe preview per block
-};
-
 /** A map is ready once its loader overlay is gone and its canvas exists. */
 async function expectMapReady(map: Locator, name: string): Promise<void> {
   await expect(map.locator('.ng-map-loader'), `${name} finishes loading`).toHaveCount(0, {

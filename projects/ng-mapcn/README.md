@@ -153,6 +153,8 @@ The map fills its parent, so give the parent an explicit height. More building b
 | `ng-map-fill-extrusion`                                     | 3D extrusion of polygons (3D buildings): defaults to the Carto `building` layer (`render_height`), or any source by id; `color`, `opacity`, `minZoom`, `filter`, `beforeId`.                                                                                                                       |
 | `ng-map-terrain`                                            | 3D terrain from a `raster-dem` source (public Terrarium tiles by default) with `exaggeration` and an optional `hillshade`; re-applied after a theme switch.                                                                                                                                        |
 
+`ng-map` also takes `[fitBounds]="{ padding, maxZoom, duration, animate, bounds? }"` to fit the camera to its children's data (or explicit `bounds`) once loaded and whenever they change; `MapContextService.fitBounds()` is the imperative form.
+
 Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint`, `blankMapStyle`, `defaultStyles`, and `MapContextService` (map / isLoaded / resolvedTheme signals and the `hasSource(id)` source registry for advanced layer work via `inject`).
 
 ## Theming

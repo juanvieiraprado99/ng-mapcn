@@ -4,14 +4,14 @@ import { gotoAndWaitForMap, mapCall, waitForMap } from './map-helpers';
 test.describe('map', () => {
   test('every map on the page becomes ready and renders a canvas', async ({ page }) => {
     await page.goto('/docs/components/map');
-    // The page has four examples (basic, controlled, blank, custom styles); later ones render
+    // The page has five examples (basic, controlled, blank, custom styles, fit bounds); later ones render
     // lazily, so wait for each in turn.
-    for (let index = 0; index < 4; index++) {
+    for (let index = 0; index < 5; index++) {
       await waitForMap(page, index);
     }
     const maps = page.locator('ng-map');
-    await expect(maps).toHaveCount(4);
-    for (let index = 0; index < 4; index++) {
+    await expect(maps).toHaveCount(5);
+    for (let index = 0; index < 5; index++) {
       const map = maps.nth(index);
       await expect(map.locator('canvas.maplibregl-canvas')).toHaveCount(1);
       await expect(map.locator('.ng-map-loader')).toHaveCount(0);
