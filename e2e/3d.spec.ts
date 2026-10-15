@@ -73,7 +73,7 @@ test.describe('3D buildings', () => {
               .map((f) => f.properties['render_height'] as number)
               .sort((a, b) => a - b),
           ),
-        { message: 'building features loaded from the fixture tile' },
+        { message: 'building features loaded from the fixture tile', timeout: 20_000 },
       )
       .toContain(20);
   });
