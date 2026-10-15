@@ -31,7 +31,7 @@ export const DOCS_PAGES = [
 
 export const BLOCK_VIEW_ROUTES = BLOCKS.map((block) => `/view/${block.name}`);
 
-export const ROUTES = ['/', ...DOCS_PAGES, '/blocks', ...BLOCK_VIEW_ROUTES];
+export const ROUTES = ['/', ...DOCS_PAGES, '/blocks', '/playground', ...BLOCK_VIEW_ROUTES];
 
 /**
  * How many maps each route renders (block previews on /blocks are iframes). Asserted as a minimum,
@@ -57,4 +57,5 @@ export const EXPECTED_MAPS: Record<string, number> = {
   '/docs/components/draw': 1,
   '/docs/components/advanced': 4,
   '/blocks': BLOCKS.length, // one iframe preview per block
+  '/playground': 7, // the playground map + one live preview per gallery style (minimum)
 };

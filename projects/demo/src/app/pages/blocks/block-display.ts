@@ -3,13 +3,15 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCheck, lucideMaximize, lucideTerminal } from '@ng-icons/lucide';
 
+import { blockUsage } from '@/blocks/block-usage';
 import { type BlockMeta, zardDocsUrl, zardInstallCommand } from '@/blocks/registry';
+import { CodeBlockComponent } from '@/shared/code-block';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSeparatorComponent } from '@/shared/components/separator';
 
 import { BlockCodeViewerComponent } from './block-code-viewer';
 
-type Tab = 'preview' | 'code';
+type Tab = 'preview' | 'code' | 'usage';
 
 /** shadcn new-york `TabsTrigger` on the default (muted pill) list. */
 const TAB_TRIGGER =
@@ -19,7 +21,13 @@ const TAB_TRIGGER =
 @Component({
   selector: 'app-block-display',
   standalone: true,
-  imports: [NgIcon, ZardButtonComponent, ZardSeparatorComponent, BlockCodeViewerComponent],
+  imports: [
+    NgIcon,
+    ZardButtonComponent,
+    ZardSeparatorComponent,
+    BlockCodeViewerComponent,
+    CodeBlockComponent,
+  ],
   viewProviders: [provideIcons({ lucideCheck, lucideMaximize, lucideTerminal })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -55,7 +63,7 @@ const TAB_TRIGGER =
           role="tablist"
           class="bg-muted text-muted-foreground inline-flex h-8 w-fit items-center justify-center rounded-lg p-[3px]"
         >
-          @for (tab of tabs; track tab.id) {
+          @for (tab of tabs(); track tab.id) {
             <button
               type="button"
               role="tab"
@@ -115,6 +123,15 @@ const TAB_TRIGGER =
           <app-block-code-viewer [block]="block()" />
         </div>
       }
+
+      @if (usage(); as snippet) {
+        <div class="mt-3" [hidden]="active() !== 'usage'">
+          <p class="text-muted-foreground mb-2 text-sm">
+            After copying the files into your app, render the block like this.
+          </p>
+          <app-code-block [code]="snippet" lang="angular-ts" filename="page.component.ts" />
+        </div>
+      }
     </div>
   `,
 })
@@ -122,15 +139,27 @@ export class BlockDisplayComponent {
   readonly block = input.required<BlockMeta>();
 
   protected readonly trigger = TAB_TRIGGER;
-  protected readonly tabs: { id: Tab; label: string }[] = [
+  protected readonly tabs = computed<{ id: Tab; label: string }[]>(() => [
     { id: 'preview', label: 'Preview' },
     { id: 'code', label: 'Code' },
-  ];
+    ...(this.usage() ? [{ id: 'usage' as const, label: 'Usage' }] : []),
+  ]);
   protected readonly active = signal<Tab>('preview');
   protected readonly codeOpened = signal(false);
   protected readonly copied = signal(false);
+  /** Block sources, loaded once (lazy chunk) to derive the usage snippet. */
+  private readonly sources = signal<Record<string, string> | null>(null);
+  /** `null` until the sources load, and for a block whose entry component cannot be read. */
+  protected readonly usage = computed(() => {
+    const sources = this.sources();
+    return sources ? blockUsage(this.block(), sources) : null;
+  });
 
   private readonly sanitizer = inject(DomSanitizer);
+
+  constructor() {
+    void import('@/blocks/block-sources.generated').then((m) => this.sources.set(m.BLOCK_SOURCES));
+  }
 
   protected readonly viewUrl = computed(() => `/view/${this.block().name}`);
   /** Same-origin route of this site, so it is safe as an iframe resource URL. */

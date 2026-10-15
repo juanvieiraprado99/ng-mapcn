@@ -78,7 +78,12 @@ describe('site navigation', () => {
   });
 
   it('header links exclude Home', () => {
-    expect(mainNavItems.map((i) => i.title)).toEqual(['Docs', 'Components', 'Blocks']);
+    expect(mainNavItems.map((i) => i.title)).toEqual([
+      'Docs',
+      'Components',
+      'Blocks',
+      'Playground',
+    ]);
   });
 
   it('prev/next links skip file entries and stop at the ends', () => {
