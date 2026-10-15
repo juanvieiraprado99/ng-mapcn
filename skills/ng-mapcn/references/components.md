@@ -111,6 +111,8 @@ Must be placed inside `<ng-map-marker>`.
 | `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button                                                                                         |
 | `className`    | `string`             | `undefined` | Classes for `.ng-popup-card`                                                                                                   |
 
+Keyboard and a11y: MapLibre makes a marker with a popup focusable (`tabindex=0`, Enter/Space toggles it). The library also sets `role="button"` and `aria-haspopup="dialog"` on the marker element unless the app already set them. `focusAfterOpen` moves focus into the popup. Escape inside the card closes the popup, calls `stopPropagation()` (a host dialog does not also close) and returns focus to the marker. Give the marker an accessible name through visible text (`ng-marker-label`) or an `aria-label` on your content. Do not put your own `<button>` in `ng-marker-content` next to `ng-marker-popup`: the marker is already a button, so that nests interactive content (axe `nested-interactive`); use non-interactive content or set your own `role` on the marker element.
+
 ## ng-map-popup
 
 Class `MapPopupComponent`. Standalone popup at coordinates, opened on creation (unless `open` is `false`).
@@ -126,6 +128,8 @@ Class `MapPopupComponent`. Standalone popup at coordinates, opened on creation (
 | `open`         | `boolean` (`model`)  | `true`      | `[(open)]`: closing writes `false`, `true` reopens the same popup. A closed popup stays closed when only the position changes |
 | `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button                                                                                        |
 | `className`    | `string`             | `undefined` | Classes for `.ng-popup-card`. `ng-popup-passthrough` makes the popup ignore the pointer (see below)                           |
+
+Keyboard and a11y: `focusAfterOpen` moves focus into the popup. Escape inside the card closes it (writes `open = false`, emits `popupClose`) and calls `stopPropagation()` so a host dialog does not also close. With `[closeButton]="true"` the X is a button named by the `closePopup` label.
 
 Hover popups: set `[closeOnClick]="false"` and `className="ng-popup-passthrough"`. The popup sits next to the hovered point; if it captured the pointer, moving the cursor into it would fire the layer's `mouseleave` and close it. The rule `.maplibregl-popup:has(.ng-popup-passthrough)` (and its `.maplibregl-popup-content`) gets `pointer-events: none`. It ships in the library's `_utilities.scss`, and `ng add` appends it to a plain `styles.css`. It needs `:has()` (Chrome 105, Safari 15.4, Firefox 121).
 

@@ -114,7 +114,7 @@
       "id": "markerpopup",
       "title": "MarkerPopup",
       "selector": "ng-marker-popup",
-      "description": "A popup attached to the marker that opens on click. Must be used inside ng-map-marker.",
+      "description": "A popup attached to the marker that opens on click. Must be used inside ng-map-marker. Keyboard: the marker becomes a focusable role=button with aria-haspopup=dialog (unless you set them), Enter/Space opens it, focus moves into the popup, and Escape closes it, stops propagation and returns focus to the marker. Avoid your own <button> inside ng-marker-content (nested interactive content).",
       "inputs": [
         { "name": "closeButton", "type": "boolean", "default": "false", "description": "Shows a close button in the popup." },
         { "name": "offset", "type": "Offset", "default": "", "description": "Pixel offset from the marker. Reconciled live via setOffset; MapLibre's default when unset." },
@@ -144,7 +144,7 @@
       "id": "mappopup",
       "title": "MapPopup",
       "selector": "ng-map-popup",
-      "description": "A standalone popup component that can be placed anywhere on the map without a marker. Must be used inside ng-map.",
+      "description": "A standalone popup component that can be placed anywhere on the map without a marker. Must be used inside ng-map. Keyboard: focus moves into the popup when it opens, and Escape inside it closes it (stops propagation, so a host dialog stays open).",
       "inputs": [
         { "name": "longitude", "type": "number", "default": "required", "description": "Longitude coordinate of the popup." },
         { "name": "latitude", "type": "number", "default": "required", "description": "Latitude coordinate of the popup." },

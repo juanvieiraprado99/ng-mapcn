@@ -195,7 +195,7 @@ An always-visible text label above or below the marker. Must be used inside ng-m
 
 `ng-marker-popup`
 
-A popup attached to the marker that opens on click. Must be used inside ng-map-marker.
+A popup attached to the marker that opens on click. Must be used inside ng-map-marker. Keyboard: the marker becomes a focusable role=button with aria-haspopup=dialog (unless you set them), Enter/Space opens it, focus moves into the popup, and Escape closes it, stops propagation and returns focus to the marker. Avoid your own <button> inside ng-marker-content (nested interactive content).
 
 **Inputs**
 
@@ -233,7 +233,7 @@ A tooltip that appears on marker hover. Must be used inside ng-map-marker.
 
 `ng-map-popup`
 
-A standalone popup component that can be placed anywhere on the map without a marker. Must be used inside ng-map.
+A standalone popup component that can be placed anywhere on the map without a marker. Must be used inside ng-map. Keyboard: focus moves into the popup when it opens, and Escape inside it closes it (stops propagation, so a host dialog stays open).
 
 **Inputs**
 
