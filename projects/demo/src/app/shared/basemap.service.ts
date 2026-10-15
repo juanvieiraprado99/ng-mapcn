@@ -8,10 +8,11 @@ import {
   PLATFORM_ID,
   signal,
 } from '@angular/core';
-import type { StyleSpecification } from 'maplibre-gl';
 // Type-only: a value import would pull the whole ng-mapcn FESM (and with it
 // maplibre-gl) into the initial bundle, since this service is root-provided.
 import type { MapStylesConfig } from 'ng-mapcn';
+
+import { OSM_RASTER_STYLE } from './osm-style';
 
 export type BasemapId = 'carto' | 'openfreemap' | 'osm' | 'maptiler' | 'stadia';
 
@@ -27,25 +28,6 @@ export interface BasemapProvider {
   /** `undefined` = fall back to the library's Carto defaults. */
   styles(key: string): MapStylesConfig | undefined;
 }
-
-/**
- * Raster style built by hand — OpenStreetMap serves tiles, not a style.json.
- * Kept as a module constant so the reference is stable: `ng-map` compares the
- * resolved style by identity before calling `setStyle`.
- */
-const OSM_RASTER_STYLE: StyleSpecification = {
-  version: 8,
-  sources: {
-    osm: {
-      type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      maxzoom: 19,
-      attribution: '© OpenStreetMap contributors',
-    },
-  },
-  layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-};
 
 export const BASEMAP_PROVIDERS: readonly BasemapProvider[] = [
   {

@@ -119,6 +119,15 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
             >.
           </p>
 
+          @if (spec().requiresCarto && !activePreset().hasCartoSource) {
+            <p
+              role="status"
+              class="bg-muted text-muted-foreground rounded-md border px-3 py-2 text-sm"
+            >
+              {{ spec().label }} need the Carto vector tiles: pick Carto, Carto Voyager, Globe or 3D
+              tilt in the Basemap control.
+            </p>
+          }
           <div class="bg-card relative h-[520px] overflow-hidden rounded-xl border shadow-sm">
             @for (key of [spec().id]; track key) {
               <ng-map

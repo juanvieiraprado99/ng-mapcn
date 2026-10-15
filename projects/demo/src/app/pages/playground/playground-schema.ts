@@ -61,6 +61,8 @@ export interface PlaygroundSpec {
   attrs?: Record<string, string>;
   controls: Control[];
   fixed: FixedInput[];
+  /** The component draws from the `carto` vector source, so it shows nothing on other basemaps. */
+  requiresCarto?: boolean;
   /** Content projected into the layer element (e.g. the marker's `<ng-marker-content />`). */
   content?: { template: string; imports: string[] };
   /** Initial view that frames the component's data. */
@@ -82,6 +84,10 @@ export interface MapSnippetInput {
   ts?: string[];
   /** Extra `ng-mapcn` type imports used by `ts`. */
   imports?: string[];
+  /** Module-level declarations emitted between the imports and `@Component`. */
+  declarations?: string[];
+  /** Extra `import type { ... } from '...'` lines (types from other packages). */
+  typeImports?: { from: string; names: string[] }[];
 }
 
 export type Values = Record<string, unknown>;
@@ -211,10 +217,15 @@ export function buildSnippet(
     ? `{\n${members.map((m) => `  ${m.split('\n').join('\n  ')}`).join('\n')}\n}`
     : '{}';
 
-  const component = `import { Component } from '@angular/core';
-import { ${libImports.join(', ')} } from 'ng-mapcn';
-
-@Component({
+  const importLines = [
+    "import { Component } from '@angular/core';",
+    ...(map.typeImports ?? []).map(
+      (t) => `import type { ${t.names.join(', ')} } from '${t.from}';`,
+    ),
+    `import { ${libImports.join(', ')} } from 'ng-mapcn';`,
+  ];
+  const declarations = (map.declarations ?? []).map((d) => `${d}\n\n`).join('');
+  const component = `${importLines.join('\n')}\n\n${declarations}@Component({
   selector: 'app-map',
   standalone: true,
   imports: [${imports.join(', ')}],

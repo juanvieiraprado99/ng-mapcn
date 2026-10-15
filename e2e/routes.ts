@@ -57,5 +57,5 @@ export const EXPECTED_MAPS: Record<string, number> = {
   '/docs/components/draw': 1,
   '/docs/components/advanced': 4,
   '/blocks': BLOCKS.length, // one iframe preview per block
-  '/playground': 7, // the playground map + one live preview per gallery style (minimum)
+  '/playground': 8, // the playground map + one live preview per gallery style (7 presets)
 };

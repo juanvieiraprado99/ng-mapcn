@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { OSM_RASTER_STYLE } from '../../shared/osm-style';
 import {
   buildSnippet,
   controlDefaults,
@@ -250,7 +251,7 @@ describe('playground spec hardening', () => {
   });
 
   it('never reuses a basemap source id for a layer component id', () => {
-    const basemapSourceIds = ['osm', 'carto', 'openmaptiles'];
+    const basemapSourceIds = ['carto', 'openmaptiles', ...Object.keys(OSM_RASTER_STYLE.sources)];
     for (const s of PLAYGROUND_SPECS) {
       expect(basemapSourceIds, s.id).not.toContain(s.attrs?.['id']);
     }
@@ -287,5 +288,29 @@ describe('projected content and always-on grouped controls', () => {
     expect(inputs['linePaint']).toEqual({ 'line-color': '#ffffff' });
     // Width/opacity stay at the library defaults until touched.
     expect(buildSnippet(geojson, values, { attrs: [] }).template).toContain('[fillHoverPaint]=');
+  });
+});
+
+describe('module-level declarations and type imports', () => {
+  it('renders extra type imports and declarations between the imports and @Component', () => {
+    const { component } = buildSnippet(SPEC, controlDefaults(SPEC.controls), {
+      attrs: [],
+      declarations: ['const THING = 1;'],
+      typeImports: [{ from: 'maplibre-gl', names: ['StyleSpecification', 'Map'] }],
+    });
+
+    expect(
+      component.startsWith(
+        [
+          "import { Component } from '@angular/core';",
+          "import type { StyleSpecification, Map } from 'maplibre-gl';",
+          "import { MapComponent, MapRouteComponent } from 'ng-mapcn';",
+          '',
+          'const THING = 1;',
+          '',
+          '@Component({',
+        ].join('\n'),
+      ),
+    ).toBe(true);
   });
 });

@@ -498,6 +498,7 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
       'Extruded buildings from the basemap vector tiles. Needs a basemap with a building layer (Carto default); pick the 3D tilt preset.',
     selector: 'ng-map-fill-extrusion',
     className: 'MapFillExtrusionComponent',
+    requiresCarto: true,
     attrs: { id: 'buildings' },
     controls: [
       {

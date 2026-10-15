@@ -99,4 +99,35 @@ test.describe('playground', () => {
       .toBe(40);
     expect(await mapCall(page, PLAYGROUND, (map) => map.getZoom())).toBe(6.5);
   });
+
+  test('the OpenStreetMap card applies a raster style and prints its declaration', async ({
+    page,
+  }) => {
+    await gotoAndWaitForMap(page, '/playground', PLAYGROUND);
+
+    await page.getByRole('button', { name: 'Apply OpenStreetMap to the playground map' }).click();
+
+    await expect
+      .poll(() => mapCall(page, PLAYGROUND, (map) => map.getSource('osm')?.type))
+      .toBe('raster');
+    await expect(page.getByText('OpenStreetMap snippet')).toBeVisible();
+    await expect(page.locator('#gallery app-code-block').last()).toContainText('OSM_STYLE');
+
+    // Switching theme keeps the same style object: no setStyle, so the source survives.
+    await page.locator('app-theme-toggle button').click();
+    expect(await mapCall(page, PLAYGROUND, (map) => map.getSource('osm')?.type)).toBe('raster');
+  });
+
+  test('the raster component coexists with the OpenStreetMap basemap', async ({ page }) => {
+    await gotoAndWaitForMap(page, '/playground', PLAYGROUND);
+
+    await page.getByRole('button', { name: 'Apply OpenStreetMap to the playground map' }).click();
+    await page.getByRole('button', { name: 'Raster tiles', exact: true }).click();
+
+    // The fixtures fail the test on any console error, e.g. a duplicate source id.
+    await expect
+      .poll(() => mapCall(page, PLAYGROUND, (map) => map.getSource('tiles')?.type))
+      .toBe('raster');
+    expect(await mapCall(page, PLAYGROUND, (map) => map.getSource('osm')?.type)).toBe('raster');
+  });
 });
