@@ -218,7 +218,7 @@ export const MAP_CONTROLS: readonly Control[] = [
     ],
   },
   { kind: 'range', key: 'zoom', label: 'Zoom', min: 0, max: 20, step: 0.5, default: 2 },
-  { kind: 'range', key: 'pitch', label: 'Pitch', min: 0, max: 80, step: 5, default: 0 },
+  { kind: 'range', key: 'pitch', label: 'Pitch', min: 0, max: 60, step: 5, default: 0 },
   { kind: 'range', key: 'bearing', label: 'Bearing', min: -180, max: 180, step: 10, default: 0 },
 ];
 

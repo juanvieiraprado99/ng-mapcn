@@ -104,7 +104,7 @@ const INPUT =
                 [attr.aria-invalid]="errors()[control.key] ? 'true' : null"
                 [attr.aria-describedby]="errors()[control.key] ? id + '-error' : null"
                 [value]="draftOf(control.key, value)"
-                (input)="editJson(control.key, $any($event.target).value)"
+                (input)="editJson(control, $any($event.target))"
               ></textarea>
               @if (errors()[control.key]; as message) {
                 <p [id]="id + '-error'" class="text-destructive text-xs" role="alert">
@@ -146,22 +146,39 @@ export class PlaygroundControlsComponent {
     return this.drafts()[key] ?? (value === undefined ? '' : JSON.stringify(value));
   }
 
-  protected editJson(key: string, text: string): void {
-    this.drafts.update((drafts) => ({ ...drafts, [key]: text }));
+  /**
+   * Parses and validates the JSON text. Empty text resets to the control's default (never
+   * `undefined`, which would crash components that require the value) and rewrites the field.
+   */
+  protected editJson(control: Control, field: HTMLTextAreaElement): void {
+    if (control.kind !== 'json') return;
+    const { key } = control;
+    const text = field.value;
+    const clearError = () => this.errors.update(({ [key]: _, ...rest }) => rest);
+    const fail = (message: string) =>
+      this.errors.update((errors) => ({ ...errors, [key]: message }));
+
     if (!text.trim()) {
-      this.errors.update(({ [key]: _, ...rest }) => rest);
-      this.emit(key, undefined);
+      this.drafts.update(({ [key]: _, ...rest }) => rest);
+      clearError();
+      field.value = control.default === undefined ? '' : JSON.stringify(control.default);
+      this.emit(key, control.default);
       return;
     }
+    this.drafts.update((drafts) => ({ ...drafts, [key]: text }));
+    let parsed: unknown;
     try {
-      const parsed: unknown = JSON.parse(text);
-      this.errors.update(({ [key]: _, ...rest }) => rest);
-      this.emit(key, parsed);
+      parsed = JSON.parse(text);
     } catch {
-      this.errors.update((errors) => ({
-        ...errors,
-        [key]: 'Not valid JSON, keeping the last value.',
-      }));
+      fail('Not valid JSON, keeping the last value.');
+      return;
     }
+    const invalid = control.validate?.(parsed);
+    if (invalid) {
+      fail(`${invalid} Keeping the last value.`);
+      return;
+    }
+    clearError();
+    this.emit(key, parsed);
   }
 }

@@ -70,4 +70,26 @@ describe('playground page', () => {
       root.querySelector<HTMLSelectElement>('#pg-map-projection')!.selectedOptions[0].text,
     ).toBe('Globe');
   });
+
+  it('survives clearing or corrupting the cluster JSON controls', async () => {
+    const { harness, errors } = await renderRoute('/playground');
+    const root = harness.fixture.nativeElement as HTMLElement;
+    [...root.querySelectorAll('button')]
+      .find((button) => button.textContent?.trim() === 'Clusters')!
+      .click();
+    harness.detectChanges();
+
+    const colors = root.querySelector<HTMLTextAreaElement>('#pg-cluster-clusterColors')!;
+    const type = (text: string) => {
+      colors.value = text;
+      colors.dispatchEvent(new Event('input', { bubbles: true }));
+      harness.detectChanges();
+    };
+    type('null');
+    expect(root.querySelector('[role="alert"]')?.textContent).toContain('Three CSS colors');
+    type('');
+    expect(root.querySelector('[role="alert"]')).toBeNull();
+    expect(snippet(root)).not.toContain('undefined');
+    expect(errors).toEqual([]);
+  });
 });

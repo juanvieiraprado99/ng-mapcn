@@ -19,15 +19,15 @@ test.describe('tile sources', () => {
   }) => {
     await gotoAndWaitForMap(page, PAGE, RASTER);
 
-    expect(await sourceType(page, RASTER, 'osm')).toBe('raster');
+    expect(await sourceType(page, RASTER, 'tiles')).toBe('raster');
     const layer = await mapCall(page, RASTER, (map) => {
-      const l = map.getLayer('raster-layer-osm');
+      const l = map.getLayer('raster-layer-tiles');
       return { type: l?.type, source: l?.source };
     });
-    expect(layer).toEqual({ type: 'raster', source: 'osm' });
+    expect(layer).toEqual({ type: 'raster', source: 'tiles' });
 
     await expect
-      .poll(() => mapCall(page, RASTER, (map) => map.isSourceLoaded('osm')), {
+      .poll(() => mapCall(page, RASTER, (map) => map.isSourceLoaded('tiles')), {
         message: 'raster tiles loaded from the fixture',
       })
       .toBe(true);
@@ -38,7 +38,7 @@ test.describe('tile sources', () => {
   }) => {
     await gotoAndWaitForMap(page, PAGE, RASTER);
     const opacity = () =>
-      mapCall(page, RASTER, (map) => map.getPaintProperty('raster-layer-osm', 'raster-opacity'));
+      mapCall(page, RASTER, (map) => map.getPaintProperty('raster-layer-tiles', 'raster-opacity'));
     expect(await opacity()).toBe(0.7);
 
     await page
@@ -55,10 +55,10 @@ test.describe('tile sources', () => {
     await page.getByRole('button', { name: 'Hide' }).click();
     await expect
       .poll(() =>
-        mapCall(page, RASTER, (map) => map.getLayoutProperty('raster-layer-osm', 'visibility')),
+        mapCall(page, RASTER, (map) => map.getLayoutProperty('raster-layer-tiles', 'visibility')),
       )
       .toBe('none');
-    expect(await sourceType(page, RASTER, 'osm')).toBe('raster');
+    expect(await sourceType(page, RASTER, 'tiles')).toBe('raster');
   });
 
   test('image overlay: setCoordinates moves the live source', async ({ page }) => {
@@ -176,8 +176,8 @@ test.describe('tile sources', () => {
     await expect
       .poll(() =>
         mapCall(page, RASTER, (map) => [
-          map.getSource('osm')?.type,
-          map.getLayer('raster-layer-osm')?.type,
+          map.getSource('tiles')?.type,
+          map.getLayer('raster-layer-tiles')?.type,
         ]),
       )
       .toEqual(['raster', 'raster']);

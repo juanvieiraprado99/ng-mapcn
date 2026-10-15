@@ -31,8 +31,11 @@ export type Control = BaseControl &
     | { kind: 'boolean'; default: boolean }
     | { kind: 'color'; default: string }
     | { kind: 'text'; default: string }
-    /** Edited as JSON text; the parsed value is the input. */
-    | { kind: 'json'; default: unknown }
+    /**
+     * Edited as JSON text; the parsed value is the input. `validate` returns an error message
+     * for a parsed value the component cannot take (the last good value is kept).
+     */
+    | { kind: 'json'; default: unknown; validate?: (value: unknown) => string | null }
   );
 
 /** An input the playground always passes and the user does not edit (the component's data). */

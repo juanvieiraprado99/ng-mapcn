@@ -8,6 +8,7 @@ import {
   toTemplateExpr,
 } from './playground-schema';
 import { PLAYGROUND_SPECS } from './playground-specs';
+import { MAP_CONTROLS } from './style-presets';
 
 const SPEC: PlaygroundSpec = {
   id: 'route',
@@ -198,5 +199,60 @@ describe('required inputs and escaping', () => {
     const { component } = buildSnippet(spec, { label: 'a`b${c}\\d' }, MAP);
 
     expect(component).toContain('label="a\\`b\\${c}\\\\d"');
+  });
+});
+
+describe('playground spec hardening', () => {
+  const spec = (id: string) => PLAYGROUND_SPECS.find((s) => s.id === id)!;
+  const jsonControl = (id: string, key: string) => {
+    const control = spec(id).controls.find((c) => c.key === key)!;
+    if (control.kind !== 'json') throw new Error('not json');
+    return control;
+  };
+
+  it('validates the cluster colors and thresholds', () => {
+    const colors = jsonControl('cluster', 'clusterColors').validate!;
+    expect(colors(['#22c55e', 'red', 'rgb(1 2 3)'])).toBeNull();
+    for (const bad of [null, undefined, 'red', [], [1, 2, 3], ['red', 'blue'], ['a', 'b', 'c']]) {
+      expect(colors(bad), JSON.stringify(bad)).toContain('Three CSS colors');
+    }
+
+    const thresholds = jsonControl('cluster', 'clusterThresholds').validate!;
+    expect(thresholds([100, 750])).toBeNull();
+    for (const bad of [null, [750, 100], [100, 100], [0, 5], [1], ['1', '2'], [1, null]]) {
+      expect(thresholds(bad), JSON.stringify(bad)).toContain('Two increasing numbers');
+    }
+  });
+
+  it('defaults the cluster inputs to values that pass their own validators', () => {
+    for (const key of ['clusterColors', 'clusterThresholds']) {
+      const control = jsonControl('cluster', key);
+      expect(control.validate!(control.default)).toBeNull();
+    }
+  });
+
+  it('matches the GeoJSON outline width default of the library (0.5)', () => {
+    const control = spec('geojson').controls.find((c) => c.key === 'lineWidth')!;
+    expect(control.default).toBe(0.5);
+  });
+
+  it('keeps the pitch slider inside MapLibre default maxPitch (60)', () => {
+    const pitch = MAP_CONTROLS.find((c) => c.key === 'pitch')!;
+    expect(pitch.kind === 'range' && pitch.max).toBe(60);
+  });
+
+  it('types the arc data so the pasted component compiles under strictTemplates', () => {
+    const { component } = buildSnippet(spec('arc'), controlDefaults(spec('arc').controls), {
+      attrs: [],
+    });
+    expect(component).toContain('from: [number, number]');
+    expect(component).toContain('to: [number, number]');
+  });
+
+  it('never reuses a basemap source id for a layer component id', () => {
+    const basemapSourceIds = ['osm', 'carto', 'openmaptiles'];
+    for (const s of PLAYGROUND_SPECS) {
+      expect(basemapSourceIds, s.id).not.toContain(s.attrs?.['id']);
+    }
   });
 });
