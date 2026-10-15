@@ -93,7 +93,7 @@ Without a \`theme\` input, the map watches the \`dark\`/\`light\` class on \`doc
 const FEATURES = `## Key Features
 
 - **MapLibre GL JS v6** under the hood — no API keys required (Carto basemaps)
-- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters and heatmaps are children of \`<ng-map>\`
+- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, tile sources, image overlays, 3D buildings and terrain are children of \`<ng-map>\`
 - **Signals-first** — standalone components, \`input()\`/\`output()\`, \`effect()\`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
 - **SSR-safe** — the map is created in \`afterNextRender\`; nothing touches \`document\` on the server
@@ -130,6 +130,8 @@ const DOCS_COMPONENT_PAGES = [
   { label: 'GeoJSON', slug: 'geojson' },
   { label: 'Clusters', slug: 'clusters' },
   { label: 'Heatmap', slug: 'heatmap' },
+  { label: 'Tile Sources', slug: 'tile-sources' },
+  { label: '3D Buildings & Terrain', slug: '3d' },
   { label: 'Draw', slug: 'draw' },
   { label: 'Advanced', slug: 'advanced' },
 ];
@@ -159,7 +161,9 @@ Docs pages: ${DOCS_COMPONENT_PAGES.map((p) => `[${p.label}](${SITE_URL}/docs/com
 
 ${componentList}
 
-Utilities: \`MapViewport\`, \`getViewport\`, \`buildArcCoordinates\`, \`mergeHoverPaint\`, \`blankMapStyle\`, \`defaultStyles\`, \`MapStylesConfig\`, \`provideMapStyles()\`, \`MAP_DEFAULT_STYLES\`, and \`MapContextService\` (map / isLoaded / resolvedTheme signals, the equivalent of mapcn's \`useMap()\`).
+\`ng-map\` also takes \`[fitBounds]="{ padding, maxZoom, duration, animate, bounds? }"\` to fit the camera to its children's data (or explicit \`bounds\`) once loaded and whenever they change; \`MapContextService.fitBounds()\` is the imperative form.
+
+Utilities: \`MapViewport\`, \`getViewport\`, \`buildArcCoordinates\`, \`mergeHoverPaint\`, \`blankMapStyle\`, \`defaultStyles\`, \`MapStylesConfig\`, \`provideMapStyles()\`, \`MAP_DEFAULT_STYLES\`, and \`MapContextService\` (map / isLoaded / resolvedTheme signals and the \`hasSource(id)\` source registry, the equivalent of mapcn's \`useMap()\`).
 
 ${INSTALLATION}
 

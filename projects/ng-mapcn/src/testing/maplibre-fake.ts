@@ -92,6 +92,7 @@ function toPoint(value: unknown): Point {
 export class Map extends Evented {
   private sources: Record<string, any> = {};
   private layers: any[] = [];
+  private terrain: { source: string; exaggeration?: number } | null = null;
   private moving = false;
   private camera = { lng: 0, lat: 0, zoom: 0, bearing: 0, pitch: 0 };
   private readonly canvas = document.createElement('canvas');
@@ -171,6 +172,15 @@ export class Map extends Evented {
     this.applyCamera(opts);
     return this;
   });
+  fitBounds = vi.fn((bounds: any, opts: any = {}) => {
+    this.calls.push('fitBounds');
+    const [w, s, e, n] = Array.isArray(bounds[0])
+      ? [bounds[0][0], bounds[0][1], bounds[1][0], bounds[1][1]]
+      : bounds;
+    this.applyCamera({ center: [(w + e) / 2, (s + n) / 2], zoom: opts.maxZoom ?? 10 });
+    this.fire('move');
+    return this;
+  });
   zoomTo = vi.fn((zoom: number) => {
     this.calls.push('zoomTo');
     this.camera.zoom = zoom;
@@ -218,6 +228,7 @@ export class Map extends Evented {
     this.calls.push('styleLoaded');
     this.sources = {};
     this.layers = [];
+    this.terrain = null;
     this.styleLoading = false;
     this.fire('style.load');
     this.fire('styledata');
@@ -240,6 +251,12 @@ export class Map extends Evented {
       setData: vi.fn(),
       setClusterOptions: vi.fn((_options: unknown) => Promise.resolve()),
       getClusterExpansionZoom: vi.fn((_clusterId: number) => Promise.resolve(0)),
+      // Raster / vector tile sources
+      setTiles: vi.fn((_tiles: string[]) => this.sources[id]),
+      setUrl: vi.fn((_url: string) => this.sources[id]),
+      // Image source
+      updateImage: vi.fn((_options: unknown) => this.sources[id]),
+      setCoordinates: vi.fn((_coordinates: unknown) => this.sources[id]),
     };
     return this;
   }
@@ -316,6 +333,26 @@ export class Map extends Evented {
     }
     return this;
   });
+  setFilter = vi.fn((layerId: string, filter: unknown) => {
+    this.calls.push(`setFilter:${layerId}`);
+    const layer = this.getLayer(layerId);
+    if (layer) layer.filter = filter;
+    return this;
+  });
+  /** Like MapLibre: the terrain is style-level and needs an existing source. `null` removes it. */
+  setTerrain = vi.fn((options: { source: string; exaggeration?: number } | null) => {
+    if (options && !this.sources[options.source]) {
+      throw new Error(
+        `cannot load terrain, because there exists no source with ID: ${options.source}`,
+      );
+    }
+    this.calls.push(`setTerrain:${options ? options.source : 'null'}`);
+    this.terrain = options ? { ...options } : null;
+    return this;
+  });
+  getTerrain(): { source: string; exaggeration?: number } | null {
+    return this.terrain;
+  }
   setFeatureState = vi.fn((_feature: unknown, _state: unknown) => {
     this.calls.push('setFeatureState');
     return this;
@@ -494,6 +531,15 @@ export function setWorkerUrl(value: string): void {
   fakeRegistry.workerUrl = value;
 }
 
+/** Custom protocols registered with `addProtocol` (for example `pmtiles`). */
+export function addProtocol(name: string, loadFn: (...args: unknown[]) => unknown): void {
+  fakeRegistry.protocols[name] = loadFn;
+}
+
+export function removeProtocol(name: string): void {
+  delete fakeRegistry.protocols[name];
+}
+
 export type FakeMap = Map;
 export type FakeMarker = Marker;
 export type FakePopup = Popup;
@@ -502,6 +548,8 @@ export const fakeRegistry: {
   maps: FakeMap[];
   markers: FakeMarker[];
   popups: FakePopup[];
+  /** Protocols registered with `addProtocol`, by name. */
+  protocols: Record<string, (...args: unknown[]) => unknown>;
   /** When set, the next `new Map()` throws it (then the field is cleared). */
   constructError: Error | null;
   /** MapLibre's global worker URL (`''` until `setWorkerUrl` is called, like the real one). */
@@ -511,6 +559,7 @@ export const fakeRegistry: {
   maps: [],
   markers: [],
   popups: [],
+  protocols: {},
   constructError: null,
   workerUrl: '',
   reset() {
@@ -519,5 +568,6 @@ export const fakeRegistry: {
     this.maps.length = 0;
     this.markers.length = 0;
     this.popups.length = 0;
+    this.protocols = {};
   },
 };

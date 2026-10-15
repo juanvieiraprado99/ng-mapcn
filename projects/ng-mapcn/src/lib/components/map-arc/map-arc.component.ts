@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
@@ -18,6 +19,7 @@ import {
 } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
+import { coordinatesBounds } from '../../utils/bounds';
 import { syncLayerProperties } from '../../utils/layer-properties';
 import { addMapLayers } from '../../utils/layers';
 import {
@@ -137,6 +139,17 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
   private appliedLayoutKeys: ReadonlySet<string> = new Set();
 
   constructor() {
+    // Contributes to the map's declarative fit-to-bounds (`<ng-map [fitBounds]>`).
+    inject(DestroyRef).onDestroy(
+      this.ctx.registerBounds(() =>
+        coordinatesBounds(
+          this.data().flatMap((arc) =>
+            buildArcCoordinates(arc.from, arc.to, this.curvature(), this.samples()),
+          ),
+        ),
+      ),
+    );
+
     // Add source and layers once the map style is loaded; re-runs after theme setStyle.
     effect((onCleanup) => {
       if (!this.ctx.isLoaded()) return;

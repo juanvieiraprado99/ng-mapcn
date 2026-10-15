@@ -17,16 +17,16 @@ Version: 22.0.0-beta.6 · License: MIT · npm: https://www.npmjs.com/package/ng-
 
 ## Components
 
-Docs pages: [Map](https://ng-mapcn.vercel.app/docs/components/map) · [Controls](https://ng-mapcn.vercel.app/docs/components/controls) · [Markers](https://ng-mapcn.vercel.app/docs/components/markers) · [Popups](https://ng-mapcn.vercel.app/docs/components/popups) · [Routes](https://ng-mapcn.vercel.app/docs/components/routes) · [Arcs](https://ng-mapcn.vercel.app/docs/components/arcs) · [GeoJSON](https://ng-mapcn.vercel.app/docs/components/geojson) · [Clusters](https://ng-mapcn.vercel.app/docs/components/clusters) · [Heatmap](https://ng-mapcn.vercel.app/docs/components/heatmap) · [Draw](https://ng-mapcn.vercel.app/docs/components/draw) · [Advanced](https://ng-mapcn.vercel.app/docs/components/advanced)
+Docs pages: [Map](https://ng-mapcn.vercel.app/docs/components/map) · [Controls](https://ng-mapcn.vercel.app/docs/components/controls) · [Markers](https://ng-mapcn.vercel.app/docs/components/markers) · [Popups](https://ng-mapcn.vercel.app/docs/components/popups) · [Routes](https://ng-mapcn.vercel.app/docs/components/routes) · [Arcs](https://ng-mapcn.vercel.app/docs/components/arcs) · [GeoJSON](https://ng-mapcn.vercel.app/docs/components/geojson) · [Clusters](https://ng-mapcn.vercel.app/docs/components/clusters) · [Heatmap](https://ng-mapcn.vercel.app/docs/components/heatmap) · [Tile Sources](https://ng-mapcn.vercel.app/docs/components/tile-sources) · [3D Buildings & Terrain](https://ng-mapcn.vercel.app/docs/components/3d) · [Draw](https://ng-mapcn.vercel.app/docs/components/draw) · [Advanced](https://ng-mapcn.vercel.app/docs/components/advanced)
 
 - **Map** (`ng-map`): The root container component that initializes MapLibre GL and provides context to child components. Automatically handles theme switching between light and dark modes.
 - **MapControls** (`ng-map-controls`): Renders map control buttons: zoom, compass, locate, and fullscreen. Must be used inside ng-map.
 - **MapMarker** (`ng-map-marker`): A container for marker-related components. Provides context for its children and handles marker positioning.
 - **MarkerContent** (`ng-marker-content`): Renders the visual content of a marker via content projection. If left empty, a default blue dot is rendered; it follows conditional content (shown while nothing is projected). Must be used inside ng-map-marker.
 - **MarkerLabel** (`ng-marker-label`): An always-visible text label above or below the marker. Must be used inside ng-marker-content.
-- **MarkerPopup** (`ng-marker-popup`): A popup attached to the marker that opens on click. Must be used inside ng-map-marker.
+- **MarkerPopup** (`ng-marker-popup`): A popup attached to the marker that opens on click. Must be used inside ng-map-marker. Keyboard: the marker becomes a focusable role=button with aria-haspopup=dialog (unless you set them), Enter/Space opens it, focus moves into the popup, and Escape closes it, stops propagation and returns focus to the marker. Avoid your own <button> inside ng-marker-content (nested interactive content).
 - **MarkerTooltip** (`ng-marker-tooltip`): A tooltip that appears on marker hover. Must be used inside ng-map-marker.
-- **MapPopup** (`ng-map-popup`): A standalone popup component that can be placed anywhere on the map without a marker. Must be used inside ng-map.
+- **MapPopup** (`ng-map-popup`): A standalone popup component that can be placed anywhere on the map without a marker. Must be used inside ng-map. Keyboard: focus moves into the popup when it opens, and Escape inside it closes it (stops propagation, so a host dialog stays open).
 - **MapRoute** (`ng-map-route`): Renders a line/route from the given coordinates. Must be used inside ng-map. Supports click and hover interactions, an active (highlighted) state and a covered-progress line via child ng-route-progress / ng-route-marker components.
 - **RouteProgress** (`ng-route-progress`): Draws the covered part of the parent ng-map-route, as set by its progress input (computed by cumulative distance along the line). Use inside ng-map-route.
 - **RouteMarker** (`ng-route-marker`): A marker placed along the parent ng-map-route. Project ng-marker-content (and label, popup, tooltip) into it. Created once and moved as progress or coordinates change.
@@ -34,9 +34,16 @@ Docs pages: [Map](https://ng-mapcn.vercel.app/docs/components/map) · [Controls]
 - **MapGeoJSON** (`ng-map-geojson`): Renders GeoJSON polygons and lines with theme-aware monochrome defaults and declarative feature-state hover. Accepts a URL or an inline GeoJSON object. Generic over the feature properties: MapGeoJSONComponent<P>, with P inferred from data. Must be used inside ng-map.
 - **MapClusterLayer** (`ng-map-cluster-layer`): Renders clustered points with MapLibre GL native clustering. Automatically styles cluster circles by point count, zooms in on cluster click. Generic over the feature properties: MapClusterLayerComponent<P>, with P inferred from data. Must be used inside ng-map.
 - **MapHeatmap** (`ng-map-heatmap`): Renders GeoJSON points as a MapLibre heatmap layer with a theme-aware default gradient. Generic over the feature properties: MapHeatmapComponent<P>, with P inferred from data. Must be used inside ng-map.
+- **MapRasterSource** (`ng-map-raster-source`): Raster tile source (XYZ, TMS, WMS) plus the raster layer that draws it. Source and layer are re-added after a theme switch. Must be used inside ng-map.
+- **MapVectorSource** (`ng-map-vector-source`): Vector tile source (MVT, TileJSON or pmtiles://). Adds the source only: draw it with layers that reference it by id and wait for it with MapContextService.hasSource(id). ng-mapcn does not depend on pmtiles; register the protocol yourself with maplibregl.addProtocol. When torn down or the style reloads it removes every layer still using the source, then the source: gate your layers on hasSource(id). tiles vs url mode is fixed at creation. Must be used inside ng-map.
+- **MapImageOverlay** (`ng-map-image-overlay`): Georeferenced image pinned to four corner coordinates, drawn as a raster layer. Must be used inside ng-map.
+- **MapFillExtrusion** (`ng-map-fill-extrusion`): 3D extrusion of polygons (fill-extrusion layer), e.g. 3D buildings. Creates only the layer: the source is a basemap source or one added by a source component or the application, and the layer waits for it. Re-added after a theme switch. Must be used inside ng-map.
+- **MapTerrain** (`ng-map-terrain`): 3D terrain from a raster-dem source (map.setTerrain) with an optional hillshade layer. The terrain is style-level state: it is re-applied after a theme switch and disabled on teardown. One terrain per map. Must be used inside ng-map.
 - **MapDraw** (`ng-map-draw`): Draws, selects and edits points, lines and polygons on terra-draw. Lives in the optional ng-mapcn/draw entry point (import { MapDrawComponent } from 'ng-mapcn/draw') and needs the terra-draw and terra-draw-maplibre-gl-adapter peer dependencies. A theme switch (setStyle) stops and restarts terra-draw with the same features and mode. Must be used inside ng-map.
 
-Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint`, `blankMapStyle`, `defaultStyles`, `MapStylesConfig`, `provideMapStyles()`, `MAP_DEFAULT_STYLES`, and `MapContextService` (map / isLoaded / resolvedTheme signals, the equivalent of mapcn's `useMap()`).
+`ng-map` also takes `[fitBounds]="{ padding, maxZoom, duration, animate, bounds? }"` to fit the camera to its children's data (or explicit `bounds`) once loaded and whenever they change; `MapContextService.fitBounds()` is the imperative form.
+
+Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint`, `blankMapStyle`, `defaultStyles`, `MapStylesConfig`, `provideMapStyles()`, `MAP_DEFAULT_STYLES`, and `MapContextService` (map / isLoaded / resolvedTheme signals and the `hasSource(id)` source registry, the equivalent of mapcn's `useMap()`).
 
 ## Installation
 
@@ -106,7 +113,7 @@ Without a `theme` input, the map watches the `dark`/`light` class on `document.d
 ## Key Features
 
 - **MapLibre GL JS v6** under the hood — no API keys required (Carto basemaps)
-- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters and heatmaps are children of `<ng-map>`
+- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, tile sources, image overlays, 3D buildings and terrain are children of `<ng-map>`
 - **Signals-first** — standalone components, `input()`/`output()`, `effect()`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
 - **SSR-safe** — the map is created in `afterNextRender`; nothing touches `document` on the server

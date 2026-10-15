@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
@@ -13,6 +14,7 @@ import {
 import { type GeoJSONSource, type MapMouseEvent } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
+import { coordinatesBounds } from '../../utils/bounds';
 import { addMapLayers } from '../../utils/layers';
 import { nextId } from '../../utils/map-utils';
 import { RouteContextService } from './route-context.service';
@@ -73,6 +75,11 @@ export class MapRouteComponent {
   });
 
   constructor() {
+    // Contributes to the map's declarative fit-to-bounds (`<ng-map [fitBounds]>`).
+    inject(DestroyRef).onDestroy(
+      this.ctx.registerBounds(() => coordinatesBounds(this.coordinates())),
+    );
+
     // Share the signals themselves with the children (ng-route-progress / ng-route-marker).
     const width = computed(() => this.paint().width);
     this.routeCtx.connect({

@@ -59,3 +59,22 @@ export function addMapLayers(
     return null;
   }
 }
+
+/**
+ * Removes every layer that draws `sourceId`, including layers added by other components or by the
+ * application. A source cannot be removed while a layer uses it, and the effect of such a layer
+ * (a consumer waiting on `MapContextService.hasSource`) may be torn down after the source's own —
+ * a failed removal would leave the stale source behind and break its re-creation. Consumers
+ * re-add their layers when the source is announced again.
+ */
+export function removeLayersUsingSource(map: MapLibreMap, sourceId: string): void {
+  try {
+    for (const layer of map.getStyle()?.layers ?? []) {
+      if ('source' in layer && layer.source === sourceId && map.getLayer(layer.id)) {
+        map.removeLayer(layer.id);
+      }
+    }
+  } catch {
+    // style may be mid-reload
+  }
+}

@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   effect,
   inject,
   input,
@@ -46,6 +47,16 @@ export class MapMarkerComponent {
   private readonly zone = inject(NgZone);
 
   constructor() {
+    // Contributes to the map's declarative fit-to-bounds (`<ng-map [fitBounds]>`).
+    inject(DestroyRef).onDestroy(
+      this.mapCtx.registerBounds(() => [
+        this.longitude(),
+        this.latitude(),
+        this.longitude(),
+        this.latitude(),
+      ]),
+    );
+
     // Create marker when the map becomes available
     effect((onCleanup) => {
       const map = this.mapCtx.map();

@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
@@ -19,6 +20,7 @@ import {
 } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
+import { geoJsonBounds } from '../../utils/bounds';
 import { addMapLayers } from '../../utils/layers';
 import { nextId } from '../../utils/map-utils';
 
@@ -135,6 +137,9 @@ export class MapClusterLayerComponent<P extends Record<string, any> = Record<str
   private appliedClusterOptions: { clusterRadius: number; clusterMaxZoom: number } | null = null;
 
   constructor() {
+    // Contributes to the map's declarative fit-to-bounds (`<ng-map [fitBounds]>`).
+    inject(DestroyRef).onDestroy(this.ctx.registerBounds(() => geoJsonBounds(this.data())));
+
     // Add source and layers once the map style is loaded; re-runs after theme setStyle.
     effect((onCleanup) => {
       if (!this.ctx.isLoaded()) return;

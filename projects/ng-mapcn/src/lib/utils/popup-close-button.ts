@@ -11,6 +11,27 @@ export function createPopupCloseButton(popup: Popup, label: string): HTMLButtonE
   return btn;
 }
 
+/**
+ * Escape inside the popup card closes the popup (MapLibre only closes it on map clicks, which
+ * leaves keyboard users without a way out). The event is stopped so a host dialog does not also
+ * close. `onClosed` runs after the close and receives whether focus was inside the card, e.g. to
+ * hand focus back to the element that opened it. The listener lives on `container`, so it goes
+ * away with it.
+ */
+export function closePopupOnEscape(
+  popup: Popup,
+  container: HTMLElement,
+  onClosed?: (hadFocus: boolean) => void,
+): void {
+  container.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    event.stopPropagation();
+    const hadFocus = container.contains(document.activeElement);
+    popup.remove();
+    onClosed?.(hadFocus);
+  });
+}
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /** The "X" icon, built with DOM APIs: no HTML parsing, so it works under Trusted Types CSPs. */

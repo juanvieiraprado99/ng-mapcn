@@ -3,7 +3,9 @@ import {
   ChangeDetectionStrategy,
   Component,
   effect,
+  inject,
   input,
+  PendingTasks,
   signal,
   type Type,
 } from '@angular/core';
@@ -41,6 +43,8 @@ export class BlockViewComponent {
   protected readonly component = signal<Type<unknown> | null>(null);
   protected readonly missing = signal(false);
 
+  private readonly pendingTasks = inject(PendingTasks);
+
   constructor() {
     effect(() => {
       const name = this.name();
@@ -50,7 +54,12 @@ export class BlockViewComponent {
         this.missing.set(true);
         return;
       }
-      void load().then((type) => this.component.set(type));
+      // Tracked so server rendering / prerendering waits for the lazy block instead of
+      // serializing an empty page.
+      const done = this.pendingTasks.add();
+      void load()
+        .then((type) => this.component.set(type))
+        .finally(done);
     });
   }
 }
