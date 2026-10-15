@@ -88,11 +88,11 @@ export class MarkerPopupComponent {
       const onClose = () => this.zone.run(() => this.popupClose.emit());
       popup.on('close', onClose);
       marker.setPopup(popup);
-      // MapLibre leaves custom marker elements to the app but makes them focusable (tabindex) once
-      // they have a popup; announce them as a popup button unless the app chose a role itself.
+      // MapLibre makes the marker element focusable (tabindex) once it has a popup; the marker
+      // component gives it `role="button"` (it reads `hasPopup`), announce the popup here unless
+      // the app chose aria-haspopup itself.
       const el = marker.getElement();
-      const setRole = !el.hasAttribute('role');
-      if (setRole) el.setAttribute('role', 'button');
+      this.markerCtx.hasPopup.set(true);
       const setHaspopup = !el.hasAttribute('aria-haspopup');
       if (setHaspopup) el.setAttribute('aria-haspopup', 'dialog');
       this.appliedOffset = offset === undefined ? undefined : JSON.stringify(offset);
@@ -103,7 +103,7 @@ export class MarkerPopupComponent {
         // Detach first: a teardown is not a user close, and the outputs are being destroyed.
         popup.off('close', onClose);
         marker.setPopup(null);
-        if (setRole) el.removeAttribute('role');
+        this.markerCtx.hasPopup.set(false);
         if (setHaspopup) el.removeAttribute('aria-haspopup');
         popup.remove();
         destroyPortal();

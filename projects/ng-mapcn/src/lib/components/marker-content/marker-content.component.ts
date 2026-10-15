@@ -56,14 +56,22 @@ export class MarkerContentComponent {
         const empty = !hasContent(wrapper, icon);
         if (empty && !icon.parentNode) wrapper.appendChild(icon);
         else if (!empty && icon.parentNode) icon.remove();
+        this.markerCtx.contentKind.set(empty ? 'default' : contentKind(wrapper));
       };
       syncIcon();
       const observer = new MutationObserver(syncIcon);
-      observer.observe(wrapper, { childList: true, characterData: true, subtree: true });
+      observer.observe(wrapper, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['aria-label', 'aria-labelledby', 'alt', 'tabindex', 'href', 'role'],
+      });
 
       onCleanup(() => {
         this.wrapperEl.set(null);
         observer.disconnect();
+        this.markerCtx.contentKind.set('named');
         destroyPortal();
       });
     });
@@ -87,4 +95,14 @@ function hasContent(wrapper: HTMLElement, icon: HTMLElement): boolean {
     if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) return true;
   }
   return false;
+}
+
+const FOCUSABLE = 'a[href], button, input, select, textarea, [tabindex], [role="button"]';
+const NAMED = '[aria-label], [aria-labelledby], img[alt]:not([alt=""]), svg title';
+
+/** Classifies non-empty projected content for the marker's accessible name / role decision. */
+function contentKind(wrapper: HTMLElement): 'interactive' | 'named' | 'unnamed' {
+  if (wrapper.querySelector(FOCUSABLE)) return 'interactive';
+  if (wrapper.textContent?.trim() || wrapper.querySelector(NAMED)) return 'named';
+  return 'unnamed';
 }

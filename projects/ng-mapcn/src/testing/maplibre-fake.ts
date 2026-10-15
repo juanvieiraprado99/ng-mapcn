@@ -119,6 +119,16 @@ export class Map extends Evented {
     fakeRegistry.maps.push(this);
   }
 
+  /** Linear fake projection: 1 degree = 10 px (y grows southwards). */
+  project = vi.fn((lngLat: LngLatLike) => {
+    const ll = toLngLat(lngLat);
+    return { x: ll.lng * 10, y: -ll.lat * 10 };
+  });
+  unproject = vi.fn((point: [number, number] | { x: number; y: number }) => {
+    const [x, y] = Array.isArray(point) ? point : [point.x, point.y];
+    return { lng: x / 10, lat: -y / 10 };
+  });
+
   /** Simulates a user-driven gesture in progress (`isMoving()` result). */
   setMoving(value: boolean): void {
     this.moving = value;

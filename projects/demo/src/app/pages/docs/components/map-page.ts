@@ -150,6 +150,7 @@ const STYLE_URLS: Record<StyleKey, MapStylesConfig | undefined> = {
         (mapReady)="map.set($event)"
       />
       <select
+        aria-label="Map style"
         class="bg-background text-foreground absolute top-2 right-2 z-10 rounded-md border px-2 py-1 text-sm shadow"
         [value]="styleKey()"
         (change)="styleKey.set($any($event.target).value)"
@@ -277,6 +278,7 @@ export class CustomStyleMapComponent {
             (mapReady)="customMap.set($event)"
           />
           <select
+            aria-label="Map style"
             class="bg-background text-foreground absolute top-2 right-2 z-10 rounded-md border px-2 py-1 text-sm shadow"
             [value]="styleKey()"
             (change)="styleKey.set($any($event.target).value)"

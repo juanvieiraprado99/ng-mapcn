@@ -76,6 +76,7 @@ export class FlyToSelectedComponent {
         <ng-map-marker
           [longitude]="store.lng"
           [latitude]="store.lat"
+          [ariaLabel]="store.name"
           (markerClick)="selectStore.emit(store.id)"
         >
           <ng-marker-content>

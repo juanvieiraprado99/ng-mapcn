@@ -23,6 +23,8 @@ export interface MapLabels {
   loading: string;
   /** Accessible name of the popup close button. */
   closePopup: string;
+  /** Accessible name of an interactive marker that shows the default dot and has no `ariaLabel`. */
+  marker: string;
 }
 
 /** English defaults, used for every key that is not overridden. */
@@ -34,6 +36,7 @@ export const DEFAULT_MAP_LABELS: Readonly<MapLabels> = {
   fullscreen: 'Toggle fullscreen',
   loading: 'Loading map',
   closePopup: 'Close popup',
+  marker: 'Map marker',
 };
 
 /**

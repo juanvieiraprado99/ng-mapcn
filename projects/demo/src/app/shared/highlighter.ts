@@ -2,7 +2,7 @@ import angularHtml from '@shikijs/langs/angular-html';
 import angularTs from '@shikijs/langs/angular-ts';
 import bash from '@shikijs/langs/bash';
 import githubDark from '@shikijs/themes/github-dark';
-import githubLight from '@shikijs/themes/github-light';
+import githubLight from '@shikijs/themes/github-light-high-contrast';
 import { createHighlighterCore, type HighlighterCore } from 'shiki/core';
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
 
@@ -28,7 +28,7 @@ export function highlight(code: string, lang: CodeLang): Promise<string> {
       lang,
       // Dual theme: emits CSS variables instead of a fixed color, so the site's
       // dark/light toggle recolors the code with no re-highlight.
-      themes: { light: 'github-light', dark: 'github-dark' },
+      themes: { light: 'github-light-high-contrast', dark: 'github-dark' },
       defaultColor: false,
     }),
   );

@@ -8,7 +8,7 @@
   ],
   "provideLabelsCode": "import { inject } from '@angular/core';\nimport { provideMapLabels } from 'ng-mapcn';\n\nexport const appConfig: ApplicationConfig = {\n  providers: [\n    // Static (partial) labels merge over the English defaults...\n    provideMapLabels({\n      zoomIn: 'Aproximar',\n      zoomOut: 'Afastar',\n      resetNorth: 'Apontar para o norte',\n      locate: 'Minha localização',\n      fullscreen: 'Tela cheia',\n      loading: 'Carregando mapa',\n      closePopup: 'Fechar',\n    }),\n\n    // ...or a signal, so the labels follow the active locale\n    provideMapLabels(() => inject(I18nService).mapLabels),\n  ],\n};\n\n// Per component: <ng-map-controls [labels]=\"{ zoomIn: 'Acercar' }\" />",
   "provideLabelsRows": [
-    { "name": "MapLabels", "type": "{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup: string }", "default": "", "description": "Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup'." },
+    { "name": "MapLabels", "type": "{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; marker: string }", "default": "", "description": "Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map marker'." },
     { "name": "provideMapLabels(source)", "type": "Partial<MapLabels> | Signal<Partial<MapLabels> | undefined> | (() => Signal<Partial<MapLabels> | undefined>)", "default": "", "description": "Provider for app-wide labels; missing keys fall back to the English defaults. The factory form runs in an injection context, so it can inject() a service holding the signal." },
     { "name": "MAP_LABELS", "type": "InjectionToken<Signal<Partial<MapLabels> | undefined>>", "default": "", "description": "The token itself, if you want to provide it by hand." },
     { "name": "DEFAULT_MAP_LABELS", "type": "MapLabels", "default": "", "description": "The English defaults." }
@@ -82,10 +82,14 @@
         { "name": "rotation", "type": "number", "default": "0", "description": "Rotation of the marker in degrees." },
         { "name": "anchor", "type": "PositionAnchor", "default": "", "description": "Part of the marker element positioned at the coordinates." },
         { "name": "rotationAlignment", "type": "'map' | 'viewport' | 'auto'", "default": "'auto'", "description": "How the marker rotates with the map." },
-        { "name": "pitchAlignment", "type": "'map' | 'viewport' | 'auto'", "default": "'auto'", "description": "How the marker tilts with the map pitch." }
+        { "name": "pitchAlignment", "type": "'map' | 'viewport' | 'auto'", "default": "'auto'", "description": "How the marker tilts with the map pitch." },
+        { "name": "ariaLabel", "type": "string", "default": "", "description": "Accessible name of the marker (aria-label). Interactive markers whose content has no text fall back to labels.marker ('Map marker'); a static labelled marker gets role=\"img\"." },
+        { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (marker), merged over provideMapLabels() and the English defaults." },
+        { "name": "keyboardStep", "type": "number", "default": "10", "description": "Pixels a draggable marker moves per arrow key press." },
+        { "name": "keyboardStepLarge", "type": "number", "default": "50", "description": "Pixels per arrow key press while Shift is held." }
       ],
       "outputs": [
-        { "name": "markerClick", "type": "MouseEvent", "default": "", "description": "Emits when the marker is clicked." },
+        { "name": "markerClick", "type": "MouseEvent", "default": "", "description": "Emits when the marker is clicked, or when Enter or Space (on keyup) is pressed on the focused marker, also with ng-marker-popup. Give icon-only clickable markers their own ariaLabel. A marker with this handler becomes a role=button tab stop." },
         { "name": "markerMouseEnter", "type": "MouseEvent", "default": "", "description": "Emits when the pointer enters the marker." },
         { "name": "markerMouseLeave", "type": "MouseEvent", "default": "", "description": "Emits when the pointer leaves the marker." },
         { "name": "dragStart", "type": "{ lng: number; lat: number }", "default": "", "description": "Emits when dragging starts." },
@@ -135,7 +139,7 @@
       "id": "markertooltip",
       "title": "MarkerTooltip",
       "selector": "ng-marker-tooltip",
-      "description": "A tooltip that appears on marker hover. Must be used inside ng-map-marker.",
+      "description": "A tooltip that appears on marker hover and keyboard focus (Escape or blur closes it; the marker becomes a tab stop). Must be used inside ng-map-marker.",
       "inputs": [
         { "name": "offset", "type": "Offset", "default": "16", "description": "Pixel distance between the marker and the tooltip." },
         { "name": "anchor", "type": "PositionAnchor", "default": "", "description": "Which side of the coordinates the tooltip anchors to." },

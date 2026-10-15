@@ -66,14 +66,42 @@ export class MarkerTooltipComponent {
       };
       const hide = () => popup.remove();
 
+      // Keyboard parity: the marker element (or any focusable content inside it) shows the
+      // tooltip on focus; Escape dismisses it while focus stays on the marker.
+      const onKeydown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') hide();
+      };
+
+      // A tooltip opened by keyboard focus stays while the pointer leaves.
+      let focused = false;
+      const onFocusIn = () => {
+        focused = true;
+        show();
+      };
+      const onFocusOut = () => {
+        focused = false;
+        hide();
+      };
+      const onLeave = () => {
+        if (!focused) hide();
+      };
+
       el.addEventListener('mouseenter', show);
-      el.addEventListener('mouseleave', hide);
+      el.addEventListener('mouseleave', onLeave);
+      el.addEventListener('focusin', onFocusIn);
+      el.addEventListener('focusout', onFocusOut);
+      el.addEventListener('keydown', onKeydown);
+      this.markerCtx.hasTooltip.set(true);
 
       this.popup.set(popup);
 
       onCleanup(() => {
         el.removeEventListener('mouseenter', show);
-        el.removeEventListener('mouseleave', hide);
+        el.removeEventListener('mouseleave', onLeave);
+        el.removeEventListener('focusin', onFocusIn);
+        el.removeEventListener('focusout', onFocusOut);
+        el.removeEventListener('keydown', onKeydown);
+        this.markerCtx.hasTooltip.set(false);
         popup.remove();
         destroyPortal();
         this.popup.set(null);
