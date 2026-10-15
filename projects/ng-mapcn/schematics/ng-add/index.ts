@@ -50,6 +50,7 @@ const PASSTHROUGH_CSS = `
 interface NgAddOptions {
   project?: string;
   path: string;
+  draw?: boolean;
 }
 
 export function ngAdd(options: NgAddOptions): Rule {
@@ -58,7 +59,7 @@ export function ngAdd(options: NgAddOptions): Rule {
     registerMaplibreCss(options),
     registerWorkerAssets(options),
     appendGlobalStyles(options),
-    schematic('map', { path: options.path }),
+    schematic('map', { path: options.path, draw: options.draw }),
     installDependencies(),
   ]);
 }

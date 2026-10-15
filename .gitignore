@@ -46,6 +46,7 @@ Thumbs.db
 
 # Generated schematic file templates (synced from src/lib by scripts/sync-schematic-files.mjs)
 projects/ng-mapcn/schematics/map/files/
+projects/ng-mapcn/schematics/map/draw-files/
 
 .vercel
 

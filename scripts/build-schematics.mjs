@@ -26,5 +26,8 @@ cpSync(join(schematicsSrc, 'collection.json'), join(outDir, 'collection.json'));
 cpSync(join(schematicsSrc, 'ng-add', 'schema.json'), join(outDir, 'ng-add', 'schema.json'));
 cpSync(join(schematicsSrc, 'map', 'schema.json'), join(outDir, 'map', 'schema.json'));
 cpSync(join(schematicsSrc, 'map', 'files'), join(outDir, 'map', 'files'), { recursive: true });
+cpSync(join(schematicsSrc, 'map', 'draw-files'), join(outDir, 'map', 'draw-files'), {
+  recursive: true,
+});
 
 console.log(`Schematics built to ${outDir}`);
