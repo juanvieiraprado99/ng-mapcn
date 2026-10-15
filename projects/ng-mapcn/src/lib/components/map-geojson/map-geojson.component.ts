@@ -24,8 +24,11 @@ import { syncLayerProperties } from '../../utils/layer-properties';
 import { addMapLayers } from '../../utils/layers';
 import { type MapGeoJSONEvent, mergeHoverPaint, nextId } from '../../utils/map-utils';
 
-export type MapGeoJSONData =
-  GeoJSON.FeatureCollection | GeoJSON.Feature | GeoJSON.Geometry | string;
+export type MapGeoJSONData<P = GeoJSON.GeoJsonProperties> =
+  | GeoJSON.FeatureCollection<GeoJSON.Geometry, P>
+  | GeoJSON.Feature<GeoJSON.Geometry, P>
+  | GeoJSON.Geometry
+  | string;
 
 type MapFillPaint = NonNullable<FillLayerSpecification['paint']>;
 type MapLinePaint = NonNullable<LineLayerSpecification['paint']>;
@@ -42,15 +45,20 @@ const GEOJSON_DEFAULT_COLORS: Record<'light' | 'dark', { fill: string; line: str
  * Renders arbitrary GeoJSON as fill + outline layers on the map. Composes like
  * `ng-map-route` / `ng-map-arc` — drop it inside `<ng-map>` (typically with
  * `blank`) for choropleths and region/data maps.
+ *
+ * Generic over the feature properties `P`, inferred from `data` (e.g.
+ * `FeatureCollection<Polygon, P>`), so `featureClick` / `featureHover` carry typed
+ * `feature.properties`.
  */
 @Component({
   selector: 'ng-map-geojson',
   template: '',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MapGeoJSONComponent {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class MapGeoJSONComponent<P extends Record<string, any> = Record<string, unknown>> {
   /** GeoJSON data (FeatureCollection, Feature, Geometry) or a URL to fetch it from. */
-  readonly data = input.required<MapGeoJSONData>();
+  readonly data = input.required<MapGeoJSONData<P | null>>();
   /** Optional unique identifier prefix for the source/layers. Auto-generated if not provided. */
   readonly id = input<string>();
   /**
@@ -72,8 +80,8 @@ export class MapGeoJSONComponent {
    */
   readonly beforeId = input<string>();
 
-  readonly featureClick = output<MapGeoJSONEvent>();
-  readonly featureHover = output<MapGeoJSONEvent | null>();
+  readonly featureClick = output<MapGeoJSONEvent<P>>();
+  readonly featureHover = output<MapGeoJSONEvent<P> | null>();
 
   private readonly ctx = inject(MapContextService);
   private readonly zone = inject(NgZone);
@@ -86,7 +94,7 @@ export class MapGeoJSONComponent {
   /** Bumped every time the source is (re)created, so the layer effect re-adds its layers. */
   private readonly sourceRevision = signal(0);
   /** Data currently in the source, so re-runs of the data effect skip a no-op setData. */
-  private appliedData: MapGeoJSONData | null = null;
+  private appliedData: MapGeoJSONData<P | null> | null = null;
   /**
    * Whether this component's own source exists. Gates the other effects: after a failed creation
    * (e.g. an `id` already in use) they must not touch the source/layers of another owner.
@@ -256,8 +264,8 @@ export class MapGeoJSONComponent {
       const toEvent = (
         feature: NonNullable<MapLayerMouseEvent['features']>[number],
         e: MapLayerMouseEvent,
-      ): MapGeoJSONEvent => ({
-        feature: feature as unknown as MapGeoJSONEvent['feature'],
+      ): MapGeoJSONEvent<P> => ({
+        feature: feature as unknown as MapGeoJSONEvent<P>['feature'],
         longitude: e.lngLat.lng,
         latitude: e.lngLat.lat,
         originalEvent: e,

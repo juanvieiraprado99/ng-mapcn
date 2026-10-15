@@ -176,8 +176,8 @@ export class ChoroplethBlockComponent {
     'fill-opacity': 0.92,
   }));
 
-  protected onHover(event: MapGeoJSONEvent | null): void {
-    const props = event?.feature.properties as CountryProperties | undefined;
+  protected onHover(event: MapGeoJSONEvent<CountryProperties> | null): void {
+    const props = event?.feature.properties;
     const visitors = props?.visitors ?? 0;
     // Only countries with data are interactive.
     if (!event || !props || visitors <= 0) {

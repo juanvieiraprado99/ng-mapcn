@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { type FakeMap } from '../../../testing/maplibre-fake';
 import {
@@ -16,6 +16,8 @@ const TEMPLATE = `
     @if (show) {
       <ng-map-cluster-layer
         [data]="data"
+        [id]="id"
+        [beforeId]="beforeId"
         [clusterMaxZoom]="clusterMaxZoom"
         [clusterRadius]="clusterRadius"
         [clusterColors]="clusterColors"
@@ -45,6 +47,8 @@ function hostDefaults(): Record<string, any> {
     theme: 'light',
     show: true,
     data: DATA,
+    id: undefined,
+    beforeId: undefined,
     clusterMaxZoom: 14,
     clusterRadius: 50,
     clusterColors: ['#22c55e', '#eab308', '#ef4444'],
@@ -117,6 +121,76 @@ describe('MapClusterLayerComponent', () => {
         `addLayer:${ids.count}`,
         `addLayer:${ids.point}`,
       ]);
+    });
+  });
+
+  describe('id and beforeId', () => {
+    it('derives the source and layer ids from a custom id', async () => {
+      const { fixture, map } = await render({ id: 'stores' });
+      loadAndSettle(fixture, map);
+
+      expect(structuralCalls(map)).toEqual([
+        'addSource:cluster-source-stores',
+        'addLayer:clusters-stores',
+        'addLayer:cluster-count-stores',
+        'addLayer:unclustered-point-stores',
+      ]);
+      expect(map.listenerCount('click', 'clusters-stores')).toBe(1);
+    });
+
+    it('keeps auto-generated ids when no id is set', async () => {
+      const { ids } = await renderLoaded();
+      expect(ids.source).toMatch(/^cluster-source-ng-cluster-\d+$/);
+      expect(ids.clusters).toMatch(/^clusters-ng-cluster-\d+$/);
+    });
+
+    it('re-creates the source and layers, with symmetric listeners, when id changes', async () => {
+      const { fixture, map } = await render({ id: 'a' });
+      loadAndSettle(fixture, map);
+
+      update(fixture, { id: 'b' });
+
+      expect(map.getSource('cluster-source-a')).toBeUndefined();
+      expect(map.getSource('cluster-source-b')).toBeDefined();
+      expect(map.getLayerOrder()).toEqual(['clusters-b', 'cluster-count-b', 'unclustered-point-b']);
+      expect(map.listenerCount('click', 'clusters-a')).toBe(0);
+      expect(map.listenerCount('click', 'clusters-b')).toBe(1);
+    });
+
+    it('passes beforeId to addLayer for all three layers, at creation only', async () => {
+      const { fixture, map } = await render({ id: 'x', beforeId: 'base-layer' });
+      map.addLayer({ id: 'base-layer', type: 'background' } as never);
+      const addLayer = vi.spyOn(map, 'addLayer');
+      loadAndSettle(fixture, map);
+
+      expect(addLayer).toHaveBeenCalledTimes(3);
+      for (const call of addLayer.mock.calls) expect(call[1]).toBe('base-layer');
+      expect(map.getLayerOrder().slice(0, 4)).toEqual([
+        'clusters-x',
+        'cluster-count-x',
+        'unclustered-point-x',
+        'base-layer',
+      ]);
+
+      addLayer.mockClear();
+      update(fixture, { beforeId: 'other' });
+      expect(addLayer).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('typed generics', () => {
+    it('types the pointClick payload with the feature properties', () => {
+      interface Store {
+        name: string;
+        open: boolean;
+      }
+      type Emitted<T> = T extends { pointClick: { emit(v: infer V): void } } ? V : never;
+      expectTypeOf<
+        Emitted<MapClusterLayerComponent<Store>>['feature']['properties']
+      >().toEqualTypeOf<Store>();
+      expectTypeOf<Emitted<MapClusterLayerComponent>['feature']['properties']>().toEqualTypeOf<
+        Record<string, unknown>
+      >();
     });
   });
 
