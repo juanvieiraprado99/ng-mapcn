@@ -8,6 +8,34 @@ import type { PlaygroundSpec } from './playground-schema';
 
 const EARTHQUAKES = 'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson';
 
+const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+
+/** Three CSS colors; a bare string, `null` or a wrong length would break the cluster paint. */
+export function validateClusterColors(value: unknown): string | null {
+  const ok =
+    Array.isArray(value) &&
+    value.length === 3 &&
+    value.every(
+      (c) =>
+        typeof c === 'string' &&
+        (typeof CSS === 'undefined' ||
+          typeof CSS.supports !== 'function' ||
+          CSS.supports('color', c)),
+    );
+  return ok ? null : 'Three CSS colors, e.g. ["#22c55e", "#eab308", "#ef4444"].';
+}
+
+/** Two strictly increasing positive numbers (MapLibre `step` needs ascending stops). */
+export function validateClusterThresholds(value: unknown): string | null {
+  const ok =
+    Array.isArray(value) &&
+    value.length === 2 &&
+    value.every(isNumber) &&
+    value[0] > 0 &&
+    value[0] < value[1];
+  return ok ? null : 'Two increasing numbers, e.g. [100, 750].';
+}
+
 const OFF = { value: undefined, label: 'Default' };
 
 const ROUTE: [number, number][] = [
@@ -105,6 +133,7 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
     description: 'A DOM marker at a coordinate. Drag it when draggable is on.',
     selector: 'ng-map-marker',
     className: 'MapMarkerComponent',
+    content: { template: '<ng-marker-content />', imports: ['MarkerContentComponent'] },
     controls: [
       {
         kind: 'range',
@@ -140,6 +169,7 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
         kind: 'select',
         key: 'anchor',
         label: 'Anchor',
+        description: 'Applied when the marker is created (the playground re-creates it).',
         default: undefined,
         options: [
           OFF,
@@ -184,7 +214,13 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
           { value: [6, 3], label: 'Dashed [6, 3]' },
         ],
       },
-      { kind: 'boolean', key: 'interactive', label: 'Interactive', default: true },
+      {
+        kind: 'boolean',
+        key: 'interactive',
+        label: 'Interactive',
+        description: 'Pointer cursor and click/hover outputs (not shown here).',
+        default: true,
+      },
     ],
     fixed: [
       {
@@ -207,6 +243,8 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
         kind: 'color',
         key: 'fillColor',
         label: 'Fill color',
+        description: 'The library default follows the theme (#d4d4d4 light, #404040 dark).',
+        always: true,
         default: '#d4d4d4',
         into: { input: 'fillPaint', prop: 'fill-color' },
       },
@@ -224,6 +262,8 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
         kind: 'color',
         key: 'lineColor',
         label: 'Outline color',
+        description: 'The library default follows the theme (#ffffff light, #171717 dark).',
+        always: true,
         default: '#ffffff',
         into: { input: 'linePaint', prop: 'line-color' },
       },
@@ -234,17 +274,24 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
         min: 0,
         max: 8,
         step: 0.5,
-        default: 1,
+        default: 0.5,
         into: { input: 'linePaint', prop: 'line-width' },
       },
       {
         kind: 'color',
         key: 'hoverColor',
         label: 'Hover color',
+        description: 'Fill color while a polygon is hovered (needs Interactive).',
+        always: true,
         default: '#a3a3a3',
         into: { input: 'fillHoverPaint', prop: 'fill-color' },
       },
-      { kind: 'boolean', key: 'interactive', label: 'Interactive (enables hover)', default: false },
+      {
+        kind: 'boolean',
+        key: 'interactive',
+        label: 'Interactive (cursor and hover)',
+        default: false,
+      },
     ],
     fixed: [
       {
@@ -299,13 +346,19 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
         default: 0.85,
         into: { input: 'paint', prop: 'line-opacity' },
       },
-      { kind: 'boolean', key: 'interactive', label: 'Interactive', default: true },
+      {
+        kind: 'boolean',
+        key: 'interactive',
+        label: 'Interactive',
+        description: 'Pointer cursor and click/hover outputs (not shown here).',
+        default: true,
+      },
     ],
     fixed: [
       {
         input: 'data',
         value: ARCS,
-        ts: `readonly data = ${JSON.stringify(ARCS)};`,
+        ts: `readonly data: { id: string; from: [number, number]; to: [number, number] }[] = ${JSON.stringify(ARCS)};`,
       },
     ],
     view: { center: [-30, 38], zoom: 1.4 },
@@ -342,12 +395,14 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
         key: 'clusterColors',
         label: 'Cluster colors (small, medium, large)',
         default: ['#22c55e', '#eab308', '#ef4444'],
+        validate: validateClusterColors,
       },
       {
         kind: 'json',
         key: 'clusterThresholds',
         label: 'Thresholds [medium, large]',
         default: [100, 750],
+        validate: validateClusterThresholds,
       },
     ],
     fixed: [{ input: 'data', value: EARTHQUAKES, ts: `readonly data = '${EARTHQUAKES}';` }],
@@ -400,7 +455,7 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
     description: 'An XYZ raster tile source drawn as a layer, with live paint tuning.',
     selector: 'ng-map-raster-source',
     className: 'MapRasterSourceComponent',
-    attrs: { id: 'osm', attribution: '© OpenStreetMap contributors' },
+    attrs: { id: 'tiles', attribution: '© OpenStreetMap contributors' },
     controls: [
       { kind: 'range', key: 'opacity', label: 'Opacity', min: 0, max: 1, step: 0.05, default: 1 },
       { kind: 'boolean', key: 'visible', label: 'Visible', default: true },
@@ -443,6 +498,7 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
       'Extruded buildings from the basemap vector tiles. Needs a basemap with a building layer (Carto default); pick the 3D tilt preset.',
     selector: 'ng-map-fill-extrusion',
     className: 'MapFillExtrusionComponent',
+    requiresCarto: true,
     attrs: { id: 'buildings' },
     controls: [
       {

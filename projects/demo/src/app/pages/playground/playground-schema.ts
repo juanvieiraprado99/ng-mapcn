@@ -20,7 +20,11 @@ interface BaseControl {
    * flat control can drive a nested value.
    */
   into?: { input: string; prop: string };
-  /** Always in the snippet, even at the default (required inputs of the component). */
+  /**
+   * Always passed to the component and always in the snippet, even at the default (required
+   * inputs, or values whose real default depends on something the control cannot know, such as
+   * the theme).
+   */
   always?: boolean;
 }
 
@@ -31,8 +35,11 @@ export type Control = BaseControl &
     | { kind: 'boolean'; default: boolean }
     | { kind: 'color'; default: string }
     | { kind: 'text'; default: string }
-    /** Edited as JSON text; the parsed value is the input. */
-    | { kind: 'json'; default: unknown }
+    /**
+     * Edited as JSON text; the parsed value is the input. `validate` returns an error message
+     * for a parsed value the component cannot take (the last good value is kept).
+     */
+    | { kind: 'json'; default: unknown; validate?: (value: unknown) => string | null }
   );
 
 /** An input the playground always passes and the user does not edit (the component's data). */
@@ -54,6 +61,10 @@ export interface PlaygroundSpec {
   attrs?: Record<string, string>;
   controls: Control[];
   fixed: FixedInput[];
+  /** The component draws from the `carto` vector source, so it shows nothing on other basemaps. */
+  requiresCarto?: boolean;
+  /** Content projected into the layer element (e.g. the marker's `<ng-marker-content />`). */
+  content?: { template: string; imports: string[] };
   /** Initial view that frames the component's data. */
   view: { center: [number, number]; zoom: number; pitch?: number; bearing?: number };
 }
@@ -73,6 +84,10 @@ export interface MapSnippetInput {
   ts?: string[];
   /** Extra `ng-mapcn` type imports used by `ts`. */
   imports?: string[];
+  /** Module-level declarations emitted between the imports and `@Component`. */
+  declarations?: string[];
+  /** Extra `import type { ... } from '...'` lines (types from other packages). */
+  typeImports?: { from: string; names: string[] }[];
 }
 
 export type Values = Record<string, unknown>;
@@ -109,7 +124,7 @@ function groupInto(controls: readonly Control[], values: Values, onlyChanged: bo
   for (const control of controls) {
     if (!control.into) continue;
     const value = values[control.key];
-    if (onlyChanged && same(value, control.default)) continue;
+    if (onlyChanged && !control.always && same(value, control.default)) continue;
     const bag = grouped.get(control.into.input) ?? {};
     bag[control.into.prop] = value;
     grouped.set(control.into.input, bag);
@@ -174,13 +189,24 @@ export function buildSnippet(
     for (const [input, bag] of groupInto(spec.controls, values, true)) {
       attrs.push(renderAttr({ name: input, value: bag }));
     }
-    const layer = renderElement(spec.selector, attrs, '  ', true);
+    const { content } = spec;
+    const layer = content
+      ? [
+          renderElement(spec.selector, attrs, '  ', false),
+          `    ${content.template}`,
+          `  </${spec.selector}>`,
+        ].join('\n')
+      : renderElement(spec.selector, attrs, '  ', true);
     template = `${renderElement('ng-map', mapAttrs, '', false)}\n  ${layer}\n</ng-map>`;
   } else {
     template = renderElement('ng-map', mapAttrs, '', true);
   }
 
-  const imports = ['MapComponent', ...(layerClass ? [layerClass] : [])];
+  const imports = [
+    'MapComponent',
+    ...(layerClass ? [layerClass] : []),
+    ...(layerClass ? (spec.content?.imports ?? []) : []),
+  ];
   const libImports = [...imports, ...(map.imports ?? [])];
   const members = [...spec.fixed.map((f) => f.ts), ...(map.ts ?? [])];
   const indented = escapeLiteral(template)
@@ -191,10 +217,15 @@ export function buildSnippet(
     ? `{\n${members.map((m) => `  ${m.split('\n').join('\n  ')}`).join('\n')}\n}`
     : '{}';
 
-  const component = `import { Component } from '@angular/core';
-import { ${libImports.join(', ')} } from 'ng-mapcn';
-
-@Component({
+  const importLines = [
+    "import { Component } from '@angular/core';",
+    ...(map.typeImports ?? []).map(
+      (t) => `import type { ${t.names.join(', ')} } from '${t.from}';`,
+    ),
+    `import { ${libImports.join(', ')} } from 'ng-mapcn';`,
+  ];
+  const declarations = (map.declarations ?? []).map((d) => `${d}\n\n`).join('');
+  const component = `${importLines.join('\n')}\n\n${declarations}@Component({
   selector: 'app-map',
   standalone: true,
   imports: [${imports.join(', ')}],

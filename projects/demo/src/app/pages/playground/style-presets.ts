@@ -1,3 +1,6 @@
+import type { StyleSpecification } from 'maplibre-gl';
+
+import { OSM_RASTER_STYLE, OSM_RASTER_STYLE_CODE } from '../../shared/osm-style';
 import type { Control, MapSnippetInput, TemplateAttr } from './playground-schema';
 import { toTemplateExpr } from './playground-schema';
 
@@ -9,8 +12,15 @@ export interface StylePreset {
   id: string;
   label: string;
   description: string;
-  /** Per-theme style URLs; omitted = the library's built-in Carto defaults. */
-  styles?: { light: string; dark: string };
+  /**
+   * Per-theme styles (URLs or hand-built style objects); omitted = whatever the app provides.
+   * `CARTO` is the library default, so the snippets leave it out.
+   */
+  styles?: { light: string | StyleSpecification; dark: string | StyleSpecification };
+  /** Declaration of an object style for the snippets (the object itself cannot be printed). */
+  stylesCode?: { name: string; declaration: string };
+  /** The basemap exposes the `carto` vector source that `ng-map-fill-extrusion` waits for. */
+  hasCartoSource?: boolean;
   blank?: boolean;
   projection?: 'mercator' | 'globe';
   pitch?: number;
@@ -19,12 +29,20 @@ export interface StylePreset {
   note?: string;
 }
 
+/** The library's built-in basemap, applied explicitly so the gallery does not follow the header picker. */
+const CARTO = {
+  light: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+  dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+};
+
 export const STYLE_PRESETS: readonly StylePreset[] = [
   {
     id: 'carto',
     label: 'Carto (default)',
     description: 'Positron in light mode, Dark Matter in dark mode. No configuration needed.',
-    note: 'Follows the header basemap picker.',
+    note: 'Default: no input needed. © CARTO, © OpenStreetMap contributors.',
+    styles: CARTO,
+    hasCartoSource: true,
   },
   {
     id: 'voyager',
@@ -34,6 +52,8 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
       light: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
       dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
     },
+    note: '© CARTO, © OpenStreetMap contributors.',
+    hasCartoSource: true,
   },
   {
     id: 'openfreemap',
@@ -43,6 +63,15 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
       light: 'https://tiles.openfreemap.org/styles/positron',
       dark: 'https://tiles.openfreemap.org/styles/dark',
     },
+    note: '© OpenFreeMap, © OpenMapTiles, data from OpenStreetMap.',
+  },
+  {
+    id: 'osm',
+    label: 'OpenStreetMap',
+    description: 'Standard OSM raster tiles. Light only: the same tiles show in dark mode.',
+    note: '© OpenStreetMap contributors. Dev/demo only (OSM tile usage policy).',
+    styles: { light: OSM_RASTER_STYLE, dark: OSM_RASTER_STYLE },
+    stylesCode: { name: 'OSM_STYLE', declaration: OSM_RASTER_STYLE_CODE },
   },
   {
     id: 'blank',
@@ -54,12 +83,16 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     id: 'globe',
     label: 'Globe projection',
     description: 'The default basemap on a 3D globe instead of Web Mercator.',
+    styles: CARTO,
+    hasCartoSource: true,
     projection: 'globe',
   },
   {
     id: 'tilted',
     label: '3D tilt',
     description: 'A pitched, rotated camera, the starting point for 3D buildings.',
+    styles: CARTO,
+    hasCartoSource: true,
     pitch: 60,
     bearing: -20,
   },
@@ -81,6 +114,8 @@ export interface MapState {
   pitch: number;
   bearing: number;
   zoom: number;
+  /** Set once the user moves the map; until then the spec's initial center applies. */
+  center?: [number, number];
 }
 
 export function initialMapState(zoom: number, pitch = 0, bearing = 0): MapState {
@@ -94,14 +129,17 @@ export function initialMapState(zoom: number, pitch = 0, bearing = 0): MapState 
   };
 }
 
-/** A preset replaces the whole look (basemap, projection, tilt); theme and zoom are kept. */
+/**
+ * A preset replaces the basemap and projection; theme and zoom are kept. Tilt is only replaced
+ * by a preset that defines one, so 3D buildings stay tilted when another basemap is picked.
+ */
 export function applyPreset(state: MapState, preset: StylePreset): MapState {
   return {
     ...state,
     presetId: preset.id,
     projection: preset.projection ?? 'mercator',
-    pitch: preset.pitch ?? 0,
-    bearing: preset.bearing ?? 0,
+    pitch: preset.pitch ?? state.pitch,
+    bearing: preset.bearing ?? state.bearing,
   };
 }
 
@@ -122,57 +160,100 @@ export function mapInputs(state: MapState, view: MapView) {
     styles: preset.styles,
     blank: !!preset.blank,
     projection: state.projection === 'globe' ? ({ type: 'globe' } as const) : undefined,
-    viewport: { zoom: state.zoom, pitch: state.pitch, bearing: state.bearing },
+    viewport: {
+      ...(state.center && { center: state.center }),
+      zoom: state.zoom,
+      pitch: state.pitch,
+      bearing: state.bearing,
+    },
   };
 }
 
+/** Styles the snippets must spell out; the library default needs no input. */
+function customStyles(preset: StylePreset) {
+  return preset.styles === CARTO ? undefined : preset.styles;
+}
+
 /** `[styles]` constant declaration shared by the gallery snippet and the playground snippet. */
-function stylesDeclaration(styles: { light: string; dark: string }): string {
-  return `readonly styles: MapStylesConfig = {\n  light: '${styles.light}',\n  dark: '${styles.dark}',\n};`;
+function stylesDeclaration(preset: StylePreset): string {
+  const { styles, stylesCode } = preset;
+  if (!styles) return '';
+  if (typeof styles.light !== 'string' && stylesCode) {
+    return `readonly styles: MapStylesConfig = { light: ${stylesCode.name}, dark: ${stylesCode.name} };`;
+  }
+  return `readonly styles: MapStylesConfig = {
+  light: '${String(styles.light)}',
+  dark: '${String(styles.dark)}',
+};`;
 }
 
 /** The map's contribution to the playground snippet (initial camera + basemap + look). */
 export function mapSnippetInput(state: MapState, view: MapView): MapSnippetInput {
   const preset = findPreset(state.presetId);
+  // The camera is live (the user can pan and zoom): print it rounded.
+  const [lng, lat] = state.center ?? view.center;
   const attrs: TemplateAttr[] = [
-    { name: 'center', value: view.center },
-    { name: 'zoom', value: state.zoom },
+    { name: 'center', value: [+lng.toFixed(4), +lat.toFixed(4)] },
+    { name: 'zoom', value: +state.zoom.toFixed(2) },
   ];
   const ts: string[] = [];
   const imports: string[] = [];
+  const declarations: string[] = [];
+  const typeImports: { from: string; names: string[] }[] = [];
 
   if (preset.blank) attrs.push({ name: 'blank', expr: 'true' });
-  if (preset.styles) {
+  if (customStyles(preset)) {
     attrs.push({ name: 'styles', expr: 'styles' });
-    ts.push(stylesDeclaration(preset.styles));
+    ts.push(stylesDeclaration(preset));
     imports.push('MapStylesConfig');
+    if (preset.stylesCode) {
+      declarations.push(preset.stylesCode.declaration);
+      typeImports.push({ from: 'maplibre-gl', names: ['StyleSpecification'] });
+    }
   }
   if (state.theme !== 'auto') attrs.push({ name: 'theme', value: state.theme });
   if (state.projection === 'globe') {
     attrs.push({ name: 'projection', value: { type: 'globe' } });
   }
   const camera: Record<string, number> = {};
-  if (state.pitch) camera['pitch'] = state.pitch;
-  if (state.bearing) camera['bearing'] = state.bearing;
+  if (Math.round(state.pitch)) camera['pitch'] = Math.round(state.pitch);
+  if (Math.round(state.bearing)) camera['bearing'] = Math.round(state.bearing);
   if (Object.keys(camera).length) attrs.push({ name: 'options', value: camera });
 
-  return { attrs, ts, imports };
+  return { attrs, ts, imports, declarations, typeImports };
 }
 
 /** The gallery's copy-ready code for a preset: a template and, for custom styles, the app provider. */
 export function presetSnippet(preset: StylePreset): { template: string; provider?: string } {
-  if (preset.styles) {
+  const styles = customStyles(preset);
+  if (styles && preset.stylesCode) {
+    const { name, declaration } = preset.stylesCode;
     return {
-      template: `<ng-map [styles]="${toTemplateExpr(preset.styles)}" />`,
+      template: '<ng-map [styles]="styles" />',
+      provider: `import type { StyleSpecification } from 'maplibre-gl';
+
+${declaration}
+
+// In the component
+${stylesDeclaration(preset)}
+
+// Or once for the whole app (app.config.ts)
+provideMapStyles({ light: ${name}, dark: ${name} }),`,
+    };
+  }
+  if (styles) {
+    return {
+      template: `<ng-map [styles]="${toTemplateExpr(styles)}" />`,
       provider: `// Or once for the whole app (app.config.ts)
 provideMapStyles({
-  light: '${preset.styles.light}',
-  dark: '${preset.styles.dark}',
+  light: '${String(styles.light)}',
+  dark: '${String(styles.dark)}',
 }),`,
     };
   }
   const attrs: string[] = [];
-  if (preset.blank) attrs.push('blank');
+  // `blank` has no boolean-attribute transform, so it has to be bound.
+  if (preset.blank) attrs.push('[blank]="true"');
   if (preset.projection === 'globe') attrs.push(`[projection]="{ type: 'globe' }"`);
   const camera: Record<string, number> = {};
   if (preset.pitch) camera['pitch'] = preset.pitch;
@@ -218,7 +299,7 @@ export const MAP_CONTROLS: readonly Control[] = [
     ],
   },
   { kind: 'range', key: 'zoom', label: 'Zoom', min: 0, max: 20, step: 0.5, default: 2 },
-  { kind: 'range', key: 'pitch', label: 'Pitch', min: 0, max: 80, step: 5, default: 0 },
+  { kind: 'range', key: 'pitch', label: 'Pitch', min: 0, max: 60, step: 5, default: 0 },
   { kind: 'range', key: 'bearing', label: 'Bearing', min: -180, max: 180, step: 10, default: 0 },
 ];
 

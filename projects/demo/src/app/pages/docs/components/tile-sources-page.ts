@@ -25,7 +25,7 @@ import { MapComponent, MapRasterSourceComponent } from 'ng-mapcn';
     <button (click)="visible.set(!visible())">Toggle</button>
     <ng-map [center]="[10, 50]" [zoom]="3.5">
       <ng-map-raster-source
-        id="osm"
+        id="tiles"
         [tiles]="['https://tile.openstreetmap.org/{z}/{x}/{y}.png']"
         [tileSize]="256"
         [maxzoom]="19"
@@ -241,7 +241,7 @@ effect(() => {
         </div>
         <ng-map [center]="[10, 50]" [zoom]="3.5">
           <ng-map-raster-source
-            id="osm"
+            id="tiles"
             [tiles]="osmTiles"
             [tileSize]="256"
             [maxzoom]="19"

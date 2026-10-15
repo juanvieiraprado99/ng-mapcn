@@ -70,4 +70,83 @@ describe('playground page', () => {
       root.querySelector<HTMLSelectElement>('#pg-map-projection')!.selectedOptions[0].text,
     ).toBe('Globe');
   });
+
+  it('survives clearing or corrupting the cluster JSON controls', async () => {
+    const { harness, errors } = await renderRoute('/playground');
+    const root = harness.fixture.nativeElement as HTMLElement;
+    [...root.querySelectorAll('button')]
+      .find((button) => button.textContent?.trim() === 'Clusters')!
+      .click();
+    harness.detectChanges();
+
+    const colors = root.querySelector<HTMLTextAreaElement>('#pg-cluster-clusterColors')!;
+    const type = (text: string) => {
+      colors.value = text;
+      colors.dispatchEvent(new Event('input', { bubbles: true }));
+      harness.detectChanges();
+    };
+    type('null');
+    expect(root.querySelector('[role="alert"]')?.textContent).toContain('Three CSS colors');
+    type('');
+    expect(root.querySelector('[role="alert"]')).toBeNull();
+    expect(snippet(root)).not.toContain('undefined');
+    expect(errors).toEqual([]);
+  });
+
+  it('renders the marker with its content and follows a drag', async () => {
+    const { harness, errors } = await renderRoute('/playground');
+    const root = harness.fixture.nativeElement as HTMLElement;
+    [...root.querySelectorAll('button')]
+      .find((button) => button.textContent?.trim() === 'Marker')!
+      .click();
+    harness.detectChanges();
+
+    expect(snippet(root)).toContain('<ng-marker-content />');
+    expect(root.querySelector('app-playground-marker')).not.toBeNull();
+    expect(errors).toEqual([]);
+  });
+
+  it('links hints and readouts to their fields', async () => {
+    const { harness } = await renderRoute('/playground');
+    const root = harness.fixture.nativeElement as HTMLElement;
+
+    const width = root.querySelector('#pg-route-width')!;
+    expect(root.querySelector('label[for="pg-route-width"]')?.textContent?.trim()).toBe('Width');
+    expect(root.querySelector('output[for="pg-route-width"]')).not.toBeNull();
+    const interactive = root.querySelector('#pg-route-interactive')!;
+    const hint = root.querySelector('#' + interactive.getAttribute('aria-describedby'));
+    expect(hint?.textContent).toContain('Pointer cursor');
+    expect(width.getAttribute('aria-describedby')).not.toBeNull();
+  });
+
+  it('applies the OpenStreetMap preset with its snippet and no errors', async () => {
+    const { harness, errors } = await renderRoute('/playground');
+    const root = harness.fixture.nativeElement as HTMLElement;
+
+    const basemap = root.querySelector<HTMLSelectElement>('#pg-map-presetId')!;
+    basemap.value = String(
+      [...basemap.options].findIndex((option) => option.textContent?.includes('OpenStreetMap')),
+    );
+    basemap.dispatchEvent(new Event('change', { bubbles: true }));
+    harness.detectChanges();
+
+    expect(snippet(root)).toContain('[styles]="styles"');
+    expect(root.querySelector('button[aria-label^="Apply OpenStreetMap"]')).not.toBeNull();
+    expect(root.textContent).toContain('OSM_STYLE');
+    expect(errors).toEqual([]);
+  });
+
+  it('warns when 3D buildings meet a basemap without the carto source', async () => {
+    const { harness } = await renderRoute('/playground');
+    const root = harness.fixture.nativeElement as HTMLElement;
+    [...root.querySelectorAll('button')]
+      .find((button) => button.textContent?.trim() === '3D buildings')!
+      .click();
+    harness.detectChanges();
+    expect(root.textContent).not.toContain('Carto vector tiles');
+
+    root.querySelector<HTMLButtonElement>('button[aria-label^="Apply OpenFreeMap"]')!.click();
+    harness.detectChanges();
+    expect(root.textContent).toContain('Carto vector tiles');
+  });
 });
