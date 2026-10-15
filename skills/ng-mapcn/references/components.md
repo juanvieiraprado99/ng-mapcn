@@ -19,6 +19,7 @@ Class `MapComponent`. Provides `MapContextService` to its children. Child conten
 | `loading`    | `boolean`                                  | `false`     | Forces the loader overlay                                                                                                          |
 | `labels`     | `Partial<MapLabels>`                       | `undefined` | Overrides the loader's accessible name (`loading`), over `provideMapLabels()` and the English defaults                             |
 | `viewport`   | `Partial<MapViewport>`                     | `undefined` | Controlled viewport; applied with `jumpTo`, skipped while the map is moving                                                        |
+| `fitBounds`  | `MapFitBoundsOptions`                      | `undefined` | Fit-to-bounds: `{ bounds?, padding?, maxZoom?, duration?, animate? }`. Without `bounds`, fits the children's data. See below       |
 | `options`    | `Omit<MapOptions, 'container' \| 'style'>` | `undefined` | Extra MapLibre constructor options. Defaults before spreading: `renderWorldCopies: false`, `attributionControl: { compact: true }` |
 
 | Output           | Payload                                                                                                                             |
@@ -29,6 +30,8 @@ Class `MapComponent`. Provides `MapContextService` to its children. Child conten
 | `mapError`       | `Error` (MapLibre errors, and layer components that fail to add their source or layer, e.g. a duplicate `id` or unknown `beforeId`) |
 
 Method: `getMap(): MapLibreMap | null` (escape hatch to the raw map).
+
+Fit to bounds: `<ng-map [fitBounds]="{ padding: 48, maxZoom: 14 }">` fits the camera to the union of the bounds of the children (markers, `ng-map-geojson`/`-cluster-layer`/`-heatmap` object data, routes, arcs; URL `data` is not fetched, so it contributes nothing) once the map is loaded, and again only when those bounds really change. The first fit never animates; later ones animate unless `animate: false`; `maxZoom` defaults to 16. `bounds` (any `LngLatBoundsLike`) fits explicit bounds instead. The fit is not guarded against a controlled `[viewport]`: `viewportChange` reports the new camera, and the viewport sync is idempotent. Arc bounds follow the unwrapped curve (an antimeridian arc spans e.g. 170 to 190); other antimeridian-crossing data is not handled. A draggable marker bound to signals refits continuously while dragged: pass explicit `bounds` or leave `fitBounds` off for that case.
 
 Basemap precedence: `styles` input, then `blank`, then `provideMapStyles()`, then Carto default. Changing these inputs at runtime re-applies the style.
 
@@ -108,6 +111,8 @@ Must be placed inside `<ng-map-marker>`.
 | `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button                                                                                         |
 | `className`    | `string`             | `undefined` | Classes for `.ng-popup-card`                                                                                                   |
 
+Keyboard and a11y: MapLibre makes a marker with a popup focusable (`tabindex=0`, Enter/Space toggles it). The library also sets `role="button"` and `aria-haspopup="dialog"` on the marker element unless the app already set them. `focusAfterOpen` moves focus into the popup. Escape inside the card closes the popup, calls `stopPropagation()` (a host dialog does not also close) and returns focus to the marker. Give the marker an accessible name through visible text (`ng-marker-label`) or an `aria-label` on your content. Do not put your own `<button>` in `ng-marker-content` next to `ng-marker-popup`: the marker is already a button, so that nests interactive content (axe `nested-interactive`); use non-interactive content or set your own `role` on the marker element.
+
 ## ng-map-popup
 
 Class `MapPopupComponent`. Standalone popup at coordinates, opened on creation (unless `open` is `false`).
@@ -123,6 +128,8 @@ Class `MapPopupComponent`. Standalone popup at coordinates, opened on creation (
 | `open`         | `boolean` (`model`)  | `true`      | `[(open)]`: closing writes `false`, `true` reopens the same popup. A closed popup stays closed when only the position changes |
 | `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button                                                                                        |
 | `className`    | `string`             | `undefined` | Classes for `.ng-popup-card`. `ng-popup-passthrough` makes the popup ignore the pointer (see below)                           |
+
+Keyboard and a11y: `focusAfterOpen` moves focus into the popup. Escape inside the card closes it (writes `open = false`, emits `popupClose`) and calls `stopPropagation()` so a host dialog does not also close. With `[closeButton]="true"` the X is a button named by the `closePopup` label.
 
 Hover popups: set `[closeOnClick]="false"` and `className="ng-popup-passthrough"`. The popup sits next to the hovered point; if it captured the pointer, moving the cursor into it would fire the layer's `mouseleave` and close it. The rule `.maplibregl-popup:has(.ng-popup-passthrough)` (and its `.maplibregl-popup-content`) gets `pointer-events: none`. It ships in the library's `_utilities.scss`, and `ng add` appends it to a plain `styles.css`. It needs `:has()` (Chrome 105, Safari 15.4, Firefox 121).
 
@@ -350,6 +357,9 @@ Also exported: `ImageOverlayCoordinates`, `TileBounds`, `TileScheme`.
 | `resolvedTheme`                                                              | `Signal<'light' \| 'dark'>`                                      | Theme currently applied to the map                                                                                                                                                             |
 | `hasSource(id)` / `sourceIds`                                                | `boolean` (reactive in `effect`) / `Signal<ReadonlySet<string>>` | Source registry: ids announced by `ng-map-raster-source`, `ng-map-vector-source`, `ng-map-image-overlay` while the source is on the map. Wait on it before adding layers that use `source: id` |
 | `registerSource(id)`                                                         | `() => () => void`                                               | Announce a source you added yourself; returns the release function                                                                                                                             |
+| `fitBounds(options?)`                                                        | `boolean`                                                        | Fits to `options.bounds` or the children's data; `false` if not loaded or no bounds                                                                                                            |
+| `dataBounds`                                                                 | `Signal<[w, s, e, n] \| null>`                                   | Union of the bounds registered by children                                                                                                                                                     |
+| `registerBounds(getter)`                                                     | `() => void`                                                     | Adds a bounds source (reactive getter); returns the unregister function. Custom layer components use it                                                                                        |
 | `setMap`, `setResolvedTheme`, `setLoadedFlag`, `setStyleLoadedFlag`, `reset` | methods                                                          | Used internally by `ng-map`                                                                                                                                                                    |
 
 `ThemeService` (`providedIn: 'root'`):

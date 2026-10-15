@@ -171,6 +171,15 @@ export class Map extends Evented {
     this.applyCamera(opts);
     return this;
   });
+  fitBounds = vi.fn((bounds: any, opts: any = {}) => {
+    this.calls.push('fitBounds');
+    const [w, s, e, n] = Array.isArray(bounds[0])
+      ? [bounds[0][0], bounds[0][1], bounds[1][0], bounds[1][1]]
+      : bounds;
+    this.applyCamera({ center: [(w + e) / 2, (s + n) / 2], zoom: opts.maxZoom ?? 10 });
+    this.fire('move');
+    return this;
+  });
   zoomTo = vi.fn((zoom: number) => {
     this.calls.push('zoomTo');
     this.camera.zoom = zoom;

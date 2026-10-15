@@ -151,6 +151,8 @@ The map fills its parent, so give the parent an explicit height. More building b
 | `ng-map-vector-source`                                      | Vector tile source (MVT, TileJSON, `pmtiles://`), source only; draw it with layers that wait for it via `MapContextService.hasSource(id)`.                                                                                                                                                         |
 | `ng-map-image-overlay`                                      | Image pinned to four corner coordinates, with `opacity`, `visible` and `beforeId`; `url` and `coordinates` update in place.                                                                                                                                                                        |
 
+`ng-map` also takes `[fitBounds]="{ padding, maxZoom, duration, animate, bounds? }"` to fit the camera to its children's data (or explicit `bounds`) once loaded and whenever they change; `MapContextService.fitBounds()` is the imperative form.
+
 Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint`, `blankMapStyle`, `defaultStyles`, and `MapContextService` (map / isLoaded / resolvedTheme signals and the `hasSource(id)` source registry for advanced layer work via `inject`).
 
 ## Theming

@@ -74,7 +74,8 @@ selectPlace(place: RichPlace, event: MouseEvent) {
       (markerClick)="selectPlace(place, $event)"
     >
       <ng-marker-content>
-        <div class="size-5 cursor-pointer rounded-full border-2 border-white bg-rose-500 shadow-lg transition-transform hover:scale-110"></div>
+        <!-- a real <button>: focusable, and Enter/Space fire the same click as the mouse -->
+        <button type="button" [attr.aria-label]="place.name" class="size-5 cursor-pointer rounded-full border-2 border-white bg-rose-500 shadow-lg transition-transform hover:scale-110"></button>
         <ng-marker-label position="bottom">{{ place.label }}</ng-marker-label>
       </ng-marker-content>
     </ng-map-marker>
@@ -209,9 +210,11 @@ export class DraggableMarkerComponent {
               (markerClick)="selectPlace(place, $event)"
             >
               <ng-marker-content>
-                <div
+                <button
+                  type="button"
+                  [attr.aria-label]="place.name"
                   class="size-5 cursor-pointer rounded-full border-2 border-white bg-rose-500 shadow-lg transition-transform hover:scale-110"
-                ></div>
+                ></button>
                 <ng-marker-label position="bottom">{{ place.label }}</ng-marker-label>
               </ng-marker-content>
             </ng-map-marker>

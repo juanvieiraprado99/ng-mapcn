@@ -214,6 +214,18 @@ describe('MapPopupComponent', () => {
 
       expect(host['popupClose']).toHaveBeenCalledTimes(1);
     });
+
+    it('closes on Escape pressed inside the card, and ignores other keys', async () => {
+      const { host } = await render();
+      const body = content().querySelector('.body') as HTMLElement;
+
+      body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      expect(fakeRegistry.popups[0].isOpen()).toBe(true);
+
+      body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(fakeRegistry.popups[0].isOpen()).toBe(false);
+      expect(host['popupClose']).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('teardown', () => {

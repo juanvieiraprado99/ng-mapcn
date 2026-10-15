@@ -20,6 +20,9 @@
     { "name": "hasSource(id)", "type": "(id: string) => boolean", "default": "", "description": "Whether a source component (raster, vector, image overlay) currently has a source with this id on the map. Reactive inside effect(); false while a theme switch has removed the style. Wait on it before adding layers that reference source: id." },
     { "name": "sourceIds()", "type": "Signal<ReadonlySet<string>>", "default": "", "description": "Ids of the sources currently announced by source components." },
     { "name": "registerSource(id)", "type": "(id: string) => () => void", "default": "", "description": "Announces a source you added yourself so hasSource(id) sees it; returns the release function to call when you remove it." }
+    { "name": "fitBounds(options?)", "type": "(options?: MapFitBoundsOptions) => boolean", "default": "", "description": "Fits the camera to options.bounds, or to the union of the children's data. Returns false when the map is not loaded or there are no bounds." },
+    { "name": "dataBounds()", "type": "Signal<[number, number, number, number] | null>", "default": "", "description": "Union of the bounds registered by the children, as [west, south, east, north]." },
+    { "name": "registerBounds(getter)", "type": "(getter: () => LngLatBoundsLike | null) => () => void", "default": "", "description": "Contributes a bounds source to fit-to-bounds. The getter runs reactively; returns the unregister function (call it on destroy)." }
   ],
   "sections": [
     {
@@ -37,6 +40,7 @@
         { "name": "loading", "type": "boolean", "default": "false", "description": "Shows the loading overlay." },
         { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (loading), merged over provideMapLabels() and the English defaults." },
         { "name": "viewport", "type": "Partial<MapViewport>", "default": "", "description": "Controlled viewport ({ center, zoom, bearing, pitch }). Pair with viewportChange." },
+        { "name": "fitBounds", "type": "MapFitBoundsOptions", "default": "", "description": "Fits the camera to bounds ({ bounds?, padding?, maxZoom?, duration?, animate? }). Without bounds it fits the union of the children's data (markers, GeoJSON, routes, arcs, clusters, heatmaps). Runs after load and refits only when the bounds change; the first fit never animates; maxZoom defaults to 16. A draggable marker bound to signals refits while dragged: pass explicit bounds for that case. Imperative form: MapContextService.fitBounds()." },
         { "name": "options", "type": "Omit<MapOptions, 'container' | 'style'>", "default": "", "description": "Extra MapLibre MapOptions (scrollZoom, dragRotate, …) passed to the map constructor." }
       ],
       "outputs": [
@@ -113,7 +117,7 @@
       "id": "markerpopup",
       "title": "MarkerPopup",
       "selector": "ng-marker-popup",
-      "description": "A popup attached to the marker that opens on click. Must be used inside ng-map-marker.",
+      "description": "A popup attached to the marker that opens on click. Must be used inside ng-map-marker. Keyboard: the marker becomes a focusable role=button with aria-haspopup=dialog (unless you set them), Enter/Space opens it, focus moves into the popup, and Escape closes it, stops propagation and returns focus to the marker. Avoid your own <button> inside ng-marker-content (nested interactive content).",
       "inputs": [
         { "name": "closeButton", "type": "boolean", "default": "false", "description": "Shows a close button in the popup." },
         { "name": "offset", "type": "Offset", "default": "", "description": "Pixel offset from the marker. Reconciled live via setOffset; MapLibre's default when unset." },
@@ -143,7 +147,7 @@
       "id": "mappopup",
       "title": "MapPopup",
       "selector": "ng-map-popup",
-      "description": "A standalone popup component that can be placed anywhere on the map without a marker. Must be used inside ng-map.",
+      "description": "A standalone popup component that can be placed anywhere on the map without a marker. Must be used inside ng-map. Keyboard: focus moves into the popup when it opens, and Escape inside it closes it (stops propagation, so a host dialog stays open).",
       "inputs": [
         { "name": "longitude", "type": "number", "default": "required", "description": "Longitude coordinate of the popup." },
         { "name": "latitude", "type": "number", "default": "required", "description": "Latitude coordinate of the popup." },

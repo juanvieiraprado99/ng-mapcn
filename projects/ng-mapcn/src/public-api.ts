@@ -38,5 +38,6 @@ export * from './lib/providers/map-styles.provider';
 
 export type { MapStylesConfig } from './lib/styles/map-styles';
 export { blankMapStyle, defaultStyles } from './lib/styles/map-styles';
+export type { BoundsGetter, BoundsTuple, MapFitBoundsOptions } from './lib/utils/bounds';
 export * from './lib/utils/map-utils';
 export type { TileBounds, TileScheme } from './lib/utils/tile-source';

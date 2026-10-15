@@ -87,7 +87,9 @@ export class StandalonePopupComponent {
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">false</code>
           back, while setting it to
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">true</code>
-          opens it again. For popups that follow the hover, set
+          opens it again. Popups are keyboard friendly: focus moves into the popup when it opens, and
+          <kbd class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">Esc</kbd> closes it (the event is
+          stopped, so a host dialog stays open). For popups that follow the hover, set
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[closeOnClick]="false"</code>
           so a click does not dismiss them, and add
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">className="ng-popup-passthrough"</code>
