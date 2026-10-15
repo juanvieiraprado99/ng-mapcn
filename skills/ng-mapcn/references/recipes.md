@@ -285,6 +285,8 @@ Extra datum properties (here `color`) are available to paint expressions through
 
 `data` also accepts a `GeoJSON.FeatureCollection<GeoJSON.Point, P>`. Without `gradient` the ramp follows the map theme (`defaultHeatmapGradients`); a custom `[gradient]="[[0, 'rgba(0,0,0,0)'], [1, '#ef4444']]"` is kept across theme switches. `radius`, `intensity` and `opacity` accept zoom expressions such as `['interpolate', ['linear'], ['zoom'], 0, 8, 6, 34]`. `maxZoom` stops rendering from that zoom, so a custom circle layer placed after the heatmap in the template can take over when zoomed in. Ids: `heatmap-source-<id>`, `heatmap-layer-<id>`.
 
+Gotchas: set `weightRange` to the real `[min, max]` of `weightProperty`, otherwise raw values (e.g. a magnitude of 0-7) saturate the layer. `radius`, `intensity`, `opacity`, `gradient`, `minZoom`/`maxZoom` and `data` update the existing layer in place, so binding them to signals is cheap. The component has no outputs and a heatmap is not hit-testable (`queryRenderedFeatures` returns nothing), so use a circle layer or markers for interaction.
+
 ## Controlled viewport and raw map
 
 ```ts

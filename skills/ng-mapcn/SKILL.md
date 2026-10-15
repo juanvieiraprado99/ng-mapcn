@@ -68,7 +68,7 @@ Coordinates are always `[longitude, latitude]`.
 | `ng-map-geojson`                                       | Fill + line layers             | `data`, `promoteId`, `fillPaint`, `fillHoverPaint`, `interactive`; `featureClick`, `featureHover`                                                  |
 | `ng-map-arc`                                           | Curved arcs                    | `data`, `curvature`, `paint`, `hoverPaint`; `arcClick`, `arcHover`                                                                                 |
 | `ng-map-cluster-layer`                                 | Clustered points               | `data`, `id`, `beforeId`, `clusterColors`, `pointColor`; `pointClick`, `clusterClick`                                                              |
-| `ng-map-heatmap`                                       | Point-density heatmap          | `data`, `id`, `beforeId`, `weightProperty`, `weightRange`, `radius`, `intensity`, `opacity`, `gradient`, `maxZoom`, `paint`                        |
+| `ng-map-heatmap`                                       | Point-density heatmap          | `data`, `id`, `beforeId`, `weightProperty`, `weightRange`, `radius`, `intensity`, `opacity`, `gradient`, `minZoom`, `maxZoom`, `paint`             |
 
 Full inputs, types and defaults: `references/components.md`.
 
