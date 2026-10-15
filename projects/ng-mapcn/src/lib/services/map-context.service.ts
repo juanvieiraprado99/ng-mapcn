@@ -23,6 +23,11 @@ export class MapContextService {
   /** Theme currently applied to the map (mapcn context `resolvedTheme`). */
   readonly resolvedTheme = this.resolvedThemeSignal.asReadonly();
 
+  private readonly sourceCounts = new Map<string, number>();
+  private readonly sourceIdsSignal = signal<ReadonlySet<string>>(new Set());
+  /** Ids of the sources currently added to the map by source components. */
+  readonly sourceIds = this.sourceIdsSignal.asReadonly();
+
   private readonly boundsSources = signal<ReadonlyMap<symbol, BoundsGetter>>(new Map());
   /**
    * Union of the bounds the child components registered (`registerBounds`), or `null` when none
@@ -49,6 +54,30 @@ export class MapContextService {
 
   setStyleLoadedFlag(value: boolean): void {
     this.styleLoadedFlagSignal.set(value);
+  }
+
+  /**
+   * Announces that a source with this id now exists on the map (called by the source components
+   * once `addSource` succeeded). Returns the release function; call it when the source is removed.
+   * Layer components that reference a source by id (`source="parcels"`) wait on `hasSource(id)`.
+   */
+  registerSource(id: string): () => void {
+    this.sourceCounts.set(id, (this.sourceCounts.get(id) ?? 0) + 1);
+    this.sourceIdsSignal.set(new Set(this.sourceCounts.keys()));
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      const count = (this.sourceCounts.get(id) ?? 0) - 1;
+      if (count > 0) this.sourceCounts.set(id, count);
+      else this.sourceCounts.delete(id);
+      this.sourceIdsSignal.set(new Set(this.sourceCounts.keys()));
+    };
+  }
+
+  /** Whether a source with this id is currently registered. Reactive when read in an effect. */
+  hasSource(id: string): boolean {
+    return this.sourceIdsSignal().has(id);
   }
 
   /**
@@ -107,6 +136,8 @@ export class MapContextService {
     this.mapSignal.set(null);
     this.loadedFlagSignal.set(false);
     this.styleLoadedFlagSignal.set(false);
+    this.sourceCounts.clear();
+    this.sourceIdsSignal.set(new Set());
   }
 }
 

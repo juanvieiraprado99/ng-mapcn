@@ -2,7 +2,7 @@
 
 Copy-paste examples. Import from `'ng-mapcn'` (or from the folder `ng add` copied into your app). Every map needs a parent with an explicit height. Coordinates are `[longitude, latitude]`.
 
-Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Fit to data](#fit-to-data) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading)
+Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Tile sources](#tile-sources) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading) | [Fit to data](#fit-to-data)
 
 ## Controls
 
@@ -286,6 +286,66 @@ Extra datum properties (here `color`) are available to paint expressions through
 `data` also accepts a `GeoJSON.FeatureCollection<GeoJSON.Point, P>`. Without `gradient` the ramp follows the map theme (`defaultHeatmapGradients`); a custom `[gradient]="[[0, 'rgba(0,0,0,0)'], [1, '#ef4444']]"` is kept across theme switches. `radius`, `intensity` and `opacity` accept zoom expressions such as `['interpolate', ['linear'], ['zoom'], 0, 8, 6, 34]`. `maxZoom` stops rendering from that zoom, so a custom circle layer placed after the heatmap in the template can take over when zoomed in. Ids: `heatmap-source-<id>`, `heatmap-layer-<id>`.
 
 Gotchas: set `weightRange` to the real `[min, max]` of `weightProperty`, otherwise raw values (e.g. a magnitude of 0-7) saturate the layer. `radius`, `intensity`, `opacity`, `gradient`, `minZoom`/`maxZoom` and `data` update the existing layer in place, so binding them to signals is cheap. The component has no outputs and a heatmap is not hit-testable (`queryRenderedFeatures` returns nothing), so use a circle layer or markers for interaction.
+
+## Tile sources
+
+```html
+<ng-map [center]="[10, 50]" [zoom]="4">
+  <ng-map-raster-source
+    id="radar"
+    [tiles]="['https://tiles.example.com/{z}/{x}/{y}.png']"
+    [tileSize]="256"
+    attribution="Radar data"
+    [opacity]="0.7"
+  />
+  <ng-map-image-overlay [url]="img" [coordinates]="corners" [opacity]="0.8" />
+  <ng-map-vector-source
+    id="parcels"
+    url="pmtiles://https://example.com/parcels.pmtiles"
+    promoteId="parcel"
+  />
+  <app-parcels-layer source="parcels" />
+</ng-map>
+```
+
+`corners` is `[[lng, lat] x4]` clockwise from the top-left. A vector source draws nothing by itself: add layers from a component that waits for it with `hasSource(id)` (it closes during a theme switch and re-opens once the source is re-added):
+
+```ts
+import { Component, effect, inject, input } from '@angular/core';
+import { MapContextService } from 'ng-mapcn';
+
+@Component({ selector: 'app-parcels-layer', template: '' })
+export class ParcelsLayerComponent {
+  readonly source = input.required<string>();
+  private readonly ctx = inject(MapContextService);
+
+  constructor() {
+    effect((onCleanup) => {
+      const map = this.ctx.map();
+      const source = this.source();
+      if (!map || !this.ctx.isLoaded() || !this.ctx.hasSource(source)) return;
+
+      const id = `${source}-fill`;
+      map.addLayer({
+        id,
+        type: 'fill',
+        source,
+        'source-layer': 'parcels',
+        paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.5 },
+      });
+      onCleanup(() => {
+        try {
+          if (map.getLayer(id)) map.removeLayer(id);
+        } catch {
+          // style may be mid-reload
+        }
+      });
+    });
+  }
+}
+```
+
+PMTiles needs the protocol registered once in the browser, before the source is added (`npm i pmtiles`; the library does not bundle it): `addProtocol('pmtiles', new Protocol().tile)` with `addProtocol` from `maplibre-gl` and `Protocol` from `pmtiles`. The archive must be served with HTTP range support. Tile `tiles`/`url`, image `url`/`coordinates` and `opacity`/`visible` update in place; `tileSize`, zoom range, `bounds`, `scheme`, `attribution` and `promoteId` are read at creation (change the `id` to rebuild).
 
 ## Fit to data
 

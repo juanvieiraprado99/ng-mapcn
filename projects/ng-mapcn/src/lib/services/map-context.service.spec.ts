@@ -1,3 +1,4 @@
+import { effect } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -56,5 +57,50 @@ describe('MapContextService', () => {
     ctx.reset();
     ctx.setStyleLoadedFlag(true);
     expect(ctx.isLoaded()).toBe(false);
+  });
+
+  describe('source registry', () => {
+    it('hasSource tracks registered ids reactively', () => {
+      const seen: boolean[] = [];
+      const ref = TestBed.runInInjectionContext(() =>
+        effect(() => {
+          seen.push(ctx.hasSource('parcels'));
+        }),
+      );
+      TestBed.tick();
+      const release = ctx.registerSource('parcels');
+      TestBed.tick();
+      expect(ctx.hasSource('parcels')).toBe(true);
+      expect(ctx.hasSource('other')).toBe(false);
+      release();
+      TestBed.tick();
+      expect(ctx.hasSource('parcels')).toBe(false);
+      expect(seen).toEqual([false, true, false]);
+      ref.destroy();
+    });
+
+    it('lists registered ids; releasing twice is harmless', () => {
+      const first = ctx.registerSource('a');
+      ctx.registerSource('b');
+      expect([...ctx.sourceIds()].sort()).toEqual(['a', 'b']);
+      first();
+      first();
+      expect([...ctx.sourceIds()]).toEqual(['b']);
+    });
+
+    it('a stale release does not drop a newer registration of the same id', () => {
+      const first = ctx.registerSource('a');
+      const second = ctx.registerSource('a');
+      first();
+      expect(ctx.hasSource('a')).toBe(true);
+      second();
+      expect(ctx.hasSource('a')).toBe(false);
+    });
+
+    it('reset clears the registry', () => {
+      ctx.registerSource('a');
+      ctx.reset();
+      expect(ctx.hasSource('a')).toBe(false);
+    });
   });
 });

@@ -9,9 +9,12 @@ import { MapArcComponent } from './components/map-arc/map-arc.component';
 import { MapClusterLayerComponent } from './components/map-cluster-layer/map-cluster-layer.component';
 import { MapGeoJSONComponent } from './components/map-geojson/map-geojson.component';
 import { MapHeatmapComponent } from './components/map-heatmap/map-heatmap.component';
+import { MapImageOverlayComponent } from './components/map-image-overlay/map-image-overlay.component';
 import { MapMarkerComponent } from './components/map-marker/map-marker.component';
 import { MapPopupComponent } from './components/map-popup/map-popup.component';
+import { MapRasterSourceComponent } from './components/map-raster-source/map-raster-source.component';
 import { MapRouteComponent } from './components/map-route/map-route.component';
+import { MapVectorSourceComponent } from './components/map-vector-source/map-vector-source.component';
 import { MarkerContentComponent } from './components/marker-content/marker-content.component';
 import { MarkerLabelComponent } from './components/marker-label/marker-label.component';
 import { MarkerPopupComponent } from './components/marker-popup/marker-popup.component';
@@ -41,6 +44,9 @@ const TEMPLATE = `
     <ng-map-arc [data]="arcs" />
     <ng-map-cluster-layer [data]="collection" />
     <ng-map-heatmap [data]="collection" />
+    <ng-map-raster-source id="radar" [tiles]="['https://tiles.example.com/{z}/{x}/{y}.png']" />
+    <ng-map-vector-source id="parcels" url="https://example.com/parcels.json" />
+    <ng-map-image-overlay [url]="'https://example.com/a.png'" [coordinates]="corners" />
   </ng-map>
 `;
 
@@ -62,6 +68,12 @@ describe('server-side rendering', () => {
     ];
     const collection = { type: 'FeatureCollection', features: [] };
     const arcs = [{ from: [0, 0], to: [1, 1] }];
+    const corners = [
+      [0, 1],
+      [1, 1],
+      [1, 0],
+      [0, 0],
+    ];
 
     const { fixture, ctx } = await renderMap(TEMPLATE, {
       imports: [
@@ -79,8 +91,11 @@ describe('server-side rendering', () => {
         MapArcComponent,
         MapClusterLayerComponent,
         MapHeatmapComponent,
+        MapRasterSourceComponent,
+        MapVectorSourceComponent,
+        MapImageOverlayComponent,
       ],
-      hostProps: { route, collection, arcs },
+      hostProps: { route, collection, arcs, corners },
       providers: [{ provide: PLATFORM_ID, useValue: 'server' }],
     });
     vi.advanceTimersByTime(1000);

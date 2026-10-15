@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { fakeRegistry, Map as FakeMap, Marker, Popup } from './maplibre-fake';
+import {
+  addProtocol,
+  fakeRegistry,
+  Map as FakeMap,
+  Marker,
+  Popup,
+  removeProtocol,
+} from './maplibre-fake';
 
 function createMap(options: Record<string, unknown> = {}): FakeMap {
   return new FakeMap({ center: [0, 0], zoom: 1, ...options } as any);
@@ -84,6 +91,36 @@ describe('maplibre-fake', () => {
     expect(map.getLayer('l').minzoom).toBe(2);
     expect(map.getLayer('l').maxzoom).toBe(9);
     expect(map.calls).toContain('setLayerZoomRange:l');
+  });
+
+  it('tile and image sources expose the in-place updaters as spies', () => {
+    const map = createMap();
+    map.addSource('t', { type: 'raster', tiles: ['a'] } as any);
+    map.addSource('i', { type: 'image', url: 'u', coordinates: [] } as any);
+
+    const tiles = map.getSource('t');
+    tiles.setTiles(['b']);
+    tiles.setUrl('https://x/tiles.json');
+    const image = map.getSource('i');
+    image.updateImage({ url: 'v' });
+    image.setCoordinates([[0, 0]]);
+
+    expect(tiles.setTiles).toHaveBeenCalledWith(['b']);
+    expect(tiles.setUrl).toHaveBeenCalledWith('https://x/tiles.json');
+    expect(image.updateImage).toHaveBeenCalledWith({ url: 'v' });
+    expect(image.setCoordinates).toHaveBeenCalledWith([[0, 0]]);
+  });
+
+  it('addProtocol / removeProtocol record custom protocols and the registry resets them', () => {
+    const load = vi.fn();
+    addProtocol('pmtiles', load);
+    expect(fakeRegistry.protocols['pmtiles']).toBe(load);
+    removeProtocol('pmtiles');
+    expect(fakeRegistry.protocols['pmtiles']).toBeUndefined();
+
+    addProtocol('x', load);
+    fakeRegistry.reset();
+    expect(fakeRegistry.protocols).toEqual({});
   });
 
   it('jumpTo updates camera and fires move', () => {

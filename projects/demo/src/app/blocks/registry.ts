@@ -96,6 +96,15 @@ export const BLOCKS: BlockMeta[] = [
     files: [{ path: 'heatmap/heatmap.ts' }],
   },
   {
+    name: 'pmtiles',
+    title: 'PMTiles Parcels',
+    description:
+      'Vector tiles from a single PMTiles archive: a source component, a layer that waits for it, and hover highlighting.',
+    iframeHeight: '720px',
+    zard: [],
+    files: [{ path: 'pmtiles/pmtiles.ts' }],
+  },
+  {
     name: 'logistics-network',
     title: 'Logistics Network',
     description: 'Domestic logistics map with a sidebar of stats.',
@@ -139,6 +148,7 @@ export const BLOCK_COMPONENTS: Record<string, () => Promise<Type<unknown>>> = {
   'uptime-monitor': () =>
     import('./uptime-monitor/uptime-monitor').then((m) => m.UptimeMonitorBlockComponent),
   heatmap: () => import('./heatmap/heatmap').then((m) => m.HeatmapBlockComponent),
+  pmtiles: () => import('./pmtiles/pmtiles').then((m) => m.PmtilesBlockComponent),
   'logistics-network': () =>
     import('./logistics-network/logistics-network').then((m) => m.LogisticsNetworkBlockComponent),
   'store-locator': () =>

@@ -207,6 +207,21 @@ export const DOCS_ROUTES: Routes = [
           import('./components/heatmap-page').then((m) => m.HeatmapPageComponent),
       },
       {
+        path: 'components/tile-sources',
+        title: 'Tile Sources',
+        data: {
+          seo: {
+            title: 'Angular Map Tile Sources',
+            description:
+              'Add raster tiles, vector tiles, PMTiles archives and georeferenced image overlays to an Angular map with ng-map-raster-source, ng-map-vector-source and ng-map-image-overlay.',
+            keywords: ['Angular raster tiles', 'PMTiles Angular', 'MapLibre vector tiles', 'WMS overlay'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () =>
+          import('./components/tile-sources-page').then((m) => m.TileSourcesPageComponent),
+      },
+      {
         path: 'components/advanced',
         title: 'Advanced',
         data: {

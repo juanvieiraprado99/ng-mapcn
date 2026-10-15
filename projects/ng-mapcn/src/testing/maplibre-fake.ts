@@ -249,6 +249,12 @@ export class Map extends Evented {
       setData: vi.fn(),
       setClusterOptions: vi.fn((_options: unknown) => Promise.resolve()),
       getClusterExpansionZoom: vi.fn((_clusterId: number) => Promise.resolve(0)),
+      // Raster / vector tile sources
+      setTiles: vi.fn((_tiles: string[]) => this.sources[id]),
+      setUrl: vi.fn((_url: string) => this.sources[id]),
+      // Image source
+      updateImage: vi.fn((_options: unknown) => this.sources[id]),
+      setCoordinates: vi.fn((_coordinates: unknown) => this.sources[id]),
     };
     return this;
   }
@@ -503,6 +509,15 @@ export function setWorkerUrl(value: string): void {
   fakeRegistry.workerUrl = value;
 }
 
+/** Custom protocols registered with `addProtocol` (for example `pmtiles`). */
+export function addProtocol(name: string, loadFn: (...args: unknown[]) => unknown): void {
+  fakeRegistry.protocols[name] = loadFn;
+}
+
+export function removeProtocol(name: string): void {
+  delete fakeRegistry.protocols[name];
+}
+
 export type FakeMap = Map;
 export type FakeMarker = Marker;
 export type FakePopup = Popup;
@@ -511,6 +526,8 @@ export const fakeRegistry: {
   maps: FakeMap[];
   markers: FakeMarker[];
   popups: FakePopup[];
+  /** Protocols registered with `addProtocol`, by name. */
+  protocols: Record<string, (...args: unknown[]) => unknown>;
   /** When set, the next `new Map()` throws it (then the field is cleared). */
   constructError: Error | null;
   /** MapLibre's global worker URL (`''` until `setWorkerUrl` is called, like the real one). */
@@ -520,6 +537,7 @@ export const fakeRegistry: {
   maps: [],
   markers: [],
   popups: [],
+  protocols: {},
   constructError: null,
   workerUrl: '',
   reset() {
@@ -528,5 +546,6 @@ export const fakeRegistry: {
     this.maps.length = 0;
     this.markers.length = 0;
     this.popups.length = 0;
+    this.protocols = {};
   },
 };

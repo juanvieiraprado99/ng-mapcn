@@ -2,7 +2,7 @@
 
 All components are standalone, `OnPush`, and use signal inputs/outputs. Everything below is exported from `ng-mapcn` (or from the folder `ng add` copied into your app). Coordinates are `[longitude, latitude]`.
 
-Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
+Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
 
 ## ng-map
 
@@ -286,19 +286,81 @@ Ids derive from `id` (auto `ng-heatmap-N`): source `heatmap-source-<id>`, layer 
 
 No outputs. Also exported: `heatmapColorExpression(stops, theme?)`, `defaultHeatmapGradients`, `MapHeatmapData`, `HeatmapGradient`.
 
+## ng-map-raster-source
+
+Class `MapRasterSourceComponent`. A raster tile source (XYZ, TMS, WMS via `{bbox-epsg-3857}`) plus one `raster` layer.
+
+Ids: the MapLibre source id is exactly `id` (auto `ng-raster-source-N`); layer `raster-layer-<id>`. The source is announced via `MapContextService.hasSource(id)` while it exists.
+
+| Input         | Type                                | Default            | Notes                                                                   |
+| ------------- | ----------------------------------- | ------------------ | ----------------------------------------------------------------------- |
+| `id`          | `string`                            | auto               | Changing it re-creates the source and layer                             |
+| `tiles`       | `readonly string[]`                 | `undefined`        | URL templates; changes call `setTiles`. One of `tiles` / `url` required |
+| `url`         | `string`                            | `undefined`        | TileJSON URL, wins over `tiles`; changes call `setUrl`                  |
+| `tileSize`    | `number`                            | `256` (MapLibre)   | Creation only                                                           |
+| `minzoom`     | `number`                            | `0` (MapLibre)     | Creation only                                                           |
+| `maxzoom`     | `number`                            | `22` (MapLibre)    | Creation only                                                           |
+| `attribution` | `string`                            | `undefined`        | Creation only                                                           |
+| `bounds`      | `[number, number, number, number]`  | `undefined`        | `[west, south, east, north]`; creation only                             |
+| `scheme`      | `'xyz' \| 'tms'`                    | `'xyz'` (MapLibre) | Creation only                                                           |
+| `opacity`     | `number \| expression`              | `1`                | `raster-opacity`, reconciled with `setPaintProperty`                    |
+| `visible`     | `boolean`                           | `true`             | `visibility` layout property; the source stays loaded                   |
+| `beforeId`    | `string`                            | `undefined`        | Layer to insert before; creation only                                   |
+| `paint`       | `RasterLayerSpecification['paint']` | `undefined`        | Escape hatch, merged last                                               |
+
+No outputs. A missing `tiles`/`url` or a duplicate source id is reported through `ng-map`'s `mapError`.
+
+## ng-map-vector-source
+
+Class `MapVectorSourceComponent`. A vector tile source (MVT, TileJSON or `pmtiles://`). **Adds the source only**: draw it with layers that reference `source: '<id>'`.
+
+The source id is exactly `id` (auto `ng-vector-source-N`). While it exists on the map it is announced through `MapContextService.hasSource(id)` / `sourceIds()`; during a theme switch it disappears and comes back, so a consumer effect that reads `hasSource(id)` re-adds its layers by itself. On teardown (destroy, `id` change, or the gate closing for a theme switch) the component removes **every layer still using the source**, including layers added by other components or the app, then the source. Consumers must gate on `ctx.hasSource(id)` and re-add their layers when it reopens. The mode (`url` vs `tiles`) is fixed at creation: switching later is ignored; change `id` to rebuild.
+
+| Input         | Type                               | Default         | Notes                                                                   |
+| ------------- | ---------------------------------- | --------------- | ----------------------------------------------------------------------- |
+| `id`          | `string`                           | auto            | Changing it re-creates the source                                       |
+| `tiles`       | `readonly string[]`                | `undefined`     | URL templates; changes call `setTiles`. One of `tiles` / `url` required |
+| `url`         | `string`                           | `undefined`     | TileJSON URL or `pmtiles://<archive url>`; changes call `setUrl`        |
+| `minzoom`     | `number`                           | `0` (MapLibre)  | Creation only                                                           |
+| `maxzoom`     | `number`                           | `22` (MapLibre) | Creation only                                                           |
+| `attribution` | `string`                           | `undefined`     | Creation only                                                           |
+| `bounds`      | `[number, number, number, number]` | `undefined`     | Creation only                                                           |
+| `scheme`      | `'xyz' \| 'tms'`                   | `'xyz'`         | Creation only                                                           |
+| `promoteId`   | `string \| Record<string, string>` | `undefined`     | Feature property used as id (enables feature-state); creation only      |
+
+PMTiles: `ng-mapcn` does not depend on `pmtiles`. `npm i pmtiles`, then once before the map loads: `addProtocol('pmtiles', new Protocol().tile)` (`import { addProtocol } from 'maplibre-gl'; import { Protocol } from 'pmtiles'`; browser only). The server must support HTTP range requests.
+
+## ng-map-image-overlay
+
+Class `MapImageOverlayComponent`. An `image` source pinned to four corners plus one `raster` layer. Source id exactly `id` (auto `ng-image-overlay-N`), layer `image-layer-<id>`.
+
+| Input         | Type                                | Default     | Notes                                                                               |
+| ------------- | ----------------------------------- | ----------- | ----------------------------------------------------------------------------------- |
+| `id`          | `string`                            | auto        | Changing it re-creates the source and layer                                         |
+| `url`         | `string`                            | required    | Changes call `updateImage`                                                          |
+| `coordinates` | `ImageOverlayCoordinates`           | required    | `[lng, lat]` x4, clockwise from the top-left; changes call `setCoordinates`         |
+| `opacity`     | `number \| expression`              | `1`         | `raster-opacity`                                                                    |
+| `visible`     | `boolean`                           | `true`      |                                                                                     |
+| `beforeId`    | `string`                            | `undefined` | Creation only                                                                       |
+| `paint`       | `RasterLayerSpecification['paint']` | `undefined` | Escape hatch, e.g. `{ 'raster-fade-duration': 0 }` to avoid a flash on `url` change |
+
+Also exported: `ImageOverlayCoordinates`, `TileBounds`, `TileScheme`.
+
 ## Services
 
 `MapContextService` (`@Injectable()`, provided by `ng-map`, not root):
 
-| Member                                                                       | Type                           | Notes                                                                                                          |
-| ---------------------------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| `map`                                                                        | `Signal<MapLibreMap \| null>`  |                                                                                                                |
-| `isLoaded`                                                                   | `Signal<boolean>`              | True only when the map `load` flag and the (debounced) `styledata` flag are both set. Closes during `setStyle` |
-| `resolvedTheme`                                                              | `Signal<'light' \| 'dark'>`    | Theme currently applied to the map                                                                             |
-| `fitBounds(options?)`                                                        | `boolean`                      | Fits to `options.bounds` or the children's data; `false` if not loaded or no bounds                            |
-| `dataBounds`                                                                 | `Signal<[w, s, e, n] \| null>` | Union of the bounds registered by children                                                                     |
-| `registerBounds(getter)`                                                     | `() => void`                   | Adds a bounds source (reactive getter); returns the unregister function. Custom layer components use it        |
-| `setMap`, `setResolvedTheme`, `setLoadedFlag`, `setStyleLoadedFlag`, `reset` | methods                        | Used internally by `ng-map`                                                                                    |
+| Member                                                                       | Type                                                             | Notes                                                                                                                                                                                          |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `map`                                                                        | `Signal<MapLibreMap \| null>`                                    |                                                                                                                                                                                                |
+| `isLoaded`                                                                   | `Signal<boolean>`                                                | True only when the map `load` flag and the (debounced) `styledata` flag are both set. Closes during `setStyle`                                                                                 |
+| `resolvedTheme`                                                              | `Signal<'light' \| 'dark'>`                                      | Theme currently applied to the map                                                                                                                                                             |
+| `hasSource(id)` / `sourceIds`                                                | `boolean` (reactive in `effect`) / `Signal<ReadonlySet<string>>` | Source registry: ids announced by `ng-map-raster-source`, `ng-map-vector-source`, `ng-map-image-overlay` while the source is on the map. Wait on it before adding layers that use `source: id` |
+| `registerSource(id)`                                                         | `() => () => void`                                               | Announce a source you added yourself; returns the release function                                                                                                                             |
+| `fitBounds(options?)`                                                        | `boolean`                                                        | Fits to `options.bounds` or the children's data; `false` if not loaded or no bounds                                                                                                            |
+| `dataBounds`                                                                 | `Signal<[w, s, e, n] \| null>`                                   | Union of the bounds registered by children                                                                                                                                                     |
+| `registerBounds(getter)`                                                     | `() => void`                                                     | Adds a bounds source (reactive getter); returns the unregister function. Custom layer components use it                                                                                        |
+| `setMap`, `setResolvedTheme`, `setLoadedFlag`, `setStyleLoadedFlag`, `reset` | methods                                                          | Used internally by `ng-map`                                                                                                                                                                    |
 
 `ThemeService` (`providedIn: 'root'`):
 

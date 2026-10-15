@@ -1,5 +1,5 @@
 {
-  "anatomyCode": "<ng-map [center]=\"[-74.006, 40.7128]\" [zoom]=\"11\">\n  <ng-map-controls />\n\n  <ng-map-marker [longitude]=\"-74.006\" [latitude]=\"40.7128\">\n    <ng-marker-content>\n      <div class=\"size-4 rounded-full bg-blue-500\"></div>\n      <ng-marker-label position=\"top\">New York</ng-marker-label>\n    </ng-marker-content>\n    <ng-marker-tooltip>Hover content</ng-marker-tooltip>\n    <ng-marker-popup>Click content</ng-marker-popup>\n  </ng-map-marker>\n\n  <ng-map-popup [longitude]=\"-74\" [latitude]=\"40.7\">Standalone popup</ng-map-popup>\n  <ng-map-route [coordinates]=\"coordinates\" />\n  <ng-map-arc [data]=\"arcs\" />\n  <ng-map-geojson [data]=\"geojson\" />\n  <ng-map-cluster-layer [data]=\"points\" />\n  <ng-map-heatmap [data]=\"points\" weightProperty=\"mag\" />\n</ng-map>",
+  "anatomyCode": "<ng-map [center]=\"[-74.006, 40.7128]\" [zoom]=\"11\">\n  <ng-map-controls />\n\n  <ng-map-marker [longitude]=\"-74.006\" [latitude]=\"40.7128\">\n    <ng-marker-content>\n      <div class=\"size-4 rounded-full bg-blue-500\"></div>\n      <ng-marker-label position=\"top\">New York</ng-marker-label>\n    </ng-marker-content>\n    <ng-marker-tooltip>Hover content</ng-marker-tooltip>\n    <ng-marker-popup>Click content</ng-marker-popup>\n  </ng-map-marker>\n\n  <ng-map-popup [longitude]=\"-74\" [latitude]=\"40.7\">Standalone popup</ng-map-popup>\n  <ng-map-route [coordinates]=\"coordinates\" />\n  <ng-map-arc [data]=\"arcs\" />\n  <ng-map-geojson [data]=\"geojson\" />\n  <ng-map-cluster-layer [data]=\"points\" />\n  <ng-map-heatmap [data]=\"points\" weightProperty=\"mag\" />\n  <ng-map-raster-source id=\"radar\" [tiles]=\"radarTiles\" [opacity]=\"0.7\" />\n  <ng-map-vector-source id=\"parcels\" url=\"pmtiles://https://example.com/parcels.pmtiles\" />\n  <ng-map-image-overlay [url]=\"imageUrl\" [coordinates]=\"corners\" />\n</ng-map>",
   "provideStylesCode": "import { inject } from '@angular/core';\nimport { provideMapStyles } from 'ng-mapcn';\n\nexport const appConfig: ApplicationConfig = {\n  providers: [\n    // Static config...\n    provideMapStyles({\n      light: 'https://tiles.openfreemap.org/styles/positron',\n      dark: 'https://tiles.openfreemap.org/styles/dark',\n    }),\n\n    // ...or a signal, so the basemap can be switched at runtime\n    provideMapStyles(() => inject(BasemapService).styles),\n  ],\n};",
   "provideStylesRows": [
     { "name": "MapStylesConfig", "type": "{ light?: string | StyleSpecification; dark?: string | StyleSpecification }", "default": "", "description": "Per-theme basemap. A theme left undefined falls back to the Carto default for that theme." },
@@ -17,6 +17,9 @@
     { "name": "map()", "type": "Signal<Map | null>", "default": "", "description": "The raw maplibre-gl Map instance, or null before init." },
     { "name": "isLoaded()", "type": "Signal<boolean>", "default": "", "description": "True when the style is loaded and layers can be added. Gates every source/layer operation." },
     { "name": "resolvedTheme()", "type": "Signal<'light' | 'dark'>", "default": "", "description": "Theme currently applied to the map." },
+    { "name": "hasSource(id)", "type": "(id: string) => boolean", "default": "", "description": "Whether a source component (raster, vector, image overlay) currently has a source with this id on the map. Reactive inside effect(); false while a theme switch has removed the style. Wait on it before adding layers that reference source: id." },
+    { "name": "sourceIds()", "type": "Signal<ReadonlySet<string>>", "default": "", "description": "Ids of the sources currently announced by source components." },
+    { "name": "registerSource(id)", "type": "(id: string) => () => void", "default": "", "description": "Announces a source you added yourself so hasSource(id) sees it; returns the release function to call when you remove it." },
     { "name": "fitBounds(options?)", "type": "(options?: MapFitBoundsOptions) => boolean", "default": "", "description": "Fits the camera to options.bounds, or to the union of the children's data. Returns false when the map is not loaded or there are no bounds." },
     { "name": "dataBounds()", "type": "Signal<[number, number, number, number] | null>", "default": "", "description": "Union of the bounds registered by the children, as [west, south, east, north]." },
     { "name": "registerBounds(getter)", "type": "(getter: () => LngLatBoundsLike | null) => () => void", "default": "", "description": "Contributes a bounds source to fit-to-bounds. The getter runs reactively; returns the unregister function (call it on destroy)." }
@@ -291,6 +294,62 @@
         { "name": "minZoom", "type": "number", "default": "0", "description": "Minimum zoom at which the heatmap is rendered." },
         { "name": "maxZoom", "type": "number", "default": "24", "description": "Zoom from which the heatmap is no longer rendered (e.g. to hand over to a point layer)." },
         { "name": "paint", "type": "HeatmapLayerSpecification[\"paint\"]", "default": "", "description": "Escape hatch: heatmap paint properties merged last." }
+      ],
+      "outputs": []
+    },
+    {
+      "id": "maprastersource",
+      "title": "MapRasterSource",
+      "selector": "ng-map-raster-source",
+      "description": "Raster tile source (XYZ, TMS, WMS) plus the raster layer that draws it. Source and layer are re-added after a theme switch. Must be used inside ng-map.",
+      "inputs": [
+        { "name": "id", "type": "string", "default": "auto", "description": "MapLibre source id, used verbatim (other components reference it as source: id). The layer is raster-layer-<id>. Changing it re-creates both." },
+        { "name": "tiles", "type": "string[]", "default": "", "description": "Tile URL templates ({z}/{x}/{y}, {bbox-epsg-3857} for WMS). Updated in place with setTiles." },
+        { "name": "url", "type": "string", "default": "", "description": "TileJSON URL, instead of tiles (takes precedence). Updated in place with setUrl." },
+        { "name": "tileSize", "type": "number", "default": "256", "description": "Tile size in pixels. Applied at creation." },
+        { "name": "minzoom", "type": "number", "default": "0", "description": "Minimum tile zoom. Applied at creation." },
+        { "name": "maxzoom", "type": "number", "default": "22", "description": "Maximum tile zoom. Applied at creation." },
+        { "name": "attribution", "type": "string", "default": "", "description": "Attribution for the map attribution control. Applied at creation." },
+        { "name": "bounds", "type": "[number, number, number, number]", "default": "", "description": "[west, south, east, north] limit of the tiles. Applied at creation." },
+        { "name": "scheme", "type": "'xyz' | 'tms'", "default": "'xyz'", "description": "Tile addressing scheme. Applied at creation." },
+        { "name": "opacity", "type": "number | expression", "default": "1", "description": "Raster layer opacity (raster-opacity)." },
+        { "name": "visible", "type": "boolean", "default": "true", "description": "Whether the layer is drawn; the source stays loaded when hidden." },
+        { "name": "beforeId", "type": "string", "default": "", "description": "Insert the layer before this layer id. Applied at creation only." },
+        { "name": "paint", "type": "RasterLayerSpecification[\"paint\"]", "default": "", "description": "Escape hatch: raster paint properties merged last." }
+      ],
+      "outputs": []
+    },
+    {
+      "id": "mapvectorsource",
+      "title": "MapVectorSource",
+      "selector": "ng-map-vector-source",
+      "description": "Vector tile source (MVT, TileJSON or pmtiles://). Adds the source only: draw it with layers that reference it by id and wait for it with MapContextService.hasSource(id). ng-mapcn does not depend on pmtiles; register the protocol yourself with maplibregl.addProtocol. When torn down or the style reloads it removes every layer still using the source, then the source: gate your layers on hasSource(id). tiles vs url mode is fixed at creation. Must be used inside ng-map.",
+      "inputs": [
+        { "name": "id", "type": "string", "default": "auto", "description": "MapLibre source id, used verbatim; layers reference it as source: id. Announced through MapContextService.hasSource(id) while it exists. Changing it re-creates the source." },
+        { "name": "tiles", "type": "string[]", "default": "", "description": "Tile URL templates. Updated in place with setTiles." },
+        { "name": "url", "type": "string", "default": "", "description": "TileJSON URL or pmtiles://<archive url> (register the pmtiles protocol first), instead of tiles. Updated in place with setUrl." },
+        { "name": "minzoom", "type": "number", "default": "0", "description": "Minimum tile zoom. Applied at creation." },
+        { "name": "maxzoom", "type": "number", "default": "22", "description": "Maximum tile zoom. Applied at creation." },
+        { "name": "attribution", "type": "string", "default": "", "description": "Attribution for the map attribution control. Applied at creation." },
+        { "name": "bounds", "type": "[number, number, number, number]", "default": "", "description": "[west, south, east, north] limit of the tiles. Applied at creation." },
+        { "name": "scheme", "type": "'xyz' | 'tms'", "default": "'xyz'", "description": "Tile addressing scheme. Applied at creation." },
+        { "name": "promoteId", "type": "string | Record<string, string>", "default": "", "description": "Feature property (or per source-layer map) used as the feature id, which enables feature-state on vector tiles. Applied at creation." }
+      ],
+      "outputs": []
+    },
+    {
+      "id": "mapimageoverlay",
+      "title": "MapImageOverlay",
+      "selector": "ng-map-image-overlay",
+      "description": "Georeferenced image pinned to four corner coordinates, drawn as a raster layer. Must be used inside ng-map.",
+      "inputs": [
+        { "name": "id", "type": "string", "default": "auto", "description": "MapLibre image source id, used verbatim. The layer is image-layer-<id>. Changing it re-creates both." },
+        { "name": "url", "type": "string", "default": "required", "description": "Image URL. Changing it calls updateImage on the live source." },
+        { "name": "coordinates", "type": "ImageOverlayCoordinates", "default": "required", "description": "Four [lng, lat] corners, clockwise from the top-left. Changing them calls setCoordinates." },
+        { "name": "opacity", "type": "number | expression", "default": "1", "description": "Layer opacity (raster-opacity)." },
+        { "name": "visible", "type": "boolean", "default": "true", "description": "Whether the layer is drawn." },
+        { "name": "beforeId", "type": "string", "default": "", "description": "Insert the layer before this layer id. Applied at creation only." },
+        { "name": "paint", "type": "RasterLayerSpecification[\"paint\"]", "default": "", "description": "Escape hatch: raster paint properties merged last (e.g. raster-fade-duration: 0 to avoid a flash on url change)." }
       ],
       "outputs": []
     }
