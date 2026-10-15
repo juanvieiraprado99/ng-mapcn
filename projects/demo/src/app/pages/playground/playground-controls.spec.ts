@@ -2,7 +2,12 @@ import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 
-import { type ControlChange, PlaygroundControlsComponent } from './playground-controls';
+import {
+  type ControlChange,
+  fromSlider,
+  PlaygroundControlsComponent,
+  toSlider,
+} from './playground-controls';
 import type { Control } from './playground-schema';
 import { validateClusterColors } from './playground-specs';
 
@@ -79,5 +84,16 @@ describe('PlaygroundControlsComponent json control', () => {
     expect(changes).toEqual([{ key: 'colors', value: CONTROLS[0].default }]);
     expect(field.value).toBe('["#111111","#222222","#333333"]');
     expect(error()).toBeUndefined();
+  });
+});
+
+describe('slider mapping', () => {
+  it('maps any range onto the 0-100 zard scale and back, snapped to the step', () => {
+    expect(toSlider(0, -180, 180)).toBe(50);
+    expect(fromSlider(50, -180, 180, 10)).toBe(0);
+    expect(fromSlider(toSlider(40, -180, 180), -180, 180, 10)).toBe(40);
+    expect(fromSlider(toSlider(0.35, 0.1, 1), 0.1, 1, 0.05)).toBe(0.35);
+    expect(fromSlider(100, 1, 14, 1)).toBe(14);
+    expect(fromSlider(-5, 1, 14, 1)).toBe(1);
   });
 });
