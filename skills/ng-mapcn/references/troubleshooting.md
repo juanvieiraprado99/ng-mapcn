@@ -48,7 +48,7 @@
 ## Keyboard and accessibility
 
 - Popups close on Escape from inside the card (`ng-map-popup` and `ng-marker-popup`). The event is stopped, so a host dialog or overlay does not also close. `ng-marker-popup` returns focus to its marker.
-- A marker with `ng-marker-popup` gets `role="button"` and `aria-haspopup="dialog"` (unless you set them) and is focusable through MapLibre. Name it with an `ng-marker-label` or an `aria-label`.
-- axe `nested-interactive`: do not put your own `<button>` inside `ng-marker-content` when the marker has `ng-marker-popup`. Use non-interactive content, or set your own `role` on the marker element.
-- Markers that only use `(markerClick)` are not focusable (MapLibre leaves custom marker elements to the app): project a `<button aria-label>` as content, which works because the click bubbles to the marker.
-- `ng-marker-tooltip` is hover-only; do not put essential content in it.
+- A marker with `ng-marker-popup` gets `role="button"` and `aria-haspopup="dialog"` (unless you set them) and is focusable through MapLibre. Name it with an `ng-marker-label`, an `aria-label` on your content or the `ariaLabel` input of `ng-map-marker`.
+- A `<button>` or link inside `ng-marker-content` is the keyboard target: the marker element then gets no `role="button"` (no axe `nested-interactive`).
+- Markers with `(markerClick)` are keyboard operable: `role="button"`, `tabindex="0"`, Enter/Space emit `markerClick`. Draggable markers move with the arrow keys (Shift for a larger step) and emit `dragEnd`. Static markers without handlers stay out of the tab order. Set `ariaLabel` for a name (interactive markers with no text are named "Map marker", `labels.marker`).
+- `ng-marker-tooltip` opens on hover and on keyboard focus of the marker (the marker becomes a tab stop); Escape or blur closes it. Touch devices have no hover, so do not put essential content in it.

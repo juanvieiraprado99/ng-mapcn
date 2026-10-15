@@ -76,6 +76,22 @@ describe('MarkerTooltipComponent', () => {
     expect(popup.calls.at(-1)).toBe('remove');
   });
 
+  it('shows on focus, hides on blur and on Escape, and makes the marker focusable', async () => {
+    await render();
+    const popup = fakeRegistry.popups[0];
+    const el = fakeRegistry.markers[0].getElement();
+    expect(el.getAttribute('tabindex')).toBe('0');
+
+    el.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    expect(popup.isOpen()).toBe(true);
+    el.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+    expect(popup.isOpen()).toBe(false);
+
+    el.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(popup.isOpen()).toBe(false);
+  });
+
   it('calls setOffset on the live popup when [offset] changes', async () => {
     const { fixture } = await render();
     const popup = fakeRegistry.popups[0];

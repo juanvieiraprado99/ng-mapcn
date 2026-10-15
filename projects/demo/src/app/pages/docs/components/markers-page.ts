@@ -118,7 +118,9 @@ import {
           [longitude]="-3.7038"
           [latitude]="40.4168"
           [draggable]="true"
+          ariaLabel="Draggable marker"
           (dragEnd)="position.set($event)"
+          (markerClick)="clicks.update((n) => n + 1)"
         >
           <ng-marker-content>
             <div class="size-4 cursor-grab rounded-full border-2 border-white bg-blue-500 shadow-lg"></div>
@@ -130,6 +132,7 @@ import {
 })
 export class DraggableMarkerComponent {
   readonly position = signal({ lng: -3.7038, lat: 40.4168 });
+  readonly clicks = signal(0);
 }`;
 
 @Component({
@@ -165,7 +168,7 @@ export class DraggableMarkerComponent {
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-content</code>
           — leave it empty for the default dot. Add
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-tooltip</code>
-          for hover tooltips and
+          for hover and focus tooltips and
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-label</code>
           for always-visible labels.
         </span>
@@ -334,21 +337,27 @@ export class DraggableMarkerComponent {
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">draggable</code>
           and listen to
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">dragEnd</code>
-          to track the marker position.
+          to track the marker position. The marker also moves from the keyboard: focus it with Tab and
+          use the arrow keys (Shift for a larger step); each key press emits
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">dragEnd</code>.
+          Enter or Space trigger
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">markerClick</code>.
         </span>
         <div class="relative h-full">
           <div
             class="bg-background/95 absolute top-3 left-3 z-10 rounded-md border px-3 py-2 font-mono text-xs shadow-md"
           >
             lng: {{ position().lng | number: '1.4-4' }} lat:
-            {{ position().lat | number: '1.4-4' }}
+            {{ position().lat | number: '1.4-4' }} clicks: {{ clicks() }}
           </div>
           <ng-map [center]="[-3.7038, 40.4168]" [zoom]="12">
             <ng-map-marker
               [longitude]="-3.7038"
               [latitude]="40.4168"
               [draggable]="true"
+              ariaLabel="Draggable marker"
               (dragEnd)="position.set($event)"
+              (markerClick)="clicks.update((n) => n + 1)"
             >
               <ng-marker-content>
                 <div
@@ -423,6 +432,7 @@ export class MarkersPageComponent {
   }
 
   readonly position = signal({ lng: -3.7038, lat: 40.4168 });
+  readonly clicks = signal(0);
 }
 
 interface RichPlace {

@@ -158,12 +158,16 @@ A container for marker-related components. Provides context for its children and
 | `anchor` | `PositionAnchor` | — | Part of the marker element positioned at the coordinates. |
 | `rotationAlignment` | `'map' \| 'viewport' \| 'auto'` | `'auto'` | How the marker rotates with the map. |
 | `pitchAlignment` | `'map' \| 'viewport' \| 'auto'` | `'auto'` | How the marker tilts with the map pitch. |
+| `ariaLabel` | `string` | — | Accessible name of the marker (aria-label). Interactive markers whose content has no text fall back to labels.marker ('Map marker'); a static labelled marker gets role="img". |
+| `labels` | `Partial<MapLabels>` | — | Label overrides (marker), merged over provideMapLabels() and the English defaults. |
+| `keyboardStep` | `number` | `10` | Pixels a draggable marker moves per arrow key press. |
+| `keyboardStepLarge` | `number` | `50` | Pixels per arrow key press while Shift is held. |
 
 **Outputs**
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `markerClick` | `MouseEvent` | — | Emits when the marker is clicked. |
+| `markerClick` | `MouseEvent` | — | Emits when the marker is clicked, or when Enter or Space is pressed on the focused marker. A marker with this handler becomes a role=button tab stop. |
 | `markerMouseEnter` | `MouseEvent` | — | Emits when the pointer enters the marker. |
 | `markerMouseLeave` | `MouseEvent` | — | Emits when the pointer leaves the marker. |
 | `dragStart` | `{ lng: number; lat: number }` | — | Emits when dragging starts. |
@@ -222,7 +226,7 @@ A popup attached to the marker that opens on click. Must be used inside ng-map-m
 
 `ng-marker-tooltip`
 
-A tooltip that appears on marker hover. Must be used inside ng-map-marker.
+A tooltip that appears on marker hover and keyboard focus (Escape or blur closes it; the marker becomes a tab stop). Must be used inside ng-map-marker.
 
 **Inputs**
 
@@ -634,7 +638,7 @@ export const appConfig: ApplicationConfig = {
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `MapLabels` | `{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup: string }` | — | Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup'. |
+| `MapLabels` | `{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; marker: string }` | — | Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map marker'. |
 | `provideMapLabels(source)` | `Partial<MapLabels> \| Signal<Partial<MapLabels> \| undefined> \| (() => Signal<Partial<MapLabels> \| undefined>)` | — | Provider for app-wide labels; missing keys fall back to the English defaults. The factory form runs in an injection context, so it can inject() a service holding the signal. |
 | `MAP_LABELS` | `InjectionToken<Signal<Partial<MapLabels> \| undefined>>` | — | The token itself, if you want to provide it by hand. |
 | `DEFAULT_MAP_LABELS` | `MapLabels` | — | The English defaults. |

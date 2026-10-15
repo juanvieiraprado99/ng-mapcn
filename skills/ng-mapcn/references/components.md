@@ -72,10 +72,14 @@ Class `MapMarkerComponent`. The MapLibre `Marker` is created once; inputs are di
 | `anchor`            | `MarkerOptions['anchor']`            | `undefined` | Creation only                  |
 | `rotationAlignment` | `MarkerOptions['rotationAlignment']` | `'auto'`    |                                |
 | `pitchAlignment`    | `MarkerOptions['pitchAlignment']`    | `'auto'`    |                                |
+| `ariaLabel`         | `string`                             | `undefined` | Accessible name (see a11y)     |
+| `labels`            | `Partial<MapLabels>`                 | `undefined` | `marker` fallback name         |
+| `keyboardStep`      | `number`                             | `10`        | Arrow-key drag step in px      |
+| `keyboardStepLarge` | `number`                             | `50`        | Same with Shift                |
 
 | Output             | Payload                                                                                          |
 | ------------------ | ------------------------------------------------------------------------------------------------ |
-| `markerClick`      | `MouseEvent`                                                                                     |
+| `markerClick`      | `MouseEvent` (also from Enter/Space on the focused marker)                                       |
 | `markerMouseEnter` | `MouseEvent`                                                                                     |
 | `markerMouseLeave` | `MouseEvent`                                                                                     |
 | `dragStart`        | `{ lng: number; lat: number }`                                                                   |
@@ -83,6 +87,8 @@ Class `MapMarkerComponent`. The MapLibre `Marker` is created once; inputs are di
 | `dragEnd`          | `{ lng: number; lat: number }`                                                                   |
 
 Method: `getMarker(): Marker | null`.
+
+Keyboard and a11y (markers): the marker element follows what it does. With `(markerClick)` it gets `role="button"` and `tabindex="0"`, and Enter/Space emit `markerClick` (a real click on the element). A marker with `ng-marker-popup` is a button too (MapLibre handles Enter/Space for the popup). `draggable` markers are tab stops and move with the arrow keys (`keyboardStep` px, default 10; Shift uses `keyboardStepLarge`, default 50); each key press emits `dragStart`, `drag` and `dragEnd` and moves the marker, so keep `longitude`/`latitude` in sync from `dragEnd` exactly as for mouse drags. A marker with `ng-marker-tooltip` is focusable so the tooltip opens on focus (and closes on blur or Escape). Markers with none of these stay out of the tab order. `ariaLabel` sets the accessible name; interactive markers whose content has no text (the default dot, an icon) fall back to `labels.marker` (`'Map marker'`); a static labelled marker gets `role="img"`. When your projected content already holds a focusable control (`<button>`, `<a href>`, `[tabindex]`), the marker element gets no role (no `nested-interactive`) and that control is the keyboard target. Attributes you set on the marker element yourself are never overwritten.
 
 `MarkerContextService` (provided by each `ng-map-marker`): `marker` readonly signal of `Marker | null`, plus `setMarker(marker)` and `reset()`. Marker children inject it.
 
@@ -94,7 +100,7 @@ Must be placed inside `<ng-map-marker>`.
 | ------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `ng-marker-content` | `MarkerContentComponent` | `className: string`                                                                                                 | none               | Projects its content into the marker element (`.ng-marker-content` wrapper). Empty content renders the default dot (`.ng-marker-default-icon`), re-evaluated when the content changes (`@if`, empty interpolation) |
 | `ng-marker-popup`   | `MarkerPopupComponent`   | see the table below                                                                                                 | `popupClose: void` | Popup attached to the marker (opens on marker click). Created once; `offset`, `maxWidth`, `closeButton`, `labels` and `className` are reconciled live. Destroying the component does not emit `popupClose`         |
-| `ng-marker-tooltip` | `MarkerTooltipComponent` | `offset: Offset` (default `16`), `anchor: PositionAnchor` (default `undefined`, creation only), `className: string` | none               | Shown on marker hover; `pointer-events: none`                                                                                                                                                                      |
+| `ng-marker-tooltip` | `MarkerTooltipComponent` | `offset: Offset` (default `16`), `anchor: PositionAnchor` (default `undefined`, creation only), `className: string` | none               | Shown on marker hover and keyboard focus (Escape or blur hides it); `pointer-events: none`                                                                                                                         |
 | `ng-marker-label`   | `MarkerLabelComponent`   | `position: 'top' \| 'bottom'` (default `'top'`)                                                                     | none               | CSS label (`.ng-marker-label`), meant to be placed inside `ng-marker-content`                                                                                                                                      |
 
 `className` (on `ng-marker-content`, `ng-marker-popup`, `ng-marker-tooltip`, `ng-map-popup` and `ng-map-controls`) adds space-separated classes to the element the library renders (`.ng-marker-content`, `.ng-popup-card`, `.ng-tooltip-pill`, `.ng-controls`). A `class` on the Angular host never reaches these elements, because their content is portaled into elements MapLibre owns. Changing the value swaps the classes on the live element; the built-in class is kept.
@@ -111,7 +117,7 @@ Must be placed inside `<ng-map-marker>`.
 | `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button                                                                                         |
 | `className`    | `string`             | `undefined` | Classes for `.ng-popup-card`                                                                                                   |
 
-Keyboard and a11y: MapLibre makes a marker with a popup focusable (`tabindex=0`, Enter/Space toggles it). The library also sets `role="button"` and `aria-haspopup="dialog"` on the marker element unless the app already set them. `focusAfterOpen` moves focus into the popup. Escape inside the card closes the popup, calls `stopPropagation()` (a host dialog does not also close) and returns focus to the marker. Give the marker an accessible name through visible text (`ng-marker-label`) or an `aria-label` on your content. Do not put your own `<button>` in `ng-marker-content` next to `ng-marker-popup`: the marker is already a button, so that nests interactive content (axe `nested-interactive`); use non-interactive content or set your own `role` on the marker element.
+Keyboard and a11y: MapLibre makes a marker with a popup focusable (`tabindex=0`, Enter/Space toggles it). The library also sets `role="button"` (through `ng-map-marker`) and `aria-haspopup="dialog"` on the marker element unless the app already set them. `focusAfterOpen` moves focus into the popup. Escape inside the card closes the popup, calls `stopPropagation()` (a host dialog does not also close) and returns focus to the marker. Give the marker an accessible name through visible text (`ng-marker-label`) or an `aria-label` on your content. A `<button>` inside `ng-marker-content` is fine: the marker element then gets no role and the button is the keyboard target (no `nested-interactive`).
 
 ## ng-map-popup
 
@@ -484,6 +490,7 @@ interface MapLabels {
   fullscreen: string; // 'Toggle fullscreen'
   loading: string; // 'Loading map' (loader aria-label)
   closePopup: string; // 'Close popup'
+  marker: string; // 'Map marker' (name of an interactive marker with no text)
 }
 ```
 
