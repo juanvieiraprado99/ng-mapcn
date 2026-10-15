@@ -39,7 +39,7 @@ type MapRasterPaint = NonNullable<RasterLayerSpecification['paint']>;
  * - layer: `raster-layer-<id>`.
  *
  * Provide `tiles` (URL templates) or `url` (a TileJSON). `tiles`/`url` are updated in place
- * (`setTiles`/`setUrl`); `tileSize`, `minzoom`, `maxzoom`, `bounds`, `scheme`, `attribution` and
+ * (`setTiles`/`setUrl`); the mode (`url` vs `tiles`) is fixed at creation, switching later is ignored (change `id` to rebuild); `tileSize`, `minzoom`, `maxzoom`, `bounds`, `scheme`, `attribution` and
  * `beforeId` are applied when the source is created. `opacity`, `visible` and `paint` are
  * reconciled live. After a theme switch the source and layer are re-added.
  */
@@ -171,8 +171,9 @@ export class MapRasterSourceComponent {
       const map = this.ctx.map();
       const source = map?.getSource(this.resolvedId()) as RasterTileSource | undefined;
       if (!source) return;
+      // The mode (url or tiles) is fixed at creation; the other mode is ignored.
       if (url) {
-        if (url === this.appliedUrl) return;
+        if (this.appliedUrl === undefined || url === this.appliedUrl) return;
         source.setUrl(url);
         this.appliedUrl = url;
       } else if (tiles?.length && !this.appliedUrl && !sameTiles(tiles, this.appliedTiles)) {

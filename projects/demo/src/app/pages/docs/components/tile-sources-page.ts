@@ -289,7 +289,9 @@ effect(() => {
           adds the source only. This example reads a single static
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">.pmtiles</code>
           archive (no tile server) and draws it with a small layer component that waits for the
-          source by id. Hover a parcel to highlight it with feature-state.
+          source by id. Hover a parcel to highlight it with feature-state. The same code is the
+          <a class="underline" href="/blocks">pmtiles block</a>; copying it requires
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">npm i pmtiles</code>.
         </span>
         <ng-map [center]="[-74.0046, 40.5811]" [zoom]="11.6">
           <ng-map-vector-source id="parcels" [url]="archiveUrl" promoteId="parcel" />
@@ -301,7 +303,7 @@ effect(() => {
         <p>
           ng-mapcn does not depend on
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">pmtiles</code>.
-          Install it in your app and register the protocol once, before a
+          Run <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">npm i pmtiles</code> in your app (also required to copy the pmtiles block) and register the protocol once, before a
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">pmtiles://</code>
           source is added. The URL is
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">pmtiles://</code>
@@ -318,6 +320,10 @@ effect(() => {
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService</code>
           and waits for the source with
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">hasSource(id)</code>.
+          When a source component is torn down, or a theme switch reloads the style, it removes
+          <strong>every layer still using its source</strong> (yours included) and then the source.
+          Gate on <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">hasSource(id)</code>
+          so your layers are re-added when the source comes back.
         </p>
         <app-code-block [code]="layerCode" />
       </app-docs-section>
@@ -354,7 +360,7 @@ effect(() => {
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">scheme</code>,
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">attribution</code> and
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code> are
-          read when the source is created; change the
+          read when the source is created. The mode (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">url</code> or <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tiles</code>) is fixed at creation too: switching between them later is ignored. Change the
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> to rebuild it
           with new ones.
         </p>

@@ -34,7 +34,8 @@ import {
  * can wait for it; after a theme switch the source is re-added (and announced again).
  *
  * Provide `tiles` (URL templates) or `url` (a TileJSON, or `pmtiles://<archive url>`). `tiles`/`url`
- * are updated in place (`setTiles`/`setUrl`); every other option is applied when the source is
+ * are updated in place (`setTiles`/`setUrl`), but the mode (`url` vs `tiles`) is fixed at creation,
+ * switching later is ignored (change `id` to rebuild); every other option is applied when the source is
  * created.
  *
  * PMTiles needs the protocol registered once, before the map loads (the library does not depend
@@ -45,8 +46,9 @@ import {
  * maplibregl.addProtocol('pmtiles', new Protocol().tile);
  * ```
  *
- * Teardown removes the source only when no layer uses it any more; layers added by other
- * components are removed by those components.
+ * Teardown (destroy, `id` change, or the gate closing for a theme switch) removes every layer still
+ * using the source, including layers added by other components or the app, then the source. A
+ * consumer should gate on `MapContextService.hasSource(id)` and re-add its layers when it reopens.
  */
 @Component({
   selector: 'ng-map-vector-source',
@@ -145,8 +147,9 @@ export class MapVectorSourceComponent {
       const map = this.ctx.map();
       const source = map?.getSource(this.resolvedId()) as VectorTileSource | undefined;
       if (!source) return;
+      // The mode (url or tiles) is fixed at creation; the other mode is ignored.
       if (url) {
-        if (url === this.appliedUrl) return;
+        if (this.appliedUrl === undefined || url === this.appliedUrl) return;
         source.setUrl(url);
         this.appliedUrl = url;
       } else if (tiles?.length && !this.appliedUrl && !sameTiles(tiles, this.appliedTiles)) {

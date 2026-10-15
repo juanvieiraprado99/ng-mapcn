@@ -307,7 +307,7 @@ No outputs. A missing `tiles`/`url` or a duplicate source id is reported through
 
 Class `MapVectorSourceComponent`. A vector tile source (MVT, TileJSON or `pmtiles://`). **Adds the source only**: draw it with layers that reference `source: '<id>'`.
 
-The source id is exactly `id` (auto `ng-vector-source-N`). While it exists on the map it is announced through `MapContextService.hasSource(id)` / `sourceIds()`; during a theme switch it disappears and comes back, so a consumer effect that reads `hasSource(id)` re-adds its layers by itself. On teardown (and on theme switch) the component removes any layer still using the source, then the source.
+The source id is exactly `id` (auto `ng-vector-source-N`). While it exists on the map it is announced through `MapContextService.hasSource(id)` / `sourceIds()`; during a theme switch it disappears and comes back, so a consumer effect that reads `hasSource(id)` re-adds its layers by itself. On teardown (destroy, `id` change, or the gate closing for a theme switch) the component removes **every layer still using the source**, including layers added by other components or the app, then the source. Consumers must gate on `ctx.hasSource(id)` and re-add their layers when it reopens. The mode (`url` vs `tiles`) is fixed at creation: switching later is ignored; change `id` to rebuild.
 
 | Input         | Type                               | Default         | Notes                                                                   |
 | ------------- | ---------------------------------- | --------------- | ----------------------------------------------------------------------- |

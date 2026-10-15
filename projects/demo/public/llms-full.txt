@@ -449,7 +449,7 @@ Raster tile source (XYZ, TMS, WMS) plus the raster layer that draws it. Source a
 
 `ng-map-vector-source`
 
-Vector tile source (MVT, TileJSON or pmtiles://). Adds the source only: draw it with layers that reference it by id and wait for it with MapContextService.hasSource(id). ng-mapcn does not depend on pmtiles; register the protocol yourself with maplibregl.addProtocol. Must be used inside ng-map.
+Vector tile source (MVT, TileJSON or pmtiles://). Adds the source only: draw it with layers that reference it by id and wait for it with MapContextService.hasSource(id). ng-mapcn does not depend on pmtiles; register the protocol yourself with maplibregl.addProtocol. When torn down or the style reloads it removes every layer still using the source, then the source: gate your layers on hasSource(id). tiles vs url mode is fixed at creation. Must be used inside ng-map.
 
 **Inputs**
 

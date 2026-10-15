@@ -139,6 +139,16 @@ describe('MapVectorSourceComponent', () => {
     expect(structuralCalls(map)).toEqual(['addSource:parcels']);
   });
 
+  it('ignores switching from url to tiles after creation (mode is fixed)', async () => {
+    const { fixture, map } = await renderLoaded();
+    const source = map.getSource('parcels');
+
+    update(fixture, { url: undefined, tiles: ['https://b.example.com/{z}/{x}/{y}.mvt'] });
+
+    expect(source.setTiles).not.toHaveBeenCalled();
+    expect(source.setUrl).not.toHaveBeenCalled();
+  });
+
   it('calls setTiles only when the tile URLs change', async () => {
     const tiles = ['https://a.example.com/{z}/{x}/{y}.mvt'];
     const { fixture, map } = await renderLoaded({ url: undefined, tiles });

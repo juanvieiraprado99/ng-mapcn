@@ -1,4 +1,4 @@
-// Needs the `pmtiles` package (demo-only dependency, ng-mapcn does not bundle it): npm i pmtiles
+// REQUIRES `npm i pmtiles` in your app. It is a demo-only dependency: ng-mapcn does not bundle it.
 import {
   afterNextRender,
   ChangeDetectionStrategy,

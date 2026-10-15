@@ -122,31 +122,21 @@ test.describe('tile sources', () => {
     await page.mouse.move(point.x + 1, point.y + 1);
 
     await expect
-      .poll(() =>
-        mapCall(page, PMTILES, (map) => {
-          const [feature] = map.queryRenderedFeatures({ layers: ['parcels-fill'] });
-          return feature
-            ? Object.keys(
+      .poll(
+        () =>
+          mapCall(page, PMTILES, (map) =>
+            map.queryRenderedFeatures({ layers: ['parcels-fill'] }).some(
+              (f) =>
                 map.getFeatureState({
                   source: 'parcels',
                   sourceLayer: 'parcels',
-                  id: feature.id as number,
-                }),
-              ).length
-            : -1;
-        }),
+                  id: f.id as number,
+                })['hover'] === true,
+            ),
+          ),
+        { message: 'a parcel has hover feature-state' },
       )
-      .toBeGreaterThanOrEqual(0);
-    const hovered = await mapCall(page, PMTILES, (map) => {
-      const features = map.queryRenderedFeatures({ layers: ['parcels-fill'] });
-      return features.some(
-        (f) =>
-          map.getFeatureState({ source: 'parcels', sourceLayer: 'parcels', id: f.id as number })[
-            'hover'
-          ] === true,
-      );
-    });
-    expect(hovered).toBe(true);
+      .toBe(true);
   });
 
   test('a theme switch re-adds the sources and the layers that wait for them', async ({ page }) => {

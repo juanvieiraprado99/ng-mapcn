@@ -319,7 +319,7 @@
       "id": "mapvectorsource",
       "title": "MapVectorSource",
       "selector": "ng-map-vector-source",
-      "description": "Vector tile source (MVT, TileJSON or pmtiles://). Adds the source only: draw it with layers that reference it by id and wait for it with MapContextService.hasSource(id). ng-mapcn does not depend on pmtiles; register the protocol yourself with maplibregl.addProtocol. Must be used inside ng-map.",
+      "description": "Vector tile source (MVT, TileJSON or pmtiles://). Adds the source only: draw it with layers that reference it by id and wait for it with MapContextService.hasSource(id). ng-mapcn does not depend on pmtiles; register the protocol yourself with maplibregl.addProtocol. When torn down or the style reloads it removes every layer still using the source, then the source: gate your layers on hasSource(id). tiles vs url mode is fixed at creation. Must be used inside ng-map.",
       "inputs": [
         { "name": "id", "type": "string", "default": "auto", "description": "MapLibre source id, used verbatim; layers reference it as source: id. Announced through MapContextService.hasSource(id) while it exists. Changing it re-creates the source." },
         { "name": "tiles", "type": "string[]", "default": "", "description": "Tile URL templates. Updated in place with setTiles." },
