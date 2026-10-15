@@ -17,7 +17,7 @@ Version: 22.0.0-beta.6 · License: MIT · npm: https://www.npmjs.com/package/ng-
 
 ## Components
 
-Docs pages: [Map](https://ng-mapcn.vercel.app/docs/components/map) · [Controls](https://ng-mapcn.vercel.app/docs/components/controls) · [Markers](https://ng-mapcn.vercel.app/docs/components/markers) · [Popups](https://ng-mapcn.vercel.app/docs/components/popups) · [Routes](https://ng-mapcn.vercel.app/docs/components/routes) · [Arcs](https://ng-mapcn.vercel.app/docs/components/arcs) · [GeoJSON](https://ng-mapcn.vercel.app/docs/components/geojson) · [Clusters](https://ng-mapcn.vercel.app/docs/components/clusters) · [Heatmap](https://ng-mapcn.vercel.app/docs/components/heatmap) · [Advanced](https://ng-mapcn.vercel.app/docs/components/advanced)
+Docs pages: [Map](https://ng-mapcn.vercel.app/docs/components/map) · [Controls](https://ng-mapcn.vercel.app/docs/components/controls) · [Markers](https://ng-mapcn.vercel.app/docs/components/markers) · [Popups](https://ng-mapcn.vercel.app/docs/components/popups) · [Routes](https://ng-mapcn.vercel.app/docs/components/routes) · [Arcs](https://ng-mapcn.vercel.app/docs/components/arcs) · [GeoJSON](https://ng-mapcn.vercel.app/docs/components/geojson) · [Clusters](https://ng-mapcn.vercel.app/docs/components/clusters) · [Heatmap](https://ng-mapcn.vercel.app/docs/components/heatmap) · [Tile Sources](https://ng-mapcn.vercel.app/docs/components/tile-sources) · [Advanced](https://ng-mapcn.vercel.app/docs/components/advanced)
 
 - **Map** (`ng-map`): The root container component that initializes MapLibre GL and provides context to child components. Automatically handles theme switching between light and dark modes.
 - **MapControls** (`ng-map-controls`): Renders map control buttons: zoom, compass, locate, and fullscreen. Must be used inside ng-map.
@@ -34,8 +34,11 @@ Docs pages: [Map](https://ng-mapcn.vercel.app/docs/components/map) · [Controls]
 - **MapGeoJSON** (`ng-map-geojson`): Renders GeoJSON polygons and lines with theme-aware monochrome defaults and declarative feature-state hover. Accepts a URL or an inline GeoJSON object. Generic over the feature properties: MapGeoJSONComponent<P>, with P inferred from data. Must be used inside ng-map.
 - **MapClusterLayer** (`ng-map-cluster-layer`): Renders clustered points with MapLibre GL native clustering. Automatically styles cluster circles by point count, zooms in on cluster click. Generic over the feature properties: MapClusterLayerComponent<P>, with P inferred from data. Must be used inside ng-map.
 - **MapHeatmap** (`ng-map-heatmap`): Renders GeoJSON points as a MapLibre heatmap layer with a theme-aware default gradient. Generic over the feature properties: MapHeatmapComponent<P>, with P inferred from data. Must be used inside ng-map.
+- **MapRasterSource** (`ng-map-raster-source`): Raster tile source (XYZ, TMS, WMS) plus the raster layer that draws it. Source and layer are re-added after a theme switch. Must be used inside ng-map.
+- **MapVectorSource** (`ng-map-vector-source`): Vector tile source (MVT, TileJSON or pmtiles://). Adds the source only: draw it with layers that reference it by id and wait for it with MapContextService.hasSource(id). ng-mapcn does not depend on pmtiles; register the protocol yourself with maplibregl.addProtocol. Must be used inside ng-map.
+- **MapImageOverlay** (`ng-map-image-overlay`): Georeferenced image pinned to four corner coordinates, drawn as a raster layer. Must be used inside ng-map.
 
-Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint`, `blankMapStyle`, `defaultStyles`, `MapStylesConfig`, `provideMapStyles()`, `MAP_DEFAULT_STYLES`, and `MapContextService` (map / isLoaded / resolvedTheme signals, the equivalent of mapcn's `useMap()`).
+Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint`, `blankMapStyle`, `defaultStyles`, `MapStylesConfig`, `provideMapStyles()`, `MAP_DEFAULT_STYLES`, and `MapContextService` (map / isLoaded / resolvedTheme signals and the `hasSource(id)` source registry, the equivalent of mapcn's `useMap()`).
 
 ## Installation
 
@@ -105,7 +108,7 @@ Without a `theme` input, the map watches the `dark`/`light` class on `document.d
 ## Key Features
 
 - **MapLibre GL JS v6** under the hood — no API keys required (Carto basemaps)
-- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters and heatmaps are children of `<ng-map>`
+- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, tile sources and image overlays are children of `<ng-map>`
 - **Signals-first** — standalone components, `input()`/`output()`, `effect()`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
 - **SSR-safe** — the map is created in `afterNextRender`; nothing touches `document` on the server

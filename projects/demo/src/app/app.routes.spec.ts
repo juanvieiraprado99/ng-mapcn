@@ -22,6 +22,7 @@ const PAGES: [url: string, h1: string, title: string][] = [
   ['/docs/components/geojson', 'GeoJSON', 'Angular GeoJSON Layers - ng-mapcn'],
   ['/docs/components/clusters', 'Clusters', 'Angular Map Clusters - ng-mapcn'],
   ['/docs/components/heatmap', 'Heatmap', 'Angular Map Heatmap - ng-mapcn'],
+  ['/docs/components/tile-sources', 'Tile Sources', 'Angular Map Tile Sources - ng-mapcn'],
   ['/docs/components/advanced', 'Advanced', 'Advanced Angular Map Usage - ng-mapcn'],
   ['/blocks', 'Blocks', 'Angular Map Blocks and Templates - ng-mapcn'],
   ['/credits', 'Credits', 'Credits - ng-mapcn'],

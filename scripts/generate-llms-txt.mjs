@@ -93,7 +93,7 @@ Without a \`theme\` input, the map watches the \`dark\`/\`light\` class on \`doc
 const FEATURES = `## Key Features
 
 - **MapLibre GL JS v6** under the hood — no API keys required (Carto basemaps)
-- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters and heatmaps are children of \`<ng-map>\`
+- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, tile sources and image overlays are children of \`<ng-map>\`
 - **Signals-first** — standalone components, \`input()\`/\`output()\`, \`effect()\`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
 - **SSR-safe** — the map is created in \`afterNextRender\`; nothing touches \`document\` on the server
@@ -130,6 +130,7 @@ const DOCS_COMPONENT_PAGES = [
   { label: 'GeoJSON', slug: 'geojson' },
   { label: 'Clusters', slug: 'clusters' },
   { label: 'Heatmap', slug: 'heatmap' },
+  { label: 'Tile Sources', slug: 'tile-sources' },
   { label: 'Advanced', slug: 'advanced' },
 ];
 
@@ -158,7 +159,7 @@ Docs pages: ${DOCS_COMPONENT_PAGES.map((p) => `[${p.label}](${SITE_URL}/docs/com
 
 ${componentList}
 
-Utilities: \`MapViewport\`, \`getViewport\`, \`buildArcCoordinates\`, \`mergeHoverPaint\`, \`blankMapStyle\`, \`defaultStyles\`, \`MapStylesConfig\`, \`provideMapStyles()\`, \`MAP_DEFAULT_STYLES\`, and \`MapContextService\` (map / isLoaded / resolvedTheme signals, the equivalent of mapcn's \`useMap()\`).
+Utilities: \`MapViewport\`, \`getViewport\`, \`buildArcCoordinates\`, \`mergeHoverPaint\`, \`blankMapStyle\`, \`defaultStyles\`, \`MapStylesConfig\`, \`provideMapStyles()\`, \`MAP_DEFAULT_STYLES\`, and \`MapContextService\` (map / isLoaded / resolvedTheme signals and the \`hasSource(id)\` source registry, the equivalent of mapcn's \`useMap()\`).
 
 ${INSTALLATION}
 
