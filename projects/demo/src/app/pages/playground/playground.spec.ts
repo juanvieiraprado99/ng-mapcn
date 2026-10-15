@@ -10,6 +10,37 @@ describe('playground page', () => {
     document.documentElement.className = '';
   });
 
+  /** Opens a zard select by its host id and clicks the option with that label. */
+  const pick = (
+    harness: { detectChanges(): void },
+    root: HTMLElement,
+    id: string,
+    label: string,
+  ) => {
+    root.querySelector<HTMLButtonElement>(`#${id} button[role="combobox"]`)!.click();
+    harness.detectChanges();
+    const option = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+      (item) => item.textContent?.trim() === label,
+    )!;
+    option.click();
+    harness.detectChanges();
+  };
+
+  /** One keyboard step per press on the zard slider thumb. */
+  const press = (
+    harness: { detectChanges(): void },
+    root: HTMLElement,
+    id: string,
+    key: string,
+    times: number,
+  ) => {
+    const thumb = root.querySelector<HTMLElement>(`#${id} [data-slot="slider-thumb"]`)!;
+    for (let i = 0; i < times; i++) {
+      thumb.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    }
+    harness.detectChanges();
+  };
+
   const snippet = (root: HTMLElement) =>
     root.querySelector('#snippet app-code-block')?.textContent ?? '';
 
@@ -18,24 +49,18 @@ describe('playground page', () => {
     const root = harness.fixture.nativeElement as HTMLElement;
 
     // Route is the default component: its controls are labelled and the snippet is live.
-    const width = root.querySelector<HTMLInputElement>('#pg-route-width')!;
-    expect(width).not.toBeNull();
-    expect(root.querySelector('label[for="pg-route-width"]')).not.toBeNull();
+    expect(root.querySelector('#pg-route-width')).not.toBeNull();
+    expect(
+      root.querySelector('#pg-route-width [data-slot="slider-thumb"]')?.getAttribute('aria-label'),
+    ).toBe('Width');
     expect(snippet(root)).toContain('<ng-map-route');
     expect(snippet(root)).not.toContain('[width]');
 
-    width.value = '9';
-    width.dispatchEvent(new Event('input', { bubbles: true }));
-    harness.detectChanges();
+    press(harness, root, 'pg-route-width', 'ArrowRight', 6);
     expect(snippet(root)).toContain('[width]="9"');
 
     // The basemap select applies a gallery preset to the map snippet.
-    const basemap = root.querySelector<HTMLSelectElement>('#pg-map-presetId')!;
-    basemap.value = String(
-      [...basemap.options].findIndex((option) => option.textContent?.includes('Blank')),
-    );
-    basemap.dispatchEvent(new Event('change', { bubbles: true }));
-    harness.detectChanges();
+    pick(harness, root, 'pg-map-presetId', 'Blank');
     expect(snippet(root)).toContain('[blank]="true"');
     expect(errors).toEqual([]);
   });
@@ -67,7 +92,7 @@ describe('playground page', () => {
 
     expect(snippet(root)).toContain(`[projection]="{ type: 'globe' }"`);
     expect(
-      root.querySelector<HTMLSelectElement>('#pg-map-projection')!.selectedOptions[0].text,
+      root.querySelector('#pg-map-projection button[role="combobox"]')?.textContent?.trim(),
     ).toBe('Globe');
   });
 
@@ -111,7 +136,7 @@ describe('playground page', () => {
     const root = harness.fixture.nativeElement as HTMLElement;
 
     const width = root.querySelector('#pg-route-width')!;
-    expect(root.querySelector('label[for="pg-route-width"]')?.textContent?.trim()).toBe('Width');
+    expect(root.querySelector('#pg-route-width-label')?.textContent?.trim()).toBe('Width');
     expect(root.querySelector('output[for="pg-route-width"]')).not.toBeNull();
     const interactive = root.querySelector('#pg-route-interactive')!;
     const hint = root.querySelector('#' + interactive.getAttribute('aria-describedby'));
@@ -123,12 +148,7 @@ describe('playground page', () => {
     const { harness, errors } = await renderRoute('/playground');
     const root = harness.fixture.nativeElement as HTMLElement;
 
-    const basemap = root.querySelector<HTMLSelectElement>('#pg-map-presetId')!;
-    basemap.value = String(
-      [...basemap.options].findIndex((option) => option.textContent?.includes('OpenStreetMap')),
-    );
-    basemap.dispatchEvent(new Event('change', { bubbles: true }));
-    harness.detectChanges();
+    pick(harness, root, 'pg-map-presetId', 'OpenStreetMap');
 
     expect(snippet(root)).toContain('[styles]="styles"');
     expect(root.querySelector('button[aria-label^="Apply OpenStreetMap"]')).not.toBeNull();

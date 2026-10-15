@@ -1,4 +1,10 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+
+import { ZardCheckboxComponent } from '@/shared/components/checkbox';
+import { ZardInputComponent } from '@/shared/components/input';
+import { ZardSelectImports } from '@/shared/components/select/select.imports';
+import { ZardSliderComponent } from '@/shared/components/slider/slider.component';
 
 import type { Control, Values } from './playground-schema';
 
@@ -7,16 +13,32 @@ export interface ControlChange {
   value: unknown;
 }
 
-const INPUT =
-  'border-input bg-background text-foreground focus-visible:ring-ring/50 h-9 w-full rounded-md border px-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]';
+/** The zard slider works on 0-100: a range control maps its own min/max/step onto that scale. */
+export function toSlider(value: number, min: number, max: number): number {
+  return max === min ? 0 : ((value - min) / (max - min)) * 100;
+}
+
+export function fromSlider(percent: number, min: number, max: number, step: number): number {
+  const raw = min + (percent / 100) * (max - min);
+  const snapped = min + Math.round((raw - min) / step) * step;
+  const decimals = (String(step).split('.')[1] ?? '').length;
+  return +Math.min(max, Math.max(min, snapped)).toFixed(decimals);
+}
 
 /**
- * Renders a `Control[]` schema as form fields (select, range, switch, color, text, JSON).
- * Every field is a native, labelled element, so it is keyboard operable and axe clean.
+ * Renders a `Control[]` schema as form fields: zard ui checkbox, slider, select and input, a
+ * native color input and a JSON textarea. Every field is labelled and keyboard operable.
  */
 @Component({
   selector: 'app-playground-controls',
   standalone: true,
+  imports: [
+    FormsModule,
+    ZardCheckboxComponent,
+    ZardInputComponent,
+    ZardSelectImports,
+    ZardSliderComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -27,50 +49,44 @@ const INPUT =
         <div class="grid gap-1.5">
           @switch (control.kind) {
             @case ('boolean') {
-              <label class="flex items-center gap-2 text-sm font-medium" [attr.for]="id">
-                <input
-                  type="checkbox"
-                  class="size-4"
-                  [id]="id"
-                  [checked]="value === true"
-                  [attr.aria-describedby]="describedBy(control, id)"
-                  (change)="emit(control.key, $any($event.target).checked)"
-                />
+              <z-checkbox
+                [zId]="id"
+                [zDescribedBy]="describedBy(control, id) ?? ''"
+                [ngModel]="value === true"
+                (checkChange)="emit(control.key, $event)"
+              >
                 {{ control.label }}
-              </label>
+              </z-checkbox>
             }
             @case ('range') {
               <div class="flex items-center justify-between">
-                <label class="text-sm font-medium" [attr.for]="id">{{ control.label }}</label>
+                <span class="text-sm font-medium" [id]="id + '-label'">{{ control.label }}</span>
                 <output class="text-muted-foreground font-mono text-xs" [attr.for]="id">{{
                   value
                 }}</output>
               </div>
-              <input
-                type="range"
+              <z-slider
                 [id]="id"
+                [zAriaLabel]="control.label"
+                [zValueText]="[String(value)]"
                 [attr.aria-describedby]="describedBy(control, id)"
-                [attr.min]="control.min"
-                [attr.max]="control.max"
-                [attr.step]="control.step"
-                [value]="value"
-                (input)="emit(control.key, +$any($event.target).value)"
+                [zStep]="(control.step / (control.max - control.min)) * 100"
+                [ngModel]="[toPercent(control, value)]"
+                (ngModelChange)="emitRange(control, $event[0])"
               />
             }
             @case ('select') {
-              <label class="text-sm font-medium" [attr.for]="id">{{ control.label }}</label>
-              <select
+              <span class="text-sm font-medium" [id]="id + '-label'">{{ control.label }}</span>
+              <z-select
                 [id]="id"
                 [attr.aria-describedby]="describedBy(control, id)"
-                class="${INPUT}"
-                (change)="emit(control.key, control.options[+$any($event.target).value].value)"
+                [zValue]="'' + optionIndex(control, value)"
+                (zSelectionChange)="emit(control.key, control.options[+$any($event)].value)"
               >
                 @for (option of control.options; track $index) {
-                  <option [value]="$index" [selected]="optionIndex(control, value) === $index">
-                    {{ option.label }}
-                  </option>
+                  <z-select-item [zValue]="'' + $index">{{ option.label }}</z-select-item>
                 }
-              </select>
+              </z-select>
             }
             @case ('color') {
               <div class="flex items-center justify-between">
@@ -91,11 +107,11 @@ const INPUT =
             @case ('text') {
               <label class="text-sm font-medium" [attr.for]="id">{{ control.label }}</label>
               <input
+                z-input
                 type="text"
                 [id]="id"
                 [attr.aria-describedby]="describedBy(control, id)"
-                class="${INPUT}"
-                [value]="value"
+                [value]="$any(value)"
                 (input)="emit(control.key, $any($event.target).value)"
               />
             }
@@ -136,6 +152,17 @@ export class PlaygroundControlsComponent {
 
   private readonly drafts = signal<Record<string, string>>({});
   protected readonly errors = signal<Record<string, string>>({});
+
+  protected readonly String = String;
+
+  protected toPercent(control: Control, value: unknown): number {
+    return control.kind === 'range' ? toSlider(Number(value), control.min, control.max) : 0;
+  }
+
+  protected emitRange(control: Control, percent: number): void {
+    if (control.kind !== 'range') return;
+    this.emit(control.key, fromSlider(percent, control.min, control.max, control.step));
+  }
 
   protected emit(key: string, value: unknown): void {
     this.valueChange.emit({ key, value });

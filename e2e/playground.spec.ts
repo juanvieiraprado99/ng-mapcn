@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 import { expect, test } from './fixtures';
 import { gotoAndWaitForMap, layerIds, mapCall } from './map-helpers';
@@ -7,12 +7,18 @@ const PLAYGROUND = 0;
 
 const snippet = (page: Page) => page.locator('#snippet app-code-block');
 
-async function setRange(input: Locator, value: string) {
-  await input.evaluate((el, v) => {
-    const range = el as HTMLInputElement;
-    range.value = v;
-    range.dispatchEvent(new Event('input', { bubbles: true }));
-  }, value);
+/** Drives the zard slider by keyboard: Home, then one ArrowRight per step up to `value`. */
+async function setSlider(
+  page: Page,
+  id: string,
+  { min, step, value }: { min: number; step: number; value: number },
+) {
+  const thumb = page.locator(`${id} [data-slot="slider-thumb"]`);
+  await thumb.focus();
+  await page.keyboard.press('Home');
+  for (let i = 0; i < Math.round((value - min) / step); i++) {
+    await page.keyboard.press('ArrowRight');
+  }
 }
 
 test.describe('playground', () => {
@@ -24,7 +30,7 @@ test.describe('playground', () => {
     await expect(snippet(page)).toContainText('<ng-map-route');
     await expect(snippet(page)).not.toContainText('[width]');
 
-    await setRange(page.locator('#pg-route-width'), '9');
+    await setSlider(page, '#pg-route-width', { min: 1, step: 1, value: 9 });
 
     await expect(snippet(page)).toContainText('[width]="9"');
     await expect
@@ -75,7 +81,8 @@ test.describe('playground', () => {
     await expect(page.locator('.maplibregl-marker .ng-marker-default-icon')).toBeVisible();
     await expect(snippet(page)).toContainText('<ng-marker-content />');
 
-    await page.locator('#pg-marker-anchor').selectOption({ label: 'top' });
+    await page.locator('#pg-marker-anchor button').click();
+    await page.getByRole('option', { name: 'top', exact: true }).click();
     await expect(snippet(page)).toContainText('anchor="top"');
     await expect(page.locator('.maplibregl-marker')).toHaveCount(1);
     await expect(page.locator('.maplibregl-marker')).toHaveClass(/maplibregl-marker-anchor-top/);
@@ -93,7 +100,7 @@ test.describe('playground', () => {
     await expect(snippet(page)).toContainText('[zoom]="6.5"');
     await expect(snippet(page)).toContainText('[center]="[10, 20]"');
 
-    await setRange(page.locator('#pg-map-bearing'), '40');
+    await setSlider(page, '#pg-map-bearing', { min: -180, step: 10, value: 40 });
     await expect
       .poll(() => mapCall(page, PLAYGROUND, (map) => Math.round(map.getBearing())))
       .toBe(40);
