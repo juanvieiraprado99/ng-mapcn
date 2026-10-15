@@ -13,8 +13,10 @@ export function createPopupCloseButton(popup: Popup, label: string): HTMLButtonE
 
 /**
  * Escape inside the popup card closes the popup (MapLibre only closes it on map clicks, which
- * leaves keyboard users without a way out). `onClosed` runs after the close and receives whether focus was inside the card, e.g. to hand
- * focus back to the element that opened it. The listener lives on `container`, so it goes away with it.
+ * leaves keyboard users without a way out). The event is stopped so a host dialog does not also
+ * close. `onClosed` runs after the close and receives whether focus was inside the card, e.g. to
+ * hand focus back to the element that opened it. The listener lives on `container`, so it goes
+ * away with it.
  */
 export function closePopupOnEscape(
   popup: Popup,

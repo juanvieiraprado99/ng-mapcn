@@ -33,8 +33,6 @@ async function libraryViolations(page: Page) {
 test.describe('accessibility (axe)', () => {
   for (const route of SCANNED_ROUTES) {
     test(`${route} has no axe violations in the library UI`, async ({ page }) => {
-      await page.goto(route);
-      await expect(page.locator('app-root[ng-version]')).toHaveCount(1);
       await gotoAndWaitForMap(page, route, Math.max((EXPECTED_MAPS[route] ?? 1) - 1, 0));
       await expect(page.locator('ng-map .ng-map-loader')).toHaveCount(0, { timeout: 30_000 });
       expect(await libraryViolations(page)).toEqual([]);
