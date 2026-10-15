@@ -1,7 +1,16 @@
 import { NgComponentOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, linkedSignal, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MapComponent } from 'ng-mapcn';
+import type { MarkerOptions } from 'maplibre-gl';
+import { MapComponent, type MapViewport } from 'ng-mapcn';
 
 import { FooterComponent } from '@/layout/footer';
 import { CodeBlockComponent } from '@/shared/code-block';
@@ -10,6 +19,7 @@ import { PageHeaderImports } from '@/shared/page-header';
 import apiData from '../docs/api-reference.data.json';
 import { PLAYGROUND_COMPONENTS } from './playground-components';
 import { type ControlChange, PlaygroundControlsComponent } from './playground-controls';
+import { PlaygroundMarkerComponent } from './playground-marker';
 import {
   buildSnippet,
   controlDefaults,
@@ -52,7 +62,9 @@ function describeControls(spec: PlaygroundSpec): PlaygroundSpec {
     controls: spec.controls.map((control) => {
       const name = control.into?.input ?? control.key;
       const description = section.inputs.find((input) => input.name === name)?.description;
-      return control.description || !description ? control : { ...control, description };
+      // Grouped controls share one object input, whose description would not fit each of them.
+      if (control.description || control.into || !description) return control;
+      return { ...control, description };
     }),
   };
 }
@@ -72,6 +84,7 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
     FooterComponent,
     PageHeaderImports,
     PlaygroundControlsComponent,
+    PlaygroundMarkerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -117,8 +130,18 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
                 [theme]="mapProps().theme"
                 [projection]="mapProps().projection"
                 [viewport]="viewport()"
+                (viewportChange)="onViewport($event)"
               >
-                @if (layerComponent(); as layer) {
+                @if (markerProps(); as marker) {
+                  <app-playground-marker
+                    [longitude]="marker.longitude"
+                    [latitude]="marker.latitude"
+                    [draggable]="marker.draggable"
+                    [rotation]="marker.rotation"
+                    [anchor]="marker.anchor"
+                    (moved)="onMarkerMoved($event)"
+                  />
+                } @else if (layerComponent(); as layer) {
                   <ng-container *ngComponentOutlet="layer; inputs: layerInputs()" />
                 }
               </ng-map>
@@ -233,6 +256,12 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
   `,
 })
 export class PlaygroundComponent {
+  private viewportTimer: ReturnType<typeof setTimeout> | undefined;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.viewportTimer));
+  }
+
   protected readonly specs = PLAYGROUND_SPECS;
   protected readonly presets = STYLE_PRESETS;
   protected readonly mapControls = MAP_CONTROLS;
@@ -270,13 +299,39 @@ export class PlaygroundComponent {
     },
   });
 
-  protected readonly mapValues = computed<Values>(() => ({ ...this.mapState() }));
+  /** The sliders show a readable camera; the state itself keeps the exact values. */
+  protected readonly mapValues = computed<Values>(() => {
+    const { zoom, pitch, bearing, ...rest } = this.mapState();
+    return {
+      ...rest,
+      zoom: +zoom.toFixed(2),
+      pitch: Math.round(pitch),
+      bearing: Math.round(bearing),
+    };
+  });
   protected readonly mapProps = computed(() => mapInputs(this.mapState(), this.view()));
   /** Only changes when the camera fields do, so unrelated edits never re-jump the map. */
   protected readonly viewport = computed(() => this.mapProps().viewport, {
-    equal: (a, b) => a.zoom === b.zoom && a.pitch === b.pitch && a.bearing === b.bearing,
+    equal: (a, b) =>
+      a.zoom === b.zoom &&
+      a.pitch === b.pitch &&
+      a.bearing === b.bearing &&
+      a.center?.[0] === b.center?.[0] &&
+      a.center?.[1] === b.center?.[1],
   });
 
+  /** The marker is rendered by its wrapper (anchor re-create and `dragEnd`), not the outlet. */
+  protected readonly markerProps = computed(() => {
+    if (this.spec().id !== 'marker') return null;
+    const values = this.values();
+    return {
+      longitude: Number(values['longitude']),
+      latitude: Number(values['latitude']),
+      draggable: values['draggable'] === true,
+      rotation: Number(values['rotation']),
+      anchor: values['anchor'] as MarkerOptions['anchor'],
+    };
+  });
   protected readonly layerComponent = computed(() => {
     const className = this.spec().className;
     return className ? (PLAYGROUND_COMPONENTS[className] ?? null) : null;
@@ -295,6 +350,34 @@ export class PlaygroundComponent {
 
   protected onLayerChange({ key, value }: ControlChange): void {
     this.values.update((values) => ({ ...values, [key]: value }));
+  }
+
+  protected onMarkerMoved({ lng, lat }: { lng: number; lat: number }): void {
+    this.values.update((values) => ({
+      ...values,
+      longitude: +lng.toFixed(4),
+      latitude: +lat.toFixed(4),
+    }));
+  }
+
+  /**
+   * The user panned, zoomed or rotated: mirror the camera into the sliders and the snippet.
+   * Debounced, since the map reports every frame. The controlled viewport then matches the live
+   * camera, so the next slider change moves only the field it edits.
+   */
+  protected onViewport(viewport: MapViewport): void {
+    clearTimeout(this.viewportTimer);
+    const specId = this.spec().id;
+    this.viewportTimer = setTimeout(() => {
+      if (this.spec().id !== specId) return;
+      this.mapState.update((state) => ({
+        ...state,
+        center: viewport.center,
+        zoom: viewport.zoom,
+        pitch: viewport.pitch,
+        bearing: viewport.bearing,
+      }));
+    }, 100);
   }
 
   protected onMapChange({ key, value }: ControlChange): void {

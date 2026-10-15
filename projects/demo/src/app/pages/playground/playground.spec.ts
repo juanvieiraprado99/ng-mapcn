@@ -92,4 +92,30 @@ describe('playground page', () => {
     expect(snippet(root)).not.toContain('undefined');
     expect(errors).toEqual([]);
   });
+
+  it('renders the marker with its content and follows a drag', async () => {
+    const { harness, errors } = await renderRoute('/playground');
+    const root = harness.fixture.nativeElement as HTMLElement;
+    [...root.querySelectorAll('button')]
+      .find((button) => button.textContent?.trim() === 'Marker')!
+      .click();
+    harness.detectChanges();
+
+    expect(snippet(root)).toContain('<ng-marker-content />');
+    expect(root.querySelector('app-playground-marker')).not.toBeNull();
+    expect(errors).toEqual([]);
+  });
+
+  it('links hints and readouts to their fields', async () => {
+    const { harness } = await renderRoute('/playground');
+    const root = harness.fixture.nativeElement as HTMLElement;
+
+    const width = root.querySelector('#pg-route-width')!;
+    expect(root.querySelector('label[for="pg-route-width"]')?.textContent?.trim()).toBe('Width');
+    expect(root.querySelector('output[for="pg-route-width"]')).not.toBeNull();
+    const interactive = root.querySelector('#pg-route-interactive')!;
+    const hint = root.querySelector('#' + interactive.getAttribute('aria-describedby'));
+    expect(hint?.textContent).toContain('Pointer cursor');
+    expect(width.getAttribute('aria-describedby')).not.toBeNull();
+  });
 });

@@ -133,6 +133,7 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
     description: 'A DOM marker at a coordinate. Drag it when draggable is on.',
     selector: 'ng-map-marker',
     className: 'MapMarkerComponent',
+    content: { template: '<ng-marker-content />', imports: ['MarkerContentComponent'] },
     controls: [
       {
         kind: 'range',
@@ -168,6 +169,7 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
         kind: 'select',
         key: 'anchor',
         label: 'Anchor',
+        description: 'Applied when the marker is created (the playground re-creates it).',
         default: undefined,
         options: [
           OFF,
@@ -212,7 +214,13 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
           { value: [6, 3], label: 'Dashed [6, 3]' },
         ],
       },
-      { kind: 'boolean', key: 'interactive', label: 'Interactive', default: true },
+      {
+        kind: 'boolean',
+        key: 'interactive',
+        label: 'Interactive',
+        description: 'Pointer cursor and click/hover outputs (not shown here).',
+        default: true,
+      },
     ],
     fixed: [
       {
@@ -235,6 +243,8 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
         kind: 'color',
         key: 'fillColor',
         label: 'Fill color',
+        description: 'The library default follows the theme (#d4d4d4 light, #404040 dark).',
+        always: true,
         default: '#d4d4d4',
         into: { input: 'fillPaint', prop: 'fill-color' },
       },
@@ -252,6 +262,8 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
         kind: 'color',
         key: 'lineColor',
         label: 'Outline color',
+        description: 'The library default follows the theme (#ffffff light, #171717 dark).',
+        always: true,
         default: '#ffffff',
         into: { input: 'linePaint', prop: 'line-color' },
       },
@@ -269,10 +281,17 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
         kind: 'color',
         key: 'hoverColor',
         label: 'Hover color',
+        description: 'Fill color while a polygon is hovered (needs Interactive).',
+        always: true,
         default: '#a3a3a3',
         into: { input: 'fillHoverPaint', prop: 'fill-color' },
       },
-      { kind: 'boolean', key: 'interactive', label: 'Interactive (enables hover)', default: false },
+      {
+        kind: 'boolean',
+        key: 'interactive',
+        label: 'Interactive (cursor and hover)',
+        default: false,
+      },
     ],
     fixed: [
       {
@@ -327,7 +346,13 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
         default: 0.85,
         into: { input: 'paint', prop: 'line-opacity' },
       },
-      { kind: 'boolean', key: 'interactive', label: 'Interactive', default: true },
+      {
+        kind: 'boolean',
+        key: 'interactive',
+        label: 'Interactive',
+        description: 'Pointer cursor and click/hover outputs (not shown here).',
+        default: true,
+      },
     ],
     fixed: [
       {

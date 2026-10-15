@@ -129,3 +129,33 @@ describe('updateMapState', () => {
     expect(Object.keys(initialMapState(2))).toEqual(expect.arrayContaining(keys));
   });
 });
+
+describe('camera follows the map', () => {
+  it('prints the live camera rounded in the snippet and passes it to the viewport', () => {
+    const state = {
+      ...initialMapState(3),
+      center: [10.123456, 20.987654] as [number, number],
+      zoom: 5.23456,
+      pitch: 37.4,
+      bearing: -12.6,
+    };
+    const { template } = buildSnippet(MAP_ONLY, {}, mapSnippetInput(state, VIEW));
+
+    expect(template).toContain('[center]="[10.1235, 20.9877]"');
+    expect(template).toContain('[zoom]="5.23"');
+    expect(template).toContain('[options]="{ pitch: 37, bearing: -13 }"');
+    expect(mapInputs(state, VIEW).viewport).toEqual({
+      center: [10.123456, 20.987654],
+      zoom: 5.23456,
+      pitch: 37.4,
+      bearing: -12.6,
+    });
+  });
+
+  it('keeps the spec center until the user moves the map', () => {
+    expect(mapInputs(initialMapState(3), VIEW).viewport).not.toHaveProperty('center');
+    expect(
+      buildSnippet(MAP_ONLY, {}, mapSnippetInput(initialMapState(3), VIEW)).template,
+    ).toContain('[center]="[2.35, 48.85]"');
+  });
+});

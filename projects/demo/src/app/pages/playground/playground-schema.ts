@@ -20,7 +20,11 @@ interface BaseControl {
    * flat control can drive a nested value.
    */
   into?: { input: string; prop: string };
-  /** Always in the snippet, even at the default (required inputs of the component). */
+  /**
+   * Always passed to the component and always in the snippet, even at the default (required
+   * inputs, or values whose real default depends on something the control cannot know, such as
+   * the theme).
+   */
   always?: boolean;
 }
 
@@ -57,6 +61,8 @@ export interface PlaygroundSpec {
   attrs?: Record<string, string>;
   controls: Control[];
   fixed: FixedInput[];
+  /** Content projected into the layer element (e.g. the marker's `<ng-marker-content />`). */
+  content?: { template: string; imports: string[] };
   /** Initial view that frames the component's data. */
   view: { center: [number, number]; zoom: number; pitch?: number; bearing?: number };
 }
@@ -112,7 +118,7 @@ function groupInto(controls: readonly Control[], values: Values, onlyChanged: bo
   for (const control of controls) {
     if (!control.into) continue;
     const value = values[control.key];
-    if (onlyChanged && same(value, control.default)) continue;
+    if (onlyChanged && !control.always && same(value, control.default)) continue;
     const bag = grouped.get(control.into.input) ?? {};
     bag[control.into.prop] = value;
     grouped.set(control.into.input, bag);
@@ -177,13 +183,24 @@ export function buildSnippet(
     for (const [input, bag] of groupInto(spec.controls, values, true)) {
       attrs.push(renderAttr({ name: input, value: bag }));
     }
-    const layer = renderElement(spec.selector, attrs, '  ', true);
+    const { content } = spec;
+    const layer = content
+      ? [
+          renderElement(spec.selector, attrs, '  ', false),
+          `    ${content.template}`,
+          `  </${spec.selector}>`,
+        ].join('\n')
+      : renderElement(spec.selector, attrs, '  ', true);
     template = `${renderElement('ng-map', mapAttrs, '', false)}\n  ${layer}\n</ng-map>`;
   } else {
     template = renderElement('ng-map', mapAttrs, '', true);
   }
 
-  const imports = ['MapComponent', ...(layerClass ? [layerClass] : [])];
+  const imports = [
+    'MapComponent',
+    ...(layerClass ? [layerClass] : []),
+    ...(layerClass ? (spec.content?.imports ?? []) : []),
+  ];
   const libImports = [...imports, ...(map.imports ?? [])];
   const members = [...spec.fixed.map((f) => f.ts), ...(map.ts ?? [])];
   const indented = escapeLiteral(template)

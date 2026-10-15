@@ -33,21 +33,23 @@ const INPUT =
                   class="size-4"
                   [id]="id"
                   [checked]="value === true"
+                  [attr.aria-describedby]="describedBy(control, id)"
                   (change)="emit(control.key, $any($event.target).checked)"
                 />
                 {{ control.label }}
               </label>
             }
             @case ('range') {
-              <label class="flex items-center justify-between text-sm font-medium" [attr.for]="id">
-                <span>{{ control.label }}</span>
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium" [attr.for]="id">{{ control.label }}</label>
                 <output class="text-muted-foreground font-mono text-xs" [attr.for]="id">{{
                   value
                 }}</output>
-              </label>
+              </div>
               <input
                 type="range"
                 [id]="id"
+                [attr.aria-describedby]="describedBy(control, id)"
                 [attr.min]="control.min"
                 [attr.max]="control.max"
                 [attr.step]="control.step"
@@ -59,6 +61,7 @@ const INPUT =
               <label class="text-sm font-medium" [attr.for]="id">{{ control.label }}</label>
               <select
                 [id]="id"
+                [attr.aria-describedby]="describedBy(control, id)"
                 class="${INPUT}"
                 (change)="emit(control.key, control.options[+$any($event.target).value].value)"
               >
@@ -70,15 +73,16 @@ const INPUT =
               </select>
             }
             @case ('color') {
-              <label class="flex items-center justify-between text-sm font-medium" [attr.for]="id">
-                <span>{{ control.label }}</span>
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium" [attr.for]="id">{{ control.label }}</label>
                 <output class="text-muted-foreground font-mono text-xs" [attr.for]="id">{{
                   value
                 }}</output>
-              </label>
+              </div>
               <input
                 type="color"
                 [id]="id"
+                [attr.aria-describedby]="describedBy(control, id)"
                 class="border-input h-9 w-full cursor-pointer rounded-md border p-1"
                 [value]="value"
                 (input)="emit(control.key, $any($event.target).value)"
@@ -89,6 +93,7 @@ const INPUT =
               <input
                 type="text"
                 [id]="id"
+                [attr.aria-describedby]="describedBy(control, id)"
                 class="${INPUT}"
                 [value]="value"
                 (input)="emit(control.key, $any($event.target).value)"
@@ -102,7 +107,7 @@ const INPUT =
                 spellcheck="false"
                 class="border-input bg-background text-foreground focus-visible:ring-ring/50 w-full rounded-md border px-2 py-1.5 font-mono text-xs shadow-xs outline-none focus-visible:ring-[3px]"
                 [attr.aria-invalid]="errors()[control.key] ? 'true' : null"
-                [attr.aria-describedby]="errors()[control.key] ? id + '-error' : null"
+                [attr.aria-describedby]="describedBy(control, id)"
                 [value]="draftOf(control.key, value)"
                 (input)="editJson(control, $any($event.target))"
               ></textarea>
@@ -114,7 +119,7 @@ const INPUT =
             }
           }
           @if (control.description; as hint) {
-            <p class="text-muted-foreground text-xs">{{ hint }}</p>
+            <p class="text-muted-foreground text-xs" [id]="id + '-hint'">{{ hint }}</p>
           }
         </div>
       }
@@ -134,6 +139,15 @@ export class PlaygroundControlsComponent {
 
   protected emit(key: string, value: unknown): void {
     this.valueChange.emit({ key, value });
+  }
+
+  /** Hint and (for JSON) error ids that describe the field. */
+  protected describedBy(control: Control, id: string): string | null {
+    const ids = [
+      ...(control.description ? [`${id}-hint`] : []),
+      ...(this.errors()[control.key] ? [`${id}-error`] : []),
+    ];
+    return ids.length ? ids.join(' ') : null;
   }
 
   protected optionIndex(control: Control, value: unknown): number {

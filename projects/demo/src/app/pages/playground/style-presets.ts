@@ -81,6 +81,8 @@ export interface MapState {
   pitch: number;
   bearing: number;
   zoom: number;
+  /** Set once the user moves the map; until then the spec's initial center applies. */
+  center?: [number, number];
 }
 
 export function initialMapState(zoom: number, pitch = 0, bearing = 0): MapState {
@@ -122,7 +124,12 @@ export function mapInputs(state: MapState, view: MapView) {
     styles: preset.styles,
     blank: !!preset.blank,
     projection: state.projection === 'globe' ? ({ type: 'globe' } as const) : undefined,
-    viewport: { zoom: state.zoom, pitch: state.pitch, bearing: state.bearing },
+    viewport: {
+      ...(state.center && { center: state.center }),
+      zoom: state.zoom,
+      pitch: state.pitch,
+      bearing: state.bearing,
+    },
   };
 }
 
@@ -134,9 +141,11 @@ function stylesDeclaration(styles: { light: string; dark: string }): string {
 /** The map's contribution to the playground snippet (initial camera + basemap + look). */
 export function mapSnippetInput(state: MapState, view: MapView): MapSnippetInput {
   const preset = findPreset(state.presetId);
+  // The camera is live (the user can pan and zoom): print it rounded.
+  const [lng, lat] = state.center ?? view.center;
   const attrs: TemplateAttr[] = [
-    { name: 'center', value: view.center },
-    { name: 'zoom', value: state.zoom },
+    { name: 'center', value: [+lng.toFixed(4), +lat.toFixed(4)] },
+    { name: 'zoom', value: +state.zoom.toFixed(2) },
   ];
   const ts: string[] = [];
   const imports: string[] = [];
@@ -152,8 +161,8 @@ export function mapSnippetInput(state: MapState, view: MapView): MapSnippetInput
     attrs.push({ name: 'projection', value: { type: 'globe' } });
   }
   const camera: Record<string, number> = {};
-  if (state.pitch) camera['pitch'] = state.pitch;
-  if (state.bearing) camera['bearing'] = state.bearing;
+  if (Math.round(state.pitch)) camera['pitch'] = Math.round(state.pitch);
+  if (Math.round(state.bearing)) camera['bearing'] = Math.round(state.bearing);
   if (Object.keys(camera).length) attrs.push({ name: 'options', value: camera });
 
   return { attrs, ts, imports };

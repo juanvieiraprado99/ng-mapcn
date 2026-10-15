@@ -256,3 +256,36 @@ describe('playground spec hardening', () => {
     }
   });
 });
+
+describe('projected content and always-on grouped controls', () => {
+  const marker = PLAYGROUND_SPECS.find((s) => s.id === 'marker')!;
+  const geojson = PLAYGROUND_SPECS.find((s) => s.id === 'geojson')!;
+
+  it('renders the marker with its <ng-marker-content /> child and imports it', () => {
+    const { template, component } = buildSnippet(marker, controlDefaults(marker.controls), {
+      attrs: [],
+    });
+
+    expect(template).toMatch(
+      /<ng-map-marker [^>]*>\n {4}<ng-marker-content \/>\n {2}<\/ng-map-marker>\n<\/ng-map>/,
+    );
+    expect(template).not.toContain('<ng-map-marker [longitude]="-74.006" [latitude]="40.7128" />');
+    expect(component).toContain(
+      "import { MapComponent, MapMarkerComponent, MarkerContentComponent } from 'ng-mapcn';",
+    );
+    expect(component).toContain(
+      'imports: [MapComponent, MapMarkerComponent, MarkerContentComponent],',
+    );
+  });
+
+  it('always passes the hover, fill and outline colors so hover works at the defaults', () => {
+    const values = controlDefaults(geojson.controls);
+    const inputs = resolveInputs(geojson, values);
+
+    expect(inputs['fillHoverPaint']).toEqual({ 'fill-color': '#a3a3a3' });
+    expect(inputs['fillPaint']).toEqual({ 'fill-color': '#d4d4d4' });
+    expect(inputs['linePaint']).toEqual({ 'line-color': '#ffffff' });
+    // Width/opacity stay at the library defaults until touched.
+    expect(buildSnippet(geojson, values, { attrs: [] }).template).toContain('[fillHoverPaint]=');
+  });
+});
