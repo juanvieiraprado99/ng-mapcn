@@ -18,7 +18,7 @@ import { type Map as MapLibreMap, type Offset, Popup } from 'maplibre-gl';
 import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MapContextService } from '../../services/map-context.service';
 import { applyClassName } from '../../utils/class-name';
-import { createPopupCloseButton } from '../../utils/popup-close-button';
+import { closePopupOnEscape, createPopupCloseButton } from '../../utils/popup-close-button';
 import { renderPortal } from '../../utils/portal';
 
 /**
@@ -88,6 +88,7 @@ export class MapPopupComponent {
       });
       popup.setMaxWidth(untracked(() => this.maxWidth()));
       popup.setDOMContent(container);
+      closePopupOnEscape(popup, container);
       popup.setLngLat([untracked(() => this.longitude()), untracked(() => this.latitude())]);
       if (untracked(() => this.open())) popup.addTo(map);
       // 'close' fires from the map's event system (outside the zone) — re-enter

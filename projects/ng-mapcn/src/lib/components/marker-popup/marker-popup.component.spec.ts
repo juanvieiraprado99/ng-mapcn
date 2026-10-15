@@ -67,6 +67,35 @@ describe('MarkerPopupComponent', () => {
     expect(popupClose).toHaveBeenCalledTimes(1);
   });
 
+  it('closes on Escape inside the card and returns focus to the marker', async () => {
+    const { popupClose } = await render();
+    const popup = fakeRegistry.popups[0];
+    popup.addTo(fakeRegistry.maps[0]);
+    const markerEl = fakeRegistry.markers[0].getElement();
+    markerEl.tabIndex = 0;
+    document.body.appendChild(markerEl);
+    const body = (popup.getContent() as HTMLElement).querySelector('.body') as HTMLElement;
+    document.body.appendChild(popup.getContent() as HTMLElement);
+    body.tabIndex = 0;
+    body.focus();
+
+    body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+    expect(popup.isOpen()).toBe(false);
+    expect(popupClose).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(markerEl);
+    markerEl.remove();
+    (popup.getContent() as HTMLElement).remove();
+  });
+
+  it('marks the marker as a popup button', async () => {
+    await render();
+    const el = fakeRegistry.markers[0].getElement();
+
+    expect(el.getAttribute('role')).toBe('button');
+    expect(el.getAttribute('aria-haspopup')).toBe('dialog');
+  });
+
   it('detaches and removes the popup on destroy and drops the projected content', async () => {
     const { fixture } = await render();
     const popup = fakeRegistry.popups[0];
