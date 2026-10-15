@@ -1,0 +1,201 @@
+/**
+ * Declarative schema of the playground: each showcased component is one `PlaygroundSpec`
+ * (its inputs as editable `controls`, plus the `fixed` data it needs). The page renders the
+ * controls and the live component from the spec, and `buildSnippet` turns the current values
+ * back into copy-ready code. Pure data and functions: no Angular, no `ng-mapcn` imports.
+ */
+
+export interface SelectOption {
+  value: unknown;
+  label: string;
+}
+
+interface BaseControl {
+  /** Unique within the spec; the Angular input name unless `into` is set. */
+  key: string;
+  label: string;
+  description?: string;
+  /**
+   * Merges this control into one prop of an object input (`fillPaint['fill-color']`), so a
+   * flat control can drive a nested value.
+   */
+  into?: { input: string; prop: string };
+}
+
+export type Control = BaseControl &
+  (
+    | { kind: 'select'; options: SelectOption[]; default: unknown }
+    | { kind: 'range'; min: number; max: number; step: number; default: number }
+    | { kind: 'boolean'; default: boolean }
+    | { kind: 'color'; default: string }
+    | { kind: 'text'; default: string }
+    /** Edited as JSON text; the parsed value is the input. */
+    | { kind: 'json'; default: unknown }
+  );
+
+/** An input the playground always passes and the user does not edit (the component's data). */
+export interface FixedInput {
+  input: string;
+  value: unknown;
+  /** Declaration emitted into the snippet's class, so `[input]="input"` resolves. */
+  ts: string;
+}
+
+export interface PlaygroundSpec {
+  id: string;
+  label: string;
+  description: string;
+  /** Layer component element; `undefined` for the map alone. */
+  selector?: string;
+  className?: string;
+  /** Static string attributes, e.g. the layer `id`. */
+  attrs?: Record<string, string>;
+  controls: Control[];
+  fixed: FixedInput[];
+  /** Initial view that frames the component's data. */
+  view: { center: [number, number]; zoom: number; pitch?: number; bearing?: number };
+}
+
+export interface TemplateAttr {
+  name: string;
+  /** Rendered as `[name]="expr"` (a reference to a class member). */
+  expr?: string;
+  /** Strings render as `name="value"`, everything else as `[name]="literal"`. */
+  value?: unknown;
+}
+
+/** What the map around the component contributes to the snippet. */
+export interface MapSnippetInput {
+  attrs: TemplateAttr[];
+  /** Class member declarations (e.g. the `styles` constant). */
+  ts?: string[];
+  /** Extra `ng-mapcn` type imports used by `ts`. */
+  imports?: string[];
+}
+
+export type Values = Record<string, unknown>;
+
+const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
+
+/** Serializes a value as an Angular template expression (single-quoted strings). */
+export function toTemplateExpr(value: unknown): string {
+  if (value === undefined) return 'undefined';
+  if (value === null || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  if (typeof value === 'string') {
+    return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(toTemplateExpr).join(', ')}]`;
+  }
+  const entries = Object.entries(value as Record<string, unknown>);
+  if (!entries.length) return '{}';
+  return `{ ${entries
+    .map(([k, v]) => `${IDENTIFIER.test(k) ? k : toTemplateExpr(k)}: ${toTemplateExpr(v)}`)
+    .join(', ')} }`;
+}
+
+export function controlDefaults(controls: readonly Control[]): Values {
+  return Object.fromEntries(controls.map((c) => [c.key, c.default]));
+}
+
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+function groupInto(controls: readonly Control[], values: Values, onlyChanged: boolean) {
+  const grouped = new Map<string, Record<string, unknown>>();
+  for (const control of controls) {
+    if (!control.into) continue;
+    const value = values[control.key];
+    if (onlyChanged && same(value, control.default)) continue;
+    const bag = grouped.get(control.into.input) ?? {};
+    bag[control.into.prop] = value;
+    grouped.set(control.into.input, bag);
+  }
+  return grouped;
+}
+
+/** The inputs to bind on the live component: fixed data, plain controls and changed grouped props. */
+export function resolveInputs(spec: PlaygroundSpec, values: Values): Values {
+  const inputs: Values = { ...spec.attrs };
+  for (const fixed of spec.fixed) inputs[fixed.input] = fixed.value;
+  for (const control of spec.controls) {
+    if (!control.into) inputs[control.key] = values[control.key];
+  }
+  // Untouched grouped props are left out so the component keeps its own (theme-aware) defaults.
+  for (const [input, bag] of groupInto(spec.controls, values, true)) inputs[input] = bag;
+  return inputs;
+}
+
+function renderAttr(attr: TemplateAttr): string {
+  if (attr.expr !== undefined) return `[${attr.name}]="${attr.expr}"`;
+  if (typeof attr.value === 'string') {
+    return `${attr.name}="${attr.value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}"`;
+  }
+  return `[${attr.name}]="${toTemplateExpr(attr.value)}"`;
+}
+
+function renderElement(tag: string, attrs: string[], indent: string, selfClose: boolean): string {
+  const single = `<${tag}${attrs.map((a) => ` ${a}`).join('')}${selfClose ? ' />' : '>'}`;
+  if (attrs.length <= 3 && indent.length + single.length <= 90) return single;
+  const inner = `${indent}  `;
+  return `<${tag}\n${attrs.map((a) => `${inner}${a}`).join('\n')}\n${indent}${selfClose ? '/>' : '>'}`;
+}
+
+/** Copy-ready code for the current state: the template alone and a full standalone component. */
+export function buildSnippet(
+  spec: PlaygroundSpec,
+  values: Values,
+  map: MapSnippetInput,
+): { template: string; component: string } {
+  const mapAttrs = map.attrs.map(renderAttr);
+  const layerClass = spec.selector ? spec.className : undefined;
+
+  let template: string;
+  if (spec.selector) {
+    const attrs: string[] = [];
+    for (const [name, value] of Object.entries(spec.attrs ?? {})) {
+      attrs.push(renderAttr({ name, value }));
+    }
+    for (const fixed of spec.fixed) attrs.push(`[${fixed.input}]="${fixed.input}"`);
+    for (const control of spec.controls) {
+      if (control.into || same(values[control.key], control.default)) continue;
+      attrs.push(renderAttr({ name: control.key, value: values[control.key] }));
+    }
+    for (const [input, bag] of groupInto(spec.controls, values, true)) {
+      attrs.push(renderAttr({ name: input, value: bag }));
+    }
+    const layer = renderElement(spec.selector, attrs, '  ', true);
+    template = `${renderElement('ng-map', mapAttrs, '', false)}\n  ${layer}\n</ng-map>`;
+  } else {
+    template = renderElement('ng-map', mapAttrs, '', true);
+  }
+
+  const imports = ['MapComponent', ...(layerClass ? [layerClass] : [])];
+  const libImports = [...imports, ...(map.imports ?? [])];
+  const members = [...spec.fixed.map((f) => f.ts), ...(map.ts ?? [])];
+  const indented = template
+    .split('\n')
+    .map((line) => `      ${line}`)
+    .join('\n');
+  const body = members.length
+    ? `{\n${members.map((m) => `  ${m.split('\n').join('\n  ')}`).join('\n')}\n}`
+    : '{}';
+
+  const component = `import { Component } from '@angular/core';
+import { ${libImports.join(', ')} } from 'ng-mapcn';
+
+@Component({
+  selector: 'app-map',
+  standalone: true,
+  imports: [${imports.join(', ')}],
+  template: \`
+    <div class="h-[420px]">
+${indented}
+    </div>
+  \`,
+})
+export class AppMapComponent ${body}`;
+
+  return { template, component };
+}

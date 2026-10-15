@@ -31,6 +31,7 @@ const PAGES: [url: string, h1: string, title: string][] = [
   ['/docs/components/draw', 'Draw', 'Angular Map Draw Tools - ng-mapcn'],
   ['/docs/components/advanced', 'Advanced', 'Advanced Angular Map Usage - ng-mapcn'],
   ['/blocks', 'Blocks', 'Angular Map Blocks and Templates - ng-mapcn'],
+  ['/playground', 'Playground', 'Angular Map Playground - ng-mapcn'],
   ['/credits', 'Credits', 'Credits - ng-mapcn'],
 ];
 

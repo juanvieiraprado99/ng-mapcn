@@ -36,6 +36,20 @@ export const routes: Routes = [
         loadChildren: () => import('./pages/blocks/blocks.routes').then((m) => m.BLOCKS_ROUTES),
       },
       {
+        path: 'playground',
+        title: 'Playground',
+        data: {
+          seo: {
+            title: 'Angular Map Playground',
+            description:
+              'Interactive playground for ng-mapcn: pick a map component, edit its inputs live, browse basemap styles and copy the matching Angular snippet.',
+            keywords: ['Angular map playground', 'MapLibre Angular demo', 'Angular map styles'],
+          },
+        },
+        loadChildren: () =>
+          import('./pages/playground/playground.routes').then((m) => m.PLAYGROUND_ROUTES),
+      },
+      {
         path: 'credits',
         title: 'Credits',
         data: {
