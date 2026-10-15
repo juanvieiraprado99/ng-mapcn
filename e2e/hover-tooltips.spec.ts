@@ -64,8 +64,23 @@ test.describe('non-interactive hover popups', () => {
       })
       .not.toBeNull();
 
-    await page.mouse.move(target!.x, target!.y, { steps: 4 });
+    // The source reports its data before the fill layer is rendered and queryable, so a single
+    // hover can land too early and never fire again. Re-hover until the popup shows up.
     const popup = page.locator('ng-map').first().locator('.maplibregl-popup');
+    await expect
+      .poll(
+        async () => {
+          await page.mouse.move(target!.x + 3, target!.y, { steps: 2 });
+          await page.mouse.move(target!.x, target!.y, { steps: 2 });
+          return popup.count();
+        },
+        {
+          message: 'hovering Brazil should open the popup',
+          timeout: 20_000,
+          intervals: [250, 500],
+        },
+      )
+      .toBe(1);
     await expect(popup).toContainText('Brazil');
 
     // The popup sits just above the hovered point: move the cursor up into the popup card.
