@@ -2,7 +2,7 @@
 
 Copy-paste examples. Import from `'ng-mapcn'` (or from the folder `ng add` copied into your app). Every map needs a parent with an explicit height. Coordinates are `[longitude, latitude]`.
 
-Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading)
+Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading)
 
 ## Controls
 
@@ -268,6 +268,23 @@ Extra datum properties (here `color`) are available to paint expressions through
 
 `data` also accepts a `GeoJSON.FeatureCollection<GeoJSON.Point, P>`; `P` types `pointClick` (`ClusterPointClickEvent<Store>`). Clicking a cluster zooms into it unless `[zoomOnClusterClick]="false"`. Set `id="stores"` for stable ids (`cluster-source-stores`, `clusters-stores`, `cluster-count-stores`, `unclustered-point-stores`), and `beforeId` to put the three layers under another layer. The colors above are the defaults; mapcn uses `['#3b82f6', '#1d4ed8', '#1e3a8a']`.
 
+## Heatmap
+
+```html
+<ng-map [center]="[-98, 39]" [zoom]="3">
+  <ng-map-heatmap
+    id="earthquakes"
+    data="https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson"
+    weightProperty="mag"
+    [weightRange]="[0, 7.5]"
+    [radius]="20"
+    [maxZoom]="9"
+  />
+</ng-map>
+```
+
+`data` also accepts a `GeoJSON.FeatureCollection<GeoJSON.Point, P>`. Without `gradient` the ramp follows the map theme (`defaultHeatmapGradients`); a custom `[gradient]="[[0, 'rgba(0,0,0,0)'], [1, '#ef4444']]"` is kept across theme switches. `radius`, `intensity` and `opacity` accept zoom expressions such as `['interpolate', ['linear'], ['zoom'], 0, 8, 6, 34]`. `maxZoom` stops rendering from that zoom, so a custom circle layer placed after the heatmap in the template can take over when zoomed in. Ids: `heatmap-source-<id>`, `heatmap-layer-<id>`.
+
 ## Controlled viewport and raw map
 
 ```ts
@@ -374,7 +391,7 @@ export class PointsLayerComponent {
 
 Use it as a child: `<ng-map><app-points-layer /></ng-map>`. When the theme changes, `isLoaded()` drops to false (cleanup runs) and back to true (layers are re-added). Use `ctx.resolvedTheme()` inside the effect for theme-specific colors.
 
-Layer order: `map.addLayer(spec, beforeId)` places a layer under `beforeId`. Library layer ids are `<id>-layer` (route; its progress line is `<id>-layer-progress-layer`), `geojson-fill-<id>` / `geojson-line-<id>` (geojson), `arc-layer-<id>` (arc) and `clusters-<id>` / `cluster-count-<id>` / `unclustered-point-<id>` (cluster), where `<id>` is the component's `id` input. Every layer component also takes `beforeId` (creation only).
+Layer order: `map.addLayer(spec, beforeId)` places a layer under `beforeId`. Library layer ids are `<id>-layer` (route; its progress line is `<id>-layer-progress-layer`), `geojson-fill-<id>` / `geojson-line-<id>` (geojson), `arc-layer-<id>` (arc) and `clusters-<id>` / `cluster-count-<id>` / `unclustered-point-<id>` (cluster), `heatmap-layer-<id>` (heatmap; source `heatmap-source-<id>`), where `<id>` is the component's `id` input. Every layer component also takes `beforeId` (creation only).
 
 ## Lazy loading
 

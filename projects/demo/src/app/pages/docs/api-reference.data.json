@@ -1,5 +1,5 @@
 {
-  "anatomyCode": "<ng-map [center]=\"[-74.006, 40.7128]\" [zoom]=\"11\">\n  <ng-map-controls />\n\n  <ng-map-marker [longitude]=\"-74.006\" [latitude]=\"40.7128\">\n    <ng-marker-content>\n      <div class=\"size-4 rounded-full bg-blue-500\"></div>\n      <ng-marker-label position=\"top\">New York</ng-marker-label>\n    </ng-marker-content>\n    <ng-marker-tooltip>Hover content</ng-marker-tooltip>\n    <ng-marker-popup>Click content</ng-marker-popup>\n  </ng-map-marker>\n\n  <ng-map-popup [longitude]=\"-74\" [latitude]=\"40.7\">Standalone popup</ng-map-popup>\n  <ng-map-route [coordinates]=\"coordinates\" />\n  <ng-map-arc [data]=\"arcs\" />\n  <ng-map-geojson [data]=\"geojson\" />\n  <ng-map-cluster-layer [data]=\"points\" />\n</ng-map>",
+  "anatomyCode": "<ng-map [center]=\"[-74.006, 40.7128]\" [zoom]=\"11\">\n  <ng-map-controls />\n\n  <ng-map-marker [longitude]=\"-74.006\" [latitude]=\"40.7128\">\n    <ng-marker-content>\n      <div class=\"size-4 rounded-full bg-blue-500\"></div>\n      <ng-marker-label position=\"top\">New York</ng-marker-label>\n    </ng-marker-content>\n    <ng-marker-tooltip>Hover content</ng-marker-tooltip>\n    <ng-marker-popup>Click content</ng-marker-popup>\n  </ng-map-marker>\n\n  <ng-map-popup [longitude]=\"-74\" [latitude]=\"40.7\">Standalone popup</ng-map-popup>\n  <ng-map-route [coordinates]=\"coordinates\" />\n  <ng-map-arc [data]=\"arcs\" />\n  <ng-map-geojson [data]=\"geojson\" />\n  <ng-map-cluster-layer [data]=\"points\" />\n  <ng-map-heatmap [data]=\"points\" weightProperty=\"mag\" />\n</ng-map>",
   "provideStylesCode": "import { inject } from '@angular/core';\nimport { provideMapStyles } from 'ng-mapcn';\n\nexport const appConfig: ApplicationConfig = {\n  providers: [\n    // Static config...\n    provideMapStyles({\n      light: 'https://tiles.openfreemap.org/styles/positron',\n      dark: 'https://tiles.openfreemap.org/styles/dark',\n    }),\n\n    // ...or a signal, so the basemap can be switched at runtime\n    provideMapStyles(() => inject(BasemapService).styles),\n  ],\n};",
   "provideStylesRows": [
     { "name": "MapStylesConfig", "type": "{ light?: string | StyleSpecification; dark?: string | StyleSpecification }", "default": "", "description": "Per-theme basemap. A theme left undefined falls back to the Carto default for that theme." },
@@ -268,6 +268,27 @@
         { "name": "pointClick", "type": "ClusterPointClickEvent<P>", "default": "", "description": "Emits { feature, coordinates } when an unclustered point is clicked." },
         { "name": "clusterClick", "type": "ClusterClickEvent", "default": "", "description": "Emits { clusterId, coordinates, pointCount } when a cluster is clicked." }
       ]
+    },
+    {
+      "id": "mapheatmap",
+      "title": "MapHeatmap",
+      "selector": "ng-map-heatmap",
+      "description": "Renders GeoJSON points as a MapLibre heatmap layer with a theme-aware default gradient. Generic over the feature properties: MapHeatmapComponent<P>, with P inferred from data. Must be used inside ng-map.",
+      "inputs": [
+        { "name": "data", "type": "string | FeatureCollection<Point, P>", "default": "required", "description": "GeoJSON points (object or URL string)." },
+        { "name": "id", "type": "string", "default": "auto", "description": "Optional stable id prefix for the source and layer: heatmap-source-<id>, heatmap-layer-<id>. Changing it re-creates them." },
+        { "name": "beforeId", "type": "string", "default": "", "description": "Insert the layer before this layer id. Applied at creation only." },
+        { "name": "weightProperty", "type": "string", "default": "", "description": "Numeric feature property used as the point weight. Without it every point weighs the same." },
+        { "name": "weightRange", "type": "[number, number]", "default": "[0, 1]", "description": "[min, max] of weightProperty, mapped linearly to a weight of 0..1." },
+        { "name": "radius", "type": "number | expression", "default": "30", "description": "Influence radius of each point in pixels. Accepts MapLibre expressions." },
+        { "name": "intensity", "type": "number | expression", "default": "1", "description": "Global intensity multiplier. Accepts MapLibre expressions." },
+        { "name": "opacity", "type": "number | expression", "default": "1", "description": "Layer opacity. Accepts MapLibre expressions." },
+        { "name": "gradient", "type": "HeatmapGradient", "default": "theme default", "description": "Color stops [density 0..1, color]. Sorted, with a transparent stop at 0 prepended when missing. Defaults to defaultHeatmapGradients for the resolved theme." },
+        { "name": "minZoom", "type": "number", "default": "0", "description": "Minimum zoom at which the heatmap is rendered." },
+        { "name": "maxZoom", "type": "number", "default": "24", "description": "Zoom from which the heatmap is no longer rendered (e.g. to hand over to a point layer)." },
+        { "name": "paint", "type": "HeatmapLayerSpecification[\"paint\"]", "default": "", "description": "Escape hatch: heatmap paint properties merged last." }
+      ],
+      "outputs": []
     }
   ]
 }

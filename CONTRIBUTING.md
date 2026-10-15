@@ -35,7 +35,7 @@ Inside `projects/ng-mapcn/src/lib/`:
 | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `components/map/`                                                                                 | Map host: MapLibre init, theme-driven `setStyle`, `blank` style, controlled `viewport`, loader overlay |
 | `components/map-marker/` + `marker-content/`, `marker-popup/`, `marker-tooltip/`, `marker-label/` | Marker created once and reconciled by diffed setters; content projected into the marker element        |
-| `components/map-route/`, `map-geojson/`, `map-arc/`, `map-cluster-layer/`                         | Imperative layer components with empty templates                                                       |
+| `components/map-route/`, `map-geojson/`, `map-arc/`, `map-cluster-layer/`, `map-heatmap/`         | Imperative layer components with empty templates                                                       |
 | `services/map-context.service.ts`                                                                 | `map`, `isLoaded`, `resolvedTheme` signals, provided by `<ng-map>`                                     |
 | `services/theme.service.ts`                                                                       | Watches the `dark`/`light` class on `<html>`, with a `prefers-color-scheme` fallback                   |
 | `utils/map-utils.ts`                                                                              | `nextId`, `getViewport`, `mergeHoverPaint`, `buildArcCoordinates`, shared types                        |

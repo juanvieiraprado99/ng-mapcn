@@ -192,6 +192,21 @@ export const DOCS_ROUTES: Routes = [
           import('./components/clusters-page').then((m) => m.ClustersPageComponent),
       },
       {
+        path: 'components/heatmap',
+        title: 'Heatmap',
+        data: {
+          seo: {
+            title: 'Angular Map Heatmap',
+            description:
+              'Visualize point density on an Angular map with ng-map-heatmap: weighted points, theme-aware gradients and zoom-dependent styling powered by MapLibre GL.',
+            keywords: ['heatmap Angular', 'density map MapLibre', 'weighted heatmap layer'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () =>
+          import('./components/heatmap-page').then((m) => m.HeatmapPageComponent),
+      },
+      {
         path: 'components/advanced',
         title: 'Advanced',
         data: {

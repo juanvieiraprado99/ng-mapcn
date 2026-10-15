@@ -21,6 +21,7 @@ const DOCS_PAGES = [
     'arcs',
     'geojson',
     'clusters',
+    'heatmap',
     'advanced',
   ].map((name) => `/docs/components/${name}`),
 ];
@@ -45,6 +46,7 @@ const EXPECTED_MAPS: Record<string, number> = {
   '/docs/components/arcs': 2,
   '/docs/components/geojson': 2,
   '/docs/components/clusters': 1,
+  '/docs/components/heatmap': 1,
   '/docs/components/advanced': 4,
   '/blocks': BLOCKS.length, // one iframe preview per block
 };

@@ -39,6 +39,7 @@ export const docsNavigation: SiteNavigationGroup[] = [
       { title: 'Arcs', href: '/docs/components/arcs', icon: 'lucideLayers2' },
       { title: 'GeoJSON', href: '/docs/components/geojson', icon: 'lucideLayers2' },
       { title: 'Clusters', href: '/docs/components/clusters', icon: 'lucideLayers2' },
+      { title: 'Heatmap', href: '/docs/components/heatmap', icon: 'lucideLayers2' },
       { title: 'Advanced', href: '/docs/components/advanced', icon: 'lucideLayers2' },
     ],
   },

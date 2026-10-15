@@ -9,6 +9,7 @@ export * from './lib/components/map/map.component';
 export * from './lib/components/map-arc/map-arc.component';
 export * from './lib/components/map-cluster-layer/map-cluster-layer.component';
 export * from './lib/components/map-geojson/map-geojson.component';
+export * from './lib/components/map-heatmap/map-heatmap.component';
 export * from './lib/components/map-marker/map-marker.component';
 export * from './lib/components/map-marker/marker-context.service';
 export * from './lib/components/map-popup/map-popup.component';

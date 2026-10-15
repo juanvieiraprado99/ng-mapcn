@@ -307,6 +307,15 @@ export class Map extends Evented {
     if (layer) layer.layout[name] = value;
     return this;
   });
+  setLayerZoomRange = vi.fn((layerId: string, minzoom: number, maxzoom: number) => {
+    this.calls.push(`setLayerZoomRange:${layerId}`);
+    const layer = this.getLayer(layerId);
+    if (layer) {
+      layer.minzoom = minzoom;
+      layer.maxzoom = maxzoom;
+    }
+    return this;
+  });
   setFeatureState = vi.fn((_feature: unknown, _state: unknown) => {
     this.calls.push('setFeatureState');
     return this;
