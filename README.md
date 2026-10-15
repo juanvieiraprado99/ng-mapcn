@@ -13,7 +13,7 @@
   <a href="https://bundlephobia.com/package/ng-mapcn"><img src="https://img.shields.io/bundlephobia/minzip/ng-mapcn" alt="bundle size" /></a>
 </p>
 
-ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map components for Angular. It is built for Angular apps that need theme-aware maps (markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, raster/vector tile sources, image overlays, 3D buildings and terrain) without API keys or a paid tile provider. It is an Angular port of the [mapcn](https://mapcn.dev) API, with MapLibre GL as the rendering engine and the copy-paste ownership model of [shadcn/ui](https://ui.shadcn.com): `ng add ng-mapcn` copies the sources into your project so you own the code.
+ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map components for Angular. It is built for Angular apps that need theme-aware maps (markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, raster/vector tile sources, image overlays, 3D buildings and terrain, draw tools) without API keys or a paid tile provider. It is an Angular port of the [mapcn](https://mapcn.dev) API, with MapLibre GL as the rendering engine and the copy-paste ownership model of [shadcn/ui](https://ui.shadcn.com): `ng add ng-mapcn` copies the sources into your project so you own the code.
 
 **[Docs](https://ng-mapcn.vercel.app/docs)** · **[Blocks gallery](https://ng-mapcn.vercel.app/blocks)** · **[Installation](https://ng-mapcn.vercel.app/docs/installation)** · **[API reference](https://ng-mapcn.vercel.app/docs/api-reference)**
 
@@ -57,10 +57,18 @@ This will:
 
 If your app already depends on an older `maplibre-gl`, `ng add` keeps your version and warns: update it to `^6.11.2`.
 
+Drawing (`ng-map-draw`) is opt-in so apps that do not draw never install [terra-draw](https://terradraw.dev): run `ng add ng-mapcn@beta --draw` to also copy the draw sources to `<path>/draw` (import from there) and add `terra-draw` and `terra-draw-maplibre-gl-adapter` to your dependencies.
+
 Or as a regular npm package:
 
 ```bash
 npm install ng-mapcn@beta maplibre-gl
+```
+
+To draw with `ng-map-draw`, also install its optional peer dependencies and import from the `ng-mapcn/draw` entry point (the core `ng-mapcn` entry never loads terra-draw):
+
+```bash
+npm install terra-draw terra-draw-maplibre-gl-adapter
 ```
 
 Then in your global `styles.scss`:
@@ -152,6 +160,7 @@ The map fills its parent, so give the parent an explicit height. More building b
 | `ng-map-image-overlay`                                      | Image pinned to four corner coordinates, with `opacity`, `visible` and `beforeId`; `url` and `coordinates` update in place.                                                                                                                                                                        |
 | `ng-map-fill-extrusion`                                     | 3D extrusion of polygons (3D buildings): defaults to the Carto `building` layer (`render_height`), or any source by id; `color`, `opacity`, `minZoom`, `filter`, `beforeId`.                                                                                                                       |
 | `ng-map-terrain`                                            | 3D terrain from a `raster-dem` source (public Terrarium tiles by default) with `exaggeration` and an optional `hillshade`; re-applied after a theme switch.                                                                                                                                        |
+| `ng-map-draw`                                               | Draw, select and edit points, lines and polygons (terra-draw). Optional `ng-mapcn/draw` entry point: two-way GeoJSON `features`, `mode`, `drawEnd`/`featureEdit`/`featureSelect`, theme-aware, restarts across theme switches. Needs `terra-draw` and `terra-draw-maplibre-gl-adapter`.            |
 
 `ng-map` also takes `[fitBounds]="{ padding, maxZoom, duration, animate, bounds? }"` to fit the camera to its children's data (or explicit `bounds`) once loaded and whenever they change; `MapContextService.fitBounds()` is the imperative form.
 

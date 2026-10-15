@@ -2,7 +2,7 @@
 
 Copy-paste examples. Import from `'ng-mapcn'` (or from the folder `ng add` copied into your app). Every map needs a parent with an explicit height. Coordinates are `[longitude, latitude]`.
 
-Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Tile sources](#tile-sources) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading) | [Fit to data](#fit-to-data) | [3D buildings and terrain](#3d-buildings-and-terrain)
+Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Tile sources](#tile-sources) | [Draw](#draw) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading) | [Fit to data](#fit-to-data) | [3D buildings and terrain](#3d-buildings-and-terrain)
 
 ## Controls
 
@@ -392,6 +392,42 @@ The map fits once loaded and again whenever the union of the children's bounds c
 Own data: `<ng-map-fill-extrusion source="footprints" sourceLayer="footprints" heightProperty="floors" [paint]="{ 'fill-extrusion-height': ['*', ['get', 'floors'], 3.2] }" />` next to an `ng-map-vector-source id="footprints"`. A GeoJSON source needs no `sourceLayer`. Another DEM provider: `<ng-map-terrain [tiles]="[...]" encoding="mapbox" [tileSize]="512" [maxzoom]="12" />`.
 
 Gotchas: the map needs a pitch to look 3D (`pitch` is an `options` entry, not an `ng-map` input). `ng-map-fill-extrusion` does nothing on basemaps without a vector source (`blank`, raster): extrude a source of your own. Terrain is lost on a theme `setStyle` and re-applied automatically; only one terrain per map; changing `exaggeration` rebuilds the terrain mesh.
+
+## Draw
+
+Needs `npm i terra-draw terra-draw-maplibre-gl-adapter` (or `ng add ng-mapcn --draw`); import from the `'ng-mapcn/draw'` entry point (copy-paste: `<path>/draw`).
+
+```ts
+import { Component, signal, viewChild } from '@angular/core';
+import { MapComponent } from 'ng-mapcn';
+import { MapDrawComponent, type MapDrawFeatureCollection, type MapDrawMode } from 'ng-mapcn/draw';
+
+@Component({
+  imports: [MapComponent, MapDrawComponent],
+  template: `
+    <button (click)="mode.set('polygon')">Polygon</button>
+    <button (click)="mode.set('select')">Edit</button>
+    <button (click)="draw().clear()">Clear</button>
+    <div class="h-[420px]">
+      <ng-map [center]="[-46.63, -23.55]" [zoom]="11">
+        <ng-map-draw
+          [modes]="['point', 'line', 'polygon']"
+          [(mode)]="mode"
+          [(features)]="features"
+          (drawEnd)="onDrawEnd($event)"
+        />
+      </ng-map>
+    </div>
+  `,
+})
+export class DrawMap {
+  readonly draw = viewChild.required(MapDrawComponent);
+  readonly mode = signal<MapDrawMode>('static');
+  readonly features = signal<MapDrawFeatureCollection>({ type: 'FeatureCollection', features: [] });
+}
+```
+
+Gotchas: `features` is a GeoJSON `FeatureCollection` (so it feeds `ng-map-geojson` or a backend); it updates when a draw/edit/delete completes, not per mouse move. Lines and polygons finish by clicking the last vertex again (or Enter). Preloaded features may omit `id` (one is assigned). A theme switch or a change of `modes`/`editable` restarts terra-draw with the same features and drops an unfinished shape (`color` restyles in place). Your own ids (`zone-1`, `42`) are kept. Only Point, LineString and Polygon are supported.
 
 ## Controlled viewport and raw map
 

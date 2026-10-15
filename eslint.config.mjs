@@ -18,6 +18,7 @@ export default defineConfig([
     'coverage/',
     'node_modules/',
     'projects/ng-mapcn/schematics/map/files/',
+    'projects/ng-mapcn/schematics/map/draw-files/',
     'projects/demo/src/app/blocks/block-sources.generated.ts',
     'projects/demo/public/',
   ]),

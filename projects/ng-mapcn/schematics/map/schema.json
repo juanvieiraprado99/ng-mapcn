@@ -8,6 +8,11 @@
       "type": "string",
       "description": "Directory (relative to the workspace root) where the map components are copied.",
       "default": "src/app/components/ui/map"
+    },
+    "draw": {
+      "type": "boolean",
+      "description": "Also copy the optional draw component (ng-mapcn/draw) and add its terra-draw dependencies.",
+      "default": false
     }
   },
   "required": []

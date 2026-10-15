@@ -13,5 +13,5 @@
     "rootDir": "./schematics"
   },
   "include": ["schematics/**/*.ts"],
-  "exclude": ["schematics/map/files/**", "schematics/**/*.spec.ts"]
+  "exclude": ["schematics/map/files/**", "schematics/map/draw-files/**", "schematics/**/*.spec.ts"]
 }

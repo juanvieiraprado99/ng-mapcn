@@ -1,6 +1,6 @@
 ---
 name: ng-mapcn
-description: Use when building or editing interactive maps in an Angular 22+ app with ng-mapcn (MapLibre GL v6, mapcn port) - adding <ng-map>, markers, popups, tooltips, routes, GeoJSON layers, arcs, clusters, heatmaps, raster/vector tile sources (PMTiles), image overlays, 3D buildings (fill-extrusion), terrain and hillshade, map controls, theme-aware basemaps, or installing via `ng add ng-mapcn`.
+description: Use when building or editing interactive maps in an Angular 22+ app with ng-mapcn (MapLibre GL v6, mapcn port) - adding <ng-map>, markers, popups, tooltips, routes, GeoJSON layers, arcs, clusters, heatmaps, raster/vector tile sources (PMTiles), image overlays, 3D buildings (fill-extrusion), terrain and hillshade, draw tools (points/lines/polygons), map controls, theme-aware basemaps, or installing via `ng add ng-mapcn`.
 ---
 
 # ng-mapcn
@@ -10,6 +10,7 @@ Angular port of [mapcn](https://mapcn.dev): composable MapLibre GL v6 map compon
 ## Setup
 
 - Copy-paste (shadcn-style): `ng add ng-mapcn` adds `maplibre-gl`, registers its CSS and worker assets, appends the `.maplibregl-popup-*` CSS overrides, and copies sources to `src/app/components/ui/map` (`--path` to change). Import from that folder instead of `'ng-mapcn'`.
+- Drawing is opt-in: `ng add ng-mapcn --draw` (copies `<path>/draw`, adds `terra-draw` + `terra-draw-maplibre-gl-adapter`) or `npm i terra-draw terra-draw-maplibre-gl-adapter` and import `MapDrawComponent` from `'ng-mapcn/draw'` (the core entry never loads terra-draw).
 - npm: `npm i ng-mapcn maplibre-gl` (`@types/geojson` comes with it). Then add `maplibre-gl/dist/maplibre-gl.css` to `angular.json` `styles`, the worker assets (`references/troubleshooting.md`), and in global `styles.scss`: `@use 'ng-mapcn/src/lib/styles/index' as *;` and `@use 'ng-mapcn/styles.scss' as *;`.
 - Which one does the app use? Sources in `src/app/components/ui/map` (or another `--path`) → copy-paste; otherwise import from `'ng-mapcn'`.
 - Optional app-wide basemap: `provideMapStyles({ light, dark })` in `app.config.ts`.
@@ -74,6 +75,7 @@ Coordinates are always `[longitude, latitude]`.
 | `ng-map-image-overlay`                                 | Image on 4 corners                   | `id`, `url`, `coordinates`, `opacity`, `visible`, `beforeId`, `paint`                                                                                           |
 | `ng-map-fill-extrusion`                                | 3D extrusion (buildings)             | `id`, `source`, `sourceLayer`, `heightProperty`, `baseProperty`, `color`, `opacity`, `minZoom`, `maxZoom`, `filter`, `beforeId`, `paint`                        |
 | `ng-map-terrain`                                       | 3D terrain + hillshade               | `id`, `tiles`, `url`, `encoding`, `tileSize`, `exaggeration`, `hillshade`, `hillshadeExaggeration`, `hillshadePaint`, `beforeId`                                |
+| `ng-map-draw` (`'ng-mapcn/draw'`)                      | Draw / select / edit shapes          | `modes`, `mode` (model), `features` (model, FeatureCollection), `editable`, `color`; `drawEnd`, `featureEdit`, `featureSelect`, `featureDeselect`               |
 
 Full inputs, types and defaults: `references/components.md`.
 
@@ -85,6 +87,7 @@ Full inputs, types and defaults: `references/components.md`.
 - Theme switches call `setStyle`, which wipes custom sources and layers. Gate custom layer code on `isLoaded()` and re-add inside the effect.
 - Theme comes from the `theme` input, else the `dark`/`light` class or `data-theme` on `<html>`, else `prefers-color-scheme`. Any toggle that sets a `dark` class works; `ThemeService` is optional.
 - Popup/tooltip content is wrapped in `.ng-popup-card` / `.ng-tooltip-pill` automatically; just project your content. A `class` on the Angular host does not reach that wrapper: use the `className` input. Hover popups need `className="ng-popup-passthrough"`.
+- `ng-map-draw`: terra-draw is restarted (same `features`) on every theme switch and when `modes`/`editable` change, so an unfinished shape is lost (`color` restyles in place). Ids may be any non-empty string or finite number. Bind `[(features)]`; it updates when a draw/edit/delete completes.
 - Controlled viewport: bind `[viewport]` and `(viewportChange)` together.
 - Fit to data: `<ng-map [fitBounds]="{ padding: 48, maxZoom: 14 }">` (or `MapContextService.fitBounds()`) instead of imperative `map.fitBounds` + `isLoaded` handling.
 - The global `.maplibregl-popup-*` overrides and `maplibre-gl.css` are required.

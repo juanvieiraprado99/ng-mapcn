@@ -28,6 +28,7 @@ const PAGES: [url: string, h1: string, title: string][] = [
     '3D Buildings & Terrain',
     'Angular 3D Map Buildings and Terrain - ng-mapcn',
   ],
+  ['/docs/components/draw', 'Draw', 'Angular Map Draw Tools - ng-mapcn'],
   ['/docs/components/advanced', 'Advanced', 'Advanced Angular Map Usage - ng-mapcn'],
   ['/blocks', 'Blocks', 'Angular Map Blocks and Templates - ng-mapcn'],
   ['/credits', 'Credits', 'Credits - ng-mapcn'],

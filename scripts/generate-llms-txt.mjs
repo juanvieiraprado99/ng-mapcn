@@ -132,6 +132,7 @@ const DOCS_COMPONENT_PAGES = [
   { label: 'Heatmap', slug: 'heatmap' },
   { label: 'Tile Sources', slug: 'tile-sources' },
   { label: '3D Buildings & Terrain', slug: '3d' },
+  { label: 'Draw', slug: 'draw' },
   { label: 'Advanced', slug: 'advanced' },
 ];
 

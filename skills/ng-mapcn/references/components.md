@@ -2,7 +2,7 @@
 
 All components are standalone, `OnPush`, and use signal inputs/outputs. Everything below is exported from `ng-mapcn` (or from the folder `ng add` copied into your app). Coordinates are `[longitude, latitude]`.
 
-Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
+Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [ng-map-draw](#ng-map-draw) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
 
 ## ng-map
 
@@ -392,6 +392,31 @@ Class `MapTerrainComponent`. A `raster-dem` source `terrain-source-<id>` (auto i
 The default AWS Terrarium bucket is public open data with no SLA, so production apps should supply their own provider via `tiles`/`url`; apps with a strict CSP must allow the host (`s3.amazonaws.com`).
 
 No outputs. Also exported: `defaultTerrainTiles`, `TerrainEncoding`.
+
+## ng-map-draw
+
+Class `MapDrawComponent`, from the optional **`'ng-mapcn/draw'`** entry point (copy-paste: `<path>/draw`, via `ng add ng-mapcn --draw`). Built on `terra-draw` + `terra-draw-maplibre-gl-adapter` (optional peer dependencies; install them). The core `'ng-mapcn'` entry never imports them.
+
+| Input      | Type                                                   | Default       | Notes                                                                                                                                          |
+| ---------- | ------------------------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `modes`    | `('point' \| 'line' \| 'polygon')[]`                   | all three     | Shapes the user can draw. Changing it restarts terra-draw with the same features, dropping an unfinished shape                                 |
+| `mode`     | `MapDrawMode` (`MapDrawShape \| 'select' \| 'static'`) | `'static'`    | Active tool, `model()`: `[(mode)]`. A mode that is not enabled falls back to `'static'`                                                        |
+| `features` | `MapDrawFeatureCollection`                             | empty         | `model()`: `[(features)]`. GeoJSON FeatureCollection of Point/LineString/Polygon; `properties.mode` is the shape                               |
+| `editable` | `boolean`                                              | `true`        | Registers the `select` mode (select, drag, reshape, midpoints, delete vertices). Changing it restarts terra-draw (drops an unfinished shape)   |
+| `color`    | `` `#${string}` ``                                     | theme default | Accent of the drawn shapes. Palette (`defaultDrawPalettes`, `buildDrawStyles(theme, color?)`) follows the theme; changing it restyles in place |
+
+| Output            | Type               | Notes                                                                        |
+| ----------------- | ------------------ | ---------------------------------------------------------------------------- |
+| `drawEnd`         | `MapDrawEvent`     | `{ feature, mode, action }` when a new shape is completed (`action: 'draw'`) |
+| `featureEdit`     | `MapDrawEvent`     | Same shape for other finishes (`dragFeature`, `dragCoordinate`, ...)         |
+| `featureSelect`   | `MapDrawFeature`   | Select mode: the selected Feature (with `id`)                                |
+| `featureDeselect` | `string \| number` | Id of the deselected feature                                                 |
+
+Method: `clear()` removes every feature. `features` updates when a draw/edit/delete completes (not per mouse move); assigning a collection diffs by feature `id` (add / remove / update geometry and user properties in place); equal data is a no-op. Features without an `id` get one; unsupported geometries and features terra-draw rejects are dropped and reported through `<ng-map (mapError)>`.
+
+Theme switches call `setStyle`, which wipes terra-draw's layers: the component stops terra-draw and starts a new one on the new style with the same features and mode. An unfinished shape is lost on a restart. Keyboard (terra-draw): Enter finishes, Escape cancels, Delete removes the selected feature.
+
+Also exported: `MapDrawShape`, `MapDrawMode`, `MapDrawGeometry`, `MapDrawProperties`, `MapDrawFeature`, `MapDrawFeatureCollection`, `MapDrawEvent`, `DrawStyles`, `DrawHexColor`.
 
 ## Services
 

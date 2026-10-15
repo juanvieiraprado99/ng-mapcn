@@ -114,6 +114,15 @@ export const BLOCKS: BlockMeta[] = [
     files: [{ path: 'city-3d/city-3d.ts' }],
   },
   {
+    name: 'draw',
+    title: 'Draw',
+    description:
+      'Draw and edit points, lines and polygons with a toolbar and a live readout of the shapes.',
+    iframeHeight: '720px',
+    zard: [],
+    files: [{ path: 'draw/draw.ts' }],
+  },
+  {
     name: 'logistics-network',
     title: 'Logistics Network',
     description: 'Domestic logistics map with a sidebar of stats.',
@@ -159,6 +168,7 @@ export const BLOCK_COMPONENTS: Record<string, () => Promise<Type<unknown>>> = {
   heatmap: () => import('./heatmap/heatmap').then((m) => m.HeatmapBlockComponent),
   pmtiles: () => import('./pmtiles/pmtiles').then((m) => m.PmtilesBlockComponent),
   'city-3d': () => import('./city-3d/city-3d').then((m) => m.City3dBlockComponent),
+  draw: () => import('./draw/draw').then((m) => m.DrawBlockComponent),
   'logistics-network': () =>
     import('./logistics-network/logistics-network').then((m) => m.LogisticsNetworkBlockComponent),
   'store-locator': () =>

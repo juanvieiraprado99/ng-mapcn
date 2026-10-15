@@ -42,6 +42,8 @@ Inside `projects/ng-mapcn/src/lib/`:
 | `utils/bounds.ts`                                                                                                                                                                                  | Bounds helpers and `MapFitBoundsOptions` for `fitBounds` / `registerBounds`                            |
 | `styles/`                                                                                                                                                                                          | SCSS tokens/utilities and `map-styles.ts` (Carto defaults + `blankMapStyle`)                           |
 
+`projects/ng-mapcn/draw/` is the optional `ng-mapcn/draw` secondary entry point (`ng-map-draw`, built on terra-draw). The core entry must never import it; `ng add --draw` copies it to `<path>/draw` through `scripts/sync-schematic-files.mjs`.
+
 The library is also distributed by schematics (`ng add ng-mapcn`). `scripts/sync-schematic-files.mjs` mirrors `src/lib/**` into `schematics/map/files/`. That folder is generated and git-ignored, so never edit it by hand.
 
 ## Library invariants
