@@ -235,6 +235,8 @@ export const DOCS_ROUTES: Routes = [
         },
         loadComponent: () =>
           import('./components/three-d-page').then((m) => m.ThreeDPageComponent),
+      },
+      {
         path: 'components/draw',
         title: 'Draw',
         data: {

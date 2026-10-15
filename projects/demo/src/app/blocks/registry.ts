@@ -112,6 +112,8 @@ export const BLOCKS: BlockMeta[] = [
     iframeHeight: '720px',
     zard: [],
     files: [{ path: 'city-3d/city-3d.ts' }],
+  },
+  {
     name: 'draw',
     title: 'Draw',
     description:
