@@ -8,16 +8,13 @@ import { EXPECTED_MAPS, ROUTES } from './routes';
 /**
  * Accessibility checks, run against the development build.
  *
- * Axe scans are scoped to the library UI (`ng-map`: controls, markers, popups, loader) so the demo
- * site's own chrome (code-highlight contrast, docs cards, selects) does not drown out library
- * violations. Pages without a map are skipped (nothing of the library to scan); block previews on
- * /blocks are covered through their /view/:name routes.
+ * Axe scans the whole page (site chrome and library UI). Pages without a map are skipped; block
+ * previews on /blocks are covered through their /view/:name routes.
  */
 const SCANNED_ROUTES = ROUTES.filter((route) => route !== '/blocks' && EXPECTED_MAPS[route] !== 0);
 
 async function libraryViolations(page: Page) {
   const results = await new AxeBuilder({ page })
-    .include('ng-map')
     // MapLibre fades markers that sit behind the globe horizon (`maplibregl-marker-covered`,
     // opacity 0.2): they are intentionally dimmed, so their label contrast is not meaningful.
     .exclude('.maplibregl-marker-covered')
@@ -32,7 +29,7 @@ async function libraryViolations(page: Page) {
 
 test.describe('accessibility (axe)', () => {
   for (const route of SCANNED_ROUTES) {
-    test(`${route} has no axe violations in the library UI`, async ({ page }) => {
+    test(`${route} has no axe violations`, async ({ page }) => {
       await gotoAndWaitForMap(page, route, Math.max((EXPECTED_MAPS[route] ?? 1) - 1, 0));
       await expect(page.locator('ng-map .ng-map-loader')).toHaveCount(0, { timeout: 30_000 });
       expect(await libraryViolations(page)).toEqual([]);
@@ -145,5 +142,65 @@ test.describe('markers', () => {
     ]) {
       await expect(map.getByRole('button', { name })).toHaveCount(1);
     }
+  });
+});
+
+test.describe('keyboard: markers', () => {
+  test('focusing a marker with a tooltip shows it, blur and Escape hide it', async ({ page }) => {
+    await gotoAndWaitForMap(page, '/docs/components/markers', 0);
+    const map = page.locator('ng-map').first();
+    const tooltip = map.locator('.maplibregl-popup');
+    const marker = map.locator('.maplibregl-marker').first();
+
+    await expect(tooltip).toHaveCount(0);
+    await marker.focus();
+    await expect(tooltip).toHaveCount(1);
+
+    await page.keyboard.press('Escape');
+    await expect(tooltip).toHaveCount(0);
+
+    await marker.focus();
+    await marker.blur();
+    await expect(tooltip).toHaveCount(0);
+    await marker.focus();
+    await expect(tooltip).toHaveCount(1);
+    await marker.blur();
+    await expect(tooltip).toHaveCount(0);
+  });
+
+  test('a draggable marker is a named tab stop, moves with arrow keys and clicks with Enter/Space', async ({
+    page,
+  }) => {
+    await gotoAndWaitForMap(page, '/docs/components/markers', 2);
+    const map = page.locator('ng-map').nth(2);
+    const marker = map.getByRole('button', { name: 'Draggable marker' });
+    await expect(marker).toHaveCount(1);
+    await expect(marker).toHaveAttribute('tabindex', '0');
+    const readout = map.locator('..').locator('div.font-mono').first();
+
+    await marker.focus();
+    await expect(marker).toBeFocused();
+    const lngLat = () =>
+      page.evaluate(() =>
+        document
+          .querySelectorAll('ng-map')[2]
+          ?.querySelector('.maplibregl-marker')
+          ?.getAttribute('style'),
+      );
+    const before = await lngLat();
+
+    await page.keyboard.press('ArrowRight');
+    await expect(readout).toContainText('lng: -3.');
+    const afterSmall = await lngLat();
+    expect(afterSmall).not.toEqual(before);
+
+    await page.keyboard.press('Shift+ArrowDown');
+    await expect.poll(lngLat).not.toEqual(afterSmall);
+
+    await expect(readout).toContainText('clicks: 0');
+    await page.keyboard.press('Enter');
+    await expect(readout).toContainText('clicks: 1');
+    await page.keyboard.press('Space');
+    await expect(readout).toContainText('clicks: 2');
   });
 });
