@@ -9,6 +9,7 @@ import {
   mapInputs,
   mapSnippetInput,
   presetSnippet,
+  resolveStyles,
   STYLE_PRESETS,
   updateMapState,
 } from './style-presets';
@@ -134,6 +135,18 @@ describe('style presets', () => {
       'globe',
       'tilted',
     ]);
+  });
+
+  it('swaps the key placeholder for the picked key and exposes openmaptiles buildings', () => {
+    const maptiler = findPreset('maptiler');
+    expect(resolveStyles(maptiler, undefined)).toBeUndefined();
+    expect(resolveStyles(maptiler, 'abc')?.light).toBe(
+      'https://api.maptiler.com/maps/streets-v2/style.json?key=abc',
+    );
+    expect(resolveStyles(findPreset('stadia'), '')?.dark).toBe(
+      'https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json',
+    );
+    expect(maptiler.buildingSource).toEqual({ source: 'openmaptiles', sourceLayer: 'building' });
   });
 
   it('prints blank the same way in the gallery and the playground', () => {

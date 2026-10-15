@@ -13,6 +13,7 @@ import type { MarkerOptions } from 'maplibre-gl';
 import { MapComponent, type MapViewport } from 'ng-mapcn';
 
 import { FooterComponent } from '@/layout/footer';
+import { BasemapService } from '@/shared/basemap.service';
 import { CodeBlockComponent } from '@/shared/code-block';
 import { PageHeaderImports } from '@/shared/page-header';
 
@@ -37,6 +38,7 @@ import {
   mapSnippetInput,
   type MapState,
   presetSnippet,
+  resolveStyles,
   STYLE_PRESETS,
   type StylePreset,
   updateMapState,
@@ -119,13 +121,15 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
             >.
           </p>
 
-          @if (spec().requiresCarto && !activePreset().hasCartoSource) {
+          @if (
+            spec().requiresCarto && !activePreset().hasCartoSource && !activePreset().buildingSource
+          ) {
             <p
               role="status"
               class="bg-muted text-muted-foreground rounded-md border px-3 py-2 text-sm"
             >
-              {{ spec().label }} need the Carto vector tiles: pick Carto, Carto Voyager, Globe or 3D
-              tilt in the Basemap control.
+              {{ spec().label }} need the Carto vector tiles: pick Carto, Carto Voyager, MapTiler,
+              Stadia Maps, Globe or 3D tilt in the Basemap control.
             </p>
           }
           <div class="bg-card relative h-[520px] overflow-hidden rounded-xl border shadow-sm">
@@ -227,7 +231,7 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
                   class="block h-full w-full"
                   [center]="galleryView(preset).center"
                   [zoom]="galleryView(preset).zoom"
-                  [styles]="preset.styles"
+                  [styles]="presetStyles(preset)"
                   [blank]="!!preset.blank"
                   [projection]="preset.projection === 'globe' ? globe : undefined"
                   [options]="previewOptions(preset)"
@@ -280,6 +284,8 @@ export class PlaygroundComponent {
     { id: 'component', label: 'Component' },
   ];
 
+  private readonly basemap = inject(BasemapService);
+
   protected readonly selectedId = signal(PLAYGROUND_SPECS[2].id);
   protected readonly snippetTab = signal<SnippetTab>('template');
 
@@ -318,7 +324,9 @@ export class PlaygroundComponent {
       bearing: Math.round(bearing),
     };
   });
-  protected readonly mapProps = computed(() => mapInputs(this.mapState(), this.view()));
+  protected readonly mapProps = computed(() =>
+    mapInputs(this.mapState(), this.view(), this.presetKey(this.mapState().presetId)),
+  );
   /** Only changes when the camera fields do, so unrelated edits never re-jump the map. */
   protected readonly viewport = computed(() => this.mapProps().viewport, {
     equal: (a, b) =>
@@ -345,10 +353,17 @@ export class PlaygroundComponent {
     const className = this.spec().className;
     return className ? (PLAYGROUND_COMPONENTS[className] ?? null) : null;
   });
-  protected readonly layerInputs = computed(() => resolveInputs(this.spec(), this.values()));
+  /** The picked basemap may need a non-Carto building source (`openmaptiles`). */
+  private readonly liveSpec = computed(() => {
+    const spec = this.spec();
+    const building = findPreset(this.mapState().presetId).buildingSource;
+    if (spec.id !== 'fill-extrusion' || !building) return spec;
+    return { ...spec, attrs: { ...spec.attrs, ...building } };
+  });
+  protected readonly layerInputs = computed(() => resolveInputs(this.liveSpec(), this.values()));
 
   private readonly snippet = computed(() =>
-    buildSnippet(this.spec(), this.values(), mapSnippetInput(this.mapState(), this.view())),
+    buildSnippet(this.liveSpec(), this.values(), mapSnippetInput(this.mapState(), this.view())),
   );
   protected readonly snippetCode = computed(() =>
     this.snippetTab() === 'template' ? this.snippet().template : this.snippet().component,
@@ -395,6 +410,15 @@ export class PlaygroundComponent {
 
   protected applyStyle(preset: StylePreset): void {
     this.mapState.update((state) => applyPreset(state, preset));
+  }
+
+  private presetKey(presetId: string): string | undefined {
+    const keyed = findPreset(presetId).keyed;
+    return keyed ? this.basemap.keys()[keyed] : undefined;
+  }
+
+  protected presetStyles(preset: StylePreset) {
+    return resolveStyles(preset, this.presetKey(preset.id));
   }
 
   protected galleryView(preset: StylePreset) {
