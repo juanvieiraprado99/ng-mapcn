@@ -20,6 +20,8 @@ interface BaseControl {
    * flat control can drive a nested value.
    */
   into?: { input: string; prop: string };
+  /** Always in the snippet, even at the default (required inputs of the component). */
+  always?: boolean;
 }
 
 export type Control = BaseControl &
@@ -127,12 +129,18 @@ export function resolveInputs(spec: PlaygroundSpec, values: Values): Values {
   return inputs;
 }
 
+const escapeAttr = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+
+/** The template ends up inside a TS template literal in the Component tab. */
+const escapeLiteral = (text: string) =>
+  text.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+
 function renderAttr(attr: TemplateAttr): string {
-  if (attr.expr !== undefined) return `[${attr.name}]="${attr.expr}"`;
+  if (attr.expr !== undefined) return `[${attr.name}]="${escapeAttr(attr.expr)}"`;
   if (typeof attr.value === 'string') {
-    return `${attr.name}="${attr.value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}"`;
+    return `${attr.name}="${escapeAttr(attr.value)}"`;
   }
-  return `[${attr.name}]="${toTemplateExpr(attr.value)}"`;
+  return `[${attr.name}]="${escapeAttr(toTemplateExpr(attr.value))}"`;
 }
 
 function renderElement(tag: string, attrs: string[], indent: string, selfClose: boolean): string {
@@ -159,7 +167,8 @@ export function buildSnippet(
     }
     for (const fixed of spec.fixed) attrs.push(`[${fixed.input}]="${fixed.input}"`);
     for (const control of spec.controls) {
-      if (control.into || same(values[control.key], control.default)) continue;
+      if (control.into) continue;
+      if (!control.always && same(values[control.key], control.default)) continue;
       attrs.push(renderAttr({ name: control.key, value: values[control.key] }));
     }
     for (const [input, bag] of groupInto(spec.controls, values, true)) {
@@ -174,7 +183,7 @@ export function buildSnippet(
   const imports = ['MapComponent', ...(layerClass ? [layerClass] : [])];
   const libImports = [...imports, ...(map.imports ?? [])];
   const members = [...spec.fixed.map((f) => f.ts), ...(map.ts ?? [])];
-  const indented = template
+  const indented = escapeLiteral(template)
     .split('\n')
     .map((line) => `      ${line}`)
     .join('\n');

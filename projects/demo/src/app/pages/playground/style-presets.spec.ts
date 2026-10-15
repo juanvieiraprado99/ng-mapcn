@@ -88,14 +88,29 @@ describe('style presets', () => {
     ).toContain(' [blank]="true"');
   });
 
-  it('gives every preset a gallery snippet', () => {
-    expect(presetSnippet(findPreset('carto'))).toContain('<ng-map />');
-    expect(presetSnippet(findPreset('openfreemap'))).toContain('provideMapStyles({');
-    expect(presetSnippet(findPreset('globe'))).toContain(`[projection]="{ type: 'globe' }"`);
-    expect(presetSnippet(findPreset('tilted'))).toContain(
+  it('gives every preset a gallery snippet, split by language', () => {
+    expect(presetSnippet(findPreset('carto')).template).toContain('<ng-map />');
+    expect(presetSnippet(findPreset('carto')).provider).toBeUndefined();
+
+    const custom = presetSnippet(findPreset('openfreemap'));
+    expect(custom.template).toBe(
+      `<ng-map [styles]="{ light: 'https://tiles.openfreemap.org/styles/positron', dark: 'https://tiles.openfreemap.org/styles/dark' }" />`,
+    );
+    expect(custom.template).not.toContain('// ');
+    expect(custom.provider).toContain('provideMapStyles({');
+    expect(custom.provider).not.toContain('<ng-map');
+
+    expect(presetSnippet(findPreset('globe')).template).toContain(
+      `[projection]="{ type: 'globe' }"`,
+    );
+    expect(presetSnippet(findPreset('tilted')).template).toContain(
       '[options]="{ pitch: 60, bearing: -20 }"',
     );
-    expect(presetSnippet(findPreset('blank'))).toBe('<ng-map blank />');
+    expect(presetSnippet(findPreset('blank')).template).toBe('<ng-map blank />');
+  });
+
+  it('tells the default preset it follows the header basemap picker', () => {
+    expect(findPreset('carto').note).toContain('header basemap picker');
   });
 });
 

@@ -15,6 +15,8 @@ export interface StylePreset {
   projection?: 'mercator' | 'globe';
   pitch?: number;
   bearing?: number;
+  /** Shown on the gallery card. */
+  note?: string;
 }
 
 export const STYLE_PRESETS: readonly StylePreset[] = [
@@ -22,6 +24,7 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     id: 'carto',
     label: 'Carto (default)',
     description: 'Positron in light mode, Dark Matter in dark mode. No configuration needed.',
+    note: 'Follows the header basemap picker.',
   },
   {
     id: 'voyager',
@@ -156,18 +159,17 @@ export function mapSnippetInput(state: MapState, view: MapView): MapSnippetInput
   return { attrs, ts, imports };
 }
 
-/** The gallery's copy-ready code for a preset. */
-export function presetSnippet(preset: StylePreset): string {
-  const lines: string[] = [];
+/** The gallery's copy-ready code for a preset: a template and, for custom styles, the app provider. */
+export function presetSnippet(preset: StylePreset): { template: string; provider?: string } {
   if (preset.styles) {
-    lines.push(
-      '<!-- Per map -->',
-      `<ng-map [styles]="${toTemplateExpr(preset.styles)}" />`,
-      '',
-      '// ...or once for the whole app (app.config.ts)',
-      `provideMapStyles({\n  light: '${preset.styles.light}',\n  dark: '${preset.styles.dark}',\n}),`,
-    );
-    return lines.join('\n');
+    return {
+      template: `<ng-map [styles]="${toTemplateExpr(preset.styles)}" />`,
+      provider: `// Or once for the whole app (app.config.ts)
+provideMapStyles({
+  light: '${preset.styles.light}',
+  dark: '${preset.styles.dark}',
+}),`,
+    };
   }
   const attrs: string[] = [];
   if (preset.blank) attrs.push('blank');
@@ -177,9 +179,12 @@ export function presetSnippet(preset: StylePreset): string {
   if (preset.bearing) camera['bearing'] = preset.bearing;
   if (Object.keys(camera).length) attrs.push(`[options]="${toTemplateExpr(camera)}"`);
   if (!attrs.length) {
-    return '<!-- No inputs: the built-in Carto basemap follows the light/dark theme -->\n<ng-map />';
+    return {
+      template:
+        '<!-- No inputs: the built-in Carto basemap follows the light/dark theme -->\n<ng-map />',
+    };
   }
-  return `<ng-map ${attrs.join(' ')} />`;
+  return { template: `<ng-map ${attrs.join(' ')} />` };
 }
 
 /** Map-level fields of the playground, rendered by the same controls component as the layers. */

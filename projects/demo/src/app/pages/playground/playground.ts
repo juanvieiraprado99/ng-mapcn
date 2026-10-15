@@ -1,5 +1,6 @@
 import { NgComponentOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, linkedSignal, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MapComponent } from 'ng-mapcn';
 
 import { FooterComponent } from '@/layout/footer';
@@ -65,6 +66,7 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
   standalone: true,
   imports: [
     NgComponentOutlet,
+    RouterLink,
     MapComponent,
     CodeBlockComponent,
     FooterComponent,
@@ -97,6 +99,12 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
             }
           </div>
           <p class="text-muted-foreground text-sm">{{ spec().description }}</p>
+          <p class="text-muted-foreground text-xs">
+            Popups, terrain, vector and image sources and draw are not in the playground; see the
+            <a routerLink="/docs/components/map" class="underline underline-offset-4"
+              >component docs</a
+            >.
+          </p>
 
           <div class="bg-card relative h-[520px] overflow-hidden rounded-xl border shadow-sm">
             @for (key of [spec().id]; track key) {
@@ -196,6 +204,9 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
               <div class="border-t p-3">
                 <p class="text-sm font-medium">{{ preset.label }}</p>
                 <p class="text-muted-foreground mt-0.5 text-xs">{{ preset.description }}</p>
+                @if (preset.note) {
+                  <p class="text-muted-foreground mt-0.5 text-xs italic">{{ preset.note }}</p>
+                }
               </div>
               <button
                 type="button"
@@ -210,7 +221,10 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
 
         <div class="space-y-2">
           <h3 class="text-sm font-medium">{{ activePreset().label }} snippet</h3>
-          <app-code-block [code]="gallerySnippet()" lang="angular-html" />
+          <app-code-block [code]="gallerySnippet().template" lang="angular-html" />
+          @if (gallerySnippet().provider; as provider) {
+            <app-code-block [code]="provider" lang="angular-ts" />
+          }
         </div>
       </section>
     </section>

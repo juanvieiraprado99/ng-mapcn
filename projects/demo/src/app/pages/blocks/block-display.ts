@@ -63,7 +63,7 @@ const TAB_TRIGGER =
           role="tablist"
           class="bg-muted text-muted-foreground inline-flex h-8 w-fit items-center justify-center rounded-lg p-[3px]"
         >
-          @for (tab of tabs; track tab.id) {
+          @for (tab of tabs(); track tab.id) {
             <button
               type="button"
               role="tab"
@@ -139,18 +139,27 @@ export class BlockDisplayComponent {
   readonly block = input.required<BlockMeta>();
 
   protected readonly trigger = TAB_TRIGGER;
-  protected readonly tabs: { id: Tab; label: string }[] = [
+  protected readonly tabs = computed<{ id: Tab; label: string }[]>(() => [
     { id: 'preview', label: 'Preview' },
     { id: 'code', label: 'Code' },
-    { id: 'usage', label: 'Usage' },
-  ];
+    ...(this.usage() ? [{ id: 'usage' as const, label: 'Usage' }] : []),
+  ]);
   protected readonly active = signal<Tab>('preview');
   protected readonly codeOpened = signal(false);
   protected readonly copied = signal(false);
-  /** Loaded with the block sources the first time the Usage tab opens. */
-  protected readonly usage = signal<string | null>(null);
+  /** Block sources, loaded once (lazy chunk) to derive the usage snippet. */
+  private readonly sources = signal<Record<string, string> | null>(null);
+  /** `null` until the sources load, and for a block whose entry component cannot be read. */
+  protected readonly usage = computed(() => {
+    const sources = this.sources();
+    return sources ? blockUsage(this.block(), sources) : null;
+  });
 
   private readonly sanitizer = inject(DomSanitizer);
+
+  constructor() {
+    void import('@/blocks/block-sources.generated').then((m) => this.sources.set(m.BLOCK_SOURCES));
+  }
 
   protected readonly viewUrl = computed(() => `/view/${this.block().name}`);
   /** Same-origin route of this site, so it is safe as an iframe resource URL. */
@@ -167,11 +176,6 @@ export class BlockDisplayComponent {
   protected select(tab: Tab): void {
     this.active.set(tab);
     if (tab === 'code') this.codeOpened.set(true);
-    if (tab === 'usage' && this.usage() === null) {
-      void import('@/blocks/block-sources.generated').then((m) =>
-        this.usage.set(blockUsage(this.block(), m.BLOCK_SOURCES)),
-      );
-    }
   }
 
   protected async copyCommand(): Promise<void> {

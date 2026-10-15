@@ -109,6 +109,7 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
       {
         kind: 'range',
         key: 'longitude',
+        always: true,
         label: 'Longitude',
         min: -75,
         max: -73,
@@ -118,6 +119,7 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
       {
         kind: 'range',
         key: 'latitude',
+        always: true,
         label: 'Latitude',
         min: 40,
         max: 41.5,
@@ -248,7 +250,7 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
       {
         input: 'data',
         value: AREAS,
-        ts: 'readonly data: GeoJSON.FeatureCollection = { type: \'FeatureCollection\', features: [/* polygons with a "name" property */] };',
+        ts: `readonly data: GeoJSON.FeatureCollection = ${JSON.stringify(AREAS)};`,
       },
     ],
     view: { center: [-73.99, 40.73], zoom: 11 },

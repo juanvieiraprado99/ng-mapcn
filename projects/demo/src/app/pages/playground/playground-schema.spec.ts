@@ -7,6 +7,7 @@ import {
   resolveInputs,
   toTemplateExpr,
 } from './playground-schema';
+import { PLAYGROUND_SPECS } from './playground-specs';
 
 const SPEC: PlaygroundSpec = {
   id: 'route',
@@ -153,5 +154,49 @@ describe('buildSnippet', () => {
 
     expect(template).toBe('<ng-map [center]="[-74, 40.7]" [zoom]="11" />');
     expect(component).toContain('imports: [MapComponent],');
+  });
+});
+
+describe('required inputs and escaping', () => {
+  const REQUIRED: Record<string, string[]> = {
+    'ng-map-marker': ['longitude', 'latitude'],
+    'ng-map-route': ['coordinates'],
+    'ng-map-geojson': ['data'],
+    'ng-map-arc': ['data'],
+    'ng-map-cluster-layer': ['data'],
+    'ng-map-heatmap': ['data'],
+  };
+  const MAP = { attrs: [{ name: 'zoom', value: 3 }] };
+
+  it.each(PLAYGROUND_SPECS.filter((s) => s.selector).map((s) => [s.id, s] as const))(
+    '%s emits its required inputs at default values',
+    (_id, spec) => {
+      const { template } = buildSnippet(spec, controlDefaults(spec.controls), MAP);
+      for (const name of REQUIRED[spec.selector!] ?? []) {
+        expect(template, name).toContain(`[${name}]="`);
+      }
+    },
+  );
+
+  it('escapes double quotes and ampersands in bound expressions', () => {
+    const spec: PlaygroundSpec = {
+      ...SPEC,
+      fixed: [],
+      controls: [{ kind: 'json', key: 'paint', label: 'p', default: undefined }],
+    };
+    const { template } = buildSnippet(spec, { paint: { a: 'say "hi" & go' } }, MAP);
+
+    expect(template).toContain(`[paint]="{ a: 'say &quot;hi&quot; &amp; go' }"`);
+  });
+
+  it('escapes backticks, ${ and backslashes in the component template literal', () => {
+    const spec: PlaygroundSpec = {
+      ...SPEC,
+      fixed: [],
+      controls: [{ kind: 'text', key: 'label', label: 'l', default: '' }],
+    };
+    const { component } = buildSnippet(spec, { label: 'a`b${c}\\d' }, MAP);
+
+    expect(component).toContain('label="a\\`b\\${c}\\\\d"');
   });
 });
