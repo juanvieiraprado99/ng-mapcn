@@ -3,13 +3,15 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCheck, lucideMaximize, lucideTerminal } from '@ng-icons/lucide';
 
+import { blockUsage } from '@/blocks/block-usage';
 import { type BlockMeta, zardDocsUrl, zardInstallCommand } from '@/blocks/registry';
+import { CodeBlockComponent } from '@/shared/code-block';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSeparatorComponent } from '@/shared/components/separator';
 
 import { BlockCodeViewerComponent } from './block-code-viewer';
 
-type Tab = 'preview' | 'code';
+type Tab = 'preview' | 'code' | 'usage';
 
 /** shadcn new-york `TabsTrigger` on the default (muted pill) list. */
 const TAB_TRIGGER =
@@ -19,7 +21,13 @@ const TAB_TRIGGER =
 @Component({
   selector: 'app-block-display',
   standalone: true,
-  imports: [NgIcon, ZardButtonComponent, ZardSeparatorComponent, BlockCodeViewerComponent],
+  imports: [
+    NgIcon,
+    ZardButtonComponent,
+    ZardSeparatorComponent,
+    BlockCodeViewerComponent,
+    CodeBlockComponent,
+  ],
   viewProviders: [provideIcons({ lucideCheck, lucideMaximize, lucideTerminal })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -115,6 +123,15 @@ const TAB_TRIGGER =
           <app-block-code-viewer [block]="block()" />
         </div>
       }
+
+      @if (usage(); as snippet) {
+        <div class="mt-3" [hidden]="active() !== 'usage'">
+          <p class="text-muted-foreground mb-2 text-sm">
+            After copying the files into your app, render the block like this.
+          </p>
+          <app-code-block [code]="snippet" lang="angular-ts" filename="page.component.ts" />
+        </div>
+      }
     </div>
   `,
 })
@@ -125,10 +142,13 @@ export class BlockDisplayComponent {
   protected readonly tabs: { id: Tab; label: string }[] = [
     { id: 'preview', label: 'Preview' },
     { id: 'code', label: 'Code' },
+    { id: 'usage', label: 'Usage' },
   ];
   protected readonly active = signal<Tab>('preview');
   protected readonly codeOpened = signal(false);
   protected readonly copied = signal(false);
+  /** Loaded with the block sources the first time the Usage tab opens. */
+  protected readonly usage = signal<string | null>(null);
 
   private readonly sanitizer = inject(DomSanitizer);
 
@@ -147,6 +167,11 @@ export class BlockDisplayComponent {
   protected select(tab: Tab): void {
     this.active.set(tab);
     if (tab === 'code') this.codeOpened.set(true);
+    if (tab === 'usage' && this.usage() === null) {
+      void import('@/blocks/block-sources.generated').then((m) =>
+        this.usage.set(blockUsage(this.block(), m.BLOCK_SOURCES)),
+      );
+    }
   }
 
   protected async copyCommand(): Promise<void> {
