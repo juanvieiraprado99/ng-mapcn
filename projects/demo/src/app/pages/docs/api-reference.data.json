@@ -113,6 +113,12 @@
       "selector": "ng-marker-popup",
       "description": "A popup attached to the marker that opens on click. Must be used inside ng-map-marker.",
       "inputs": [
+        { "name": "closeButton", "type": "boolean", "default": "false", "description": "Shows a close button in the popup." },
+        { "name": "offset", "type": "Offset", "default": "", "description": "Pixel offset from the marker. Reconciled live via setOffset; MapLibre's default when unset." },
+        { "name": "anchor", "type": "PositionAnchor", "default": "", "description": "Which side of the marker the popup anchors to. Applied at creation only." },
+        { "name": "maxWidth", "type": "string", "default": "'none'", "description": "CSS max-width of the popup container. Reconciled live via setMaxWidth." },
+        { "name": "closeOnClick", "type": "boolean", "default": "false", "description": "Closes the popup when the map is clicked. Applied at creation only." },
+        { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (closePopup), merged over provideMapLabels() and the English defaults." },
         { "name": "className", "type": "string", "default": "", "description": "Extra space-separated classes added to the rendered .ng-popup-card element. Reactive; the built-in class is always kept." }
       ],
       "outputs": [

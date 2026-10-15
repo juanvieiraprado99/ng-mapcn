@@ -87,6 +87,147 @@ describe('MarkerPopupComponent', () => {
     expect(() => fixture.destroy()).not.toThrow();
   });
 
+  describe('options', () => {
+    const OPTS_TEMPLATE = `
+      <ng-map><ng-map-marker [longitude]="1" [latitude]="2">
+        <ng-marker-popup
+          [closeButton]="closeButton"
+          [offset]="offset"
+          [anchor]="anchor"
+          [maxWidth]="maxWidth"
+          [closeOnClick]="closeOnClick"
+          [labels]="labels"
+          (popupClose)="popupClose()"
+        ><p class="body">x</p></ng-marker-popup>
+      </ng-map-marker></ng-map>
+    `;
+    const defaults = () => ({
+      closeButton: false,
+      offset: undefined,
+      anchor: undefined,
+      maxWidth: 'none',
+      closeOnClick: false,
+      labels: undefined,
+      popupClose: vi.fn(),
+    });
+    const renderOpts = async (props: Record<string, unknown> = {}) => {
+      const hostProps = { ...defaults(), ...props };
+      const result = await renderMap(OPTS_TEMPLATE, {
+        imports: [MapMarkerComponent, MarkerPopupComponent],
+        hostProps,
+      });
+      return { ...result, hostProps };
+    };
+    const card = () => fakeRegistry.popups[0].getContent() as HTMLElement;
+
+    it('keeps the previous behaviour with no inputs set', async () => {
+      await renderOpts();
+      expect(fakeRegistry.popups[0].options).toEqual({
+        maxWidth: 'none',
+        closeButton: false,
+        closeOnClick: false,
+        focusAfterOpen: true,
+      });
+      expect(card().querySelector('.ng-popup-close')).toBeNull();
+    });
+
+    it('passes creation-only options to the Popup constructor', async () => {
+      await renderOpts({ anchor: 'bottom', closeOnClick: true, offset: 24, maxWidth: '320px' });
+      expect(fakeRegistry.popups[0].options).toEqual({
+        maxWidth: '320px',
+        closeButton: false,
+        closeOnClick: true,
+        focusAfterOpen: true,
+        offset: 24,
+        anchor: 'bottom',
+      });
+    });
+
+    it('renders a close button that closes the popup and emits popupClose', async () => {
+      const { hostProps } = await renderOpts({ closeButton: true });
+      fakeRegistry.popups[0].addTo(fakeRegistry.maps[0]);
+      const button = card().querySelector<HTMLButtonElement>('.ng-popup-close')!;
+      expect(button.getAttribute('aria-label')).toBe('Close popup');
+
+      button.click();
+
+      expect(fakeRegistry.popups[0].isOpen()).toBe(false);
+      expect(hostProps.popupClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('toggles the close button and translates its label without recreating the popup', async () => {
+      const { fixture } = await renderOpts();
+      update(fixture, { closeButton: true, labels: { closePopup: 'Fechar' } });
+      await fixture.whenStable();
+      expect(card().querySelector('.ng-popup-close')?.getAttribute('aria-label')).toBe('Fechar');
+      update(fixture, { closeButton: false });
+      await fixture.whenStable();
+      expect(card().querySelector('.ng-popup-close')).toBeNull();
+      expect(fakeRegistry.popups).toHaveLength(1);
+    });
+
+    it('reconciles offset and maxWidth through setters without recreation', async () => {
+      const { fixture } = await renderOpts();
+      const popup = fakeRegistry.popups[0];
+      popup.calls.length = 0;
+
+      update(fixture, { offset: [4, 8], maxWidth: '200px' });
+      await fixture.whenStable();
+
+      expect(popup.calls).toContain('setOffset');
+      expect(popup.calls).toContain('setMaxWidth');
+      expect(popup.getOffset()).toEqual([4, 8]);
+      expect(popup.getMaxWidth()).toBe('200px');
+      expect(fakeRegistry.popups).toHaveLength(1);
+      expect(fakeRegistry.markers[0].getPopup()).toBe(popup);
+    });
+  });
+
+  describe('offset and close handling', () => {
+    const T = `<ng-map><ng-map-marker [longitude]="1" [latitude]="2">
+      @if (show) { <ng-marker-popup [offset]="offset" (popupClose)="popupClose()"><p>x</p></ng-marker-popup> }
+    </ng-map-marker></ng-map>`;
+    const go = async (offset?: unknown) => {
+      const popupClose = vi.fn();
+      const result = await renderMap(T, {
+        imports: [MapMarkerComponent, MarkerPopupComponent],
+        hostProps: { show: true, offset, popupClose },
+      });
+      await result.fixture.whenStable();
+      return { ...result, popupClose };
+    };
+
+    it('never calls setOffset when no offset input is given', async () => {
+      await go();
+      expect(fakeRegistry.popups[0].calls).not.toContain('setOffset');
+    });
+
+    it('does not re-apply the creation offset, only later changes', async () => {
+      const { fixture } = await go([1, 2]);
+      const popup = fakeRegistry.popups[0];
+      expect(popup.calls).not.toContain('setOffset');
+      update(fixture, { offset: [3, 4] });
+      await fixture.whenStable();
+      expect(popup.calls.filter((c: string) => c === 'setOffset')).toHaveLength(1);
+      expect(popup.getOffset()).toEqual([3, 4]);
+    });
+
+    it('does not emit popupClose when destroyed with an open popup', async () => {
+      const { fixture, popupClose } = await go();
+      fakeRegistry.popups[0].addTo(fakeRegistry.maps[0]);
+      update(fixture, { show: false });
+      await fixture.whenStable();
+      expect(popupClose).not.toHaveBeenCalled();
+    });
+
+    it('still emits popupClose on a user close', async () => {
+      const { popupClose } = await go();
+      fakeRegistry.popups[0].addTo(fakeRegistry.maps[0]);
+      fakeRegistry.popups[0].remove();
+      expect(popupClose).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('className', () => {
     it('applies the initial classes and keeps the built-in class', async () => {
       const { fixture } = await renderMap(

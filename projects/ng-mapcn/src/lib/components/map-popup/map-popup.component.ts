@@ -18,6 +18,7 @@ import { type Map as MapLibreMap, type Offset, Popup } from 'maplibre-gl';
 import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MapContextService } from '../../services/map-context.service';
 import { applyClassName } from '../../utils/class-name';
+import { createPopupCloseButton } from '../../utils/popup-close-button';
 import { renderPortal } from '../../utils/portal';
 
 /**
@@ -157,44 +158,10 @@ export class MapPopupComponent {
       const existing = container.querySelector('.ng-popup-close');
       existing?.setAttribute('aria-label', label);
       if (showClose && !existing) {
-        container.appendChild(this.createCloseButton(popup, label));
+        container.appendChild(createPopupCloseButton(popup, label));
       } else if (!showClose && existing) {
         existing.remove();
       }
     });
   }
-
-  private createCloseButton(popup: Popup, label: string): HTMLButtonElement {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'ng-popup-close';
-    btn.setAttribute('aria-label', label);
-    btn.appendChild(createCloseIcon());
-    btn.addEventListener('click', () => popup.remove());
-    return btn;
-  }
-}
-
-const SVG_NS = 'http://www.w3.org/2000/svg';
-
-/** The "X" icon, built with DOM APIs: no HTML parsing, so it works under Trusted Types CSPs. */
-function createCloseIcon(): SVGSVGElement {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  const attrs: Record<string, string> = {
-    width: '14',
-    height: '14',
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    'stroke-width': '2',
-    'stroke-linecap': 'round',
-    'stroke-linejoin': 'round',
-  };
-  for (const [name, value] of Object.entries(attrs)) svg.setAttribute(name, value);
-  for (const d of ['M18 6 6 18', 'm6 6 12 12']) {
-    const path = document.createElementNS(SVG_NS, 'path');
-    path.setAttribute('d', d);
-    svg.appendChild(path);
-  }
-  return svg;
 }
