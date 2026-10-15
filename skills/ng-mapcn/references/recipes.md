@@ -20,6 +20,7 @@ Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array
           [showLocate]="true"
           [showFullscreen]="true"
           (locateChange)="onLocate($event)"
+          (locateError)="onLocateError($event)"
         />
       </ng-map>
     </div>
@@ -29,8 +30,22 @@ export class ControlsMap {
   onLocate(pos: { longitude: number; latitude: number }) {
     console.log(pos.longitude, pos.latitude);
   }
+
+  // Permission denied, timeout, or no geolocation at all (insecure context: an Error)
+  onLocateError(error: GeolocationPositionError | Error) {
+    console.warn(error.message);
+  }
 }
 ```
+
+Translate the button labels app-wide in `app.config.ts`. Missing keys stay in English, and a signal follows the active locale:
+
+```ts
+provideMapLabels({ zoomIn: 'Aproximar', zoomOut: 'Afastar', locate: 'Minha localização' });
+provideMapLabels(() => inject(I18nService).mapLabels); // Signal<Partial<MapLabels>>
+```
+
+Per map or per component: `<ng-map-controls [labels]="{ zoomIn: 'Acercar' }" />`.
 
 ## Markers from an array
 
@@ -140,6 +155,33 @@ The popup opens when created and is removed when the `@if` block is destroyed.
 readonly route = signal<[number, number][]>([[-46.63, -23.55], [-45.9, -23.2], [-43.17, -22.91]]);
 ```
 
+Progress, a marker that follows it, and an active (selected) state:
+
+```html
+<ng-map-route
+  [coordinates]="route()"
+  color="#94a3b8"
+  [width]="4"
+  [progress]="progress()"
+  [active]="selected()"
+  activeColor="#2563eb"
+  (routeClick)="selected.set(!selected())"
+  (routeMouseEnter)="hovering.set(true)"
+  (routeMouseLeave)="hovering.set(false)"
+>
+  <ng-route-progress color="#22c55e" />
+  <ng-route-marker at="start">
+    <ng-marker-content><div class="size-3 rounded-full bg-slate-500"></div></ng-marker-content>
+  </ng-route-marker>
+  <ng-route-marker at="progress">
+    <ng-marker-content>🚚</ng-marker-content>
+    <ng-marker-tooltip>In transit</ng-marker-tooltip>
+  </ng-route-marker>
+</ng-map-route>
+```
+
+Import `RouteProgressComponent`, `RouteMarkerComponent` and `MarkerContentComponent` too. `progress` (0 to 1) is measured along the cumulative distance. Without a `ng-route-progress` child nothing is drawn for it, but `ng-route-marker at="progress"` still follows it.
+
 ## GeoJSON with hover
 
 Hover styling needs `promoteId` (a feature property that is unique per feature) and `interactive`.
@@ -160,6 +202,30 @@ Hover styling needs `promoteId` (a feature property that is unique per feature) 
 ```
 
 `data` can also be a URL string. Set `[fillPaint]="false"` or `[linePaint]="false"` to skip a layer. A choropleth example (data-driven `fill-color` expression, `ng-map-popup` on hover) lives in `projects/demo/src/app/blocks/choropleth/`.
+
+The properties type is inferred from `data`. With `countries: FeatureCollection<Geometry, CountryProperties>`, type the handler as `MapGeoJSONEvent<CountryProperties>` (a bare `MapGeoJSONEvent` does not compile for an interface):
+
+```ts
+onHover(event: MapGeoJSONEvent<CountryProperties> | null) {
+  this.hovered.set(event?.feature.properties.NAME_LONG ?? null);
+}
+```
+
+A tooltip that follows the hover is a `ng-map-popup` with `[closeOnClick]="false"` and `className="ng-popup-passthrough"`. Without the class, moving the cursor into the popup fires the layer's `mouseleave` and the popup disappears:
+
+```html
+@if (hover(); as h) {
+<ng-map-popup
+  [longitude]="h.lng"
+  [latitude]="h.lat"
+  [offset]="12"
+  [closeOnClick]="false"
+  className="ng-popup-passthrough"
+>
+  {{ h.name }}
+</ng-map-popup>
+}
+```
 
 ## Arcs
 
@@ -200,7 +266,7 @@ Extra datum properties (here `color`) are available to paint expressions through
 </ng-map>
 ```
 
-`data` also accepts a `GeoJSON.FeatureCollection<GeoJSON.Point>`. Clicking a cluster zooms into it unless `[zoomOnClusterClick]="false"`.
+`data` also accepts a `GeoJSON.FeatureCollection<GeoJSON.Point, P>`; `P` types `pointClick` (`ClusterPointClickEvent<Store>`). Clicking a cluster zooms into it unless `[zoomOnClusterClick]="false"`. Set `id="stores"` for stable ids (`cluster-source-stores`, `clusters-stores`, `cluster-count-stores`, `unclustered-point-stores`), and `beforeId` to put the three layers under another layer. The colors above are the defaults; mapcn uses `['#3b82f6', '#1d4ed8', '#1e3a8a']`.
 
 ## Controlled viewport and raw map
 
@@ -308,7 +374,7 @@ export class PointsLayerComponent {
 
 Use it as a child: `<ng-map><app-points-layer /></ng-map>`. When the theme changes, `isLoaded()` drops to false (cleanup runs) and back to true (layers are re-added). Use `ctx.resolvedTheme()` inside the effect for theme-specific colors.
 
-Layer order: `map.addLayer(spec, beforeId)` places a layer under `beforeId`. Library layer ids are `<id>-layer` (route), `geojson-fill-<id>` / `geojson-line-<id>` (geojson) and `arc-layer-<id>` (arc), where `<id>` is the component's `id` input. `ng-map-cluster-layer` has no `id` input (auto ids `clusters-ng-cluster-N`), so its order follows creation order.
+Layer order: `map.addLayer(spec, beforeId)` places a layer under `beforeId`. Library layer ids are `<id>-layer` (route; its progress line is `<id>-layer-progress-layer`), `geojson-fill-<id>` / `geojson-line-<id>` (geojson), `arc-layer-<id>` (arc) and `clusters-<id>` / `cluster-count-<id>` / `unclustered-point-<id>` (cluster), where `<id>` is the component's `id` input. Every layer component also takes `beforeId` (creation only).
 
 ## Lazy loading
 
