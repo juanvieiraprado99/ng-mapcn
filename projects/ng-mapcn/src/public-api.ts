@@ -35,4 +35,5 @@ export * from './lib/providers/map-styles.provider';
 
 export type { MapStylesConfig } from './lib/styles/map-styles';
 export { blankMapStyle, defaultStyles } from './lib/styles/map-styles';
+export type { MapFitBoundsOptions } from './lib/utils/bounds';
 export * from './lib/utils/map-utils';

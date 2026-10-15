@@ -16,7 +16,10 @@
   "contextRows": [
     { "name": "map()", "type": "Signal<Map | null>", "default": "", "description": "The raw maplibre-gl Map instance, or null before init." },
     { "name": "isLoaded()", "type": "Signal<boolean>", "default": "", "description": "True when the style is loaded and layers can be added. Gates every source/layer operation." },
-    { "name": "resolvedTheme()", "type": "Signal<'light' | 'dark'>", "default": "", "description": "Theme currently applied to the map." }
+    { "name": "resolvedTheme()", "type": "Signal<'light' | 'dark'>", "default": "", "description": "Theme currently applied to the map." },
+    { "name": "fitBounds(options?)", "type": "(options?: MapFitBoundsOptions) => boolean", "default": "", "description": "Fits the camera to options.bounds, or to the union of the children's data. Returns false when the map is not loaded or there are no bounds." },
+    { "name": "dataBounds()", "type": "Signal<[number, number, number, number] | null>", "default": "", "description": "Union of the bounds registered by the children, as [west, south, east, north]." },
+    { "name": "registerBounds(getter)", "type": "(getter: () => LngLatBoundsLike | null) => () => void", "default": "", "description": "Contributes a bounds source to fit-to-bounds. The getter runs reactively; returns the unregister function (call it on destroy)." }
   ],
   "sections": [
     {
@@ -34,6 +37,7 @@
         { "name": "loading", "type": "boolean", "default": "false", "description": "Shows the loading overlay." },
         { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (loading), merged over provideMapLabels() and the English defaults." },
         { "name": "viewport", "type": "Partial<MapViewport>", "default": "", "description": "Controlled viewport ({ center, zoom, bearing, pitch }). Pair with viewportChange." },
+        { "name": "fitBounds", "type": "MapFitBoundsOptions", "default": "", "description": "Fits the camera to bounds ({ bounds?, padding?, maxZoom?, duration?, animate? }). Without bounds it fits the union of the children's data (markers, GeoJSON, routes, arcs, clusters, heatmaps). Runs after load and refits only when the bounds change; the first fit never animates; maxZoom defaults to 16. Imperative form: MapContextService.fitBounds()." },
         { "name": "options", "type": "Omit<MapOptions, 'container' | 'style'>", "default": "", "description": "Extra MapLibre MapOptions (scrollZoom, dragRotate, …) passed to the map constructor." }
       ],
       "outputs": [
