@@ -152,8 +152,8 @@ export class MapClusterLayerComponent<P extends Record<string, any> = Record<str
       const unclusteredLayerId = this.unclusteredLayerId();
       const beforeId = untracked(() => this.beforeId());
 
-      const colors = untracked(() => this.clusterColors());
-      const thresholds = untracked(() => this.clusterThresholds());
+      const colors = untracked(() => this.clusterColors() ?? DEFAULT_CLUSTER_COLORS);
+      const thresholds = untracked(() => this.clusterThresholds() ?? DEFAULT_CLUSTER_THRESHOLDS);
       const pointColor = untracked(() => this.pointColor());
 
       const data = untracked(() => this.data());
@@ -330,8 +330,8 @@ export class MapClusterLayerComponent<P extends Record<string, any> = Record<str
 
     // Update layer paint when style props change
     effect(() => {
-      const colors = this.clusterColors();
-      const thresholds = this.clusterThresholds();
+      const colors = this.clusterColors() ?? DEFAULT_CLUSTER_COLORS;
+      const thresholds = this.clusterThresholds() ?? DEFAULT_CLUSTER_THRESHOLDS;
       const pointColor = this.pointColor();
       if (!this.created()) return;
       const map = this.ctx.map();

@@ -351,6 +351,26 @@ describe('MapClusterLayerComponent', () => {
       expect(structuralCalls(map)).toEqual([]);
     });
 
+    it('falls back to the default colors and thresholds when the inputs are set to undefined', async () => {
+      const { fixture, map, ids } = await renderLoaded({
+        clusterColors: ['#a', '#b', '#c'],
+        clusterThresholds: [5, 6],
+      });
+      map.setPaintProperty.mockClear();
+
+      update(fixture, { clusterColors: undefined, clusterThresholds: undefined });
+
+      expect(map.setPaintProperty).toHaveBeenCalledWith(ids.clusters, 'circle-color', [
+        'step',
+        ['get', 'point_count'],
+        '#22c55e',
+        100,
+        '#eab308',
+        750,
+        '#ef4444',
+      ]);
+    });
+
     it('pushes new object data through setData on the same source', async () => {
       const { fixture, map, ids } = await renderLoaded();
       const source = map.getSource(ids.source);
