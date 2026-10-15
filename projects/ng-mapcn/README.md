@@ -148,6 +148,8 @@ The map fills its parent, so give the parent an explicit height. More building b
 | `ng-map-cluster-layer`                                      | Clustered points with count labels, threshold-based colors/sizes and expansion-zoom on click.                                                                                                                                                                                                      |
 | `ng-map-heatmap`                                            | Point-density heatmap layer with a theme-aware gradient, `weightProperty`/`weightRange`, zoom-dependent `radius`/`intensity`/`opacity` expressions and `maxZoom`.                                                                                                                                  |
 
+`ng-map` also takes `[fitBounds]="{ padding, maxZoom, duration, animate, bounds? }"` to fit the camera to its children's data (or explicit `bounds`) once loaded and whenever they change; `MapContextService.fitBounds()` is the imperative form.
+
 Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint`, `blankMapStyle`, `defaultStyles`, and `MapContextService` (map / isLoaded / resolvedTheme signals for advanced layer work via `inject`).
 
 ## Theming

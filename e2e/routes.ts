@@ -40,7 +40,7 @@ export const EXPECTED_MAPS: Record<string, number> = {
   '/docs/installation': 1,
   '/docs/api-reference': 0,
   '/docs/basemaps': 5,
-  '/docs/components/map': 4,
+  '/docs/components/map': 5,
   '/docs/components/controls': 1,
   '/docs/components/markers': 3,
   '/docs/components/popups': 1,

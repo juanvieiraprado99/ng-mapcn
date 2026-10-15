@@ -7,6 +7,7 @@ import {
   effect,
   type ElementRef,
   inject,
+  Injector,
   input,
   NgZone,
   output,
@@ -37,6 +38,12 @@ import {
   getLightMapStyle,
   type MapStylesConfig,
 } from '../../styles/map-styles';
+import {
+  type BoundsTuple,
+  type MapFitBoundsOptions,
+  sameBounds,
+  toBoundsTuple,
+} from '../../utils/bounds';
 import { getViewport, type MapViewport } from '../../utils/map-utils';
 
 /** Worker file `ng add` copies to the build output root (`angular.json` assets). */
@@ -64,6 +71,13 @@ export class MapComponent {
   /** Per-map label overrides, merged over `provideMapLabels` and the English defaults. */
   readonly labels = input<Partial<MapLabels>>();
   readonly viewport = input<Partial<MapViewport>>();
+  /**
+   * Fits the camera to `bounds`, or to the union of the children's data (markers, GeoJSON, routes,
+   * arcs, cluster layers, heatmaps) when omitted. Runs once the map is loaded and again only when
+   * the bounds really change; the first fit never animates. Needs a loaded map, so it is ignored on
+   * the server. See `MapContextService.fitBounds()` for the imperative form.
+   */
+  readonly fitBounds = input<MapFitBoundsOptions>();
   /** Extra MapLibre options passed through to the constructor (mapcn spreads these in React). */
   readonly options = input<Omit<MapOptions, 'container' | 'style'>>();
 
@@ -92,6 +106,7 @@ export class MapComponent {
   private readonly zone = inject(NgZone);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly document = inject(DOCUMENT);
+  private readonly injector = inject(Injector);
 
   private styleTimeoutRef: ReturnType<typeof setTimeout> | null = null;
   private initTimeoutRef: ReturnType<typeof setTimeout> | null = null;
@@ -101,6 +116,10 @@ export class MapComponent {
   private currentStyle: string | StyleSpecification | null = null;
   /** Whether a [projection] was pushed to the map, so clearing the input can reset it. */
   private projectionApplied = false;
+  /** Bounds the last automatic fit went to, so unchanged bounds do not refit. */
+  private lastFit: BoundsTuple | null = null;
+  private hasFitted = false;
+  private fitScheduled = false;
 
   constructor() {
     afterNextRender(() => this.initializeMap());
@@ -146,6 +165,27 @@ export class MapComponent {
       this.internalUpdate = false;
     });
 
+    // Declarative fit-to-bounds. The camera moves like any other and `viewportChange` reports it,
+    // so a controlled [viewport] follows; the viewport effect above is idempotent (it compares
+    // with the current camera and skips while moving), so there is no loop to guard against.
+    effect(() => {
+      // Track everything that can change the target; the fit itself runs after rendering so a
+      // batch of child updates (e.g. one marker removed, another moved) fits only the final bounds.
+      const options = this.fitBounds();
+      const loaded = this.ctx.isLoaded();
+      if (options && loaded && !options.bounds) this.ctx.dataBounds();
+      if (!options) this.lastFit = null;
+      if (!options || !loaded || this.fitScheduled) return;
+      this.fitScheduled = true;
+      afterNextRender(
+        () => {
+          this.fitScheduled = false;
+          this.applyFit();
+        },
+        { injector: this.injector },
+      );
+    });
+
     // Runtime [projection] changes. While the gate is closed the styledata handler applies the
     // current value before re-opening it; clearing the input resets to MapLibre's default.
     effect(() => {
@@ -158,6 +198,19 @@ export class MapComponent {
     });
 
     this.destroyRef.onDestroy(() => this.destroyMap());
+  }
+
+  /** Fits to the current target unless it equals the bounds of the last fit. */
+  private applyFit(): void {
+    const options = this.fitBounds();
+    if (!options || this.destroyed) return;
+    const bounds = options.bounds ? toBoundsTuple(options.bounds) : this.ctx.dataBounds();
+    if (!bounds || sameBounds(bounds, this.lastFit)) return;
+    const animate = options.animate !== false && this.hasFitted;
+    if (this.ctx.fitBounds({ ...options, bounds, animate })) {
+      this.lastFit = bounds;
+      this.hasFitted = true;
+    }
   }
 
   private resolvedTheme(): 'light' | 'dark' {

@@ -158,6 +158,8 @@ Docs pages: ${DOCS_COMPONENT_PAGES.map((p) => `[${p.label}](${SITE_URL}/docs/com
 
 ${componentList}
 
+\`ng-map\` also takes \`[fitBounds]="{ padding, maxZoom, duration, animate, bounds? }"\` to fit the camera to its children's data (or explicit \`bounds\`) once loaded and whenever they change; \`MapContextService.fitBounds()\` is the imperative form.
+
 Utilities: \`MapViewport\`, \`getViewport\`, \`buildArcCoordinates\`, \`mergeHoverPaint\`, \`blankMapStyle\`, \`defaultStyles\`, \`MapStylesConfig\`, \`provideMapStyles()\`, \`MAP_DEFAULT_STYLES\`, and \`MapContextService\` (map / isLoaded / resolvedTheme signals, the equivalent of mapcn's \`useMap()\`).
 
 ${INSTALLATION}

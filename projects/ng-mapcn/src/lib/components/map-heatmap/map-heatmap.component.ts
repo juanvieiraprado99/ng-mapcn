@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
@@ -16,6 +17,7 @@ import {
 } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
+import { geoJsonBounds } from '../../utils/bounds';
 import { syncLayerProperties } from '../../utils/layer-properties';
 import { addMapLayers } from '../../utils/layers';
 import { nextId } from '../../utils/map-utils';
@@ -163,6 +165,11 @@ export class MapHeatmapComponent<P extends Record<string, any> = Record<string, 
   });
 
   constructor() {
+    // Contributes to the map's declarative fit-to-bounds (`<ng-map [fitBounds]>`).
+    inject(DestroyRef).onDestroy(
+      this.ctx.registerBounds(() => geoJsonBounds(this.data() as GeoJSON.GeoJSON | string)),
+    );
+
     // Add source and layer once the style is loaded; re-runs after theme setStyle.
     effect((onCleanup) => {
       if (!this.ctx.isLoaded()) return;

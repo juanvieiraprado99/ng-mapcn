@@ -10,8 +10,10 @@ import type { Map as MapLibreMap } from 'maplibre-gl';
 import {
   MapComponent,
   MapGeoJSONComponent,
+  MapMarkerComponent,
   type MapStylesConfig,
   type MapViewport,
+  MarkerContentComponent,
 } from 'ng-mapcn';
 
 type StyleKey = 'default' | 'openstreetmap' | 'openstreetmap3d';
@@ -81,6 +83,41 @@ export class BlankMapComponent {
   readonly worldGeoJsonUrl = 'https://.../ne_110m_admin_0_countries.geojson';
 }`;
 
+const FIT_CODE = `import { Component, signal } from '@angular/core';
+import { MapComponent, MapMarkerComponent, MarkerContentComponent } from 'ng-mapcn';
+
+@Component({
+  selector: 'app-fit-bounds-map',
+  standalone: true,
+  imports: [MapComponent, MapMarkerComponent, MarkerContentComponent],
+  template: \`
+    <button (click)="addFarCity()">Add Tokyo</button>
+    <div class="h-[420px]">
+      <!-- Fits the markers once loaded, and again whenever their bounds change. -->
+      <ng-map [fitBounds]="{ padding: 64, maxZoom: 8 }">
+        @for (city of cities(); track city.name) {
+          <ng-map-marker [longitude]="city.lng" [latitude]="city.lat">
+            <ng-marker-content>
+              <div class="size-3 rounded-full bg-blue-500"></div>
+            </ng-marker-content>
+          </ng-map-marker>
+        }
+      </ng-map>
+    </div>
+  \`,
+})
+export class FitBoundsMapComponent {
+  readonly cities = signal([
+    { name: 'Paris', lng: 2.35, lat: 48.85 },
+    { name: 'Berlin', lng: 13.4, lat: 52.52 },
+    { name: 'Rome', lng: 12.5, lat: 41.9 },
+  ]);
+
+  addFarCity() {
+    this.cities.update((c) => [...c, { name: 'Tokyo', lng: 139.69, lat: 35.69 }]);
+  }
+}`;
+
 const STYLES_CODE = `import { Component, computed, effect, signal } from '@angular/core';
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import { MapComponent, MapStylesConfig } from 'ng-mapcn';
@@ -147,6 +184,8 @@ export class CustomStyleMapComponent {
     ExampleSectionComponent,
     MapComponent,
     MapGeoJSONComponent,
+    MapMarkerComponent,
+    MarkerContentComponent,
     DecimalPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -248,10 +287,65 @@ export class CustomStyleMapComponent {
           </select>
         </div>
       </app-example-section>
+
+      <app-example-section
+        title="Fit to Bounds"
+        sectionId="fit-bounds"
+        [code]="fitCode"
+      >
+        <span description>
+          The
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">fitBounds</code>
+          input fits the camera to the data of the map's children (markers,
+          GeoJSON, routes, arcs, clusters, heatmaps) once the map is loaded,
+          and again only when those bounds change. Pass
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code>
+          to fit explicit bounds, or call
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService.fitBounds()</code>
+          imperatively. It does not fight a controlled
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewport</code>.
+          A draggable marker bound to signals refits continuously while
+          dragged: pass explicit
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code>
+          for that case.
+        </span>
+        <div class="relative h-full">
+          <button
+            type="button"
+            data-testid="fit-toggle"
+            class="bg-background text-foreground absolute top-3 left-3 z-10 rounded-md border px-3 py-1.5 text-xs shadow-md"
+            (click)="toggleFarCity()"
+          >
+            {{ fitCities().length > 3 ? 'Remove Tokyo' : 'Add Tokyo' }}
+          </button>
+          <ng-map [fitBounds]="{ padding: 64, maxZoom: 8 }">
+            @for (city of fitCities(); track city.name) {
+              <ng-map-marker [longitude]="city.lng" [latitude]="city.lat">
+                <ng-marker-content>
+                  <div class="size-3 rounded-full bg-blue-500"></div>
+                </ng-marker-content>
+              </ng-map-marker>
+            }
+          </ng-map>
+        </div>
+      </app-example-section>
     </app-docs-page>
   `,
 })
 export class MapPageComponent {
+  readonly fitCode = FIT_CODE;
+  readonly fitCities = signal([
+    { name: 'Paris', lng: 2.35, lat: 48.85 },
+    { name: 'Berlin', lng: 13.4, lat: 52.52 },
+    { name: 'Rome', lng: 12.5, lat: 41.9 },
+  ]);
+
+  toggleFarCity() {
+    this.fitCities.update((c) =>
+      c.length > 3 ? c.slice(0, 3) : [...c, { name: 'Tokyo', lng: 139.69, lat: 35.69 }],
+    );
+  }
+
   readonly basicCode = BASIC_CODE;
   readonly controlledCode = CONTROLLED_CODE;
   readonly blankCode = BLANK_CODE;

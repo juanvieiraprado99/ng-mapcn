@@ -35,6 +35,8 @@ Docs pages: [Map](https://ng-mapcn.vercel.app/docs/components/map) · [Controls]
 - **MapClusterLayer** (`ng-map-cluster-layer`): Renders clustered points with MapLibre GL native clustering. Automatically styles cluster circles by point count, zooms in on cluster click. Generic over the feature properties: MapClusterLayerComponent<P>, with P inferred from data. Must be used inside ng-map.
 - **MapHeatmap** (`ng-map-heatmap`): Renders GeoJSON points as a MapLibre heatmap layer with a theme-aware default gradient. Generic over the feature properties: MapHeatmapComponent<P>, with P inferred from data. Must be used inside ng-map.
 
+`ng-map` also takes `[fitBounds]="{ padding, maxZoom, duration, animate, bounds? }"` to fit the camera to its children's data (or explicit `bounds`) once loaded and whenever they change; `MapContextService.fitBounds()` is the imperative form.
+
 Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint`, `blankMapStyle`, `defaultStyles`, `MapStylesConfig`, `provideMapStyles()`, `MAP_DEFAULT_STYLES`, and `MapContextService` (map / isLoaded / resolvedTheme signals, the equivalent of mapcn's `useMap()`).
 
 ## Installation
