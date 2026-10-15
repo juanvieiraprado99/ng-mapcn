@@ -61,6 +61,18 @@ describe('maplibre-fake', () => {
     expect(onStyleData).toHaveBeenCalledTimes(1);
   });
 
+  it('setLayerZoomRange updates the layer zoom range and is not structural', () => {
+    const map = createMap();
+    map.addSource('s', geojsonSource());
+    map.addLayer({ id: 'l', type: 'heatmap', source: 's' } as any);
+
+    expect(map.setLayerZoomRange('l', 2, 9)).toBe(map);
+
+    expect(map.getLayer('l').minzoom).toBe(2);
+    expect(map.getLayer('l').maxzoom).toBe(9);
+    expect(map.calls).toContain('setLayerZoomRange:l');
+  });
+
   it('jumpTo updates camera and fires move', () => {
     const map = createMap();
     const onMove = vi.fn();

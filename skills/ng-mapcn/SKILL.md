@@ -1,6 +1,6 @@
 ---
 name: ng-mapcn
-description: Use when building or editing interactive maps in an Angular 22+ app with ng-mapcn (MapLibre GL v6, mapcn port) - adding <ng-map>, markers, popups, tooltips, routes, GeoJSON layers, arcs, clusters, map controls, theme-aware basemaps, or installing via `ng add ng-mapcn`.
+description: Use when building or editing interactive maps in an Angular 22+ app with ng-mapcn (MapLibre GL v6, mapcn port) - adding <ng-map>, markers, popups, tooltips, routes, GeoJSON layers, arcs, clusters, heatmaps, map controls, theme-aware basemaps, or installing via `ng add ng-mapcn`.
 ---
 
 # ng-mapcn
@@ -68,6 +68,7 @@ Coordinates are always `[longitude, latitude]`.
 | `ng-map-geojson`                                       | Fill + line layers             | `data`, `promoteId`, `fillPaint`, `fillHoverPaint`, `interactive`; `featureClick`, `featureHover`                                                  |
 | `ng-map-arc`                                           | Curved arcs                    | `data`, `curvature`, `paint`, `hoverPaint`; `arcClick`, `arcHover`                                                                                 |
 | `ng-map-cluster-layer`                                 | Clustered points               | `data`, `id`, `beforeId`, `clusterColors`, `pointColor`; `pointClick`, `clusterClick`                                                              |
+| `ng-map-heatmap`                                       | Point-density heatmap          | `data`, `id`, `beforeId`, `weightProperty`, `weightRange`, `radius`, `intensity`, `opacity`, `gradient`, `minZoom`, `maxZoom`, `paint`             |
 
 Full inputs, types and defaults: `references/components.md`.
 
@@ -81,7 +82,7 @@ Full inputs, types and defaults: `references/components.md`.
 - Popup/tooltip content is wrapped in `.ng-popup-card` / `.ng-tooltip-pill` automatically; just project your content. A `class` on the Angular host does not reach that wrapper: use the `className` input. Hover popups need `className="ng-popup-passthrough"`.
 - Controlled viewport: bind `[viewport]` and `(viewportChange)` together.
 - The global `.maplibregl-popup-*` overrides and `maplibre-gl.css` are required.
-- Many points: use `ng-map-cluster-layer` or `ng-map-geojson` (GPU), not hundreds of `ng-map-marker` (one DOM element each).
+- Many points: use `ng-map-cluster-layer`, `ng-map-heatmap` or `ng-map-geojson` (GPU), not hundreds of `ng-map-marker` (one DOM element each).
 - MapLibre is ~1 MB: lazy-load the map (`loadComponent` route or `@defer (on viewport)`). Any eager import of `ng-mapcn` pulls it into the main bundle.
 - Only pass trusted URLs to `styles`, `provideMapStyles()` and `data`; attributions render as HTML.
 

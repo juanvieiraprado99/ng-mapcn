@@ -93,7 +93,7 @@ Without a \`theme\` input, the map watches the \`dark\`/\`light\` class on \`doc
 const FEATURES = `## Key Features
 
 - **MapLibre GL JS v6** under the hood — no API keys required (Carto basemaps)
-- **Composable** — markers, popups, routes, GeoJSON, arcs and clusters are children of \`<ng-map>\`
+- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters and heatmaps are children of \`<ng-map>\`
 - **Signals-first** — standalone components, \`input()\`/\`output()\`, \`effect()\`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
 - **SSR-safe** — the map is created in \`afterNextRender\`; nothing touches \`document\` on the server
@@ -129,6 +129,7 @@ const DOCS_COMPONENT_PAGES = [
   { label: 'Arcs', slug: 'arcs' },
   { label: 'GeoJSON', slug: 'geojson' },
   { label: 'Clusters', slug: 'clusters' },
+  { label: 'Heatmap', slug: 'heatmap' },
   { label: 'Advanced', slug: 'advanced' },
 ];
 

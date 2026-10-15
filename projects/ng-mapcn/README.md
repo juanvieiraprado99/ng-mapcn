@@ -13,7 +13,7 @@
   <a href="https://bundlephobia.com/package/ng-mapcn"><img src="https://img.shields.io/bundlephobia/minzip/ng-mapcn" alt="bundle size" /></a>
 </p>
 
-ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map components for Angular. It is built for Angular apps that need theme-aware maps (markers, popups, routes, GeoJSON, arcs, clusters) without API keys or a paid tile provider. It is an Angular port of the [mapcn](https://mapcn.dev) API, with MapLibre GL as the rendering engine and the copy-paste ownership model of [shadcn/ui](https://ui.shadcn.com): `ng add ng-mapcn` copies the sources into your project so you own the code.
+ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map components for Angular. It is built for Angular apps that need theme-aware maps (markers, popups, routes, GeoJSON, arcs, clusters, heatmaps) without API keys or a paid tile provider. It is an Angular port of the [mapcn](https://mapcn.dev) API, with MapLibre GL as the rendering engine and the copy-paste ownership model of [shadcn/ui](https://ui.shadcn.com): `ng add ng-mapcn` copies the sources into your project so you own the code.
 
 **[Docs](https://ng-mapcn.vercel.app/docs)** · **[Blocks gallery](https://ng-mapcn.vercel.app/blocks)** · **[Installation](https://ng-mapcn.vercel.app/docs/installation)** · **[API reference](https://ng-mapcn.vercel.app/docs/api-reference)**
 
@@ -21,7 +21,7 @@ ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map componen
 
 - **MapLibre GL JS v6** under the hood, no API keys required (Carto basemaps)
 - **Theme-aware**: follows the `dark`/`light` class or `data-theme` attribute on `<html>` (or `prefers-color-scheme`) and swaps the basemap at runtime
-- **Composable**: declare markers, popups, routes, GeoJSON, arcs and clusters as children of `<ng-map>`
+- **Composable**: declare markers, popups, routes, GeoJSON, arcs, clusters and heatmaps as children of `<ng-map>`
 - **Signals-first**: standalone components, signal inputs/outputs, `effect()`-based reconciliation
 - **Copy-paste distribution**: `ng add ng-mapcn` copies the sources into your project (shadcn-style). Also usable as a regular npm package.
 - **SSR-safe**: nothing touches `window` or MapLibre during server render
@@ -130,7 +130,7 @@ import { MapComponent, MapMarkerComponent, MarkerPopupComponent } from 'ng-mapcn
 export class AppMap {}
 ```
 
-The map fills its parent, so give the parent an explicit height. More building blocks (controls, routes, GeoJSON, arcs, clusters) are listed below and in the [blocks gallery](https://ng-mapcn.vercel.app/blocks).
+The map fills its parent, so give the parent an explicit height. More building blocks (controls, routes, GeoJSON, arcs, clusters, heatmaps) are listed below and in the [blocks gallery](https://ng-mapcn.vercel.app/blocks).
 
 ## Components
 
@@ -146,6 +146,7 @@ The map fills its parent, so give the parent an explicit height. More building b
 | `ng-map-geojson`                                            | Fill + outline layers from GeoJSON data or URL. Declarative hover via `promoteId` + `fillHoverPaint` (feature-state).                                                                                                                                                                              |
 | `ng-map-arc`                                                | Curved arcs between points (flight paths). Invisible hit layer for comfortable hover/click; `hoverPaint` via feature-state.                                                                                                                                                                        |
 | `ng-map-cluster-layer`                                      | Clustered points with count labels, threshold-based colors/sizes and expansion-zoom on click.                                                                                                                                                                                                      |
+| `ng-map-heatmap`                                            | Point-density heatmap layer with a theme-aware gradient, `weightProperty`/`weightRange`, zoom-dependent `radius`/`intensity`/`opacity` expressions and `maxZoom`.                                                                                                                                  |
 
 Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint`, `blankMapStyle`, `defaultStyles`, and `MapContextService` (map / isLoaded / resolvedTheme signals for advanced layer work via `inject`).
 
@@ -244,7 +245,7 @@ Notes:
 ## Performance
 
 - **Lazy-load the map.** MapLibre is large: in the demo's production build its chunk is about 1 MB (≈285 KB gzipped), more than the demo's entire initial JavaScript (≈160 KB gzipped), and the first map also fetches the worker files (≈150 KB gzipped, on the worker thread, cached afterwards). Keep `ng-mapcn` out of your initial bundle with a lazy route (`loadComponent`) or `@defer (on viewport) { <ng-map>…</ng-map> }`.
-- **Many points → layers, not markers.** Each `<ng-map-marker>` is a DOM element with its own component; for hundreds of points use `<ng-map-cluster-layer>` or `<ng-map-geojson>`, which render on the GPU.
+- **Many points → layers, not markers.** Each `<ng-map-marker>` is a DOM element with its own component; for hundreds of points use `<ng-map-cluster-layer>`, `<ng-map-heatmap>` or `<ng-map-geojson>`, which render on the GPU.
 - **Pass new references to update data.** Layer components push `[data]` / `[coordinates]` to MapLibre only when the reference changes; replace arrays and objects instead of mutating them.
 
 ## For LLMs
@@ -261,7 +262,7 @@ Install it with the [skills.sh](https://skills.sh) CLI, from your app's root:
 npx skills add juanvieiraprado99/ng-mapcn
 ```
 
-The CLI asks which agents to configure. To install only this skill from the repository, pass `--skill ng-mapcn`; to see what is available first, pass `--list`.
+The CLI downloads the skill and configures it for your agent. Pass `--list` to see the skills in the repository without installing, or `--skill ng-mapcn` to install this one explicitly.
 
 ## Contributing
 

@@ -2,7 +2,7 @@
 
 All components are standalone, `OnPush`, and use signal inputs/outputs. Everything below is exported from `ng-mapcn` (or from the folder `ng add` copied into your app). Coordinates are `[longitude, latitude]`.
 
-Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
+Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
 
 ## ng-map
 
@@ -255,6 +255,29 @@ Ids derive from `id` (auto `ng-cluster-N`): source `cluster-source-<id>`, layers
 | -------------- | ------------------------------------------------------------------------------------------------------------- |
 | `pointClick`   | `ClusterPointClickEvent<P>` = `{ feature: GeoJSON.Feature<GeoJSON.Point, P>; coordinates: [number, number] }` |
 | `clusterClick` | `ClusterClickEvent` = `{ clusterId: number; coordinates: [number, number]; pointCount: number }`              |
+
+## ng-map-heatmap
+
+Class `MapHeatmapComponent<P = Record<string, unknown>>`. A GeoJSON point source rendered as one MapLibre `heatmap` layer. `P` is inferred from `data`.
+
+Ids derive from `id` (auto `ng-heatmap-N`): source `heatmap-source-<id>`, layer `heatmap-layer-<id>`.
+
+| Input            | Type                                                            | Default               | Notes                                                                                                                                                                        |
+| ---------------- | --------------------------------------------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`           | `string \| GeoJSON.FeatureCollection<GeoJSON.Point, P \| null>` | required              | String is a URL; a new URL is fetched again via `setData`                                                                                                                    |
+| `id`             | `string`                                                        | auto (`ng-heatmap-N`) | Changing it re-creates the source and layer                                                                                                                                  |
+| `beforeId`       | `string`                                                        | `undefined`           | Layer to insert before; creation only                                                                                                                                        |
+| `weightProperty` | `string`                                                        | `undefined`           | Numeric property used as weight; missing or non-numeric counts as 0. Unset: every point weighs the same                                                                      |
+| `weightRange`    | `[number, number]`                                              | `[0, 1]`              | `[min, max]` of the property, mapped linearly to weight 0..1                                                                                                                 |
+| `radius`         | `number \| expression`                                          | `30`                  | Pixels; MapLibre expressions allowed (e.g. zoom interpolation)                                                                                                               |
+| `intensity`      | `number \| expression`                                          | `1`                   | Expressions allowed                                                                                                                                                          |
+| `opacity`        | `number \| expression`                                          | `1`                   | Expressions allowed                                                                                                                                                          |
+| `gradient`       | `HeatmapGradient`                                               | theme default         | `readonly (readonly [number, string])[]` stops over density 0..1; sorted, a transparent stop at 0 is prepended when missing. Default: `defaultHeatmapGradients[light\|dark]` |
+| `minZoom`        | `number`                                                        | `0`                   | Zoom range, reconciled with `setLayerZoomRange`                                                                                                                              |
+| `maxZoom`        | `number`                                                        | `24`                  | Not rendered from this zoom up (MapLibre `maxzoom` is exclusive)                                                                                                             |
+| `paint`          | `HeatmapLayerSpecification['paint']`                            | `undefined`           | Escape hatch, merged last over every input above                                                                                                                             |
+
+No outputs. Also exported: `heatmapColorExpression(stops, theme?)`, `defaultHeatmapGradients`, `MapHeatmapData`, `HeatmapGradient`.
 
 ## Services
 

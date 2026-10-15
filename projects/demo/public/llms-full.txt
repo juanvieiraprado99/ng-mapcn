@@ -2,7 +2,7 @@
 
 > Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
 
-Version: 22.0.0-beta.5 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
+Version: 22.0.0-beta.6 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
 
 ## Installation
 
@@ -75,6 +75,7 @@ Every part of the component set, and how they nest:
   <ng-map-arc [data]="arcs" />
   <ng-map-geojson [data]="geojson" />
   <ng-map-cluster-layer [data]="points" />
+  <ng-map-heatmap [data]="points" weightProperty="mag" />
 </ng-map>
 ```
 
@@ -394,6 +395,29 @@ Renders clustered points with MapLibre GL native clustering. Automatically style
 | `pointClick` | `ClusterPointClickEvent<P>` | — | Emits { feature, coordinates } when an unclustered point is clicked. |
 | `clusterClick` | `ClusterClickEvent` | — | Emits { clusterId, coordinates, pointCount } when a cluster is clicked. |
 
+### MapHeatmap
+
+`ng-map-heatmap`
+
+Renders GeoJSON points as a MapLibre heatmap layer with a theme-aware default gradient. Generic over the feature properties: MapHeatmapComponent<P>, with P inferred from data. Must be used inside ng-map.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `data` | `string \| FeatureCollection<Point, P>` | `required` | GeoJSON points (object or URL string). |
+| `id` | `string` | `auto` | Optional stable id prefix for the source and layer: heatmap-source-<id>, heatmap-layer-<id>. Changing it re-creates them. |
+| `beforeId` | `string` | — | Insert the layer before this layer id. Applied at creation only. |
+| `weightProperty` | `string` | — | Numeric feature property used as the point weight. Without it every point weighs the same. |
+| `weightRange` | `[number, number]` | `[0, 1]` | [min, max] of weightProperty, mapped linearly to a weight of 0..1. |
+| `radius` | `number \| expression` | `30` | Influence radius of each point in pixels. Accepts MapLibre expressions. |
+| `intensity` | `number \| expression` | `1` | Global intensity multiplier. Accepts MapLibre expressions. |
+| `opacity` | `number \| expression` | `1` | Layer opacity. Accepts MapLibre expressions. |
+| `gradient` | `HeatmapGradient` | `theme default` | Color stops [density 0..1, color]. Sorted, with a transparent stop at 0 prepended when missing. Defaults to defaultHeatmapGradients for the resolved theme. |
+| `minZoom` | `number` | `0` | Minimum zoom at which the heatmap is rendered. |
+| `maxZoom` | `number` | `24` | Zoom from which the heatmap is no longer rendered (e.g. to hand over to a point layer). |
+| `paint` | `HeatmapLayerSpecification["paint"]` | — | Escape hatch: heatmap paint properties merged last. |
+
 ## MapContextService
 
 Component-scoped service provided by `ng-map` — the Angular equivalent of mapcn's `useMap()` hook. Inject it in any component projected inside `ng-map` to reach the raw map.
@@ -500,7 +524,7 @@ The map is created in `afterNextRender` (browser-only, after hydration) and ever
 ## Key Features
 
 - **MapLibre GL JS v6** under the hood — no API keys required (Carto basemaps)
-- **Composable** — markers, popups, routes, GeoJSON, arcs and clusters are children of `<ng-map>`
+- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters and heatmaps are children of `<ng-map>`
 - **Signals-first** — standalone components, `input()`/`output()`, `effect()`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
 - **SSR-safe** — the map is created in `afterNextRender`; nothing touches `document` on the server
