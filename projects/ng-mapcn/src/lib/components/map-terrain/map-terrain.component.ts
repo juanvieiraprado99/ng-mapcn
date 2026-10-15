@@ -27,7 +27,9 @@ export type TerrainEncoding = 'terrarium' | 'mapbox';
 
 /**
  * Public Terrarium elevation tiles (AWS Open Data "Terrain Tiles", no key needed), used when
- * neither `tiles` nor `url` is given. Tiles exist up to zoom 15.
+ * neither `tiles` nor `url` is given. Tiles exist up to zoom 15. It is a public open-data bucket
+ * with no SLA: production apps should supply their own provider via `tiles`/`url`, and apps with
+ * a strict CSP must allow the host (`s3.amazonaws.com`).
  */
 export const defaultTerrainTiles: readonly string[] = [
   'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',

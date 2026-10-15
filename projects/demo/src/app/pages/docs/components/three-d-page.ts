@@ -275,7 +275,7 @@ const IDS_CODE = `<ng-map-terrain id="relief" [hillshade]="true" />
           is loaded. Changing
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">exaggeration</code>
           re-applies the terrain (MapLibre rebuilds its mesh), so a slider is fine but not free. A
-          map has one terrain at a time. The hillshade has its own DEM source because MapLibre
+          map has one terrain at a time. The default tiles come from a public open-data bucket with no SLA: in production pass your own provider with <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tiles</code> or <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">url</code>, and allow the host (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">s3.amazonaws.com</code>) if your CSP is strict. The hillshade has its own DEM source because MapLibre
           warns when it shares one with the terrain; it is added and removed with
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">hillshade</code>
           and styled with
