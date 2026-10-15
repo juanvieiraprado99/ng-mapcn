@@ -39,6 +39,7 @@ Inside `projects/ng-mapcn/src/lib/`:
 | `services/map-context.service.ts`                                                                 | `map`, `isLoaded`, `resolvedTheme` signals, provided by `<ng-map>`                                     |
 | `services/theme.service.ts`                                                                       | Watches the `dark`/`light` class on `<html>`, with a `prefers-color-scheme` fallback                   |
 | `utils/map-utils.ts`                                                                              | `nextId`, `getViewport`, `mergeHoverPaint`, `buildArcCoordinates`, shared types                        |
+| `utils/bounds.ts`                                                                                 | Bounds helpers and `MapFitBoundsOptions` for `fitBounds` / `registerBounds`                            |
 | `styles/`                                                                                         | SCSS tokens/utilities and `map-styles.ts` (Carto defaults + `blankMapStyle`)                           |
 
 The library is also distributed by schematics (`ng add ng-mapcn`). `scripts/sync-schematic-files.mjs` mirrors `src/lib/**` into `schematics/map/files/`. That folder is generated and git-ignored, so never edit it by hand.

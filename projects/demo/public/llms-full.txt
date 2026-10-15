@@ -100,6 +100,7 @@ The root container component that initializes MapLibre GL and provides context t
 | `loading` | `boolean` | `false` | Shows the loading overlay. |
 | `labels` | `Partial<MapLabels>` | — | Label overrides (loading), merged over provideMapLabels() and the English defaults. |
 | `viewport` | `Partial<MapViewport>` | — | Controlled viewport ({ center, zoom, bearing, pitch }). Pair with viewportChange. |
+| `fitBounds` | `MapFitBoundsOptions` | — | Fits the camera to bounds ({ bounds?, padding?, maxZoom?, duration?, animate? }). Without bounds it fits the union of the children's data (markers, GeoJSON, routes, arcs, clusters, heatmaps). Runs after load and refits only when the bounds change; the first fit never animates; maxZoom defaults to 16. A draggable marker bound to signals refits while dragged: pass explicit bounds for that case. Imperative form: MapContextService.fitBounds(). |
 | `options` | `Omit<MapOptions, 'container' \| 'style'>` | — | Extra MapLibre MapOptions (scrollZoom, dragRotate, …) passed to the map constructor. |
 
 **Outputs**
@@ -427,6 +428,9 @@ Component-scoped service provided by `ng-map` — the Angular equivalent of mapc
 | `map()` | `Signal<Map \| null>` | — | The raw maplibre-gl Map instance, or null before init. |
 | `isLoaded()` | `Signal<boolean>` | — | True when the style is loaded and layers can be added. Gates every source/layer operation. |
 | `resolvedTheme()` | `Signal<'light' \| 'dark'>` | — | Theme currently applied to the map. |
+| `fitBounds(options?)` | `(options?: MapFitBoundsOptions) => boolean` | — | Fits the camera to options.bounds, or to the union of the children's data. Returns false when the map is not loaded or there are no bounds. |
+| `dataBounds()` | `Signal<[number, number, number, number] \| null>` | — | Union of the bounds registered by the children, as [west, south, east, north]. |
+| `registerBounds(getter)` | `(getter: () => LngLatBoundsLike \| null) => () => void` | — | Contributes a bounds source to fit-to-bounds. The getter runs reactively; returns the unregister function (call it on destroy). |
 
 ## provideMapStyles()
 

@@ -19,6 +19,7 @@ Class `MapComponent`. Provides `MapContextService` to its children. Child conten
 | `loading`    | `boolean`                                  | `false`     | Forces the loader overlay                                                                                                          |
 | `labels`     | `Partial<MapLabels>`                       | `undefined` | Overrides the loader's accessible name (`loading`), over `provideMapLabels()` and the English defaults                             |
 | `viewport`   | `Partial<MapViewport>`                     | `undefined` | Controlled viewport; applied with `jumpTo`, skipped while the map is moving                                                        |
+| `fitBounds`  | `MapFitBoundsOptions`                      | `undefined` | Fit-to-bounds: `{ bounds?, padding?, maxZoom?, duration?, animate? }`. Without `bounds`, fits the children's data. See below       |
 | `options`    | `Omit<MapOptions, 'container' \| 'style'>` | `undefined` | Extra MapLibre constructor options. Defaults before spreading: `renderWorldCopies: false`, `attributionControl: { compact: true }` |
 
 | Output           | Payload                                                                                                                             |
@@ -29,6 +30,8 @@ Class `MapComponent`. Provides `MapContextService` to its children. Child conten
 | `mapError`       | `Error` (MapLibre errors, and layer components that fail to add their source or layer, e.g. a duplicate `id` or unknown `beforeId`) |
 
 Method: `getMap(): MapLibreMap | null` (escape hatch to the raw map).
+
+Fit to bounds: `<ng-map [fitBounds]="{ padding: 48, maxZoom: 14 }">` fits the camera to the union of the bounds of the children (markers, `ng-map-geojson`/`-cluster-layer`/`-heatmap` object data, routes, arcs; URL `data` is not fetched, so it contributes nothing) once the map is loaded, and again only when those bounds really change. The first fit never animates; later ones animate unless `animate: false`; `maxZoom` defaults to 16. `bounds` (any `LngLatBoundsLike`) fits explicit bounds instead. The fit is not guarded against a controlled `[viewport]`: `viewportChange` reports the new camera, and the viewport sync is idempotent. Arc bounds follow the unwrapped curve (an antimeridian arc spans e.g. 170 to 190); other antimeridian-crossing data is not handled. A draggable marker bound to signals refits continuously while dragged: pass explicit `bounds` or leave `fitBounds` off for that case.
 
 Basemap precedence: `styles` input, then `blank`, then `provideMapStyles()`, then Carto default. Changing these inputs at runtime re-applies the style.
 
@@ -283,12 +286,15 @@ No outputs. Also exported: `heatmapColorExpression(stops, theme?)`, `defaultHeat
 
 `MapContextService` (`@Injectable()`, provided by `ng-map`, not root):
 
-| Member                                                                       | Type                          | Notes                                                                                                          |
-| ---------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `map`                                                                        | `Signal<MapLibreMap \| null>` |                                                                                                                |
-| `isLoaded`                                                                   | `Signal<boolean>`             | True only when the map `load` flag and the (debounced) `styledata` flag are both set. Closes during `setStyle` |
-| `resolvedTheme`                                                              | `Signal<'light' \| 'dark'>`   | Theme currently applied to the map                                                                             |
-| `setMap`, `setResolvedTheme`, `setLoadedFlag`, `setStyleLoadedFlag`, `reset` | methods                       | Used internally by `ng-map`                                                                                    |
+| Member                                                                       | Type                           | Notes                                                                                                          |
+| ---------------------------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `map`                                                                        | `Signal<MapLibreMap \| null>`  |                                                                                                                |
+| `isLoaded`                                                                   | `Signal<boolean>`              | True only when the map `load` flag and the (debounced) `styledata` flag are both set. Closes during `setStyle` |
+| `resolvedTheme`                                                              | `Signal<'light' \| 'dark'>`    | Theme currently applied to the map                                                                             |
+| `fitBounds(options?)`                                                        | `boolean`                      | Fits to `options.bounds` or the children's data; `false` if not loaded or no bounds                            |
+| `dataBounds`                                                                 | `Signal<[w, s, e, n] \| null>` | Union of the bounds registered by children                                                                     |
+| `registerBounds(getter)`                                                     | `() => void`                   | Adds a bounds source (reactive getter); returns the unregister function. Custom layer components use it        |
+| `setMap`, `setResolvedTheme`, `setLoadedFlag`, `setStyleLoadedFlag`, `reset` | methods                        | Used internally by `ng-map`                                                                                    |
 
 `ThemeService` (`providedIn: 'root'`):
 

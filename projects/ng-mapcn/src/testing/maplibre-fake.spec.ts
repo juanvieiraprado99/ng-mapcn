@@ -61,6 +61,19 @@ describe('maplibre-fake', () => {
     expect(onStyleData).toHaveBeenCalledTimes(1);
   });
 
+  it('fitBounds centers the camera on the bounds, records the call and fires move', () => {
+    const map = createMap();
+    const onMove = vi.fn();
+    map.on('move', onMove);
+
+    expect(map.fitBounds([0, 10, 20, 30], { maxZoom: 7 })).toBe(map);
+
+    expect(map.getCenter()).toEqual({ lng: 10, lat: 20 });
+    expect(map.getZoom()).toBe(7);
+    expect(map.calls).toContain('fitBounds');
+    expect(onMove).toHaveBeenCalledTimes(1);
+  });
+
   it('setLayerZoomRange updates the layer zoom range and is not structural', () => {
     const map = createMap();
     map.addSource('s', geojsonSource());

@@ -2,7 +2,7 @@
 
 Copy-paste examples. Import from `'ng-mapcn'` (or from the folder `ng add` copied into your app). Every map needs a parent with an explicit height. Coordinates are `[longitude, latitude]`.
 
-Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading)
+Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Fit to data](#fit-to-data) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading)
 
 ## Controls
 
@@ -286,6 +286,33 @@ Extra datum properties (here `color`) are available to paint expressions through
 `data` also accepts a `GeoJSON.FeatureCollection<GeoJSON.Point, P>`. Without `gradient` the ramp follows the map theme (`defaultHeatmapGradients`); a custom `[gradient]="[[0, 'rgba(0,0,0,0)'], [1, '#ef4444']]"` is kept across theme switches. `radius`, `intensity` and `opacity` accept zoom expressions such as `['interpolate', ['linear'], ['zoom'], 0, 8, 6, 34]`. `maxZoom` stops rendering from that zoom, so a custom circle layer placed after the heatmap in the template can take over when zoomed in. Ids: `heatmap-source-<id>`, `heatmap-layer-<id>`.
 
 Gotchas: set `weightRange` to the real `[min, max]` of `weightProperty`, otherwise raw values (e.g. a magnitude of 0-7) saturate the layer. `radius`, `intensity`, `opacity`, `gradient`, `minZoom`/`maxZoom` and `data` update the existing layer in place, so binding them to signals is cheap. The component has no outputs and a heatmap is not hit-testable (`queryRenderedFeatures` returns nothing), so use a circle layer or markers for interaction.
+
+## Fit to data
+
+```ts
+@Component({
+  selector: 'app-fit-map',
+  imports: [MapComponent, MapMarkerComponent, MarkerContentComponent],
+  template: `
+    <div style="height: 400px">
+      <ng-map [fitBounds]="{ padding: 48, maxZoom: 14 }">
+        @for (place of places(); track place.id) {
+          <ng-map-marker [longitude]="place.lng" [latitude]="place.lat">
+            <ng-marker-content
+              ><div class="size-3 rounded-full bg-blue-500"></div
+            ></ng-marker-content>
+          </ng-map-marker>
+        }
+      </ng-map>
+    </div>
+  `,
+})
+export class FitMap {
+  readonly places = signal([{ id: 1, lng: 2.35, lat: 48.85 }]);
+}
+```
+
+The map fits once loaded and again whenever the union of the children's bounds changes (a batch of changes fits once). Pass `bounds` for explicit bounds, or inject `MapContextService` in a child and call `fitBounds({ padding: 48 })` (returns `false` when not loaded or there is nothing to fit). A single point zooms to `maxZoom` (default 16). Data given as a URL is not fetched, so it does not contribute.
 
 ## Controlled viewport and raw map
 
