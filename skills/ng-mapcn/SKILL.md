@@ -1,6 +1,6 @@
 ---
 name: ng-mapcn
-description: Use when building or editing interactive maps in an Angular 22+ app with ng-mapcn (MapLibre GL v6, mapcn port) - adding <ng-map>, markers, popups, tooltips, routes, GeoJSON layers, arcs, clusters, heatmaps, raster/vector tile sources (PMTiles), image overlays, map controls, theme-aware basemaps, or installing via `ng add ng-mapcn`.
+description: Use when building or editing interactive maps in an Angular 22+ app with ng-mapcn (MapLibre GL v6, mapcn port) - adding <ng-map>, markers, popups, tooltips, routes, GeoJSON layers, arcs, clusters, heatmaps, raster/vector tile sources (PMTiles), image overlays, 3D buildings (fill-extrusion), terrain and hillshade, map controls, theme-aware basemaps, or installing via `ng add ng-mapcn`.
 ---
 
 # ng-mapcn
@@ -72,6 +72,8 @@ Coordinates are always `[longitude, latitude]`.
 | `ng-map-raster-source`                                 | Raster tiles + layer                 | `id`, `tiles`, `url`, `tileSize`, `minzoom`, `maxzoom`, `attribution`, `bounds`, `scheme`, `opacity`, `visible`, `beforeId`, `paint`                            |
 | `ng-map-vector-source`                                 | Vector tiles / PMTiles (source only) | `id`, `tiles`, `url`, `minzoom`, `maxzoom`, `attribution`, `bounds`, `scheme`, `promoteId`                                                                      |
 | `ng-map-image-overlay`                                 | Image on 4 corners                   | `id`, `url`, `coordinates`, `opacity`, `visible`, `beforeId`, `paint`                                                                                           |
+| `ng-map-fill-extrusion`                                | 3D extrusion (buildings)             | `id`, `source`, `sourceLayer`, `heightProperty`, `baseProperty`, `color`, `opacity`, `minZoom`, `maxZoom`, `filter`, `beforeId`, `paint`                        |
+| `ng-map-terrain`                                       | 3D terrain + hillshade               | `id`, `tiles`, `url`, `encoding`, `tileSize`, `exaggeration`, `hillshade`, `hillshadeExaggeration`, `hillshadePaint`, `beforeId`                                |
 
 Full inputs, types and defaults: `references/components.md`.
 
@@ -87,6 +89,7 @@ Full inputs, types and defaults: `references/components.md`.
 - Fit to data: `<ng-map [fitBounds]="{ padding: 48, maxZoom: 14 }">` (or `MapContextService.fitBounds()`) instead of imperative `map.fitBounds` + `isLoaded` handling.
 - The global `.maplibregl-popup-*` overrides and `maplibre-gl.css` are required.
 - Tile sources: the source id is the `id` input verbatim; a layer of your own that draws it should wait for `ctx.hasSource(id)` (see `references/recipes.md`). `ng-map-vector-source` adds no layers. PMTiles: the library does not depend on `pmtiles`; install it and call `maplibregl.addProtocol('pmtiles', new Protocol().tile)` once, then use `url="pmtiles://<archive url>"`.
+- 3D: `ng-map-fill-extrusion` creates only a layer and defaults to the Carto basemap (`source="carto"`, `sourceLayer="building"`, `render_height`, `minZoom` 14); for any other source it waits for `map.getSource(source)` and omits `sourceLayer` unless given. Tilt the map with `[options]="{ pitch: 60 }"` (terrain needs `maxPitch` up to 85). `ng-map-terrain` works with no inputs (public Terrarium tiles), is re-applied after theme switches, and only one terrain per map is active.
 - Many points: use `ng-map-cluster-layer`, `ng-map-heatmap` or `ng-map-geojson` (GPU), not hundreds of `ng-map-marker` (one DOM element each).
 - MapLibre is ~1 MB: lazy-load the map (`loadComponent` route or `@defer (on viewport)`). Any eager import of `ng-mapcn` pulls it into the main bundle.
 - Only pass trusted URLs to `styles`, `provideMapStyles()` and `data`; attributions render as HTML.

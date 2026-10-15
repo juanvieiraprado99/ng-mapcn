@@ -41,6 +41,7 @@ export const docsNavigation: SiteNavigationGroup[] = [
       { title: 'Clusters', href: '/docs/components/clusters', icon: 'lucideLayers2' },
       { title: 'Heatmap', href: '/docs/components/heatmap', icon: 'lucideLayers2' },
       { title: 'Tile Sources', href: '/docs/components/tile-sources', icon: 'lucideLayers2' },
+      { title: '3D Buildings & Terrain', href: '/docs/components/3d', icon: 'lucideLayers2' },
       { title: 'Advanced', href: '/docs/components/advanced', icon: 'lucideLayers2' },
     ],
   },

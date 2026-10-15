@@ -92,6 +92,7 @@ function toPoint(value: unknown): Point {
 export class Map extends Evented {
   private sources: Record<string, any> = {};
   private layers: any[] = [];
+  private terrain: { source: string; exaggeration?: number } | null = null;
   private moving = false;
   private camera = { lng: 0, lat: 0, zoom: 0, bearing: 0, pitch: 0 };
   private readonly canvas = document.createElement('canvas');
@@ -227,6 +228,7 @@ export class Map extends Evented {
     this.calls.push('styleLoaded');
     this.sources = {};
     this.layers = [];
+    this.terrain = null;
     this.styleLoading = false;
     this.fire('style.load');
     this.fire('styledata');
@@ -331,6 +333,26 @@ export class Map extends Evented {
     }
     return this;
   });
+  setFilter = vi.fn((layerId: string, filter: unknown) => {
+    this.calls.push(`setFilter:${layerId}`);
+    const layer = this.getLayer(layerId);
+    if (layer) layer.filter = filter;
+    return this;
+  });
+  /** Like MapLibre: the terrain is style-level and needs an existing source. `null` removes it. */
+  setTerrain = vi.fn((options: { source: string; exaggeration?: number } | null) => {
+    if (options && !this.sources[options.source]) {
+      throw new Error(
+        `cannot load terrain, because there exists no source with ID: ${options.source}`,
+      );
+    }
+    this.calls.push(`setTerrain:${options ? options.source : 'null'}`);
+    this.terrain = options ? { ...options } : null;
+    return this;
+  });
+  getTerrain(): { source: string; exaggeration?: number } | null {
+    return this.terrain;
+  }
   setFeatureState = vi.fn((_feature: unknown, _state: unknown) => {
     this.calls.push('setFeatureState');
     return this;

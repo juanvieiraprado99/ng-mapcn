@@ -222,6 +222,21 @@ export const DOCS_ROUTES: Routes = [
           import('./components/tile-sources-page').then((m) => m.TileSourcesPageComponent),
       },
       {
+        path: 'components/3d',
+        title: '3D Buildings & Terrain',
+        data: {
+          seo: {
+            title: 'Angular 3D Map Buildings and Terrain',
+            description:
+              'Render 3D buildings and real terrain with hillshade on an Angular map using ng-map-fill-extrusion and ng-map-terrain, powered by MapLibre GL.',
+            keywords: ['Angular 3D map', '3D buildings MapLibre', 'MapLibre terrain hillshade', 'fill-extrusion'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () =>
+          import('./components/three-d-page').then((m) => m.ThreeDPageComponent),
+      },
+      {
         path: 'components/advanced',
         title: 'Advanced',
         data: {

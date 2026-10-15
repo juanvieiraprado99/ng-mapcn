@@ -7,6 +7,7 @@ import { renderMap } from '../testing/render';
 import { MapControlsComponent } from './components/controls/map-controls.component';
 import { MapArcComponent } from './components/map-arc/map-arc.component';
 import { MapClusterLayerComponent } from './components/map-cluster-layer/map-cluster-layer.component';
+import { MapFillExtrusionComponent } from './components/map-fill-extrusion/map-fill-extrusion.component';
 import { MapGeoJSONComponent } from './components/map-geojson/map-geojson.component';
 import { MapHeatmapComponent } from './components/map-heatmap/map-heatmap.component';
 import { MapImageOverlayComponent } from './components/map-image-overlay/map-image-overlay.component';
@@ -14,6 +15,7 @@ import { MapMarkerComponent } from './components/map-marker/map-marker.component
 import { MapPopupComponent } from './components/map-popup/map-popup.component';
 import { MapRasterSourceComponent } from './components/map-raster-source/map-raster-source.component';
 import { MapRouteComponent } from './components/map-route/map-route.component';
+import { MapTerrainComponent } from './components/map-terrain/map-terrain.component';
 import { MapVectorSourceComponent } from './components/map-vector-source/map-vector-source.component';
 import { MarkerContentComponent } from './components/marker-content/marker-content.component';
 import { MarkerLabelComponent } from './components/marker-label/marker-label.component';
@@ -47,6 +49,8 @@ const TEMPLATE = `
     <ng-map-raster-source id="radar" [tiles]="['https://tiles.example.com/{z}/{x}/{y}.png']" />
     <ng-map-vector-source id="parcels" url="https://example.com/parcels.json" />
     <ng-map-image-overlay [url]="'https://example.com/a.png'" [coordinates]="corners" />
+    <ng-map-fill-extrusion />
+    <ng-map-terrain />
   </ng-map>
 `;
 
@@ -94,6 +98,8 @@ describe('server-side rendering', () => {
         MapRasterSourceComponent,
         MapVectorSourceComponent,
         MapImageOverlayComponent,
+        MapFillExtrusionComponent,
+        MapTerrainComponent,
       ],
       hostProps: { route, collection, arcs, corners },
       providers: [{ provide: PLATFORM_ID, useValue: 'server' }],

@@ -12,10 +12,17 @@ import { expect, test as base } from '@playwright/test';
 export const LIGHT_BACKGROUND = '#eeeeee';
 export const DARK_BACKGROUND = '#222222';
 
+/**
+ * Tiles URL of the `carto` vector source, which the real Carto styles also name `carto`. No layer
+ * uses it, so nothing is fetched until a spec adds one (the 3D buildings extrusion does).
+ */
+export const CARTO_TILES =
+  'https://tiles.basemaps.cartocdn.com/vectortiles/carto.streets/v1/{z}/{x}/{y}.mvt';
+
 export function minimalStyle(dark: boolean) {
   return {
     version: 8,
-    sources: {},
+    sources: { carto: { type: 'vector', tiles: [CARTO_TILES], maxzoom: 14 } },
     layers: [
       {
         id: 'bg',
@@ -63,6 +70,12 @@ function osrmResponse(pathname: string) {
     waypoints: [],
   };
 }
+
+/** z14 tile of `buildings.mvt` (lower Manhattan); every other vector tile is served empty. */
+const BUILDINGS_TILE = '/14/4823/6160.mvt';
+
+/** Public Terrarium elevation tiles (`ng-map-terrain` default): one hill tile for every request. */
+const TERRARIUM_TILES_PATH = '/elevation-tiles-prod/terrarium/';
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
 
@@ -116,6 +129,23 @@ export const test = base.extend<{ network: NetworkState }>({
           return route.fulfill({
             contentType: 'application/geo+json',
             body: readFileSync(join(FIXTURES_DIR, data.file)),
+          });
+        }
+        // 3D: Carto vector tiles (buildings) and Terrarium elevation tiles.
+        if (url.hostname.endsWith('basemaps.cartocdn.com') && url.pathname.endsWith('.mvt')) {
+          return route.fulfill({
+            contentType: 'application/vnd.mapbox-vector-tile',
+            headers: { 'access-control-allow-origin': '*' },
+            body: url.pathname.endsWith(BUILDINGS_TILE)
+              ? readFileSync(join(FIXTURES_DIR, 'buildings.mvt'))
+              : Buffer.alloc(0),
+          });
+        }
+        if (url.hostname === 's3.amazonaws.com' && url.pathname.startsWith(TERRARIUM_TILES_PATH)) {
+          return route.fulfill({
+            contentType: 'image/png',
+            headers: { 'access-control-allow-origin': '*' },
+            body: readFileSync(join(FIXTURES_DIR, 'terrarium.png')),
           });
         }
         // Raster basemap tiles (the OpenStreetMap example on the basemaps page) and <img> sources.

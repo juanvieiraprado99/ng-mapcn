@@ -16,6 +16,7 @@ export const DOCS_COMPONENT_PAGES = [
   'clusters',
   'heatmap',
   'tile-sources',
+  '3d',
   'advanced',
 ];
 
@@ -51,6 +52,7 @@ export const EXPECTED_MAPS: Record<string, number> = {
   '/docs/components/clusters': 1,
   '/docs/components/heatmap': 1,
   '/docs/components/tile-sources': 3,
+  '/docs/components/3d': 2,
   '/docs/components/advanced': 4,
   '/blocks': BLOCKS.length, // one iframe preview per block
 };

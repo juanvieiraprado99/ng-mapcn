@@ -352,6 +352,52 @@
         { "name": "paint", "type": "RasterLayerSpecification[\"paint\"]", "default": "", "description": "Escape hatch: raster paint properties merged last (e.g. raster-fade-duration: 0 to avoid a flash on url change)." }
       ],
       "outputs": []
+    },
+    {
+      "id": "mapfillextrusion",
+      "title": "MapFillExtrusion",
+      "selector": "ng-map-fill-extrusion",
+      "description": "3D extrusion of polygons (fill-extrusion layer), e.g. 3D buildings. Creates only the layer: the source is a basemap source or one added by a source component or the application, and the layer waits for it. Re-added after a theme switch. Must be used inside ng-map.",
+      "inputs": [
+        { "name": "id", "type": "string", "default": "auto", "description": "Layer id prefix; the layer is fill-extrusion-layer-<id>. Changing it re-creates the layer." },
+        { "name": "source", "type": "string", "default": "'carto'", "description": "Id of the source to extrude: the Carto basemap's vector source, a tile source component or an application source. The layer is added once map.getSource(source) exists." },
+        { "name": "sourceLayer", "type": "string", "default": "'building' for 'carto', else none", "description": "Layer of a vector source. Omit for GeoJSON sources." },
+        { "name": "heightProperty", "type": "string", "default": "'render_height'", "description": "Feature property with the height in meters." },
+        { "name": "baseProperty", "type": "string", "default": "'render_min_height'", "description": "Feature property with the base height in meters." },
+        { "name": "color", "type": "string | expression", "default": "theme gray", "description": "Fill color; defaults to a theme-aware gray (defaultExtrusionColors)." },
+        { "name": "opacity", "type": "number", "default": "0.8", "description": "Layer opacity, 0..1." },
+        { "name": "minZoom", "type": "number", "default": "14", "description": "Minimum zoom at which the extrusion is drawn (the Carto tiles stop at 14)." },
+        { "name": "maxZoom", "type": "number", "default": "24", "description": "Zoom from which the extrusion is no longer drawn." },
+        { "name": "filter", "type": "FilterSpecification | null", "default": "['!=', ['get', 'hide_3d'], true]", "description": "MapLibre filter, updated with setFilter. null removes the default filter." },
+        { "name": "beforeId", "type": "string", "default": "", "description": "Insert the layer before this layer id. Applied at creation only." },
+        { "name": "paint", "type": "FillExtrusionLayerSpecification[\"paint\"]", "default": "", "description": "Escape hatch: fill-extrusion paint properties merged last." }
+      ],
+      "outputs": []
+    },
+    {
+      "id": "mapterrain",
+      "title": "MapTerrain",
+      "selector": "ng-map-terrain",
+      "description": "3D terrain from a raster-dem source (map.setTerrain) with an optional hillshade layer. The terrain is style-level state: it is re-applied after a theme switch and disabled on teardown. One terrain per map. Must be used inside ng-map.",
+      "inputs": [
+        { "name": "id", "type": "string", "default": "auto", "description": "Id prefix: DEM source terrain-source-<id>, hillshade source terrain-hillshade-source-<id>, hillshade layer terrain-hillshade-<id>. Changing it re-creates all." },
+        { "name": "tiles", "type": "string[]", "default": "public Terrarium tiles", "description": "Elevation tile URL templates. Applied at creation." },
+        { "name": "url", "type": "string", "default": "", "description": "TileJSON URL, instead of tiles (takes precedence). Applied at creation." },
+        { "name": "encoding", "type": "'terrarium' | 'mapbox'", "default": "'terrarium'", "description": "Encoding of the elevation tiles. Applied at creation." },
+        { "name": "tileSize", "type": "number", "default": "256", "description": "Tile size in pixels. Applied at creation." },
+        { "name": "minzoom", "type": "number", "default": "", "description": "Minimum zoom of the elevation tiles. Applied at creation." },
+        { "name": "maxzoom", "type": "number", "default": "15 for the default tiles", "description": "Maximum zoom of the elevation tiles. Applied at creation." },
+        { "name": "attribution", "type": "string", "default": "Mapzen / AWS for the default tiles", "description": "Attribution for the map attribution control. Applied at creation." },
+        { "name": "exaggeration", "type": "number", "default": "1", "description": "How tall the terrain looks. Changing it calls setTerrain again." },
+        { "name": "hillshade", "type": "boolean", "default": "false", "description": "Draw a hillshade layer (with its own DEM source). Added and removed on toggle; the terrain is untouched." },
+        { "name": "hillshadeExaggeration", "type": "number", "default": "", "description": "Hillshade intensity, 0..1 (MapLibre default 0.5)." },
+        { "name": "hillshadeShadowColor", "type": "string", "default": "", "description": "Hillshade color of the shaded slopes." },
+        { "name": "hillshadeHighlightColor", "type": "string", "default": "", "description": "Hillshade color of the lit slopes." },
+        { "name": "hillshadeAccentColor", "type": "string", "default": "", "description": "Hillshade accent color for steep slopes." },
+        { "name": "hillshadePaint", "type": "HillshadeLayerSpecification[\"paint\"]", "default": "", "description": "Escape hatch: hillshade paint properties merged last." },
+        { "name": "beforeId", "type": "string", "default": "", "description": "Insert the hillshade layer before this layer id. Applied when the layer is created only." }
+      ],
+      "outputs": []
     }
   ]
 }
