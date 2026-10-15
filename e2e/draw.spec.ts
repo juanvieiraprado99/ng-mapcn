@@ -117,6 +117,36 @@ test.describe('draw', () => {
     await expect(counts(page)).toContainText('0 polygons');
   });
 
+  test('replacing the model programmatically ends with exactly the new features', async ({
+    page,
+  }) => {
+    await gotoAndWaitForMap(page, URL, BASIC);
+    const polygonIds = () =>
+      mapCall(page, BASIC, (map) => {
+        const source = map.getSource('td-polygon') as unknown as
+          { serialize(): { data: { features?: { id?: string | number }[] } } } | undefined;
+        return (source?.serialize().data.features ?? []).map((f) => f.id).sort();
+      });
+    const load = page.getByRole('button', { name: 'Load zones', exact: true });
+
+    // [] -> [zone-1], then [zone-1] -> [zone-2, zone-3]: terra-draw echoes the removal while the
+    // model is replaced, which must not leave a half-applied or empty result.
+    await load.click();
+    await expect(counts(page)).toContainText('1 polygons');
+    await expect.poll(() => polygonIds()).toEqual(['zone-1']);
+
+    await load.click();
+    await expect(counts(page)).toContainText('2 polygons');
+    await expect.poll(() => polygonIds()).toEqual(['zone-2', 'zone-3']);
+
+    // Back to a single zone: stays there (nothing deletes it afterwards).
+    await load.click();
+    await expect(counts(page)).toContainText('1 polygons');
+    await page.waitForTimeout(300);
+    await expect(counts(page)).toContainText('1 polygons');
+    await expect.poll(() => polygonIds()).toEqual(['zone-1']);
+  });
+
   test('Clear removes every feature', async ({ page }) => {
     await gotoAndWaitForMap(page, URL, BASIC);
     await page.getByRole('button', { name: 'Polygon', exact: true }).first().click();

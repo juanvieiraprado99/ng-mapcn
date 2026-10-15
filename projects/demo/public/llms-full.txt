@@ -422,17 +422,17 @@ Renders GeoJSON points as a MapLibre heatmap layer with a theme-aware default gr
 
 `ng-map-draw`
 
-Draws, selects and edits points, lines and polygons on terra-draw. Lives in the optional ng-mapcn/draw entry point (import { MapDrawComponent } from 'ng-mapcn/draw') and needs the terra-draw and terra-draw-maplibre-gl-adapter peer dependencies. A theme switch (setStyle) stops and restarts terra-draw with the same features. Must be used inside ng-map.
+Draws, selects and edits points, lines and polygons on terra-draw. Lives in the optional ng-mapcn/draw entry point (import { MapDrawComponent } from 'ng-mapcn/draw') and needs the terra-draw and terra-draw-maplibre-gl-adapter peer dependencies. A theme switch (setStyle) stops and restarts terra-draw with the same features and mode. Must be used inside ng-map.
 
 **Inputs**
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `modes` | `('point' \| 'line' \| 'polygon')[]` | `all three` | Shapes the user can draw. Changing it restarts terra-draw with the same features. |
+| `modes` | `('point' \| 'line' \| 'polygon')[]` | `all three` | Shapes the user can draw. Changing it restarts terra-draw with the same features and drops an unfinished shape. |
 | `mode` | `'point' \| 'line' \| 'polygon' \| 'select' \| 'static'` | `'static'` | Active tool (two-way with [(mode)]). A mode that is not enabled falls back to 'static'. |
-| `features` | `FeatureCollection` | `empty` | Drawn features as a GeoJSON FeatureCollection of Point, LineString and Polygon (two-way with [(features)]). Updates when a draw, edit or delete completes. Assigning a collection diffs by feature id; features without an id get one; unsupported geometries are dropped and reported through mapError. |
-| `editable` | `boolean` | `true` | Enables the select mode: select, drag, reshape and delete features. Changing it restarts terra-draw. |
-| `color` | ``#${string}`` | `theme default` | Accent color of the drawn shapes (#rrggbb). Defaults to a theme-aware blue. Changing it restarts terra-draw. |
+| `features` | `FeatureCollection` | `empty` | Drawn features as a GeoJSON FeatureCollection of Point, LineString and Polygon (two-way with [(features)]). Updates when a draw, edit or delete completes. Assigning a collection diffs by feature id; features keep their own ids (any non-empty string or finite number) and those without one get an id; unsupported geometries are dropped and reported through mapError. |
+| `editable` | `boolean` | `true` | Enables the select mode: select, drag, reshape and delete features. Changing it restarts terra-draw and drops an unfinished shape. |
+| `color` | ``#${string}`` | `theme default` | Accent color of the drawn shapes (#rrggbb). Defaults to a theme-aware blue. Changing it restyles the modes in place (no restart). |
 
 **Outputs**
 

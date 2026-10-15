@@ -283,13 +283,13 @@ No outputs. Also exported: `heatmapColorExpression(stops, theme?)`, `defaultHeat
 
 Class `MapDrawComponent`, from the optional **`'ng-mapcn/draw'`** entry point (copy-paste: `<path>/draw`, via `ng add ng-mapcn --draw`). Built on `terra-draw` + `terra-draw-maplibre-gl-adapter` (optional peer dependencies; install them). The core `'ng-mapcn'` entry never imports them.
 
-| Input      | Type                                                   | Default       | Notes                                                                                                            |
-| ---------- | ------------------------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `modes`    | `('point' \| 'line' \| 'polygon')[]`                   | all three     | Shapes the user can draw. Changing it restarts terra-draw with the same features                                 |
-| `mode`     | `MapDrawMode` (`MapDrawShape \| 'select' \| 'static'`) | `'static'`    | Active tool, `model()`: `[(mode)]`. A mode that is not enabled falls back to `'static'`                          |
-| `features` | `MapDrawFeatureCollection`                             | empty         | `model()`: `[(features)]`. GeoJSON FeatureCollection of Point/LineString/Polygon; `properties.mode` is the shape |
-| `editable` | `boolean`                                              | `true`        | Registers the `select` mode (select, drag, reshape, midpoints, delete vertices). Changing it restarts terra-draw |
-| `color`    | `` `#${string}` ``                                     | theme default | Accent of the drawn shapes. Palette (`defaultDrawPalettes`, `buildDrawStyles(theme, color?)`) follows the theme  |
+| Input      | Type                                                   | Default       | Notes                                                                                                                                          |
+| ---------- | ------------------------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `modes`    | `('point' \| 'line' \| 'polygon')[]`                   | all three     | Shapes the user can draw. Changing it restarts terra-draw with the same features, dropping an unfinished shape                                 |
+| `mode`     | `MapDrawMode` (`MapDrawShape \| 'select' \| 'static'`) | `'static'`    | Active tool, `model()`: `[(mode)]`. A mode that is not enabled falls back to `'static'`                                                        |
+| `features` | `MapDrawFeatureCollection`                             | empty         | `model()`: `[(features)]`. GeoJSON FeatureCollection of Point/LineString/Polygon; `properties.mode` is the shape                               |
+| `editable` | `boolean`                                              | `true`        | Registers the `select` mode (select, drag, reshape, midpoints, delete vertices). Changing it restarts terra-draw (drops an unfinished shape)   |
+| `color`    | `` `#${string}` ``                                     | theme default | Accent of the drawn shapes. Palette (`defaultDrawPalettes`, `buildDrawStyles(theme, color?)`) follows the theme; changing it restyles in place |
 
 | Output            | Type               | Notes                                                                        |
 | ----------------- | ------------------ | ---------------------------------------------------------------------------- |

@@ -321,7 +321,7 @@ export class DrawMap {
 }
 ```
 
-Gotchas: `features` is a GeoJSON `FeatureCollection` (so it feeds `ng-map-geojson` or a backend); it updates when a draw/edit/delete completes, not per mouse move. Lines and polygons finish by clicking the last vertex again (or Enter). Preloaded features may omit `id` (one is assigned). A theme switch or a change of `modes`/`editable`/`color` restarts terra-draw with the same features; an unfinished shape is lost. Only Point, LineString and Polygon are supported.
+Gotchas: `features` is a GeoJSON `FeatureCollection` (so it feeds `ng-map-geojson` or a backend); it updates when a draw/edit/delete completes, not per mouse move. Lines and polygons finish by clicking the last vertex again (or Enter). Preloaded features may omit `id` (one is assigned). A theme switch or a change of `modes`/`editable` restarts terra-draw with the same features and drops an unfinished shape (`color` restyles in place). Your own ids (`zone-1`, `42`) are kept. Only Point, LineString and Polygon are supported.
 
 ## Controlled viewport and raw map
 

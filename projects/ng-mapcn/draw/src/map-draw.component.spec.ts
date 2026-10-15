@@ -26,7 +26,13 @@ const fakes = vi.hoisted(() => {
     stopThrows = false;
     private nextId = 1;
 
-    constructor(readonly options: { adapter: { map: unknown }; modes: any[] }) {
+    constructor(
+      readonly options: {
+        adapter: { map: unknown };
+        modes: any[];
+        idStrategy?: { isValidId(id: unknown): boolean; getId(): string };
+      },
+    ) {
       fakes.instances.push(this);
     }
 
@@ -72,6 +78,11 @@ const fakes = vi.hoisted(() => {
     addFeatures(features: Feature[]) {
       this.calls.push(`addFeatures:${features.map((f) => f.id).join(',')}`);
       return features.map((f) => {
+        const isValidId =
+          this.options.idStrategy?.isValidId ??
+          ((id: unknown) => typeof id === 'string' && (id as string).length === 36);
+        if (!isValidId(f.id))
+          return { id: f.id, valid: false, reason: 'Feature must match the id strategy' };
         const mode = String(f.properties['mode']);
         if (!this.options.modes.some((m) => m.options?.modeName === mode)) {
           return { id: f.id, valid: false, reason: `mode ${mode} not enabled` };
@@ -82,7 +93,12 @@ const fakes = vi.hoisted(() => {
     }
     removeFeatures(ids: string[]) {
       this.calls.push(`removeFeatures:${ids.join(',')}`);
+      ids.forEach((id) => {
+        if (!this.store.has(id)) throw new Error(`No feature with id ${id}, can not delete`);
+      });
       ids.forEach((id) => this.store.delete(id));
+      // Real terra-draw fires this synchronously, before removeFeatures returns.
+      this.emit('change', ids, 'delete', { origin: 'api' });
     }
     updateFeatureGeometry(id: string, geometry: Feature['geometry']) {
       this.calls.push(`updateFeatureGeometry:${id}`);
@@ -98,8 +114,16 @@ const fakes = vi.hoisted(() => {
     }
     clear() {
       this.calls.push('clear');
+      const ids = [...this.store.keys()];
       this.store.clear();
+      this.emit('change', ids, 'delete', { origin: 'api' });
     }
+
+    updateModeOptions(mode: string, options: { styles?: Record<string, unknown> }) {
+      this.calls.push(`updateModeOptions:${mode}`);
+      this.modeStyles[mode] = options.styles;
+    }
+    modeStyles: Record<string, Record<string, unknown> | undefined> = {};
 
     // Test helpers.
     emit(event: string, ...args: unknown[]) {
@@ -442,6 +466,15 @@ describe('MapDrawComponent', () => {
       expect(host['features'].features[0].properties.mode).toBe('polygon');
     });
 
+    it('rounds coordinates to 9 decimals so float noise is not rejected', async () => {
+      const noisy = point('p-1');
+      noisy.geometry.coordinates = [-46.66 + 0.03, 0.1 + 0.2];
+
+      await renderLoaded({ features: collection(noisy) });
+
+      expect(draw().store.get('p-1')?.geometry.coordinates).toEqual([-46.63, 0.3]);
+    });
+
     it('reports and drops unsupported geometries and rejected features', async () => {
       vi.spyOn(console, 'error').mockImplementation(() => undefined);
       const multi = { ...polygon('m-1'), geometry: { type: 'MultiPolygon', coordinates: [] } };
@@ -478,6 +511,85 @@ describe('MapDrawComponent', () => {
 
       expect(draw().calls).toContain('clear');
       expect(host['features'].features).toEqual([]);
+    });
+  });
+
+  describe('replacing the model (terra-draw echoes deletes synchronously)', () => {
+    const ids = (host: Record<string, any>) => host['features'].features.map((f: any) => f.id);
+
+    it('[A] -> [B] ends as [B], not half-applied', async () => {
+      const { fixture, host } = await renderLoaded({ features: collection(polygon('a-1')) });
+
+      update(fixture, { features: collection(polygon('b-1')) });
+
+      expect(ids(host)).toEqual(['b-1']);
+      expect([...draw().store.keys()]).toEqual(['b-1']);
+    });
+
+    it('[A,B] -> [B,C] keeps B and swaps A for C', async () => {
+      const { fixture, host } = await renderLoaded({
+        features: collection(polygon('a-1'), polygon('b-1')),
+      });
+
+      update(fixture, { features: collection(polygon('b-1'), polygon('c-1')) });
+
+      expect(ids(host).sort()).toEqual(['b-1', 'c-1']);
+      expect([...draw().store.keys()].sort()).toEqual(['b-1', 'c-1']);
+    });
+
+    it('[A] -> [] empties the model', async () => {
+      const { fixture, host } = await renderLoaded({ features: collection(polygon('a-1')) });
+
+      update(fixture, { features: collection() });
+
+      expect(ids(host)).toEqual([]);
+      expect(draw().store.size).toBe(0);
+    });
+  });
+
+  describe('feature ids', () => {
+    it('installs an id strategy that accepts any non-empty string and finite number', async () => {
+      await renderLoaded();
+      const strategy = draw().options.idStrategy!;
+
+      expect(strategy.isValidId('zone-1')).toBe(true);
+      expect(strategy.isValidId(42)).toBe(true);
+      expect(strategy.isValidId('')).toBe(false);
+      expect(strategy.isValidId(Number.NaN)).toBe(false);
+      expect(strategy.isValidId(null)).toBe(false);
+      expect(strategy.getId()).not.toBe(strategy.getId());
+    });
+
+    it('keeps application ids such as "zone-1" and 42', async () => {
+      const { host } = await renderLoaded({
+        features: collection(polygon('zone-1'), { ...point('x'), id: 42 }),
+      });
+
+      expect([...draw().store.keys()]).toEqual(['zone-1', 42]);
+      expect(host['mapError']).not.toHaveBeenCalled();
+      expect(host['features'].features.map((f: any) => f.id)).toEqual(['zone-1', 42]);
+    });
+  });
+
+  describe('color', () => {
+    it('updates the mode styles in place without restarting or dropping shapes', async () => {
+      const { fixture } = await renderLoaded({ features: collection(polygon('a-1')) });
+      const first = draw();
+
+      update(fixture, { color: '#00ff00' });
+
+      expect(fakes.instances).toHaveLength(1);
+      expect(first.stopped).toBe(false);
+      expect(first.calls).toEqual(
+        expect.arrayContaining([
+          'updateModeOptions:point',
+          'updateModeOptions:line',
+          'updateModeOptions:polygon',
+          'updateModeOptions:select',
+        ]),
+      );
+      expect(first.modeStyles['polygon']?.['fillColor']).toBe('#00ff00');
+      expect(first.store.has('a-1')).toBe(true);
     });
   });
 
@@ -577,6 +689,16 @@ describe('MapDrawComponent', () => {
 
       expect(d.stopped).toBe(true);
       expect(d.listenerCount()).toBe(0);
+    });
+
+    it('does not write the model during destroy', async () => {
+      const { fixture, host } = await renderLoaded();
+      const before = host['features'];
+      draw().store.set('late-1', point('late-1'));
+
+      fixture.destroy();
+
+      expect(host['features']).toBe(before);
     });
 
     it('reports a failing start instead of throwing', async () => {

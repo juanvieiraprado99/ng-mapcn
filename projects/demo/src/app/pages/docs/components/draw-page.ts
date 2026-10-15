@@ -188,6 +188,13 @@ import { buildDrawStyles, defaultDrawPalettes } from 'ng-mapcn/draw';
           >
             Clear
           </button>
+          <button
+            type="button"
+            class="border-border bg-background hover:bg-muted rounded-md border px-3 py-1 text-sm"
+            (click)="loadSample()"
+          >
+            Load zones
+          </button>
           <span class="text-muted-foreground text-sm" data-testid="draw-count">
             {{ counts().polygons }} polygons, {{ counts().lines }} lines, {{ counts().points }}
             points
@@ -261,10 +268,11 @@ import { buildDrawStyles, defaultDrawPalettes } from 'ng-mapcn/draw';
           The palette follows the resolved map theme. A theme switch replaces the map style, which
           removes terra-draw's layers, so the component stops terra-draw and starts it again on the
           new style with the same features and mode. The same restart happens when
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">modes</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">editable</code> or
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">color</code> change; a
-          shape that is still being drawn is lost.
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">modes</code> or
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">editable</code> change; a
+          shape that is still being drawn is lost. Changing
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">color</code> restyles in
+          place.
         </p>
         <app-code-block [code]="themeCode" />
       </app-docs-section>
@@ -299,6 +307,31 @@ export class DrawPageComponent {
     const count = (type: string) => features.filter((f) => f.geometry.type === type).length;
     return { points: count('Point'), lines: count('LineString'), polygons: count('Polygon') };
   });
+
+  private sampleIndex = 0;
+
+  /** Replaces the whole model: a programmatic swap with your own ids, alternating two sets. */
+  loadSample(): void {
+    const square = (id: string, lng: number): MapDrawFeatureCollection['features'][number] => ({
+      type: 'Feature',
+      id,
+      properties: { name: id },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [lng, -23.52],
+            [lng + 0.03, -23.52],
+            [lng + 0.03, -23.54],
+            [lng, -23.54],
+            [lng, -23.52],
+          ],
+        ],
+      },
+    });
+    const sets = [[square('zone-1', -46.66)], [square('zone-2', -46.62), square('zone-3', -46.58)]];
+    this.features.set({ type: 'FeatureCollection', features: sets[this.sampleIndex++ % 2] });
+  }
 
   readonly last = signal<MapDrawEvent | null>(null);
   readonly zones = signal<MapDrawFeatureCollection>({

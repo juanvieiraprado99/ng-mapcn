@@ -1,5 +1,17 @@
+import type {
+  HexColor,
+  TerraDrawLineStringMode,
+  TerraDrawPointMode,
+  TerraDrawPolygonMode,
+  TerraDrawSelectMode,
+} from 'terra-draw';
+
 /** `#rrggbb` color, the only format terra-draw styling accepts. */
-export type DrawHexColor = `#${string}`;
+export type DrawHexColor = HexColor;
+
+type ModeStyles<T extends abstract new (options?: never) => unknown> = NonNullable<
+  NonNullable<ConstructorParameters<T>[0]> extends { styles?: infer S } ? S : never
+>;
 
 interface DrawPalette {
   accent: DrawHexColor;
@@ -15,10 +27,10 @@ export const defaultDrawPalettes: Record<'light' | 'dark', DrawPalette> = {
 
 /** Per-mode terra-draw styling derived from the resolved map theme. */
 export interface DrawStyles {
-  point: Record<string, number | DrawHexColor>;
-  line: Record<string, number | DrawHexColor>;
-  polygon: Record<string, number | DrawHexColor>;
-  select: Record<string, number | DrawHexColor>;
+  point: ModeStyles<typeof TerraDrawPointMode>;
+  line: ModeStyles<typeof TerraDrawLineStringMode>;
+  polygon: ModeStyles<typeof TerraDrawPolygonMode>;
+  select: ModeStyles<typeof TerraDrawSelectMode>;
 }
 
 /**

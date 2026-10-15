@@ -82,7 +82,7 @@ Full inputs, types and defaults: `references/components.md`.
 - Theme switches call `setStyle`, which wipes custom sources and layers. Gate custom layer code on `isLoaded()` and re-add inside the effect.
 - Theme comes from the `theme` input, else the `dark`/`light` class or `data-theme` on `<html>`, else `prefers-color-scheme`. Any toggle that sets a `dark` class works; `ThemeService` is optional.
 - Popup/tooltip content is wrapped in `.ng-popup-card` / `.ng-tooltip-pill` automatically; just project your content. A `class` on the Angular host does not reach that wrapper: use the `className` input. Hover popups need `className="ng-popup-passthrough"`.
-- `ng-map-draw`: terra-draw is restarted (same `features`) on every theme switch and when `modes`/`editable`/`color` change, so an unfinished shape is lost. Bind `[(features)]`; it updates when a draw/edit/delete completes.
+- `ng-map-draw`: terra-draw is restarted (same `features`) on every theme switch and when `modes`/`editable` change, so an unfinished shape is lost (`color` restyles in place). Ids may be any non-empty string or finite number. Bind `[(features)]`; it updates when a draw/edit/delete completes.
 - Controlled viewport: bind `[viewport]` and `(viewportChange)` together.
 - The global `.maplibregl-popup-*` overrides and `maplibre-gl.css` are required.
 - Many points: use `ng-map-cluster-layer`, `ng-map-heatmap` or `ng-map-geojson` (GPU), not hundreds of `ng-map-marker` (one DOM element each).

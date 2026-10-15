@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   effect,
   inject,
   input,
@@ -71,6 +72,22 @@ const GUIDANCE_KEYS = [
 /** Properties owned by terra-draw; everything else on a feature is user data. */
 const RESERVED_KEYS = new Set<string>(['mode', 'selected', 'currentlyDrawing', ...GUIDANCE_KEYS]);
 
+/**
+ * terra-draw's default only accepts 36-character strings (UUID4). Applications bring their own
+ * ids (`zone-1`, `42`, database keys), so any non-empty string or finite number is valid.
+ */
+const APP_ID_STRATEGY = {
+  isValidId: (id: string | number) =>
+    (typeof id === 'string' && id.length > 0) || (typeof id === 'number' && Number.isFinite(id)),
+  getId: () => crypto.randomUUID(),
+};
+
+/** terra-draw rejects coordinates with more than 9 decimals; float noise (-46.66 + 0.03) has more. */
+function roundCoordinates<T>(value: T): T {
+  if (typeof value === 'number') return (Math.round(value * 1e9) / 1e9) as T;
+  return Array.isArray(value) ? (value.map(roundCoordinates) as T) : value;
+}
+
 const EMPTY: MapDrawFeatureCollection = { type: 'FeatureCollection', features: [] };
 
 /** Completed features of a terra-draw snapshot, without guidance points or transient state. */
@@ -120,8 +137,8 @@ function userProperties(props: Record<string, unknown> | null | undefined) {
  * and reported through `mapError`.
  *
  * A theme switch (`setStyle`) destroys terra-draw's layers, so the controller is stopped and
- * restarted on the new style with the same features. Changing `modes`, `editable` or `color`
- * restarts it too. An unfinished shape is lost on a restart.
+ * restarted on the new style with the same features. Changing `modes` or `editable`
+ * restarts it too and drops an unfinished shape; `color` restyles the modes in place.
  *
  * Keyboard: terra-draw finishes a shape with Enter, cancels it with Escape and deletes the
  * selected feature with Delete.
@@ -154,6 +171,10 @@ export class MapDrawComponent {
 
   private readonly ctx = inject(MapContextService);
   private readonly zone = inject(NgZone);
+  private destroyed = false;
+  /** True while the model is being pushed into terra-draw: its own change events are echoes. */
+  private applying = false;
+  private appliedColor: DrawHexColor | undefined;
 
   /** The running terra-draw instance; null while the style is not loaded. */
   private readonly instance = signal<TerraDraw | null>(null);
@@ -163,6 +184,8 @@ export class MapDrawComponent {
   private appliedKey: string | null = null;
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => (this.destroyed = true));
+
     // Start terra-draw once the style is loaded; re-runs (restart) after a theme setStyle.
     effect((onCleanup) => {
       if (!this.ctx.isLoaded()) return;
@@ -170,9 +193,11 @@ export class MapDrawComponent {
       if (!map) return;
       const shapes = this.modes().filter((m) => SHAPES.includes(m));
       const editable = this.editable();
-      const color = this.color();
+      // Not tracked: a color change updates the mode styles in place (see the effect below).
+      const color = untracked(() => this.color());
       const theme = untracked(() => this.ctx.resolvedTheme());
 
+      this.appliedColor = color;
       const draw = this.start(map, shapes, editable, buildDrawStyles(theme, color));
       if (!draw) return;
       this.shapes = new Set(shapes);
@@ -192,7 +217,7 @@ export class MapDrawComponent {
         );
       };
       const onChange = (_ids: (string | number)[], type: string) => {
-        if (type === 'delete') this.syncFromDraw(draw);
+        if (type === 'delete' && !this.applying) this.syncFromDraw(draw);
       };
       const onSelect = (id: string | number) => {
         const feature = this.snapshotFeature(draw, id);
@@ -220,7 +245,7 @@ export class MapDrawComponent {
         draw.off('deselect', onDeselect);
         // Keep what the user drew across the restart; the model is the truth afterwards.
         try {
-          this.syncFromDraw(draw);
+          if (!this.destroyed) this.syncFromDraw(draw);
         } catch {
           // Store already torn down.
         }
@@ -229,6 +254,31 @@ export class MapDrawComponent {
           draw.stop();
         } catch {
           // The style (and terra-draw's layers) may already be gone after setStyle/map.remove.
+        }
+      });
+    });
+
+    // Accent color: restyle the registered modes in place, keeping any shape being drawn.
+    effect(() => {
+      const color = this.color();
+      const draw = this.instance();
+      if (!draw) return;
+      untracked(() => {
+        if (color === this.appliedColor) return;
+        this.appliedColor = color;
+        const styles = buildDrawStyles(this.ctx.resolvedTheme(), color);
+        const names = [...this.shapes, ...(this.editableNow ? ['select'] : [])];
+        try {
+          for (const name of names) {
+            draw.updateModeOptions(
+              name as never,
+              {
+                styles: styles[name as keyof typeof styles],
+              } as never,
+            );
+          }
+        } catch (error) {
+          this.ctx.reportError(error);
         }
       });
     });
@@ -254,7 +304,12 @@ export class MapDrawComponent {
   clear(): void {
     const draw = this.instance();
     if (!draw) return;
-    draw.clear();
+    this.applying = true;
+    try {
+      draw.clear();
+    } finally {
+      this.applying = false;
+    }
     this.syncFromDraw(draw);
   }
 
@@ -268,23 +323,19 @@ export class MapDrawComponent {
       return this.zone.runOutsideAngular(() => {
         const modes: ConstructorParameters<typeof TerraDraw>[0]['modes'] = [];
         if (shapes.includes('point')) {
-          modes.push(new TerraDrawPointMode({ modeName: 'point', styles: styles.point as never }));
+          modes.push(new TerraDrawPointMode({ modeName: 'point', styles: styles.point }));
         }
         if (shapes.includes('line')) {
-          modes.push(
-            new TerraDrawLineStringMode({ modeName: 'line', styles: styles.line as never }),
-          );
+          modes.push(new TerraDrawLineStringMode({ modeName: 'line', styles: styles.line }));
         }
         if (shapes.includes('polygon')) {
-          modes.push(
-            new TerraDrawPolygonMode({ modeName: 'polygon', styles: styles.polygon as never }),
-          );
+          modes.push(new TerraDrawPolygonMode({ modeName: 'polygon', styles: styles.polygon }));
         }
         if (editable) {
           const coordinates = { midpoints: true, draggable: true, deletable: true };
           modes.push(
             new TerraDrawSelectMode({
-              styles: styles.select as never,
+              styles: styles.select,
               flags: {
                 point: { feature: { draggable: true } },
                 line: { feature: { draggable: true, coordinates } },
@@ -293,7 +344,11 @@ export class MapDrawComponent {
             }),
           );
         }
-        const draw = new TerraDraw({ adapter: new TerraDrawMapLibreGLAdapter({ map }), modes });
+        const draw = new TerraDraw({
+          adapter: new TerraDrawMapLibreGLAdapter({ map }),
+          modes,
+          idStrategy: APP_ID_STRATEGY,
+        });
         draw.start();
         return draw;
       });
@@ -322,6 +377,7 @@ export class MapDrawComponent {
     const input = (value?.features ?? []) as MapDrawFeature[];
     const inputKey = serialize(input);
     if (inputKey === this.appliedKey) return;
+    this.applying = true;
     try {
       const current = new Map(
         finishedFeatures(draw.getSnapshot(), this.shapes).map((f) => [f.id, f]),
@@ -337,6 +393,10 @@ export class MapDrawComponent {
         }
         prepared.push({
           ...feature,
+          geometry: {
+            ...feature.geometry,
+            coordinates: roundCoordinates(feature.geometry.coordinates),
+          } as MapDrawGeometry,
           id: feature.id ?? draw.getFeatureId(),
           properties: { ...feature.properties, mode: feature.properties?.mode ?? shape },
         });
@@ -373,6 +433,8 @@ export class MapDrawComponent {
       }
     } catch (error) {
       this.ctx.reportError(error);
+    } finally {
+      this.applying = false;
     }
 
     // terra-draw now holds the truth (assigned ids, dropped features); mirror it in the model.
