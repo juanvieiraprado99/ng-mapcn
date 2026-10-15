@@ -1,0 +1,598 @@
+import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { loadAndSettle, reloadStyle, renderMap, update } from '../../src/testing/render';
+import { MapDrawComponent } from './map-draw.component';
+
+// terra-draw is mocked at the module boundary: the spec drives the component through a tiny fake
+// that records calls and lets the test fire terra-draw events.
+const fakes = vi.hoisted(() => {
+  type Feature = {
+    id: string;
+    type: 'Feature';
+    geometry: { type: string; coordinates: unknown };
+    properties: Record<string, unknown>;
+  };
+  type Handler = (...args: any[]) => void;
+
+  class FakeDraw {
+    readonly calls: string[] = [];
+    readonly store = new Map<string, Feature>();
+    readonly listeners: Record<string, Handler[]> = {};
+    mode = 'static';
+    started = false;
+    stopped = false;
+    stopThrows = false;
+    private nextId = 1;
+
+    constructor(readonly options: { adapter: { map: unknown }; modes: any[] }) {
+      fakes.instances.push(this);
+    }
+
+    start() {
+      this.started = true;
+      this.calls.push('start');
+    }
+    stop() {
+      this.calls.push('stop');
+      this.stopped = true;
+      this.store.clear();
+      if (this.stopThrows) throw new Error('layers gone');
+    }
+    on(event: string, handler: Handler) {
+      (this.listeners[event] ??= []).push(handler);
+    }
+    off(event: string, handler: Handler) {
+      this.listeners[event] = (this.listeners[event] ?? []).filter((h) => h !== handler);
+    }
+    listenerCount() {
+      return Object.values(this.listeners).reduce((n, l) => n + l.length, 0);
+    }
+    getMode() {
+      return this.mode;
+    }
+    setMode(mode: string) {
+      this.calls.push(`setMode:${mode}`);
+      this.mode = mode;
+    }
+    getSnapshot() {
+      return [...this.store.values()].map((f) => structuredClone(f));
+    }
+    getSnapshotFeature(id: string) {
+      const f = this.store.get(id);
+      return f ? structuredClone(f) : undefined;
+    }
+    hasFeature(id: string) {
+      return this.store.has(id);
+    }
+    getFeatureId() {
+      return `gen-${this.nextId++}`;
+    }
+    addFeatures(features: Feature[]) {
+      this.calls.push(`addFeatures:${features.map((f) => f.id).join(',')}`);
+      return features.map((f) => {
+        const mode = String(f.properties['mode']);
+        if (!this.options.modes.some((m) => m.options?.modeName === mode)) {
+          return { id: f.id, valid: false, reason: `mode ${mode} not enabled` };
+        }
+        this.store.set(f.id, structuredClone(f));
+        return { id: f.id, valid: true };
+      });
+    }
+    removeFeatures(ids: string[]) {
+      this.calls.push(`removeFeatures:${ids.join(',')}`);
+      ids.forEach((id) => this.store.delete(id));
+    }
+    updateFeatureGeometry(id: string, geometry: Feature['geometry']) {
+      this.calls.push(`updateFeatureGeometry:${id}`);
+      this.store.get(id)!.geometry = geometry;
+    }
+    updateFeatureProperties(id: string, props: Record<string, unknown>) {
+      this.calls.push(`updateFeatureProperties:${id}`);
+      const target = this.store.get(id)!.properties;
+      for (const [k, v] of Object.entries(props)) {
+        if (v === undefined) delete target[k];
+        else target[k] = v;
+      }
+    }
+    clear() {
+      this.calls.push('clear');
+      this.store.clear();
+    }
+
+    // Test helpers.
+    emit(event: string, ...args: unknown[]) {
+      for (const h of [...(this.listeners[event] ?? [])]) h(...args);
+    }
+    /** Simulates the user completing a shape. */
+    finishDraw(feature: Feature, action = 'draw') {
+      this.store.set(feature.id, structuredClone(feature));
+      this.emit('finish', feature.id, { mode: String(feature.properties['mode']), action });
+    }
+  }
+
+  class FakeMode {
+    constructor(readonly options?: { modeName?: string; styles?: Record<string, unknown> }) {}
+  }
+  const modeClass = (kind: string) =>
+    class extends FakeMode {
+      readonly kind = kind;
+    };
+
+  return {
+    instances: [] as FakeDraw[],
+    FakeDraw,
+    Point: modeClass('point'),
+    Line: modeClass('line'),
+    Polygon: modeClass('polygon'),
+    Select: modeClass('select'),
+    adapters: [] as unknown[],
+  };
+});
+
+vi.mock('terra-draw', () => ({
+  TerraDraw: fakes.FakeDraw,
+  TerraDrawPointMode: fakes.Point,
+  TerraDrawLineStringMode: fakes.Line,
+  TerraDrawPolygonMode: fakes.Polygon,
+  TerraDrawSelectMode: fakes.Select,
+}));
+vi.mock('terra-draw-maplibre-gl-adapter', () => ({
+  TerraDrawMapLibreGLAdapter: class {
+    constructor(readonly config: { map: unknown }) {
+      fakes.adapters.push(this);
+    }
+    get map() {
+      return this.config.map;
+    }
+  },
+}));
+
+const EMPTY = { type: 'FeatureCollection', features: [] };
+const polygon = (id: string, extra: Record<string, unknown> = {}): any => ({
+  id,
+  type: 'Feature',
+  geometry: {
+    type: 'Polygon',
+    coordinates: [
+      [
+        [0, 0],
+        [1, 0],
+        [1, 1],
+        [0, 0],
+      ],
+    ],
+  },
+  properties: { mode: 'polygon', ...extra },
+});
+const point = (id: string, lng = 0): any => ({
+  id,
+  type: 'Feature',
+  geometry: { type: 'Point', coordinates: [lng, 0] },
+  properties: { mode: 'point' },
+});
+const collection = (...features: any[]) => ({ type: 'FeatureCollection', features });
+
+const TEMPLATE = `
+  <ng-map [theme]="theme" (mapError)="mapError($event)">
+    <ng-map-draw
+      [modes]="modes"
+      [editable]="editable"
+      [color]="color"
+      [(mode)]="mode"
+      [(features)]="features"
+      (drawEnd)="drawEnd($event)"
+      (featureEdit)="featureEdit($event)"
+      (featureSelect)="featureSelect($event)"
+      (featureDeselect)="featureDeselect($event)"
+    />
+  </ng-map>
+`;
+
+function hostDefaults(): Record<string, any> {
+  return {
+    theme: 'light',
+    modes: ['point', 'line', 'polygon'],
+    editable: true,
+    color: undefined,
+    mode: 'static',
+    features: EMPTY,
+    mapError: vi.fn(),
+    drawEnd: vi.fn(),
+    featureEdit: vi.fn(),
+    featureSelect: vi.fn(),
+    featureDeselect: vi.fn(),
+  };
+}
+
+async function render(hostProps: Record<string, unknown> = {}) {
+  const host = { ...hostDefaults(), ...hostProps };
+  const result = await renderMap(TEMPLATE, { imports: [MapDrawComponent], hostProps: host });
+  return {
+    ...result,
+    map: result.map!,
+    host: result.fixture.componentInstance as Record<string, any>,
+  };
+}
+
+async function renderLoaded(hostProps: Record<string, unknown> = {}) {
+  const result = await render(hostProps);
+  loadAndSettle(result.fixture, result.map);
+  return result;
+}
+
+const draw = () => fakes.instances[fakes.instances.length - 1];
+const modeNames = (d: InstanceType<typeof fakes.FakeDraw>) =>
+  d.options.modes.map((m: any) => m.options?.modeName ?? m.kind);
+
+describe('MapDrawComponent', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    fakes.instances.length = 0;
+    fakes.adapters.length = 0;
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    document.documentElement.className = '';
+    TestBed.resetTestingModule();
+  });
+
+  describe('gating (invariant 1)', () => {
+    it('creates nothing before the map is loaded, then starts terra-draw once', async () => {
+      const { fixture, map, ctx } = await render();
+
+      expect(ctx.isLoaded()).toBe(false);
+      expect(fakes.instances).toHaveLength(0);
+
+      loadAndSettle(fixture, map);
+
+      expect(fakes.instances).toHaveLength(1);
+      expect(draw().started).toBe(true);
+      expect((fakes.adapters[0] as { map: unknown }).map).toBe(map);
+    });
+
+    it('registers the point, line and polygon modes plus select', async () => {
+      await renderLoaded();
+
+      expect(modeNames(draw())).toEqual(['point', 'line', 'polygon', 'select']);
+    });
+
+    it('only registers the requested shapes and skips select when not editable', async () => {
+      await renderLoaded({ modes: ['polygon'], editable: false });
+
+      expect(modeNames(draw())).toEqual(['polygon']);
+    });
+
+    it('configures the select mode flags per shape', async () => {
+      await renderLoaded();
+      const select = draw().options.modes.find((m: any) => m.kind === 'select');
+      const flags = select.options.flags;
+
+      expect(Object.keys(flags)).toEqual(['point', 'line', 'polygon']);
+      expect(flags.polygon.feature.draggable).toBe(true);
+      expect(flags.polygon.feature.coordinates).toEqual({
+        midpoints: true,
+        draggable: true,
+        deletable: true,
+      });
+    });
+  });
+
+  describe('theme-aware styling', () => {
+    it('uses the light palette by default', async () => {
+      await renderLoaded();
+      const polygonMode = draw().options.modes.find((m: any) => m.kind === 'polygon');
+
+      expect(polygonMode.options.styles.fillColor).toBe('#2563eb');
+    });
+
+    it('uses the color input over the palette', async () => {
+      await renderLoaded({ color: '#ff0000' });
+      const polygonMode = draw().options.modes.find((m: any) => m.kind === 'polygon');
+
+      expect(polygonMode.options.styles.fillColor).toBe('#ff0000');
+    });
+  });
+
+  describe('theme switch (setStyle)', () => {
+    it('stops terra-draw when the gate closes and restarts it with the same features', async () => {
+      const { fixture, map, host } = await renderLoaded({ mode: 'polygon' });
+      const first = draw();
+      first.finishDraw(polygon('a-1'));
+      fixture.detectChanges();
+      expect(host['features'].features).toHaveLength(1);
+
+      update(fixture, { theme: 'dark' });
+
+      expect(first.stopped).toBe(true);
+      expect(first.listenerCount()).toBe(0);
+      expect(fakes.instances).toHaveLength(1);
+
+      reloadStyle(fixture, map);
+
+      expect(fakes.instances).toHaveLength(2);
+      const second = draw();
+      expect(second).not.toBe(first);
+      expect(second.started).toBe(true);
+      expect(second.calls).toContain('addFeatures:a-1');
+      expect(second.store.get('a-1')?.geometry).toEqual(polygon('a-1').geometry);
+      // The active mode survives the restart and the palette follows the theme.
+      expect(second.getMode()).toBe('polygon');
+      const polygonMode = second.options.modes.find((m: any) => m.kind === 'polygon');
+      expect(polygonMode.options.styles.fillColor).toBe('#60a5fa');
+    });
+
+    it('snapshots features that were not yet synced before stopping', async () => {
+      const { fixture, map, host } = await renderLoaded();
+      const first = draw();
+      // Changed in terra-draw without a finish event reaching the component.
+      first.store.set('b-1', point('b-1'));
+
+      update(fixture, { theme: 'dark' });
+      reloadStyle(fixture, map);
+
+      expect(host['features'].features.map((f: any) => f.id)).toEqual(['b-1']);
+      expect(draw().store.has('b-1')).toBe(true);
+    });
+
+    it('survives stop() throwing because the style is already gone', async () => {
+      const { fixture, map, host } = await renderLoaded();
+      draw().stopThrows = true;
+
+      update(fixture, { theme: 'dark' });
+      reloadStyle(fixture, map);
+
+      expect(fakes.instances).toHaveLength(2);
+      expect(host['mapError']).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('features model', () => {
+    it('applies the initial features', async () => {
+      await renderLoaded({ features: collection(polygon('a-1'), point('p-1')) });
+
+      expect([...draw().store.keys()]).toEqual(['a-1', 'p-1']);
+    });
+
+    it('updates the model when a draw finishes, without echoing it back', async () => {
+      const { fixture, host } = await renderLoaded({ mode: 'polygon' });
+      const d = draw();
+      d.calls.length = 0;
+
+      d.finishDraw(polygon('a-1'));
+      fixture.detectChanges();
+
+      expect(host['features'].type).toBe('FeatureCollection');
+      expect(host['features'].features.map((f: any) => f.id)).toEqual(['a-1']);
+      // No add/remove/update back into terra-draw: the guard prevented the feedback loop.
+      expect(d.calls.filter((c) => /^(add|remove|update)/.test(c))).toEqual([]);
+    });
+
+    it('does not expose guidance points, drawing-in-progress shapes or selection state', async () => {
+      const { fixture, host } = await renderLoaded({ mode: 'polygon' });
+      const d = draw();
+      d.store.set('g-1', { ...point('g-1'), properties: { mode: 'polygon', closingPoint: true } });
+      d.store.set('g-2', {
+        ...polygon('g-2'),
+        properties: { mode: 'polygon', currentlyDrawing: true },
+      });
+      d.store.set('g-3', { ...point('g-3'), properties: { mode: 'select', selectionPoint: true } });
+
+      d.finishDraw(polygon('a-1', { selected: true, name: 'Zone' }));
+      fixture.detectChanges();
+
+      expect(host['features'].features).toEqual([polygon('a-1', { name: 'Zone' })]);
+    });
+
+    it('diffs a model change by id: add, update geometry and properties, remove', async () => {
+      const { fixture, host } = await renderLoaded({
+        features: collection(polygon('a-1'), point('p-1')),
+      });
+      const d = draw();
+      d.calls.length = 0;
+
+      const moved = point('p-1', 5);
+      update(fixture, {
+        features: collection(polygon('a-1', { name: 'Zone' }), moved, polygon('a-2')),
+      });
+
+      expect([...d.calls].sort()).toEqual([
+        'addFeatures:a-2',
+        'updateFeatureGeometry:p-1',
+        'updateFeatureProperties:a-1',
+      ]);
+
+      d.calls.length = 0;
+      update(fixture, { features: collection(moved) });
+      expect(d.calls).toEqual(['removeFeatures:a-1,a-2']);
+      expect(host['features'].features.map((f: any) => f.id)).toEqual(['p-1']);
+    });
+
+    it('removes the user property that disappeared from a feature', async () => {
+      const { fixture } = await renderLoaded({
+        features: collection(polygon('a-1', { name: 'Zone' })),
+      });
+
+      update(fixture, { features: collection(polygon('a-1')) });
+
+      expect(draw().store.get('a-1')?.properties).toEqual({ mode: 'polygon' });
+    });
+
+    it('does nothing when an equal collection is assigned', async () => {
+      const { fixture } = await renderLoaded({ features: collection(polygon('a-1')) });
+      const d = draw();
+      d.calls.length = 0;
+
+      update(fixture, { features: collection(polygon('a-1')) });
+
+      expect(d.calls).toEqual([]);
+    });
+
+    it('assigns ids to features without one and mirrors them in the model', async () => {
+      const unnamed = polygon('x');
+      delete unnamed.id;
+      delete unnamed.properties.mode;
+      const { host } = await renderLoaded({ features: collection(unnamed) });
+
+      expect(draw().store.has('gen-1')).toBe(true);
+      expect(host['features'].features[0].id).toBe('gen-1');
+      expect(host['features'].features[0].properties.mode).toBe('polygon');
+    });
+
+    it('reports and drops unsupported geometries and rejected features', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const multi = { ...polygon('m-1'), geometry: { type: 'MultiPolygon', coordinates: [] } };
+      const { host } = await renderLoaded({
+        modes: ['point'],
+        features: collection(multi, polygon('a-1'), point('p-1')),
+      });
+
+      const messages = host['mapError'].mock.calls.map((c: any[]) => c[0].message);
+      expect(messages.some((m: string) => m.includes('MultiPolygon'))).toBe(true);
+      expect(messages.some((m: string) => m.includes('a-1') && m.includes('rejected'))).toBe(true);
+      expect(host['features'].features.map((f: any) => f.id)).toEqual(['p-1']);
+    });
+
+    it('mirrors a delete done in terra-draw (select mode Delete key)', async () => {
+      const { fixture, host } = await renderLoaded({
+        features: collection(polygon('a-1'), point('p-1')),
+      });
+      const d = draw();
+      d.store.delete('a-1');
+      d.emit('change', ['a-1'], 'delete');
+      fixture.detectChanges();
+
+      expect(host['features'].features.map((f: any) => f.id)).toEqual(['p-1']);
+    });
+
+    it('clear() empties terra-draw and the model', async () => {
+      const { fixture, host } = await renderLoaded({ features: collection(polygon('a-1')) });
+      const component = fixture.debugElement.query(By.directive(MapDrawComponent))
+        .componentInstance as MapDrawComponent;
+
+      component.clear();
+      fixture.detectChanges();
+
+      expect(draw().calls).toContain('clear');
+      expect(host['features'].features).toEqual([]);
+    });
+  });
+
+  describe('outputs', () => {
+    it('emits drawEnd for a completed draw and featureEdit for other actions', async () => {
+      const { host } = await renderLoaded({ mode: 'polygon' });
+
+      draw().finishDraw(polygon('a-1'));
+      expect(host['drawEnd']).toHaveBeenCalledTimes(1);
+      expect(host['drawEnd']).toHaveBeenCalledWith({
+        feature: polygon('a-1'),
+        mode: 'polygon',
+        action: 'draw',
+      });
+      expect(host['featureEdit']).not.toHaveBeenCalled();
+
+      draw().finishDraw(polygon('a-1', { name: 'moved' }), 'dragFeature');
+      expect(host['featureEdit']).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'dragFeature', mode: 'polygon' }),
+      );
+      expect(host['drawEnd']).toHaveBeenCalledTimes(1);
+    });
+
+    it('emits featureSelect with the feature and featureDeselect with its id', async () => {
+      const { host } = await renderLoaded({ features: collection(polygon('a-1')) });
+
+      draw().emit('select', 'a-1');
+      expect(host['featureSelect']).toHaveBeenCalledWith(polygon('a-1'));
+
+      draw().emit('deselect', 'a-1');
+      expect(host['featureDeselect']).toHaveBeenCalledWith('a-1');
+    });
+
+    it('does not emit featureSelect for guidance features', async () => {
+      const { host } = await renderLoaded();
+      draw().store.set('g-1', { ...point('g-1'), properties: { mode: 'select', midPoint: true } });
+
+      draw().emit('select', 'g-1');
+
+      expect(host['featureSelect']).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('mode', () => {
+    it('applies the initial mode and follows changes', async () => {
+      const { fixture } = await renderLoaded({ mode: 'point' });
+      expect(draw().getMode()).toBe('point');
+
+      update(fixture, { mode: 'select' });
+      expect(draw().getMode()).toBe('select');
+
+      update(fixture, { mode: 'static' });
+      expect(draw().getMode()).toBe('static');
+    });
+
+    it('falls back to static for a mode that is not available', async () => {
+      const { fixture } = await renderLoaded({ modes: ['point'], editable: false, mode: 'line' });
+      expect(draw().getMode()).toBe('static');
+
+      update(fixture, { mode: 'select' });
+      expect(draw().getMode()).toBe('static');
+      expect(draw().calls.filter((c) => c.startsWith('setMode'))).toEqual([]);
+    });
+
+    it('does not call setMode when the mode is unchanged', async () => {
+      const { fixture } = await renderLoaded({ mode: 'point' });
+      const d = draw();
+      d.calls.length = 0;
+
+      update(fixture, { mode: 'point' });
+
+      expect(d.calls).toEqual([]);
+    });
+  });
+
+  describe('restart on structural inputs', () => {
+    it('restarts with the new modes and keeps the features', async () => {
+      const { fixture } = await renderLoaded({ features: collection(point('p-1')) });
+      const first = draw();
+
+      update(fixture, { modes: ['point', 'polygon'] });
+
+      expect(first.stopped).toBe(true);
+      expect(fakes.instances).toHaveLength(2);
+      expect(modeNames(draw())).toEqual(['point', 'polygon', 'select']);
+      expect(draw().store.has('p-1')).toBe(true);
+    });
+  });
+
+  describe('teardown (invariant 4)', () => {
+    it('stops terra-draw and removes its listeners on destroy', async () => {
+      const { fixture } = await renderLoaded();
+      const d = draw();
+      expect(d.listenerCount()).toBe(4);
+
+      fixture.destroy();
+
+      expect(d.stopped).toBe(true);
+      expect(d.listenerCount()).toBe(0);
+    });
+
+    it('reports a failing start instead of throwing', async () => {
+      const original = fakes.FakeDraw.prototype.start;
+      fakes.FakeDraw.prototype.start = () => {
+        throw new Error('adapter failed');
+      };
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      try {
+        const { host } = await renderLoaded();
+        expect(host['mapError']).toHaveBeenCalledWith(
+          expect.objectContaining({ message: 'adapter failed' }),
+        );
+      } finally {
+        fakes.FakeDraw.prototype.start = original;
+      }
+    });
+  });
+});

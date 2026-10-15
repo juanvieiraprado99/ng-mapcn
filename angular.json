@@ -138,6 +138,7 @@
           "builder": "@angular/build:unit-test",
           "options": {
             "tsConfig": "projects/ng-mapcn/tsconfig.spec.json",
+            "include": ["**/*.spec.ts", "../draw/**/*.spec.ts"],
             "setupFiles": ["projects/ng-mapcn/src/testing/setup.ts"],
             "coverageInclude": ["src/lib/**/*.ts"],
             "coverageExclude": ["src/lib/**/*.spec.ts"],

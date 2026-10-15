@@ -33,7 +33,17 @@
     "@angular/common": "^22.0.0",
     "@angular/core": "^22.0.0",
     "maplibre-gl": "^6.11.2",
-    "rxjs": "^6.5.3 || ^7.4.0"
+    "rxjs": "^6.5.3 || ^7.4.0",
+    "terra-draw": "^1.37.0",
+    "terra-draw-maplibre-gl-adapter": "^1.5.0"
+  },
+  "peerDependenciesMeta": {
+    "terra-draw": {
+      "optional": true
+    },
+    "terra-draw-maplibre-gl-adapter": {
+      "optional": true
+    }
   },
   "dependencies": {
     "tslib": "^2.3.0",
