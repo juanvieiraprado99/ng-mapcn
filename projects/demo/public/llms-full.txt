@@ -418,6 +418,31 @@ Renders GeoJSON points as a MapLibre heatmap layer with a theme-aware default gr
 | `maxZoom` | `number` | `24` | Zoom from which the heatmap is no longer rendered (e.g. to hand over to a point layer). |
 | `paint` | `HeatmapLayerSpecification["paint"]` | — | Escape hatch: heatmap paint properties merged last. |
 
+### MapDraw
+
+`ng-map-draw`
+
+Draws, selects and edits points, lines and polygons on terra-draw. Lives in the optional ng-mapcn/draw entry point (import { MapDrawComponent } from 'ng-mapcn/draw') and needs the terra-draw and terra-draw-maplibre-gl-adapter peer dependencies. A theme switch (setStyle) stops and restarts terra-draw with the same features. Must be used inside ng-map.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `modes` | `('point' \| 'line' \| 'polygon')[]` | `all three` | Shapes the user can draw. Changing it restarts terra-draw with the same features. |
+| `mode` | `'point' \| 'line' \| 'polygon' \| 'select' \| 'static'` | `'static'` | Active tool (two-way with [(mode)]). A mode that is not enabled falls back to 'static'. |
+| `features` | `FeatureCollection` | `empty` | Drawn features as a GeoJSON FeatureCollection of Point, LineString and Polygon (two-way with [(features)]). Updates when a draw, edit or delete completes. Assigning a collection diffs by feature id; features without an id get one; unsupported geometries are dropped and reported through mapError. |
+| `editable` | `boolean` | `true` | Enables the select mode: select, drag, reshape and delete features. Changing it restarts terra-draw. |
+| `color` | ``#${string}`` | `theme default` | Accent color of the drawn shapes (#rrggbb). Defaults to a theme-aware blue. Changing it restarts terra-draw. |
+
+**Outputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `drawEnd` | `MapDrawEvent` | — | Emits { feature, mode, action } when a new shape is completed. |
+| `featureEdit` | `MapDrawEvent` | — | Emits { feature, mode, action } when an existing feature is moved, reshaped or otherwise edited. |
+| `featureSelect` | `MapDrawFeature` | — | Emits the selected Feature (select mode). |
+| `featureDeselect` | `string \| number` | — | Emits the id of the deselected feature. |
+
 ## MapContextService
 
 Component-scoped service provided by `ng-map` — the Angular equivalent of mapcn's `useMap()` hook. Inject it in any component projected inside `ng-map` to reach the raw map.

@@ -207,6 +207,20 @@ export const DOCS_ROUTES: Routes = [
           import('./components/heatmap-page').then((m) => m.HeatmapPageComponent),
       },
       {
+        path: 'components/draw',
+        title: 'Draw',
+        data: {
+          seo: {
+            title: 'Angular Map Draw Tools',
+            description:
+              'Draw, select and edit points, lines and polygons on an Angular map with ng-map-draw, built on terra-draw: two-way GeoJSON features, events and theme-aware styling.',
+            keywords: ['draw polygon Angular map', 'terra-draw Angular', 'geofence editor MapLibre'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () => import('./components/draw-page').then((m) => m.DrawPageComponent),
+      },
+      {
         path: 'components/advanced',
         title: 'Advanced',
         data: {

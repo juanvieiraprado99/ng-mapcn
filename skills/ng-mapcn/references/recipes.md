@@ -2,7 +2,7 @@
 
 Copy-paste examples. Import from `'ng-mapcn'` (or from the folder `ng add` copied into your app). Every map needs a parent with an explicit height. Coordinates are `[longitude, latitude]`.
 
-Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading)
+Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Draw](#draw) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading)
 
 ## Controls
 
@@ -286,6 +286,42 @@ Extra datum properties (here `color`) are available to paint expressions through
 `data` also accepts a `GeoJSON.FeatureCollection<GeoJSON.Point, P>`. Without `gradient` the ramp follows the map theme (`defaultHeatmapGradients`); a custom `[gradient]="[[0, 'rgba(0,0,0,0)'], [1, '#ef4444']]"` is kept across theme switches. `radius`, `intensity` and `opacity` accept zoom expressions such as `['interpolate', ['linear'], ['zoom'], 0, 8, 6, 34]`. `maxZoom` stops rendering from that zoom, so a custom circle layer placed after the heatmap in the template can take over when zoomed in. Ids: `heatmap-source-<id>`, `heatmap-layer-<id>`.
 
 Gotchas: set `weightRange` to the real `[min, max]` of `weightProperty`, otherwise raw values (e.g. a magnitude of 0-7) saturate the layer. `radius`, `intensity`, `opacity`, `gradient`, `minZoom`/`maxZoom` and `data` update the existing layer in place, so binding them to signals is cheap. The component has no outputs and a heatmap is not hit-testable (`queryRenderedFeatures` returns nothing), so use a circle layer or markers for interaction.
+
+## Draw
+
+Needs `npm i terra-draw terra-draw-maplibre-gl-adapter` (or `ng add ng-mapcn --draw`); import from the `'ng-mapcn/draw'` entry point (copy-paste: `<path>/draw`).
+
+```ts
+import { Component, signal, viewChild } from '@angular/core';
+import { MapComponent } from 'ng-mapcn';
+import { MapDrawComponent, type MapDrawFeatureCollection, type MapDrawMode } from 'ng-mapcn/draw';
+
+@Component({
+  imports: [MapComponent, MapDrawComponent],
+  template: `
+    <button (click)="mode.set('polygon')">Polygon</button>
+    <button (click)="mode.set('select')">Edit</button>
+    <button (click)="draw().clear()">Clear</button>
+    <div class="h-[420px]">
+      <ng-map [center]="[-46.63, -23.55]" [zoom]="11">
+        <ng-map-draw
+          [modes]="['point', 'line', 'polygon']"
+          [(mode)]="mode"
+          [(features)]="features"
+          (drawEnd)="onDrawEnd($event)"
+        />
+      </ng-map>
+    </div>
+  `,
+})
+export class DrawMap {
+  readonly draw = viewChild.required(MapDrawComponent);
+  readonly mode = signal<MapDrawMode>('static');
+  readonly features = signal<MapDrawFeatureCollection>({ type: 'FeatureCollection', features: [] });
+}
+```
+
+Gotchas: `features` is a GeoJSON `FeatureCollection` (so it feeds `ng-map-geojson` or a backend); it updates when a draw/edit/delete completes, not per mouse move. Lines and polygons finish by clicking the last vertex again (or Enter). Preloaded features may omit `id` (one is assigned). A theme switch or a change of `modes`/`editable`/`color` restarts terra-draw with the same features; an unfinished shape is lost. Only Point, LineString and Polygon are supported.
 
 ## Controlled viewport and raw map
 

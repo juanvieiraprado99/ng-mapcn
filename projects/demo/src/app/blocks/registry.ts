@@ -96,6 +96,15 @@ export const BLOCKS: BlockMeta[] = [
     files: [{ path: 'heatmap/heatmap.ts' }],
   },
   {
+    name: 'draw',
+    title: 'Draw',
+    description:
+      'Draw and edit points, lines and polygons with a toolbar and a live readout of the shapes.',
+    iframeHeight: '720px',
+    zard: [],
+    files: [{ path: 'draw/draw.ts' }],
+  },
+  {
     name: 'logistics-network',
     title: 'Logistics Network',
     description: 'Domestic logistics map with a sidebar of stats.',
@@ -139,6 +148,7 @@ export const BLOCK_COMPONENTS: Record<string, () => Promise<Type<unknown>>> = {
   'uptime-monitor': () =>
     import('./uptime-monitor/uptime-monitor').then((m) => m.UptimeMonitorBlockComponent),
   heatmap: () => import('./heatmap/heatmap').then((m) => m.HeatmapBlockComponent),
+  draw: () => import('./draw/draw').then((m) => m.DrawBlockComponent),
   'logistics-network': () =>
     import('./logistics-network/logistics-network').then((m) => m.LogisticsNetworkBlockComponent),
   'store-locator': () =>

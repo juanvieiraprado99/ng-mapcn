@@ -130,6 +130,7 @@ const DOCS_COMPONENT_PAGES = [
   { label: 'GeoJSON', slug: 'geojson' },
   { label: 'Clusters', slug: 'clusters' },
   { label: 'Heatmap', slug: 'heatmap' },
+  { label: 'Draw', slug: 'draw' },
   { label: 'Advanced', slug: 'advanced' },
 ];
 
