@@ -13,10 +13,13 @@ export * from './lib/components/map-marker/map-marker.component';
 export * from './lib/components/map-marker/marker-context.service';
 export * from './lib/components/map-popup/map-popup.component';
 export * from './lib/components/map-route/map-route.component';
+export * from './lib/components/map-route/route-context.service';
 export * from './lib/components/marker-content/marker-content.component';
 export * from './lib/components/marker-label/marker-label.component';
 export * from './lib/components/marker-popup/marker-popup.component';
 export * from './lib/components/marker-tooltip/marker-tooltip.component';
+export * from './lib/components/route-marker/route-marker.component';
+export * from './lib/components/route-progress/route-progress.component';
 
 // ── Services ──────────────────────────────────────────────────────────────────
 

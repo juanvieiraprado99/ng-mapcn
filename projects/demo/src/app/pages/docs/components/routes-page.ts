@@ -11,6 +11,8 @@ import {
   MapRouteComponent,
   MarkerContentComponent,
   MarkerLabelComponent,
+  RouteMarkerComponent,
+  RouteProgressComponent,
 } from 'ng-mapcn';
 
 import { DocsImports } from '../../../shared/docs';
@@ -77,6 +79,65 @@ export class OsrmRouteComponent {
   }
 }`;
 
+const PROGRESS_CODE = `import { Component, signal } from '@angular/core';
+import {
+  MapComponent,
+  MapRouteComponent,
+  MarkerContentComponent,
+  RouteMarkerComponent,
+  RouteProgressComponent,
+} from 'ng-mapcn';
+
+@Component({
+  selector: 'app-route-progress',
+  standalone: true,
+  imports: [
+    MapComponent,
+    MapRouteComponent,
+    RouteProgressComponent,
+    RouteMarkerComponent,
+    MarkerContentComponent,
+  ],
+  template: \`
+    <input
+      type="range" min="0" max="1" step="0.01"
+      [value]="progress()"
+      (input)="progress.set(+$any($event.target).value)"
+    />
+    <div class="h-[420px]">
+      <ng-map [center]="[-73.97, 40.782]" [zoom]="12">
+        <ng-map-route
+          [coordinates]="coordinates"
+          color="#94a3b8"
+          [width]="4"
+          [progress]="progress()"
+        >
+          <ng-route-progress color="#22c55e" />
+          <ng-route-marker at="start">
+            <ng-marker-content>
+              <div class="size-3.5 rounded-full border-2 border-white bg-slate-500"></div>
+            </ng-marker-content>
+          </ng-route-marker>
+          <ng-route-marker at="progress">
+            <ng-marker-content>
+              <div class="size-4 rounded-full border-2 border-white bg-emerald-500 shadow-lg"></div>
+            </ng-marker-content>
+          </ng-route-marker>
+        </ng-map-route>
+      </ng-map>
+    </div>
+  \`,
+})
+export class RouteProgressExampleComponent {
+  readonly progress = signal(0.4);
+  readonly coordinates: [number, number][] = [
+    [-73.9585, 40.8004],
+    [-73.9718, 40.7821],
+    [-73.9819, 40.7679],
+    // ...
+  ];
+}`;
+
 // Central Park cycling loop (same data as the landing page card)
 const TRAIL: [number, number][] = [
   [-73.95846730810143, 40.80035246904919],
@@ -109,6 +170,8 @@ interface OsrmResponse {
     MapMarkerComponent,
     MarkerContentComponent,
     MarkerLabelComponent,
+    RouteProgressComponent,
+    RouteMarkerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -173,6 +236,62 @@ interface OsrmResponse {
           </ng-map-marker>
         </ng-map>
       </app-example-section>
+
+      <app-example-section
+        title="Progress and Route Marker"
+        sectionId="route-progress"
+        [code]="progressCode"
+      >
+        <span description>
+          Set
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">progress</code>
+          (0 to 1) and add an
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-progress</code>
+          child to draw the covered part. An
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-marker</code>
+          sits at
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">start</code>,
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">end</code>,
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">progress</code>
+          or a 0 to 1 fraction.
+        </span>
+        <label after-description class="mb-3 flex items-center gap-3 text-sm">
+          Progress {{ (progress() * 100).toFixed(0) }}%
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            class="w-64"
+            [value]="progress()"
+            (input)="onProgress($event)"
+          />
+        </label>
+        <ng-map [center]="[-73.97, 40.782]" [zoom]="12">
+          <ng-map-route
+            [coordinates]="trail"
+            color="#94a3b8"
+            [width]="4"
+            [progress]="progress()"
+          >
+            <ng-route-progress color="#22c55e" />
+            <ng-route-marker at="start">
+              <ng-marker-content>
+                <div
+                  class="size-3.5 rounded-full border-2 border-white bg-slate-500 shadow-lg"
+                ></div>
+              </ng-marker-content>
+            </ng-route-marker>
+            <ng-route-marker at="progress">
+              <ng-marker-content>
+                <div
+                  class="size-4 rounded-full border-2 border-white bg-emerald-500 shadow-lg"
+                ></div>
+              </ng-marker-content>
+            </ng-route-marker>
+          </ng-map-route>
+        </ng-map>
+      </app-example-section>
     </app-docs-page>
   `,
 })
@@ -180,6 +299,12 @@ export class RoutesPageComponent {
   readonly basicCode = BASIC_CODE;
   readonly osrmCode = OSRM_CODE;
   readonly trail = TRAIL;
+  readonly progressCode = PROGRESS_CODE;
+  readonly progress = signal(0.4);
+
+  onProgress(event: Event): void {
+    this.progress.set(Number((event.target as HTMLInputElement).value));
+  }
 
   private readonly http = inject(HttpClient);
   readonly osrmRoute = signal<[number, number][]>([]);

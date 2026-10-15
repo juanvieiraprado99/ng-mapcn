@@ -15,11 +15,13 @@ import { type GeoJSONSource, type MapMouseEvent } from 'maplibre-gl';
 import { MapContextService } from '../../services/map-context.service';
 import { addMapLayers } from '../../utils/layers';
 import { nextId } from '../../utils/map-utils';
+import { RouteContextService } from './route-context.service';
 
 @Component({
   selector: 'ng-map-route',
-  template: '',
+  template: '<ng-content />',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [RouteContextService],
 })
 export class MapRouteComponent {
   readonly coordinates = input.required<[number, number][]>();
@@ -30,11 +32,24 @@ export class MapRouteComponent {
   readonly opacity = input(0.8);
   readonly dashArray = input<[number, number]>();
   readonly interactive = input(true);
+  /** Id of an existing layer to insert the route (and its progress line) below. Applied at creation only. */
+  readonly beforeId = input<string>();
+  /** Covered fraction of the route (0-1), drawn by a child `<ng-route-progress>`. */
+  readonly progress = input<number>();
+  /** Highlights the route: the `active*` inputs override the base paint while true. */
+  readonly active = input(false);
+  readonly activeColor = input<string>();
+  readonly activeWidth = input<number>();
+  readonly activeOpacity = input<number>();
+  readonly activeDashArray = input<[number, number]>();
 
   readonly routeClick = output<MapMouseEvent>();
+  readonly routeMouseEnter = output<MapMouseEvent>();
+  readonly routeMouseLeave = output<MapMouseEvent>();
 
   private readonly ctx = inject(MapContextService);
   private readonly zone = inject(NgZone);
+  private readonly routeCtx = inject(RouteContextService);
 
   private readonly autoId = nextId('ng-route');
   private readonly sourceId = computed(() => this.id() ?? this.autoId);
@@ -47,7 +62,28 @@ export class MapRouteComponent {
    */
   private readonly created = signal(false);
 
+  private readonly paint = computed(() => {
+    const active = this.active();
+    return {
+      color: (active ? this.activeColor() : undefined) ?? this.color(),
+      width: (active ? this.activeWidth() : undefined) ?? this.width(),
+      opacity: (active ? this.activeOpacity() : undefined) ?? this.opacity(),
+      dashArray: (active ? this.activeDashArray() : undefined) ?? this.dashArray(),
+    };
+  });
+
   constructor() {
+    // Share the signals themselves with the children (ng-route-progress / ng-route-marker).
+    const width = computed(() => this.paint().width);
+    this.routeCtx.connect({
+      coordinates: this.coordinates,
+      progress: this.progress,
+      layerId: this.layerId,
+      beforeId: this.beforeId,
+      created: this.created.asReadonly(),
+      width,
+    });
+
     // Add source + layer once the map style is loaded; re-runs after theme setStyle
     // and when [id] changes (the cleanup removes the old ids).
     effect((onCleanup) => {
@@ -58,27 +94,28 @@ export class MapRouteComponent {
       const sourceId = this.sourceId();
       const layerId = this.layerId();
       const coords = untracked(() => this.coordinates());
-      const color = untracked(() => this.color());
-      const width = untracked(() => this.width());
-      const opacity = untracked(() => this.opacity());
-      const da = untracked(() => this.dashArray());
+      const { color, width, opacity, dashArray: da } = untracked(() => this.paint());
+      const beforeId = untracked(() => this.beforeId());
 
       const teardown = addMapLayers(
         map,
         (b) => {
           b.addSource(sourceId, { type: 'geojson', data: this.toGeoJSON(coords) });
-          b.addLayer({
-            id: layerId,
-            type: 'line',
-            source: sourceId,
-            layout: { 'line-join': 'round', 'line-cap': 'round' },
-            paint: {
-              'line-color': color,
-              'line-width': width,
-              'line-opacity': opacity,
-              ...(da ? { 'line-dasharray': da } : {}),
+          b.addLayer(
+            {
+              id: layerId,
+              type: 'line',
+              source: sourceId,
+              layout: { 'line-join': 'round', 'line-cap': 'round' },
+              paint: {
+                'line-color': color,
+                'line-width': width,
+                'line-opacity': opacity,
+                ...(da ? { 'line-dasharray': da } : {}),
+              },
             },
-          });
+            beforeId,
+          );
         },
         (error) => this.ctx.reportError(error),
       );
@@ -101,11 +138,13 @@ export class MapRouteComponent {
 
       // Map events fire outside the zone (map is created there) — re-enter for outputs
       const handleClick = (e: MapMouseEvent) => this.zone.run(() => this.routeClick.emit(e));
-      const handleMouseEnter = () => {
+      const handleMouseEnter = (e: MapMouseEvent) => {
         map.getCanvas().style.cursor = 'pointer';
+        this.zone.run(() => this.routeMouseEnter.emit(e));
       };
-      const handleMouseLeave = () => {
+      const handleMouseLeave = (e: MapMouseEvent) => {
         map.getCanvas().style.cursor = '';
+        this.zone.run(() => this.routeMouseLeave.emit(e));
       };
       map.on('click', layerId, handleClick);
       map.on('mouseenter', layerId, handleMouseEnter);
@@ -138,10 +177,7 @@ export class MapRouteComponent {
 
     // Update paint properties reactively
     effect(() => {
-      const color = this.color();
-      const width = this.width();
-      const opacity = this.opacity();
-      const da = this.dashArray();
+      const { color, width, opacity, dashArray: da } = this.paint();
       if (!this.created()) return;
       const map = this.ctx.map();
       const layerId = this.layerId();

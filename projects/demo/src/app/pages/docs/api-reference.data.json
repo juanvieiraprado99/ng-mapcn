@@ -32,8 +32,7 @@
         { "name": "projection", "type": "ProjectionSpecification", "default": "", "description": "Map projection, e.g. { type: 'globe' }." },
         { "name": "theme", "type": "'light' | 'dark' | 'auto'", "default": "'auto'", "description": "Force a theme, or 'auto' to follow the dark/light class on <html>." },
         { "name": "loading", "type": "boolean", "default": "false", "description": "Shows the loading overlay." },
-        { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (loading), merged over provideMapLabels() and the English defaults." }
-,
+        { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (loading), merged over provideMapLabels() and the English defaults." },
         { "name": "viewport", "type": "Partial<MapViewport>", "default": "", "description": "Controlled viewport ({ center, zoom, bearing, pitch }). Pair with viewportChange." },
         { "name": "options", "type": "Omit<MapOptions, 'container' | 'style'>", "default": "", "description": "Extra MapLibre MapOptions (scrollZoom, dragRotate, …) passed to the map constructor." }
       ],
@@ -162,7 +161,7 @@
       "id": "maproute",
       "title": "MapRoute",
       "selector": "ng-map-route",
-      "description": "Renders a line/route from the given coordinates. Must be used inside ng-map. Supports click and hover interactions.",
+      "description": "Renders a line/route from the given coordinates. Must be used inside ng-map. Supports click and hover interactions, an active (highlighted) state and a covered-progress line via child ng-route-progress / ng-route-marker components.",
       "inputs": [
         { "name": "coordinates", "type": "[number, number][]", "default": "required", "description": "Array of [longitude, latitude] points forming the line." },
         { "name": "id", "type": "string", "default": "auto", "description": "Optional stable id for the underlying source/layer." },
@@ -170,11 +169,43 @@
         { "name": "width", "type": "number", "default": "3", "description": "Line width in pixels." },
         { "name": "opacity", "type": "number", "default": "0.8", "description": "Line opacity." },
         { "name": "dashArray", "type": "number[]", "default": "", "description": "Dash pattern, e.g. [2, 2]." },
-        { "name": "interactive", "type": "boolean", "default": "true", "description": "Enables pointer events on the line." }
+        { "name": "interactive", "type": "boolean", "default": "true", "description": "Enables pointer events on the line." },
+        { "name": "beforeId", "type": "string", "default": "", "description": "Id of an existing layer to insert the route (and its progress line) below. Applied at creation only." },
+        { "name": "progress", "type": "number", "default": "", "description": "Covered fraction of the route (0 to 1). Drawn by a child ng-route-progress and followed by ng-route-marker at=\"progress\"." },
+        { "name": "active", "type": "boolean", "default": "false", "description": "Highlights the route: the active* inputs override the base paint while true." },
+        { "name": "activeColor", "type": "string", "default": "", "description": "Line color while active. Falls back to color." },
+        { "name": "activeWidth", "type": "number", "default": "", "description": "Line width while active. Falls back to width." },
+        { "name": "activeOpacity", "type": "number", "default": "", "description": "Line opacity while active. Falls back to opacity." },
+        { "name": "activeDashArray", "type": "number[]", "default": "", "description": "Dash pattern while active. Falls back to dashArray." }
       ],
       "outputs": [
-        { "name": "routeClick", "type": "MapMouseEvent", "default": "", "description": "Emits when the route is clicked." }
+        { "name": "routeClick", "type": "MapMouseEvent", "default": "", "description": "Emits when the route is clicked." },
+        { "name": "routeMouseEnter", "type": "MapMouseEvent", "default": "", "description": "Emits when the pointer enters the route (the cursor becomes a pointer)." },
+        { "name": "routeMouseLeave", "type": "MapMouseEvent", "default": "", "description": "Emits when the pointer leaves the route." }
       ]
+    },
+    {
+      "id": "routeprogress",
+      "title": "RouteProgress",
+      "selector": "ng-route-progress",
+      "description": "Draws the covered part of the parent ng-map-route, as set by its progress input (computed by cumulative distance along the line). Use inside ng-map-route.",
+      "inputs": [
+        { "name": "color", "type": "string", "default": "'#22c55e'", "description": "Color of the covered line." },
+        { "name": "width", "type": "number", "default": "route width", "description": "Width of the covered line in pixels." },
+        { "name": "opacity", "type": "number", "default": "1", "description": "Opacity of the covered line." },
+        { "name": "dashArray", "type": "number[]", "default": "", "description": "Dash pattern of the covered line." }
+      ],
+      "outputs": []
+    },
+    {
+      "id": "routemarker",
+      "title": "RouteMarker",
+      "selector": "ng-route-marker",
+      "description": "A marker placed along the parent ng-map-route. Project ng-marker-content (and label, popup, tooltip) into it. Created once and moved as progress or coordinates change.",
+      "inputs": [
+        { "name": "at", "type": "'start' | 'end' | 'progress' | number", "default": "'start'", "description": "Position on the route: its start, end, the current progress, or a fraction between 0 and 1 of the total distance." }
+      ],
+      "outputs": []
     },
     {
       "id": "maparc",

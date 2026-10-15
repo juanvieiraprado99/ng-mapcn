@@ -22,7 +22,15 @@ const TEMPLATE = `
         [opacity]="opacity"
         [dashArray]="dashArray"
         [interactive]="interactive"
+        [beforeId]="beforeId"
+        [active]="active"
+        [activeColor]="activeColor"
+        [activeWidth]="activeWidth"
+        [activeOpacity]="activeOpacity"
+        [activeDashArray]="activeDashArray"
         (routeClick)="routeClick($event)"
+        (routeMouseEnter)="routeMouseEnter($event)"
+        (routeMouseLeave)="routeMouseLeave($event)"
       />
     }
   </ng-map>
@@ -44,7 +52,15 @@ function hostDefaults(): Record<string, any> {
     opacity: 0.8,
     dashArray: undefined,
     interactive: true,
+    beforeId: undefined,
+    active: false,
+    activeColor: undefined,
+    activeWidth: undefined,
+    activeOpacity: undefined,
+    activeDashArray: undefined,
     routeClick: vi.fn(),
+    routeMouseEnter: vi.fn(),
+    routeMouseLeave: vi.fn(),
   };
 }
 
@@ -292,6 +308,99 @@ describe('MapRouteComponent', () => {
 
       map.fire('mouseleave', {}, LAYER);
       expect(map.getCanvas().style.cursor).toBe('');
+    });
+  });
+
+  describe('beforeId', () => {
+    it('inserts the layer below beforeId', async () => {
+      const { fixture, map } = await render({ beforeId: 'base-layer' });
+      map.addSource('base', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      map.addLayer({ id: 'base-layer', type: 'line', source: 'base' });
+
+      loadAndSettle(fixture, map);
+
+      expect(map.getLayerOrder()).toEqual([LAYER, 'base-layer']);
+    });
+
+    it('reports an unknown beforeId through mapError path without leaving a source behind', async () => {
+      const { fixture, map } = await render({ beforeId: 'missing' });
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      loadAndSettle(fixture, map);
+
+      expect(map.getLayer(LAYER)).toBeUndefined();
+      expect(map.getSource(SOURCE)).toBeUndefined();
+    });
+  });
+
+  describe('hover outputs', () => {
+    it('emits routeMouseEnter / routeMouseLeave and keeps the cursor handling', async () => {
+      const { map, host } = await renderLoaded();
+      const payload = { lngLat: { lng: 1, lat: 2 }, point: { x: 3, y: 4 } };
+
+      map.fire('mouseenter', payload, LAYER);
+      expect(host['routeMouseEnter']).toHaveBeenCalledTimes(1);
+      expect(host['routeMouseEnter'].mock.calls[0][0]).toMatchObject(payload);
+      expect(map.getCanvas().style.cursor).toBe('pointer');
+
+      map.fire('mouseleave', payload, LAYER);
+      expect(host['routeMouseLeave']).toHaveBeenCalledTimes(1);
+      expect(map.getCanvas().style.cursor).toBe('');
+    });
+
+    it('stops emitting after teardown and leaves no listeners', async () => {
+      const { fixture, map, host } = await renderLoaded();
+
+      update(fixture, { show: false });
+      map.fire('mouseenter', {}, LAYER);
+
+      expect(host['routeMouseEnter']).not.toHaveBeenCalled();
+      expect(map.listenerCount('mouseenter', LAYER)).toBe(0);
+      expect(map.listenerCount('mouseleave', LAYER)).toBe(0);
+    });
+  });
+
+  describe('active state', () => {
+    it('applies the active paint over the base paint without recreating the layer', async () => {
+      const { fixture, map } = await renderLoaded({
+        activeColor: '#ff0000',
+        activeWidth: 8,
+        activeOpacity: 1,
+        activeDashArray: [1, 1],
+      });
+      map.setPaintProperty.mockClear();
+      map.calls.length = 0;
+
+      update(fixture, { active: true });
+
+      expect(map.setPaintProperty).toHaveBeenCalledWith(LAYER, 'line-color', '#ff0000');
+      expect(map.setPaintProperty).toHaveBeenCalledWith(LAYER, 'line-width', 8);
+      expect(map.setPaintProperty).toHaveBeenCalledWith(LAYER, 'line-opacity', 1);
+      expect(map.setPaintProperty).toHaveBeenCalledWith(LAYER, 'line-dasharray', [1, 1]);
+      expect(structuralCalls(map)).toEqual([]);
+
+      update(fixture, { active: false });
+      expect(map.getLayer(LAYER).paint['line-color']).toBe('#4285F4');
+      expect(map.getLayer(LAYER).paint['line-width']).toBe(3);
+      expect(map.getLayer(LAYER).paint['line-opacity']).toBe(0.8);
+      expect(map.getLayer(LAYER).paint['line-dasharray']).toBeUndefined();
+      expect(structuralCalls(map)).toEqual([]);
+    });
+
+    it('falls back to the base value for unset active* inputs', async () => {
+      const { fixture, map } = await renderLoaded({ activeWidth: 10 });
+
+      update(fixture, { active: true });
+
+      expect(map.getLayer(LAYER).paint['line-width']).toBe(10);
+      expect(map.getLayer(LAYER).paint['line-color']).toBe('#4285F4');
+      expect(map.getLayer(LAYER).paint['line-opacity']).toBe(0.8);
+    });
+
+    it('creates the layer with the active paint when active from the start', async () => {
+      const { fixture, map } = await render({ active: true, activeColor: '#00ff00' });
+      loadAndSettle(fixture, map);
+
+      expect(map.getLayer(LAYER).paint['line-color']).toBe('#00ff00');
     });
   });
 
