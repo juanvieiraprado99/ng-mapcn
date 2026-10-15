@@ -1,5 +1,26 @@
 # Changelog
 
+## [22.0.0-beta.6](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.5...v22.0.0-beta.6) (2026-10-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cluster:** MapGeoJSONComponent and MapClusterLayerComponent are now generic over feature properties. When data is typed with an interface, event handlers must use the matching type argument, e.g. MapGeoJSONEvent<CountryProperties> instead of MapGeoJSONEvent.
+
+### Features
+
+* className inputs for portaled content and controls ([#60](https://github.com/juanvieiraprado99/ng-mapcn/issues/60)) ([943506f](https://github.com/juanvieiraprado99/ng-mapcn/commit/943506fd0714b7570e1dd97c481e0a25230473bf))
+* **cluster:** id and beforeId inputs and typed generics ([#63](https://github.com/juanvieiraprado99/ng-mapcn/issues/63)) ([3c43094](https://github.com/juanvieiraprado99/ng-mapcn/commit/3c43094ecd22c4152d3bd9cc886547837d5e5479))
+* configurable and translatable control and a11y labels ([#59](https://github.com/juanvieiraprado99/ng-mapcn/issues/59)) ([f2b813a](https://github.com/juanvieiraprado99/ng-mapcn/commit/f2b813a3d0e2096a62015369b79b74568f8ece60))
+* **controls:** add a locateError output ([#58](https://github.com/juanvieiraprado99/ng-mapcn/issues/58)) ([bc1dc42](https://github.com/juanvieiraprado99/ng-mapcn/commit/bc1dc42a5518c8d7f01db797cc0a1fb1db396ccf))
+* **marker-popup:** support PopupOptions and closeButton ([#62](https://github.com/juanvieiraprado99/ng-mapcn/issues/62)) ([bcad9e0](https://github.com/juanvieiraprado99/ng-mapcn/commit/bcad9e0690d279bdbdfcc80f7c2376d4a0c8c423))
+* **route:** progress, active state, beforeId, hover outputs, RouteProgress and RouteMarker ([#64](https://github.com/juanvieiraprado99/ng-mapcn/issues/64)) ([673ad9e](https://github.com/juanvieiraprado99/ng-mapcn/commit/673ad9ee0191bba5f6c8feb9eab2a272a4766384))
+
+
+### Bug Fixes
+
+* **popup:** keep hover tooltips open when the cursor moves into them ([#61](https://github.com/juanvieiraprado99/ng-mapcn/issues/61)) ([6cafa30](https://github.com/juanvieiraprado99/ng-mapcn/commit/6cafa3020421bc970ef345b8b891b446e9db439c))
+
 ## [22.0.0-beta.5](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.4...v22.0.0-beta.5) (2026-10-14)
 
 
