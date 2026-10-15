@@ -10,7 +10,9 @@ import type { CodeLang } from './highlighter';
   standalone: true,
   imports: [CodeCopyButtonComponent, CodeSurfaceComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block' },
+  // `lang` is an input, but a static `lang="bash"` would also land on the host as an HTML lang
+  // attribute (an invalid language code for assistive technology): drop it.
+  host: { class: 'block', '[attr.lang]': 'null' },
   template: `
     <div class="relative w-full overflow-hidden rounded-lg">
       @if (filename(); as name) {

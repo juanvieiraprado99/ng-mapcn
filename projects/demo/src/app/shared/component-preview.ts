@@ -17,7 +17,7 @@ let nextId = 0;
   standalone: true,
   imports: [ZardButtonComponent, CodeCopyButtonComponent, CodeSurfaceComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block' },
+  host: { class: 'block', '[attr.lang]': 'null' },
   template: `
     <div class="w-full overflow-hidden rounded-lg border" [style.--preview-height]="height()">
       <div class="h-(--preview-height) w-full overflow-hidden">

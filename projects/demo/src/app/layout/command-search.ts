@@ -52,7 +52,7 @@ import { siteNavigation } from '@/shared/site-navigation';
     >
       <ng-icon name="lucideSearch" size="14" />
       <span>Search...</span>
-      <kbd z-kbd class="text-muted-foreground/70 ml-auto bg-transparent">⌘K</kbd>
+      <kbd z-kbd class="text-muted-foreground ml-auto bg-transparent">⌘K</kbd>
     </button>
 
     <z-dialog

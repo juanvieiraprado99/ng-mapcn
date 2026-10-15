@@ -35,7 +35,7 @@ import { type EdgeNode, getNetworkSummary, statusMeta } from '../data';
       </div>
     </div>
 
-    <ul class="flex-1 divide-y overflow-y-auto">
+    <ul tabindex="0" class="flex-1 divide-y overflow-y-auto">
       @for (node of nodes(); track node.id) {
         <li class="flex items-center gap-2.5 px-3 py-2">
           <span class="size-2 shrink-0 rounded-full" [class]="meta[node.status].dot"></span>

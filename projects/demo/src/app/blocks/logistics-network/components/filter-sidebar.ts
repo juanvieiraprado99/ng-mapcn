@@ -130,7 +130,7 @@ const REGIONS = ['west', 'midwest', 'south', 'northeast'] as const;
                     class="pointer-events-none"
                   >
                     <span
-                      class="bg-muted text-muted-foreground flex size-4 items-center justify-center rounded text-[9px] font-bold"
+                      class="bg-muted text-foreground flex size-4 items-center justify-center rounded text-[9px] font-bold"
                       >{{ regionIcons[region] }}</span
                     >
                     <span>{{ regionLabels[region] }}</span>

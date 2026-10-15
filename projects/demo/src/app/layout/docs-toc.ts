@@ -20,7 +20,7 @@ export interface TocItem {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <nav aria-label="On this page" class="flex flex-col">
-      <p class="text-muted-foreground/70 mb-3 text-[11px] font-semibold tracking-wide uppercase">
+      <p class="text-muted-foreground mb-3 text-[11px] font-semibold tracking-wide uppercase">
         On This Page
       </p>
       <div class="flex flex-col gap-1.5">

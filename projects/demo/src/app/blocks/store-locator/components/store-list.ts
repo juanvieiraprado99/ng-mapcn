@@ -85,7 +85,7 @@ import type { Store } from '../data';
                     </div>
 
                     <div
-                      class="text-muted-foreground mt-2 space-y-1.5 text-xs font-normal tabular-nums"
+                      class="text-foreground/80 mt-2 space-y-1.5 text-xs font-normal tabular-nums"
                     >
                       <p class="flex items-center gap-1.5">
                         <ng-icon name="lucideMapPin" size="14" class="shrink-0" />
