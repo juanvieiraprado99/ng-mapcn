@@ -44,7 +44,9 @@ export class JsonLdService {
       const script = this.document.createElement('script');
       script.setAttribute('type', 'application/ld+json');
       script.setAttribute('data-seo', '');
-      script.textContent = JSON.stringify({ '@context': 'https://schema.org', ...schema });
+      // `<` escaped so a value containing `</script>` cannot close the tag in the prerendered HTML.
+      const json = JSON.stringify({ '@context': 'https://schema.org', ...schema });
+      script.textContent = json.replace(/</g, '\\u003c');
       this.document.head.appendChild(script);
     }
   }

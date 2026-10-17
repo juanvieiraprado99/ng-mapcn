@@ -141,7 +141,7 @@ describe('style presets', () => {
     const maptiler = findPreset('maptiler');
     expect(resolveStyles(maptiler, undefined)).toBeUndefined();
     expect(resolveStyles(maptiler, 'abc')?.light).toBe(
-      'https://api.maptiler.com/maps/streets-v2/style.json?key=abc',
+      'https://api.maptiler.com/maps/streets-v4/style.json?key=abc',
     );
     expect(resolveStyles(findPreset('stadia'), '')?.dark).toBe(
       'https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json',
