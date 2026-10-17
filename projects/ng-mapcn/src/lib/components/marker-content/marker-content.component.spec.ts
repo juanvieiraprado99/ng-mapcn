@@ -58,6 +58,20 @@ describe('MarkerContentComponent', () => {
     expect(el.querySelector('.ng-marker-content > .ng-marker-default-icon')).not.toBeNull();
   });
 
+  it('removes its wrapper when the content component is removed and the marker stays', async () => {
+    const { fixture } = await renderMap(
+      `<ng-map><ng-map-marker [longitude]="1" [latitude]="2">@if (show) {<ng-marker-content><b>x</b></ng-marker-content>}</ng-map-marker></ng-map>`,
+      { imports: IMPORTS, hostProps: { show: true } },
+    );
+    const el = fakeRegistry.markers[0].getElement();
+    expect(el.querySelector('.ng-marker-content')).not.toBeNull();
+
+    update(fixture, { show: false });
+
+    expect(fakeRegistry.markers).toHaveLength(1);
+    expect(el.querySelector('.ng-marker-content')).toBeNull();
+  });
+
   it('renders the default icon for whitespace-only content', async () => {
     await renderMap(
       `<ng-map><ng-map-marker [longitude]="1" [latitude]="2"><ng-marker-content>   </ng-marker-content></ng-map-marker></ng-map>`,

@@ -65,6 +65,10 @@ export class MarkerTooltipComponent {
         popup.setLngLat(ll).addTo(map);
       };
       const hide = () => popup.remove();
+      // The tooltip stays open while its marker is dragged (pointer over it): keep it attached.
+      const follow = () => {
+        if (popup.isOpen()) popup.setLngLat(marker.getLngLat());
+      };
 
       // Keyboard parity: the marker element (or any focusable content inside it) shows the
       // tooltip on focus; Escape dismisses it while focus stays on the marker.
@@ -91,6 +95,7 @@ export class MarkerTooltipComponent {
       el.addEventListener('focusin', onFocusIn);
       el.addEventListener('focusout', onFocusOut);
       el.addEventListener('keydown', onKeydown);
+      marker.on('drag', follow);
       this.markerCtx.hasTooltip.set(true);
 
       this.popup.set(popup);
@@ -101,6 +106,7 @@ export class MarkerTooltipComponent {
         el.removeEventListener('focusin', onFocusIn);
         el.removeEventListener('focusout', onFocusOut);
         el.removeEventListener('keydown', onKeydown);
+        marker.off('drag', follow);
         this.markerCtx.hasTooltip.set(false);
         popup.remove();
         destroyPortal();
