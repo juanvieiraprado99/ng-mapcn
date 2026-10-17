@@ -10,7 +10,7 @@ const schematicsSrc = join(root, 'projects', 'ng-mapcn', 'schematics');
 const outDir = join(root, 'dist', 'ng-mapcn', 'schematics');
 
 execSync('node scripts/sync-schematic-files.mjs', { cwd: root, stdio: 'inherit' });
-execSync('npx tsc -p projects/ng-mapcn/tsconfig.schematics.json', {
+execSync('npx --no-install tsc -p projects/ng-mapcn/tsconfig.schematics.json', {
   cwd: root,
   stdio: 'inherit',
 });
