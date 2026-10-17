@@ -19,7 +19,7 @@ import {
 } from 'maplibre-gl';
 
 import { MapContextService } from '../../services/map-context.service';
-import { coordinatesBounds } from '../../utils/bounds';
+import { geoJsonBounds } from '../../utils/bounds';
 import { syncLayerProperties } from '../../utils/layer-properties';
 import { addMapLayers } from '../../utils/layers';
 import {
@@ -141,13 +141,8 @@ export class MapArcComponent<T extends MapArcDatum = MapArcDatum> {
   constructor() {
     // Contributes to the map's declarative fit-to-bounds (`<ng-map [fitBounds]>`).
     inject(DestroyRef).onDestroy(
-      this.ctx.registerBounds(() =>
-        coordinatesBounds(
-          this.data().flatMap((arc) =>
-            buildArcCoordinates(arc.from, arc.to, this.curvature(), this.samples()),
-          ),
-        ),
-      ),
+      // Reuses the curves already built for the source instead of sampling every arc again.
+      this.ctx.registerBounds(() => geoJsonBounds(this.geoJSON())),
     );
 
     // Add source and layers once the map style is loaded; re-runs after theme setStyle.

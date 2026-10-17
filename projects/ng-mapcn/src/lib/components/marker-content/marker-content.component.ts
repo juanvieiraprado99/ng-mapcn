@@ -5,6 +5,7 @@ import {
   inject,
   Injector,
   input,
+  NgZone,
   signal,
   type TemplateRef,
   untracked,
@@ -26,6 +27,7 @@ export class MarkerContentComponent {
 
   private readonly injector = inject(Injector);
   private readonly markerCtx = inject(MarkerContextService);
+  private readonly zone = inject(NgZone);
   private readonly tpl = viewChild.required<TemplateRef<unknown>>('tpl');
 
   private readonly wrapperEl = signal<HTMLElement | null>(null);
@@ -59,13 +61,18 @@ export class MarkerContentComponent {
         this.markerCtx.contentKind.set(empty ? 'default' : contentKind(wrapper));
       };
       syncIcon();
-      const observer = new MutationObserver(syncIcon);
-      observer.observe(wrapper, {
-        childList: true,
-        characterData: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['aria-label', 'aria-labelledby', 'alt', 'tabindex', 'href', 'role'],
+      // Outside the zone: the mutations come from Angular rendering the content, so a callback in
+      // the zone would only schedule another change detection (live counters, async content).
+      const observer = this.zone.runOutsideAngular(() => {
+        const o = new MutationObserver(syncIcon);
+        o.observe(wrapper, {
+          childList: true,
+          characterData: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['aria-label', 'aria-labelledby', 'alt', 'tabindex', 'href', 'role'],
+        });
+        return o;
       });
 
       onCleanup(() => {
