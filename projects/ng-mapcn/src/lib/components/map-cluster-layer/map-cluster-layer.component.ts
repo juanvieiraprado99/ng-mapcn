@@ -128,6 +128,7 @@ export class MapClusterLayerComponent<P extends Record<string, any> = Record<str
   private readonly sourceId = computed(() => `cluster-source-${this.resolvedId()}`);
   private readonly clusterLayerId = computed(() => `clusters-${this.resolvedId()}`);
   private readonly clusterCountLayerId = computed(() => `cluster-count-${this.resolvedId()}`);
+  private warnedNoGlyphs = false;
   private readonly unclusteredLayerId = computed(() => `unclustered-point-${this.resolvedId()}`);
   /** Data currently in the source, so re-runs of the data effect skip a no-op setData. */
   private appliedData: string | GeoJSON.FeatureCollection<GeoJSON.Point, P | null> | null = null;
@@ -183,21 +184,27 @@ export class MapClusterLayerComponent<P extends Record<string, any> = Record<str
             beforeId,
           );
 
-          b.addLayer(
-            {
-              id: clusterCountLayerId,
-              type: 'symbol',
-              source: sourceId,
-              filter: ['has', 'point_count'],
-              layout: {
-                'text-field': '{point_count_abbreviated}',
-                'text-font': basemapTextFont(map),
-                'text-size': 12,
+          // A text layer needs the style's `glyphs` (the `blank` style has none): MapLibre would
+          // reject it with a validation error. The clusters still render, without counts.
+          if (map.getStyle()?.glyphs) {
+            b.addLayer(
+              {
+                id: clusterCountLayerId,
+                type: 'symbol',
+                source: sourceId,
+                filter: ['has', 'point_count'],
+                layout: {
+                  'text-field': '{point_count_abbreviated}',
+                  'text-font': basemapTextFont(map),
+                  'text-size': 12,
+                },
+                paint: { 'text-color': '#fff' },
               },
-              paint: { 'text-color': '#fff' },
-            },
-            beforeId,
-          );
+              beforeId,
+            );
+          } else {
+            this.warnNoGlyphs();
+          }
 
           b.addLayer(
             {
@@ -222,13 +229,11 @@ export class MapClusterLayerComponent<P extends Record<string, any> = Record<str
       this.appliedClusterOptions = clusterOptions;
       this.created.set(true);
 
-      const handleClusterClick = (e: MapMouseEvent) => {
-        const features = map.queryRenderedFeatures(e.point, {
-          layers: [clusterLayerId],
-        });
-        if (!features.length) return;
+      // Layer-scoped handler: MapLibre already queried the clicked features.
+      const handleClusterClick = (e: MapMouseEvent & { features?: MapGeoJSONFeature[] }) => {
+        const feature = e.features?.[0];
+        if (!feature) return;
 
-        const feature = features[0];
         const clusterId = feature.properties?.['cluster_id'] as number;
         const pointCount = feature.properties?.['point_count'] as number;
         const coordinates = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
@@ -353,6 +358,14 @@ export class MapClusterLayerComponent<P extends Record<string, any> = Record<str
         map.setPaintProperty(this.unclusteredLayerId(), 'circle-color', pointColor);
       }
     });
+  }
+
+  private warnNoGlyphs(): void {
+    if (this.warnedNoGlyphs) return;
+    this.warnedNoGlyphs = true;
+    console.warn(
+      'ng-map-cluster-layer: the map style has no `glyphs` (e.g. the `blank` style), so cluster counts are not shown.',
+    );
   }
 
   private clusterColorExpression(colors: [string, string, string], thresholds: [number, number]) {

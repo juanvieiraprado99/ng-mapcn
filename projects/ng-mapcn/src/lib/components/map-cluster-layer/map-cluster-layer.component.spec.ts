@@ -125,6 +125,18 @@ describe('MapClusterLayerComponent', () => {
   });
 
   describe('id and beforeId', () => {
+    it('skips the count layer (and warns once) when the style has no glyphs', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const result = await render();
+      result.map.glyphs = undefined;
+      loadAndSettle(result.fixture, result.map);
+      const ids = idsOf(result.map);
+
+      expect(result.map.getLayerOrder()).toEqual([ids.clusters, ids.point]);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0][0]).toContain('glyphs');
+    });
+
     it('derives the source and layer ids from a custom id', async () => {
       const { fixture, map } = await render({ id: 'stores' });
       loadAndSettle(fixture, map);
@@ -464,13 +476,14 @@ describe('MapClusterLayerComponent', () => {
       const { map, host, ids } = await renderLoaded();
       const source = map.getSource(ids.source);
       source.getClusterExpansionZoom.mockResolvedValue(9);
-      map.queryRenderedFeatures.mockReturnValue([clusterFeature(5, 12, [3, 4])]);
       const point = { x: 10, y: 20 };
 
-      map.fire('click', { point, lngLat: { lng: 3, lat: 4 } }, ids.clusters);
+      // Layer-scoped events carry the clicked features: no second query.
+      const features = [clusterFeature(5, 12, [3, 4])];
+      map.fire('click', { point, lngLat: { lng: 3, lat: 4 }, features }, ids.clusters);
       await vi.advanceTimersByTimeAsync(0);
 
-      expect(map.queryRenderedFeatures).toHaveBeenCalledWith(point, { layers: [ids.clusters] });
+      expect(map.queryRenderedFeatures).not.toHaveBeenCalled();
       expect(host['clusterClick']).toHaveBeenCalledWith({
         clusterId: 5,
         coordinates: [3, 4],
@@ -482,9 +495,13 @@ describe('MapClusterLayerComponent', () => {
 
     it('does not ease when zoomOnClusterClick is false', async () => {
       const { map, host, ids } = await renderLoaded({ zoomOnClusterClick: false });
-      map.queryRenderedFeatures.mockReturnValue([clusterFeature(5, 12)]);
+      const features = [clusterFeature(5, 12)];
 
-      map.fire('click', { point: { x: 0, y: 0 }, lngLat: { lng: 3, lat: 4 } }, ids.clusters);
+      map.fire(
+        'click',
+        { point: { x: 0, y: 0 }, lngLat: { lng: 3, lat: 4 }, features },
+        ids.clusters,
+      );
       await vi.advanceTimersByTimeAsync(0);
 
       expect(host['clusterClick']).toHaveBeenCalledTimes(1);
@@ -494,9 +511,13 @@ describe('MapClusterLayerComponent', () => {
 
     it('does nothing when no cluster is rendered under the click', async () => {
       const { map, host, ids } = await renderLoaded();
-      map.queryRenderedFeatures.mockReturnValue([]);
+      const features: unknown[] = [];
 
-      map.fire('click', { point: { x: 0, y: 0 }, lngLat: { lng: 3, lat: 4 } }, ids.clusters);
+      map.fire(
+        'click',
+        { point: { x: 0, y: 0 }, lngLat: { lng: 3, lat: 4 }, features },
+        ids.clusters,
+      );
       await vi.advanceTimersByTimeAsync(0);
 
       expect(host['clusterClick']).not.toHaveBeenCalled();
@@ -633,9 +654,13 @@ describe('MapClusterLayerComponent', () => {
     it('swallows a rejected expansion-zoom lookup', async () => {
       const { map, ids } = await renderLoaded();
       map.getSource(ids.source).getClusterExpansionZoom.mockRejectedValue(new Error('gone'));
-      map.queryRenderedFeatures.mockReturnValue([clusterFeature(5, 12)]);
+      const features = [clusterFeature(5, 12)];
 
-      map.fire('click', { point: { x: 0, y: 0 }, lngLat: { lng: 3, lat: 4 } }, ids.clusters);
+      map.fire(
+        'click',
+        { point: { x: 0, y: 0 }, lngLat: { lng: 3, lat: 4 }, features },
+        ids.clusters,
+      );
       await vi.advanceTimersByTimeAsync(0);
 
       expect(map.easeTo).not.toHaveBeenCalled();

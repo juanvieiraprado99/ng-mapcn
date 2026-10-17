@@ -227,8 +227,11 @@ export class Map extends Evented {
 
   /** The style as MapLibre serializes it; specs stub `basemapLayers` to emulate the basemap's own layers. */
   basemapLayers: any[] = [];
+  /** The style's `glyphs` URL; specs clear it to emulate a style without fonts (`blank`). */
+  glyphs: string | undefined = 'https://example.com/fonts/{fontstack}/{range}.pbf';
   getStyle = vi.fn(() => ({
     version: 8,
+    glyphs: this.glyphs,
     sources: this.sources,
     layers: [...this.basemapLayers, ...this.layers],
   }));

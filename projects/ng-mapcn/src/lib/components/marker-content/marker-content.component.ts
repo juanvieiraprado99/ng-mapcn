@@ -73,6 +73,7 @@ export class MarkerContentComponent {
         observer.disconnect();
         this.markerCtx.contentKind.set('named');
         destroyPortal();
+        wrapper.remove();
       });
     });
 
