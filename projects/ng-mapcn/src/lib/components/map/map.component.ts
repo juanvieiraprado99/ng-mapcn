@@ -113,6 +113,12 @@ export class MapComponent {
   private sizeObserver: ResizeObserver | null = null;
   private destroyed = false;
   private internalUpdate = false;
+  /** A setStyle is in flight: styledata from the outgoing style must not re-open the gate. */
+  private stylePending = false;
+  /** A [viewport] change arrived while the camera moved; re-applied once it settles. */
+  private viewportDeferred = false;
+  /** Bumped on the moveend that follows a deferred [viewport], so the sync effect runs again. */
+  private readonly cameraSettled = signal(0);
   private currentStyle: string | StyleSpecification | null = null;
   /** Whether a [projection] was pushed to the map, so clearing the input can reset it. */
   private projectionApplied = false;
@@ -144,8 +150,14 @@ export class MapComponent {
     effect(() => {
       const map = this.mapInstance();
       const vp = this.viewport();
+      this.cameraSettled();
       if (!map || !vp) return;
-      if (map.isMoving()) return;
+      // isMoving() is not reactive: remember the skip so moveend re-runs this effect (in the next
+      // change detection, once a parent echoing viewportChange has updated the input).
+      if (map.isMoving()) {
+        this.viewportDeferred = true;
+        return;
+      }
 
       const current = getViewport(map);
       const next: Partial<MapViewport> = {};
@@ -264,26 +276,28 @@ export class MapComponent {
           this.zone.run(() => this.mapReady.emit(m));
         });
 
+        // styledata also fires after every paint/layout/source change, so it only (re)arms the
+        // gate while the gate is closed. While a setStyle is in flight it belongs to the outgoing
+        // style (the children removing their layers) and must not re-open the gate.
         m.on('styledata', () => {
-          this.clearStyleTimeout();
-          // 100ms debounce: ensures the style is fully processed before layer
-          // operations are allowed (avoids race conditions around setStyle)
-          this.styleTimeoutRef = setTimeout(() => {
-            const proj = this.projection();
-            if (proj) {
-              m.setProjection(proj);
-              this.projectionApplied = true;
-            }
-            this.ctx.setStyleLoadedFlag(true);
-          }, 100);
+          if (this.stylePending || this.ctx.styleLoaded()) return;
+          this.armStyleGate(m);
         });
 
         // A new style has been applied (full load, or a setStyle diff with changes). MapLibre has
-        // just dropped every custom source and layer, possibly after the gate already re-opened on
-        // the styledata fired while the style was still being fetched (slow network). Close the
-        // gate; the styledata that follows re-opens it, and the layer components re-add everything.
+        // just dropped every custom source and layer: close the gate and re-open it once the
+        // style settled, so the layer components re-add everything.
         m.on('style.load', () => {
+          this.stylePending = false;
           this.ctx.setStyleLoadedFlag(false);
+          this.armStyleGate(m);
+        });
+
+        // A deferred [viewport] (it changed while the camera moved) is applied once it settles.
+        m.on('moveend', () => {
+          if (!this.viewportDeferred) return;
+          this.viewportDeferred = false;
+          this.cameraSettled.update((n) => n + 1);
         });
 
         // Fires once per frame during pan/zoom. Re-entering the zone costs one change detection per
@@ -296,11 +310,13 @@ export class MapComponent {
         });
 
         m.on('click', (e) => this.zone.run(() => this.mapClick.emit(e)));
-        m.on('error', (e) =>
+        m.on('error', (e) => {
+          // A theme switch whose style fails to load keeps the current style: re-open the gate.
+          if (this.stylePending) this.settleStyleSwap(m);
           this.zone.run(() =>
             this.mapError.emit(e.error instanceof Error ? e.error : new Error(String(e.error))),
-          ),
-        );
+          );
+        });
 
         return m;
       });
@@ -356,8 +372,51 @@ export class MapComponent {
     const style = this.getMapStyle(theme);
     if (style === this.currentStyle) return;
     this.currentStyle = style;
+    this.clearStyleTimeout();
+    this.stylePending = true;
     this.ctx.setStyleLoadedFlag(false);
-    map.setStyle(style, { diff: true });
+    map.setStyle(style, {
+      diff: true,
+      // Called once the next style is fetched, right before MapLibre diffs it. A diff that applies
+      // changes fires style.load synchronously; one with no changes (or an invalid style) fires
+      // nothing, so the current style stays and the gate re-opens here. A diff that falls back to
+      // rebuilding the style replaces map.style, and its own style.load re-opens the gate.
+      transformStyle: (_previous, next) => {
+        const current = map.style;
+        queueMicrotask(() => {
+          if (this.stylePending && map.style === current) this.settleStyleSwap(map);
+        });
+        return next;
+      },
+    });
+  }
+
+  /** The style swap ended without a new style (no changes, invalid style, failed fetch). */
+  private settleStyleSwap(map: MapLibreMap): void {
+    this.stylePending = false;
+    if (!this.ctx.styleLoaded()) this.armStyleGate(map);
+  }
+
+  /**
+   * Re-opens the style gate after a 100ms debounce, so the style is fully processed before the
+   * children run source/layer operations (avoids race conditions around setStyle).
+   */
+  private armStyleGate(map: MapLibreMap): void {
+    this.clearStyleTimeout();
+    this.styleTimeoutRef = setTimeout(() => {
+      this.styleTimeoutRef = null;
+      if (this.destroyed || this.stylePending) return;
+      const proj = this.projection();
+      if (proj) {
+        try {
+          map.setProjection(proj);
+          this.projectionApplied = true;
+        } catch (e) {
+          this.ctx.reportError(e);
+        }
+      }
+      this.ctx.setStyleLoadedFlag(true);
+    }, 100);
   }
 
   private clearStyleTimeout(): void {
