@@ -68,8 +68,11 @@ export class MapMarkerComponent {
    * a keyboard tab stop (`role="button"`, `tabindex="0"`) when someone listens.
    */
   readonly markerClick = outputFromObservable(this.click$);
-  readonly markerMouseEnter = output<MouseEvent>();
-  readonly markerMouseLeave = output<MouseEvent>();
+  private readonly mouseEnter$ = new Subject<MouseEvent>();
+  private readonly mouseLeave$ = new Subject<MouseEvent>();
+  /** Backed by Subjects so hovering a marker nobody listens to skips the zone (`observed`). */
+  readonly markerMouseEnter = outputFromObservable(this.mouseEnter$);
+  readonly markerMouseLeave = outputFromObservable(this.mouseLeave$);
   readonly dragStart = output<{ lng: number; lat: number }>();
   private readonly drag$ = new Subject<{ lng: number; lat: number }>();
   /** Emits on every frame of a drag; backed by a Subject so idle drags skip the zone (`observed`). */
@@ -125,13 +128,13 @@ export class MapMarkerComponent {
           .setLngLat([lng, lat])
           .addTo(map);
 
-        el.addEventListener('click', (e) => this.zone.run(() => this.click$.next(e as MouseEvent)));
-        el.addEventListener('mouseenter', (e) =>
-          this.zone.run(() => this.markerMouseEnter.emit(e as MouseEvent)),
-        );
-        el.addEventListener('mouseleave', (e) =>
-          this.zone.run(() => this.markerMouseLeave.emit(e as MouseEvent)),
-        );
+        // Re-enter the zone only when someone listens (one change detection per event otherwise).
+        const forward = (subject: Subject<MouseEvent>) => (e: Event) => {
+          if (subject.observed) this.zone.run(() => subject.next(e as MouseEvent));
+        };
+        el.addEventListener('click', forward(this.click$));
+        el.addEventListener('mouseenter', forward(this.mouseEnter$));
+        el.addEventListener('mouseleave', forward(this.mouseLeave$));
 
         const emitDragStart = () => {
           const ll = m.getLngLat();

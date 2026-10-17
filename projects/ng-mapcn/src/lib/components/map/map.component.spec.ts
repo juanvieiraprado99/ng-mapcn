@@ -591,5 +591,14 @@ describe('MapComponent', () => {
 
       expect(zone.runs).toBe(0);
     });
+
+    it('does not enter the zone on click when nothing listens to mapClick', async () => {
+      const { map } = await renderMap('<ng-map />');
+      const zone = trackZoneRun();
+
+      map!.fire('click');
+
+      expect(zone.runs).toBe(0);
+    });
   });
 });
