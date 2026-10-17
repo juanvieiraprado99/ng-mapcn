@@ -266,6 +266,15 @@ describe('MapPopupComponent', () => {
       expect(host['popupClose']).not.toHaveBeenCalled();
       expect(warn).not.toHaveBeenCalled();
     });
+
+    it('does not report a close when the whole map is destroyed', async () => {
+      const { fixture, host } = await render();
+      expect(fakeRegistry.popups[0].isOpen()).toBe(true);
+
+      fixture.destroy();
+
+      expect(host['popupClose']).not.toHaveBeenCalled();
+    });
   });
 
   describe('open (two-way)', () => {
