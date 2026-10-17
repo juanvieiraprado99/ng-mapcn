@@ -21,10 +21,15 @@ export function injectWorldData(url: string = WORLD_GEOJSON): Signal<WorldData |
   let active = true;
   inject(DestroyRef).onDestroy(() => (active = false));
   fetch(url)
-    .then((res) => res.json() as Promise<WorldData>)
+    .then((res) => {
+      if (!res.ok) throw new Error(`World data request failed: ${res.status} ${res.statusText}`);
+      return res.json() as Promise<WorldData>;
+    })
     .then((world) => {
       if (active) data.set(world);
-    });
+    })
+    // The map keeps rendering without the country layer; nothing else depends on it.
+    .catch((error: unknown) => console.error(error));
 
   return data.asReadonly();
 }

@@ -11,6 +11,11 @@ import express from 'express';
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
+app.disable('x-powered-by');
+
+/** Build output named after its content hash by the Angular CLI. */
+const HASHED_FILE = /-[A-Za-z0-9_-]{8}\.(?:js|mjs|css|woff2?|ttf|png|jpe?g|svg|webp)$/;
+
 const angularApp = new AngularNodeAppEngine();
 
 /**
@@ -30,9 +35,19 @@ const angularApp = new AngularNodeAppEngine();
  */
 app.use(
   express.static(browserDistFolder, {
-    maxAge: '1y',
     index: false,
     redirect: false,
+    // Only content-hashed build files (chunk-XXXXXXXX.js, styles-XXXXXXXX.css, media) may be cached
+    // for good; the rest keeps a fixed name across deploys (maplibre worker, llms.txt, sitemap.xml,
+    // data files) and must be revalidated, or browsers keep a stale copy for a year.
+    setHeaders: (res, path) => {
+      res.setHeader(
+        'Cache-Control',
+        HASHED_FILE.test(path)
+          ? 'public, max-age=31536000, immutable'
+          : 'public, max-age=0, must-revalidate',
+      );
+    },
   }),
 );
 

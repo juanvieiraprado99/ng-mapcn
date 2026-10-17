@@ -1,6 +1,21 @@
 {
   "framework": "angular",
-  "installCommand": "npm pkg delete dependencies.ng-mapcn && npm install",
+  "installCommand": "npm ci",
   "buildCommand": "node scripts/vercel-build.mjs",
-  "outputDirectory": "dist/demo/browser"
+  "outputDirectory": "dist/demo/browser",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Content-Security-Policy", "value": "frame-ancestors 'self'" },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), payment=(), usb=(), geolocation=(self)"
+        }
+      ]
+    }
+  ]
 }
