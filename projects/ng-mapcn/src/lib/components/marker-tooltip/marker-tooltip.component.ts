@@ -5,6 +5,7 @@ import {
   inject,
   Injector,
   input,
+  NgZone,
   signal,
   type TemplateRef,
   untracked,
@@ -32,6 +33,7 @@ export class MarkerTooltipComponent {
   private readonly injector = inject(Injector);
   private readonly mapCtx = inject(MapContextService);
   private readonly markerCtx = inject(MarkerContextService);
+  private readonly zone = inject(NgZone);
   private readonly tpl = viewChild.required<TemplateRef<unknown>>('tpl');
   private readonly popup = signal<Popup | null>(null);
   private readonly pillEl = signal<HTMLElement | null>(null);
@@ -90,12 +92,16 @@ export class MarkerTooltipComponent {
         if (!focused) hide();
       };
 
-      el.addEventListener('mouseenter', show);
-      el.addEventListener('mouseleave', onLeave);
-      el.addEventListener('focusin', onFocusIn);
-      el.addEventListener('focusout', onFocusOut);
-      el.addEventListener('keydown', onKeydown);
-      marker.on('drag', follow);
+      // The handlers only drive the MapLibre popup: outside the zone, so hovering a marker does not
+      // run change detection in zone.js apps.
+      this.zone.runOutsideAngular(() => {
+        el.addEventListener('mouseenter', show);
+        el.addEventListener('mouseleave', onLeave);
+        el.addEventListener('focusin', onFocusIn);
+        el.addEventListener('focusout', onFocusOut);
+        el.addEventListener('keydown', onKeydown);
+        marker.on('drag', follow);
+      });
       this.markerCtx.hasTooltip.set(true);
 
       this.popup.set(popup);
