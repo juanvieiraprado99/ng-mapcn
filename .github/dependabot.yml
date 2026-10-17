@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ['*']
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+    open-pull-requests-limit: 5
+    groups:
+      angular:
+        patterns: ['@angular/*', '@angular-devkit/*', '@schematics/*', 'ng-packagr']
+      dev-dependencies:
+        dependency-type: development
+        exclude-patterns: ['@angular/*', '@angular-devkit/*', '@schematics/*', 'ng-packagr']
