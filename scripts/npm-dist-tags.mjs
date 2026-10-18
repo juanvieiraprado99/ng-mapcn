@@ -26,17 +26,32 @@ export function distTags(version, publishedVersions) {
   return { publishTag: 'beta', alsoLatest: !hasStableOfSameMajor };
 }
 
+/**
+ * Parses `npm view <pkg> versions --json` output (an array, or a bare string for one version).
+ *
+ * @param {string} out
+ * @returns {string[]}
+ */
+export function parseVersions(out) {
+  const parsed = JSON.parse(out);
+  return Array.isArray(parsed) ? parsed : [parsed];
+}
+
+// A failed lookup must fail the release: treating it as "nothing published" would move
+// `latest` onto a prerelease. Only a 404 (package never published) means no versions.
 function fetchPublishedVersions() {
   try {
     const out = execFileSync('npm', ['view', PACKAGE, 'versions', '--json'], {
       encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
+      stdio: ['ignore', 'pipe', 'pipe'],
       shell: process.platform === 'win32',
     });
-    const parsed = JSON.parse(out);
-    return Array.isArray(parsed) ? parsed : [parsed];
-  } catch {
-    return [];
+    return parseVersions(out);
+  } catch (error) {
+    if (`${error?.stderr ?? ''}${error?.stdout ?? ''}`.includes('E404')) {
+      return [];
+    }
+    throw error;
   }
 }
 

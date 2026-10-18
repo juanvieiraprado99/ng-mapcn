@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { distTags } from './npm-dist-tags.mjs';
+import { distTags, parseVersions } from './npm-dist-tags.mjs';
 
 test('stable release goes to latest only', () => {
   assert.deepEqual(distTags('22.0.0', []), { publishTag: 'latest', alsoLatest: false });
@@ -30,4 +30,16 @@ test('prerelease of a new major without a stable also moves latest', () => {
 
 test('first prerelease with no published versions also moves latest', () => {
   assert.deepEqual(distTags('22.0.0-beta.2', []), { publishTag: 'beta', alsoLatest: true });
+});
+
+test('parses a version list', () => {
+  assert.deepEqual(parseVersions('["21.0.0","22.0.0-beta.0"]'), ['21.0.0', '22.0.0-beta.0']);
+});
+
+test('parses a single version', () => {
+  assert.deepEqual(parseVersions('"22.0.0"'), ['22.0.0']);
+});
+
+test('rejects unparseable output instead of assuming nothing is published', () => {
+  assert.throws(() => parseVersions('npm error network'));
 });
