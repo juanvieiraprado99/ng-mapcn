@@ -9,6 +9,8 @@ import {
   url,
 } from '@angular-devkit/schematics';
 
+import { normalizeTargetPath } from '../utils/path';
+
 interface MapOptions {
   path: string;
   draw?: boolean;
@@ -26,13 +28,14 @@ const DRAW_DEPENDENCIES = {
  * `ng-mapcn/draw` sources to `<path>/draw` and adds their terra-draw dependencies.
  */
 export function map(options: MapOptions): Rule {
+  const path = normalizeTargetPath(options.path);
   return (_tree: Tree, context: SchematicContext) => {
-    context.logger.info(`Copying ng-mapcn map components to ${options.path}`);
-    const rules: Rule[] = [mergeWith(apply(url('./files'), [move(options.path)]))];
+    context.logger.info(`Copying ng-mapcn map components to ${path}`);
+    const rules: Rule[] = [mergeWith(apply(url('./files'), [move(path)]))];
     if (options.draw) {
-      context.logger.info(`Copying ng-mapcn draw component to ${options.path}/draw`);
+      context.logger.info(`Copying ng-mapcn draw component to ${path}/draw`);
       rules.push(
-        mergeWith(apply(url('./draw-files'), [move(`${options.path}/draw`)])),
+        mergeWith(apply(url('./draw-files'), [move(`${path}/draw`)])),
         addDrawDependencies(),
       );
     }

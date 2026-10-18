@@ -6,6 +6,14 @@ import {
   type Tree,
 } from '@angular-devkit/schematics';
 import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
+import {
+  type ProjectDefinition,
+  readWorkspace,
+  updateWorkspace,
+  type WorkspaceDefinition,
+} from '@schematics/angular/utility';
+
+import { dirnamePath, joinPath, normalizeTargetPath, relativePath } from '../utils/path';
 
 // v6.4.1+ fixes GHSA-jrc7-96c5-q579 (attribution XSS); the copied sources are written against v6.
 const MAPLIBRE_VERSION = '^6.11.2';
@@ -54,14 +62,53 @@ interface NgAddOptions {
 }
 
 export function ngAdd(options: NgAddOptions): Rule {
-  return chain([
-    addMaplibreDependency(),
-    registerMaplibreCss(options),
-    registerWorkerAssets(options),
-    appendGlobalStyles(options),
-    schematic('map', { path: options.path, draw: options.draw }),
-    installDependencies(),
-  ]);
+  const path = normalizeTargetPath(options.path);
+  return async (tree: Tree, context: SchematicContext) => {
+    const workspace = await readWorkspaceOrWarn(tree, context);
+    const projectName = workspace ? resolveProjectName(workspace, options.project) : undefined;
+    const project = projectName ? workspace?.projects.get(projectName) : undefined;
+    return chain([
+      addMaplibreDependency(),
+      projectName ? registerBuildOptions(projectName) : noop(),
+      appendGlobalStyles(path, project),
+      schematic('map', { path, draw: options.draw }),
+      installDependencies(),
+    ]);
+  };
+}
+
+async function readWorkspaceOrWarn(
+  tree: Tree,
+  context: SchematicContext,
+): Promise<WorkspaceDefinition | null> {
+  if (!tree.exists('angular.json')) {
+    context.logger.warn(
+      'angular.json not found — add maplibre-gl CSS and its worker assets to your build manually.',
+    );
+    return null;
+  }
+  try {
+    return await readWorkspace(tree);
+  } catch (e) {
+    context.logger.warn(
+      `Could not read angular.json (${(e as Error).message}) — add maplibre-gl CSS and its ` +
+        'worker assets to your build manually.',
+    );
+    return null;
+  }
+}
+
+/** The requested project, else the first one (the CLI passes the default project as `project`). */
+function resolveProjectName(
+  workspace: WorkspaceDefinition,
+  requested?: string,
+): string | undefined {
+  if (requested) return requested;
+  return workspace.projects.keys().next().value;
+}
+
+function noop(): Rule {
+  return (tree: Tree) => tree;
 }
 
 function addMaplibreDependency(): Rule {
@@ -71,10 +118,11 @@ function addMaplibreDependency(): Rule {
     const pkg = JSON.parse(pkgBuffer.toString());
     const before = JSON.stringify(pkg);
     pkg.dependencies = pkg.dependencies ?? {};
-    const existing: string | undefined = pkg.dependencies['maplibre-gl'];
+    const existing: string | undefined =
+      pkg.dependencies['maplibre-gl'] ?? pkg.devDependencies?.['maplibre-gl'];
     if (!existing) {
       pkg.dependencies['maplibre-gl'] = MAPLIBRE_VERSION;
-    } else if (!/^[\^~]?6\./.test(existing)) {
+    } else if (majorOf(existing) !== 6) {
       // Never rewrite the app's own pin — but the copied sources will not compile against it.
       context.logger.warn(
         `ng-mapcn needs maplibre-gl ${MAPLIBRE_VERSION} (v6.4.1+ also fixes GHSA-jrc7-96c5-q579); ` +
@@ -91,69 +139,83 @@ function addMaplibreDependency(): Rule {
   };
 }
 
-function registerWorkerAssets(options: NgAddOptions): Rule {
-  return (tree: Tree, context: SchematicContext) => {
-    const angularJsonBuffer = tree.read('angular.json');
-    if (!angularJsonBuffer) return tree; // registerMaplibreCss already warned
-    const workspace = JSON.parse(angularJsonBuffer.toString());
-    const projectName = options.project ?? Object.keys(workspace.projects ?? {})[0];
-    const buildOptions = workspace.projects?.[projectName]?.architect?.build?.options;
-    if (!buildOptions) {
-      context.logger.warn(
-        `Could not locate the build options for project "${projectName}" — copy ` +
-          'maplibre-gl-worker.mjs and maplibre-gl-shared.mjs from node_modules/maplibre-gl/dist ' +
-          'to your build output root manually.',
+/** First major version a range mentions (`^6.1`, `~6`, `>=6.11`, `6.x` → 6); null for tags/URLs. */
+function majorOf(range: string): number | null {
+  const match = /^\s*(?:[\^~]|[<>]=?|=)?\s*v?(\d+)/.exec(range);
+  return match ? Number(match[1]) : null;
+}
+
+/**
+ * Registers the maplibre-gl CSS (first in `styles`) and copies its module worker next to the app
+ * bundles. Edits angular.json through the workspace API, which keeps its comments and formatting
+ * and understands both `architect` and `targets`.
+ */
+function registerBuildOptions(projectName: string): Rule {
+  return (_tree: Tree, context: SchematicContext) =>
+    updateWorkspace((workspace) => {
+      const options = workspace.projects.get(projectName)?.targets.get('build')?.options;
+      if (!options) {
+        context.logger.warn(
+          `Could not locate the build options for project "${projectName}" — add ` +
+            `"${MAPLIBRE_CSS}" to its styles and copy maplibre-gl-worker.mjs and ` +
+            'maplibre-gl-shared.mjs from node_modules/maplibre-gl/dist to your build output root.',
+        );
+        return;
+      }
+
+      const styles = options['styles'];
+      if (!Array.isArray(styles)) {
+        context.logger.warn(
+          `Could not locate the styles array for project "${projectName}" — add "${MAPLIBRE_CSS}" manually.`,
+        );
+      } else if (!styles.includes(MAPLIBRE_CSS)) {
+        options['styles'] = [MAPLIBRE_CSS, ...styles];
+      }
+
+      const assets = Array.isArray(options['assets']) ? options['assets'] : [];
+      const missing = WORKER_ASSETS.filter(
+        (asset) =>
+          !assets.some(
+            (a) =>
+              typeof a === 'object' &&
+              a !== null &&
+              !Array.isArray(a) &&
+              (a as { glob?: unknown }).glob === asset.glob,
+          ),
       );
-      return tree;
-    }
-    const assets: unknown[] = (buildOptions.assets ??= []);
-    const missing = WORKER_ASSETS.filter(
-      (asset) =>
-        !assets.some(
-          (a) =>
-            typeof a === 'object' && a !== null && (a as { glob?: string }).glob === asset.glob,
-        ),
+      if (missing.length) options['assets'] = [...assets, ...missing];
+    });
+}
+
+/**
+ * The project's global stylesheet: the first .scss/.css of its `styles` that exists, else
+ * `<sourceRoot>/styles.scss|css`.
+ */
+function findGlobalStylesheet(tree: Tree, project?: ProjectDefinition): string | undefined {
+  const declared = project?.targets.get('build')?.options?.['styles'];
+  const fromBuild = (Array.isArray(declared) ? declared : [])
+    .map((entry) => {
+      if (typeof entry === 'string') return entry;
+      if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+        return (entry as { input?: unknown }).input;
+      }
+      return undefined;
+    })
+    .filter(
+      (p): p is string =>
+        typeof p === 'string' && /\.s?css$/.test(p) && !p.startsWith('node_modules/'),
     );
-    if (missing.length) {
-      assets.push(...missing);
-      tree.overwrite('angular.json', JSON.stringify(workspace, null, 2) + '\n');
-    }
-    return tree;
-  };
+  const sourceRoot = project?.sourceRoot ?? joinPath(project?.root ?? '', 'src');
+  const fallback = ['styles.scss', 'styles.css'].map((f) => joinPath(sourceRoot, f));
+  return [...fromBuild, ...fallback].find((p) => tree.exists(p));
 }
 
-function registerMaplibreCss(options: NgAddOptions): Rule {
+function appendGlobalStyles(path: string, project?: ProjectDefinition): Rule {
   return (tree: Tree, context: SchematicContext) => {
-    const angularJsonBuffer = tree.read('angular.json');
-    if (!angularJsonBuffer) {
-      context.logger.warn('angular.json not found — add maplibre-gl CSS to your styles manually.');
-      return tree;
-    }
-    const workspace = JSON.parse(angularJsonBuffer.toString());
-    const projectName = options.project ?? Object.keys(workspace.projects ?? {})[0];
-    const project = workspace.projects?.[projectName];
-    const styles: unknown[] | undefined = project?.architect?.build?.options?.styles;
-    if (!styles) {
-      context.logger.warn(
-        `Could not locate the styles array for project "${projectName}" — add "${MAPLIBRE_CSS}" manually.`,
-      );
-      return tree;
-    }
-    if (!styles.includes(MAPLIBRE_CSS)) {
-      styles.unshift(MAPLIBRE_CSS);
-      tree.overwrite('angular.json', JSON.stringify(workspace, null, 2) + '\n');
-    }
-    return tree;
-  };
-}
-
-function appendGlobalStyles(options: NgAddOptions): Rule {
-  return (tree: Tree, context: SchematicContext) => {
-    const candidates = ['src/styles.scss', 'src/styles.css'];
-    const stylesPath = candidates.find((p) => tree.exists(p));
+    const stylesPath = findGlobalStylesheet(tree, project);
     if (!stylesPath) {
       context.logger.warn(
-        'No global stylesheet found (src/styles.scss|css) — add the .maplibregl-popup-* overrides manually.',
+        'No global stylesheet found (styles.scss|css) — add the .maplibregl-popup-* overrides manually.',
       );
       return tree;
     }
@@ -166,9 +228,9 @@ function appendGlobalStyles(options: NgAddOptions): Rule {
       addition += PASSTHROUGH_CSS;
     }
     if (stylesPath.endsWith('.scss')) {
-      // Component styles are self-contained; the shared tokens/utilities live
-      // in the copied styles folder and must be loaded once globally.
-      const stylesDir = options.path.replace(/^src\//, './').replace(/\/$/, '');
+      // Component styles are self-contained; the shared tokens/utilities live in the copied
+      // styles folder and must be loaded once globally, relative to the global stylesheet.
+      const stylesDir = relativePath(dirnamePath(stylesPath), path);
       const useLine = `@use '${stylesDir}/styles/index' as *;`;
       if (!current.includes(useLine)) {
         // @use must precede other rules
