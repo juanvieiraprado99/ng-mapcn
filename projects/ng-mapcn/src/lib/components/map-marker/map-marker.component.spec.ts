@@ -116,6 +116,35 @@ describe('MapMarkerComponent', () => {
     });
   });
 
+  describe('invalid positions', () => {
+    it('waits for a valid position before creating the marker (async data)', async () => {
+      const { fixture } = await render({ lng: undefined, lat: undefined });
+      expect(fakeRegistry.markers).toHaveLength(0);
+
+      update(fixture, { lng: 1, lat: 2 });
+
+      expect(fakeRegistry.markers).toHaveLength(1);
+      expect(fakeRegistry.markers[0].getLngLat()).toEqual({ lng: 1, lat: 2 });
+    });
+
+    it('reports an invalid position instead of throwing, and keeps the marker', async () => {
+      const { fixture } = await render();
+      const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const marker = fakeRegistry.markers[0];
+      marker.calls.length = 0;
+
+      expect(() => update(fixture, { lng: Number.NaN })).not.toThrow();
+
+      expect(marker.calls).not.toContain('setLngLat');
+      expect(error).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringContaining('invalid position') }),
+      );
+      update(fixture, { lng: 3 });
+      expect(fakeRegistry.markers).toHaveLength(1);
+      expect(marker.getLngLat()).toEqual({ lng: 3, lat: 20 });
+    });
+  });
+
   describe('reconciliation', () => {
     it('updates the position without creating a new marker', async () => {
       const { fixture } = await render();

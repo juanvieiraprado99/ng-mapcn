@@ -15,6 +15,7 @@ import { Subject } from 'rxjs';
 
 import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MapContextService } from '../../services/map-context.service';
+import { invalidPositionError, isValidLngLat, positionReady } from '../../utils/position';
 import { MarkerContextService } from './marker-context.service';
 
 /** Web Mercator latitude limit. */
@@ -83,22 +84,24 @@ export class MapMarkerComponent {
   private readonly markerCtx = inject(MarkerContextService);
   private readonly zone = inject(NgZone);
   private readonly l = injectMapLabels(this.labels);
+  /** The marker is created once the inputs first form a valid position (async data). */
+  private readonly ready = positionReady(this.longitude, this.latitude);
 
   constructor() {
     // Contributes to the map's declarative fit-to-bounds (`<ng-map [fitBounds]>`).
     inject(DestroyRef).onDestroy(
-      this.mapCtx.registerBounds(() => [
-        this.longitude(),
-        this.latitude(),
-        this.longitude(),
-        this.latitude(),
-      ]),
+      this.mapCtx.registerBounds(() => {
+        const lng = this.longitude();
+        const lat = this.latitude();
+        // An invalid position would turn the union of every child's bounds into NaN.
+        return isValidLngLat(lng, lat) ? [lng, lat, lng, lat] : null;
+      }),
     );
 
     // Create marker when the map becomes available
     effect((onCleanup) => {
       const map = this.mapCtx.map();
-      if (!map) return;
+      if (!map || !this.ready()) return;
 
       // Read initial values without registering them as dependencies
       // so that position/rotation changes go through the update effect below
@@ -272,7 +275,11 @@ export class MapMarkerComponent {
       if (!marker) return;
 
       const current = marker.getLngLat();
-      if (current.lng !== lng || current.lat !== lat) marker.setLngLat([lng, lat]);
+      if (current.lng !== lng || current.lat !== lat) {
+        // setLngLat throws on NaN/undefined; an exception escaping an effect aborts change detection.
+        if (isValidLngLat(lng, lat)) marker.setLngLat([lng, lat]);
+        else this.mapCtx.reportError(invalidPositionError('ng-map-marker', lng, lat));
+      }
       if (marker.isDraggable() !== draggable) marker.setDraggable(draggable);
       if (marker.getRotation() !== rotation) marker.setRotation(rotation);
       if (marker.getRotationAlignment() !== rotationAlignment) {

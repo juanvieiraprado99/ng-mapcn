@@ -20,6 +20,8 @@ export class MapContextService {
 
   readonly map = this.mapSignal.asReadonly();
   readonly isLoaded = computed(() => this.loadedFlagSignal() && this.styleLoadedFlagSignal());
+  /** The style half of the gate (debounced styledata after every style load). */
+  readonly styleLoaded = this.styleLoadedFlagSignal.asReadonly();
   /** Theme currently applied to the map (mapcn context `resolvedTheme`). */
   readonly resolvedTheme = this.resolvedThemeSignal.asReadonly();
 
