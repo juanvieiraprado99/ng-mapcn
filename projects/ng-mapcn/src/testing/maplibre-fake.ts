@@ -78,9 +78,14 @@ type LngLatLike = [number, number] | { lng: number; lat: number } | { lon: numbe
 
 function toLngLat(value: LngLatLike | undefined): { lng: number; lat: number } {
   if (!value) return { lng: 0, lat: 0 };
-  if (Array.isArray(value)) return { lng: value[0], lat: value[1] };
-  if ('lng' in value) return { lng: value.lng, lat: value.lat };
-  return { lng: value.lon, lat: value.lat };
+  const ll = Array.isArray(value)
+    ? { lng: value[0], lat: value[1] }
+    : { lng: 'lng' in value ? value.lng : value.lon, lat: value.lat };
+  // Like MapLibre's LngLat constructor.
+  if (isNaN(ll.lng) || isNaN(ll.lat)) {
+    throw new Error(`Invalid LngLat object: (${ll.lng}, ${ll.lat})`);
+  }
+  return ll;
 }
 
 function toPoint(value: unknown): Point {
@@ -218,12 +223,32 @@ export class Map extends Evented {
    * Like MapLibre: the new style is fetched asynchronously, so the current style (and every source
    * and layer in it) stays until `finishStyleLoad()` applies the new one.
    */
-  setStyle = vi.fn((style: unknown, _options?: unknown) => {
+  private styleOptions: { transformStyle?: (previous: unknown, next: unknown) => unknown } = {};
+
+  setStyle = vi.fn((style: unknown, options?: unknown) => {
     this.calls.push('setStyle');
     this.options.style = style;
     this.styleLoading = true;
+    this.styleOptions = (options ?? {}) as typeof this.styleOptions;
     return this;
   });
+
+  /** Like MapLibre's diff: `transformStyle` runs on the fetched style before it is applied. */
+  private transformPendingStyle(): void {
+    this.styleOptions.transformStyle?.(this.getStyle(), this.options.style);
+  }
+
+  /** The requested style arrives but the diff finds no changes: MapLibre fires no event at all. */
+  finishStyleLoadWithoutChanges(): void {
+    this.transformPendingStyle();
+    this.styleLoading = false;
+  }
+
+  /** The requested style fails to load (network, 404): MapLibre only fires `error`. */
+  failStyleLoad(error = new Error('style failed')): void {
+    this.styleLoading = false;
+    this.fire('error', { error });
+  }
 
   /** The style as MapLibre serializes it; specs stub `basemapLayers` to emulate the basemap's own layers. */
   basemapLayers: any[] = [];
@@ -236,6 +261,7 @@ export class Map extends Evented {
   /** The requested style arrives: every source and layer is dropped, then `style.load` + `styledata`. */
   finishStyleLoad(): void {
     this.calls.push('styleLoaded');
+    this.transformPendingStyle();
     this.sources = {};
     this.layers = [];
     this.terrain = null;
@@ -250,6 +276,8 @@ export class Map extends Evented {
   remove = vi.fn(() => {
     this.calls.push('remove');
     this.removed = true;
+    // Like MapLibre: open popups listen to the map's `remove` and close (firing `close`).
+    this.fire('remove');
   });
 
   addSource(id: string, source: any): this {
@@ -513,9 +541,11 @@ export class Popup extends Evented {
   isOpen(): boolean {
     return this.open;
   }
+  private readonly onMapRemove = () => this.remove();
   addTo(map: Map): this {
     this.map = map;
     this.calls.push('addTo');
+    map.on('remove', this.onMapRemove);
     if (!this.open) {
       this.open = true;
       this.fire('open');
@@ -524,6 +554,7 @@ export class Popup extends Evented {
   }
   remove(): this {
     this.calls.push('remove');
+    this.map?.off('remove', this.onMapRemove);
     this.map = null;
     if (this.open) {
       this.open = false;

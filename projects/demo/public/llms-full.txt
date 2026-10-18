@@ -2,7 +2,7 @@
 
 > Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
 
-Version: 22.0.0-beta.6 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
+Version: 22.0.0-beta.7 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
 
 ## Installation
 
@@ -570,7 +570,7 @@ Component-scoped service provided by `ng-map` — the Angular equivalent of mapc
 | Name | Type | Default | Description |
 |---|---|---|---|
 | `map()` | `Signal<Map \| null>` | — | The raw maplibre-gl Map instance, or null before init. |
-| `isLoaded()` | `Signal<boolean>` | — | True when the style is loaded and layers can be added. Gates every source/layer operation. |
+| `isLoaded()` | `Signal<boolean>` | — | True when the style is loaded and layers can be added. Gates every source/layer operation; closes during a theme/basemap switch and re-opens once it settles (or fails). |
 | `resolvedTheme()` | `Signal<'light' \| 'dark'>` | — | Theme currently applied to the map. |
 | `hasSource(id)` | `(id: string) => boolean` | — | Whether a source component (raster, vector, image overlay) currently has a source with this id on the map. Reactive inside effect(); false while a theme switch has removed the style. Wait on it before adding layers that reference source: id. |
 | `sourceIds()` | `Signal<ReadonlySet<string>>` | — | Ids of the sources currently announced by source components. |
