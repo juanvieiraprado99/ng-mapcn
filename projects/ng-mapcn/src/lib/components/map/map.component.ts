@@ -89,7 +89,9 @@ export class MapComponent {
    */
   readonly viewportChange = outputFromObservable(this.viewportChange$);
   readonly mapReady = output<MapLibreMap>();
-  readonly mapClick = output<MapMouseEvent>();
+  private readonly mapClick$ = new Subject<MapMouseEvent>();
+  /** Backed by a Subject so clicks on a map nobody listens to skip the zone (`observed`). */
+  readonly mapClick = outputFromObservable(this.mapClick$);
   readonly mapError = output<Error>();
 
   // Internal state exposed to template
@@ -309,7 +311,9 @@ export class MapComponent {
           this.zone.run(() => this.viewportChange$.next(viewport));
         });
 
-        m.on('click', (e) => this.zone.run(() => this.mapClick.emit(e)));
+        m.on('click', (e) => {
+          if (this.mapClick$.observed) this.zone.run(() => this.mapClick$.next(e));
+        });
         m.on('error', (e) => {
           // A theme switch whose style fails to load keeps the current style: re-open the gate.
           if (this.stylePending) this.settleStyleSwap(m);
