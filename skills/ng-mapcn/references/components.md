@@ -250,7 +250,7 @@ Class `MapArcComponent<T extends MapArcDatum = MapArcDatum>`. Curved arcs; an in
 
 Class `MapClusterLayerComponent<P = Record<string, unknown>>`. Cluster circles sized/colored by count, a count label, and unclustered point dots. Generic like `ng-map-geojson`: `P` is inferred from `data` and types `pointClick`.
 
-Ids derive from `id` (auto `ng-cluster-N`): source `cluster-source-<id>`, layers `clusters-<id>` (circles), `cluster-count-<id>` (labels) and `unclustered-point-<id>`.
+Ids derive from `id` (auto `ng-cluster-N`): source `cluster-source-<id>`, layers `clusters-<id>` (circles), `cluster-count-<id>` (labels) and `unclustered-point-<id>`. The count labels need the style's `glyphs`: on a style without them (the `blank` style) the count layer is skipped with a console warning.
 
 | Input                | Type                                                            | Default                             | Notes                                                                                         |
 | -------------------- | --------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------- |

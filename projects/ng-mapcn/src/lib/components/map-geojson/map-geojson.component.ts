@@ -90,6 +90,7 @@ export class MapGeoJSONComponent<P extends Record<string, any> = Record<string, 
 
   private readonly autoId = nextId('ng-geojson');
   private readonly resolvedId = computed(() => this.id() ?? this.autoId);
+  private readonly hasFill = computed(() => this.fillPaint() !== false);
   private readonly sourceId = computed(() => `geojson-source-${this.resolvedId()}`);
   private readonly fillLayerId = computed(() => `geojson-fill-${this.resolvedId()}`);
   private readonly lineLayerId = computed(() => `geojson-line-${this.resolvedId()}`);
@@ -242,12 +243,13 @@ export class MapGeoJSONComponent<P extends Record<string, any> = Record<string, 
       }
     });
 
-    // Interaction handlers (bound to the fill layer).
+    // Interaction handlers (bound to the fill layer). `hasFill` (not `fillPaint`) so a new paint
+    // object does not re-bind the handlers and reset the hovered feature mid-hover.
     effect((onCleanup) => {
       if (!this.created()) return;
       const map = this.ctx.map();
       if (!map) return;
-      if (!this.interactive() || this.fillPaint() === false) return;
+      if (!this.interactive() || !this.hasFill()) return;
 
       const sourceId = this.sourceId();
       const fillLayerId = this.fillLayerId();
@@ -281,9 +283,9 @@ export class MapGeoJSONComponent<P extends Record<string, any> = Record<string, 
       const handleMouseMove = (e: MapLayerMouseEvent) => {
         const feature = e.features?.[0];
         if (!feature) return;
-        map.getCanvas().style.cursor = 'pointer';
         const id = feature.id ?? null;
         if (hovering && id === hoveredId) return;
+        map.getCanvas().style.cursor = 'pointer';
         hovering = true;
         setHover(id);
         // Map events fire outside the zone — re-enter for outputs
