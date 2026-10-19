@@ -130,7 +130,7 @@ export class CommandSearchComponent {
     this.open.set(false);
     const href = String(option.value);
     if (this.files.has(href)) {
-      window.open(href, '_blank');
+      window.open(href, '_blank', 'noopener');
       return;
     }
     void this.router.navigateByUrl(href);

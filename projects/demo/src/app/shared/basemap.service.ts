@@ -64,8 +64,8 @@ export const BASEMAP_PROVIDERS: readonly BasemapProvider[] = [
     styles: (key) =>
       key
         ? {
-            light: `https://api.maptiler.com/maps/streets-v4/style.json?key=${key}`,
-            dark: `https://api.maptiler.com/maps/streets-v4-dark/style.json?key=${key}`,
+            light: `https://api.maptiler.com/maps/streets-v4/style.json?key=${encodeURIComponent(key)}`,
+            dark: `https://api.maptiler.com/maps/streets-v4-dark/style.json?key=${encodeURIComponent(key)}`,
           }
         : undefined,
   },
@@ -77,7 +77,7 @@ export const BASEMAP_PROVIDERS: readonly BasemapProvider[] = [
     keyUrl: 'https://client.stadiamaps.com/',
     note: 'Key optional on localhost (rate limited).',
     styles: (key) => {
-      const auth = key ? `?api_key=${key}` : '';
+      const auth = key ? `?api_key=${encodeURIComponent(key)}` : '';
       return {
         light: `https://tiles.stadiamaps.com/styles/alidade_smooth.json${auth}`,
         dark: `https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json${auth}`,
@@ -160,10 +160,21 @@ export class BasemapService {
       const known = BASEMAP_PROVIDERS.some((p) => p.id === parsed.providerId);
       return {
         providerId: known ? (parsed.providerId as BasemapId) : 'carto',
-        keys: parsed.keys ?? {},
+        keys: stringKeys(parsed.keys),
       };
     } catch {
       return fallback;
     }
   }
+}
+
+/** Keeps only the known providers with a string key (localStorage is user-editable). */
+function stringKeys(value: unknown): Partial<Record<BasemapId, string>> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const keys: Partial<Record<BasemapId, string>> = {};
+  for (const { id } of BASEMAP_PROVIDERS) {
+    const key = (value as Record<string, unknown>)[id];
+    if (typeof key === 'string') keys[id] = key;
+  }
+  return keys;
 }

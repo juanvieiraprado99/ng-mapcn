@@ -52,6 +52,15 @@ describe('BasemapService', () => {
       expect(create().providerId()).toBe('carto');
     });
 
+    it('drops stored keys that are not strings or belong to no provider', () => {
+      localStorage.setItem(
+        KEY,
+        JSON.stringify({ providerId: 'maptiler', keys: { maptiler: 'k', stadia: 42, bing: 'x' } }),
+      );
+
+      expect(create().keys()).toEqual({ maptiler: 'k' });
+    });
+
     it('persists the provider and keys when they change', () => {
       const service = create();
 
