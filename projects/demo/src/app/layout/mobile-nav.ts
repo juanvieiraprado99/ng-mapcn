@@ -84,7 +84,13 @@ import { BasemapPickerCompactComponent } from './basemap-picker-compact';
               <div class="flex flex-col gap-3">
                 @for (item of group.items; track item.href) {
                   @if (item.file) {
-                    <a [href]="item.href" target="_blank" [class]="link" (click)="open.set(false)">
+                    <a
+                      [href]="item.href"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      [class]="link"
+                      (click)="open.set(false)"
+                    >
                       {{ item.title }}
                     </a>
                   } @else {

@@ -18,7 +18,18 @@ interface Workspace {
 function createTree({
   pkg = { name: 'app', dependencies: {} },
   angularJson = {
-    projects: { app: { architect: { build: { options: { styles: ['src/styles.scss'] } } } } },
+    version: 1,
+    projects: {
+      app: {
+        root: '',
+        architect: {
+          build: {
+            builder: '@angular/build:application',
+            options: { styles: ['src/styles.scss'] },
+          },
+        },
+      },
+    },
   },
   styles = { path: 'src/styles.scss', content: 'body { margin: 0; }\n' },
 }: Workspace = {}): Tree {
@@ -120,10 +131,15 @@ describe('ng-add schematic', () => {
 
     it('appends to existing assets once, even when run twice', async () => {
       const angularJson = {
+        version: 1,
         projects: {
           app: {
+            root: '',
             architect: {
-              build: { options: { styles: [], assets: [{ glob: '**/*', input: 'public' }] } },
+              build: {
+                builder: '@angular/build:application',
+                options: { styles: [], assets: [{ glob: '**/*', input: 'public' }] },
+              },
             },
           },
         },
@@ -144,8 +160,17 @@ describe('ng-add schematic', () => {
 
     it('does not duplicate the css when it is already registered', async () => {
       const angularJson = {
+        version: 1,
         projects: {
-          app: { architect: { build: { options: { styles: ['src/styles.scss', MAPLIBRE_CSS] } } } },
+          app: {
+            root: '',
+            architect: {
+              build: {
+                builder: '@angular/build:application',
+                options: { styles: ['src/styles.scss', MAPLIBRE_CSS] },
+              },
+            },
+          },
         },
       };
       const tree = await run({}, createTree({ angularJson }));
@@ -165,9 +190,20 @@ describe('ng-add schematic', () => {
 
     it('uses the project option', async () => {
       const angularJson = {
+        version: 1,
         projects: {
-          first: { architect: { build: { options: { styles: ['a.scss'] } } } },
-          second: { architect: { build: { options: { styles: ['b.scss'] } } } },
+          first: {
+            root: '',
+            architect: {
+              build: { builder: '@angular/build:application', options: { styles: ['a.scss'] } },
+            },
+          },
+          second: {
+            root: '',
+            architect: {
+              build: { builder: '@angular/build:application', options: { styles: ['b.scss'] } },
+            },
+          },
         },
       };
       const tree = await run({ project: 'second' }, createTree({ angularJson }));
@@ -178,9 +214,20 @@ describe('ng-add schematic', () => {
 
     it('falls back to the first project', async () => {
       const angularJson = {
+        version: 1,
         projects: {
-          first: { architect: { build: { options: { styles: ['a.scss'] } } } },
-          second: { architect: { build: { options: { styles: ['b.scss'] } } } },
+          first: {
+            root: '',
+            architect: {
+              build: { builder: '@angular/build:application', options: { styles: ['a.scss'] } },
+            },
+          },
+          second: {
+            root: '',
+            architect: {
+              build: { builder: '@angular/build:application', options: { styles: ['b.scss'] } },
+            },
+          },
         },
       };
       const tree = await run({}, createTree({ angularJson }));
@@ -197,7 +244,15 @@ describe('ng-add schematic', () => {
     });
 
     it('warns and does not create a styles array when it is missing', async () => {
-      const angularJson = { projects: { app: { architect: { build: { options: {} } } } } };
+      const angularJson = {
+        version: 1,
+        projects: {
+          app: {
+            root: '',
+            architect: { build: { builder: '@angular/build:application', options: {} } },
+          },
+        },
+      };
       const tree = await run({}, createTree({ angularJson }));
 
       // The worker assets are still registered; only the css step is skipped.
@@ -319,6 +374,121 @@ describe('ng-add schematic', () => {
       expect(deps['terra-draw']).toBe('^1.37.0');
       expect(deps['terra-draw-maplibre-gl-adapter']).toBe('^1.5.0');
       expect(deps['maplibre-gl']).toBe('^6.11.2');
+    });
+  });
+
+  describe('workspace robustness', () => {
+    const appProject = (extra: object = {}) => ({
+      root: '',
+      architect: {
+        build: { builder: '@angular/build:application', options: { styles: ['src/styles.scss'] } },
+      },
+      ...extra,
+    });
+
+    it('keeps the comments of a commented angular.json', async () => {
+      const tree = Tree.empty();
+      tree.create('package.json', JSON.stringify({ name: 'app', dependencies: {} }));
+      tree.create(
+        'angular.json',
+        `{
+  // workspace comment
+  "version": 1,
+  "projects": {
+    "app": {
+      "root": "",
+      "architect": {
+        "build": { "builder": "@angular/build:application", "options": { "styles": ["src/styles.scss"] } }
+      }
+    }
+  }
+}`,
+      );
+      tree.create('src/styles.scss', '');
+
+      const out = await run({}, tree);
+
+      expect(out.readContent('angular.json')).toContain('// workspace comment');
+      expect(out.readContent('angular.json')).toContain(MAPLIBRE_CSS);
+    });
+
+    it('supports the "targets" alias of "architect"', async () => {
+      const angularJson = {
+        version: 1,
+        projects: {
+          app: {
+            root: '',
+            targets: {
+              build: {
+                builder: '@angular/build:application',
+                options: { styles: ['src/styles.scss'] },
+              },
+            },
+          },
+        },
+      };
+      const tree = await run({}, createTree({ angularJson }));
+
+      expect(readJson(tree, 'angular.json').projects.app.targets.build.options.styles).toEqual([
+        MAPLIBRE_CSS,
+        'src/styles.scss',
+      ]);
+    });
+
+    it("edits the selected project's own stylesheet with a relative @use path", async () => {
+      const angularJson = {
+        version: 1,
+        projects: {
+          first: appProject(),
+          second: {
+            root: 'projects/second',
+            sourceRoot: 'projects/second/src',
+            architect: {
+              build: {
+                builder: '@angular/build:application',
+                options: { styles: ['projects/second/src/styles.scss'] },
+              },
+            },
+          },
+        },
+      };
+      const tree = createTree({ angularJson });
+      tree.create('projects/second/src/styles.scss', '');
+
+      const out = await run({ project: 'second', path: 'projects/second/src/app/map' }, tree);
+
+      expect(out.readContent('projects/second/src/styles.scss')).toContain(
+        "@use './app/map/styles/index' as *;",
+      );
+      expect(out.readContent('src/styles.scss')).not.toContain('@use');
+    });
+
+    it.each([
+      ['an absolute path', '/etc/map'],
+      ['a Windows absolute path', String.raw`C:\map`],
+      ['a parent segment', 'src/../../map'],
+      ['a quote', "src/app/ma'p"],
+    ])('rejects %s in --path', async (_label, path) => {
+      await expect(run({ path })).rejects.toThrow(/--path/);
+    });
+
+    it('normalizes backslashes and a trailing slash in --path', async () => {
+      const tree = await run({ path: String.raw`src\app\ui\map\ `.trim() });
+
+      expect(tree.exists('src/app/ui/map/index.ts')).toBe(true);
+      expect(tree.readContent('src/styles.scss')).toContain(
+        "@use './app/ui/map/styles/index' as *;",
+      );
+    });
+
+    it('accepts maplibre-gl declared in devDependencies or as a >= range, without duplicating it', async () => {
+      const tree = await run(
+        {},
+        createTree({ pkg: { name: 'app', devDependencies: { 'maplibre-gl': '>=6.11' } } }),
+      );
+
+      expect(readJson(tree, 'package.json').dependencies['maplibre-gl']).toBeUndefined();
+      expect(warnings.some((w) => w.includes('maplibre-gl ^6.11.2'))).toBe(false);
     });
   });
 });

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test as base } from '@playwright/test';
 
 /**
- * Minimal basemaps served for every style request: no tiles, no glyphs, no sprites, so the suite
+ * Minimal basemaps served for every style request: no tiles, no sprites and a glyphs URL that is never fetched (aborted), so the suite
  * never needs the network and maps become ready in about a second. The light and dark variants
  * differ (background colour) so a theme switch is a real `setStyle` that removes and re-adds the
  * layers added by the components, exactly like swapping Carto positron for dark-matter.
@@ -22,6 +22,7 @@ export const CARTO_TILES =
 export function minimalStyle(dark: boolean) {
   return {
     version: 8,
+    glyphs: 'https://fonts.test/{fontstack}/{range}.pbf',
     sources: { carto: { type: 'vector', tiles: [CARTO_TILES], maxzoom: 14 } },
     layers: [
       {
@@ -146,6 +147,14 @@ export const test = base.extend<{ network: NetworkState }>({
             contentType: 'image/png',
             headers: { 'access-control-allow-origin': '*' },
             body: readFileSync(join(FIXTURES_DIR, 'terrarium.png')),
+          });
+        }
+        // Glyph ranges of the minimal style: an empty PBF is a valid, empty glyph set.
+        if (url.hostname === 'fonts.test' && url.pathname.endsWith('.pbf')) {
+          return route.fulfill({
+            contentType: 'application/x-protobuf',
+            headers: { 'access-control-allow-origin': '*' },
+            body: Buffer.alloc(0),
           });
         }
         // Raster basemap tiles (the OpenStreetMap example on the basemaps page) and <img> sources.

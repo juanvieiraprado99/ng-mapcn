@@ -15,6 +15,7 @@ import { Subject } from 'rxjs';
 
 import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MapContextService } from '../../services/map-context.service';
+import { invalidPositionError, isValidLngLat, positionReady } from '../../utils/position';
 import { MarkerContextService } from './marker-context.service';
 
 /** Web Mercator latitude limit. */
@@ -68,8 +69,11 @@ export class MapMarkerComponent {
    * a keyboard tab stop (`role="button"`, `tabindex="0"`) when someone listens.
    */
   readonly markerClick = outputFromObservable(this.click$);
-  readonly markerMouseEnter = output<MouseEvent>();
-  readonly markerMouseLeave = output<MouseEvent>();
+  private readonly mouseEnter$ = new Subject<MouseEvent>();
+  private readonly mouseLeave$ = new Subject<MouseEvent>();
+  /** Backed by Subjects so hovering a marker nobody listens to skips the zone (`observed`). */
+  readonly markerMouseEnter = outputFromObservable(this.mouseEnter$);
+  readonly markerMouseLeave = outputFromObservable(this.mouseLeave$);
   readonly dragStart = output<{ lng: number; lat: number }>();
   private readonly drag$ = new Subject<{ lng: number; lat: number }>();
   /** Emits on every frame of a drag; backed by a Subject so idle drags skip the zone (`observed`). */
@@ -80,22 +84,24 @@ export class MapMarkerComponent {
   private readonly markerCtx = inject(MarkerContextService);
   private readonly zone = inject(NgZone);
   private readonly l = injectMapLabels(this.labels);
+  /** The marker is created once the inputs first form a valid position (async data). */
+  private readonly ready = positionReady(this.longitude, this.latitude);
 
   constructor() {
     // Contributes to the map's declarative fit-to-bounds (`<ng-map [fitBounds]>`).
     inject(DestroyRef).onDestroy(
-      this.mapCtx.registerBounds(() => [
-        this.longitude(),
-        this.latitude(),
-        this.longitude(),
-        this.latitude(),
-      ]),
+      this.mapCtx.registerBounds(() => {
+        const lng = this.longitude();
+        const lat = this.latitude();
+        // An invalid position would turn the union of every child's bounds into NaN.
+        return isValidLngLat(lng, lat) ? [lng, lat, lng, lat] : null;
+      }),
     );
 
     // Create marker when the map becomes available
     effect((onCleanup) => {
       const map = this.mapCtx.map();
-      if (!map) return;
+      if (!map || !this.ready()) return;
 
       // Read initial values without registering them as dependencies
       // so that position/rotation changes go through the update effect below
@@ -125,13 +131,13 @@ export class MapMarkerComponent {
           .setLngLat([lng, lat])
           .addTo(map);
 
-        el.addEventListener('click', (e) => this.zone.run(() => this.click$.next(e as MouseEvent)));
-        el.addEventListener('mouseenter', (e) =>
-          this.zone.run(() => this.markerMouseEnter.emit(e as MouseEvent)),
-        );
-        el.addEventListener('mouseleave', (e) =>
-          this.zone.run(() => this.markerMouseLeave.emit(e as MouseEvent)),
-        );
+        // Re-enter the zone only when someone listens (one change detection per event otherwise).
+        const forward = (subject: Subject<MouseEvent>) => (e: Event) => {
+          if (subject.observed) this.zone.run(() => subject.next(e as MouseEvent));
+        };
+        el.addEventListener('click', forward(this.click$));
+        el.addEventListener('mouseenter', forward(this.mouseEnter$));
+        el.addEventListener('mouseleave', forward(this.mouseLeave$));
 
         const emitDragStart = () => {
           const ll = m.getLngLat();
@@ -269,7 +275,11 @@ export class MapMarkerComponent {
       if (!marker) return;
 
       const current = marker.getLngLat();
-      if (current.lng !== lng || current.lat !== lat) marker.setLngLat([lng, lat]);
+      if (current.lng !== lng || current.lat !== lat) {
+        // setLngLat throws on NaN/undefined; an exception escaping an effect aborts change detection.
+        if (isValidLngLat(lng, lat)) marker.setLngLat([lng, lat]);
+        else this.mapCtx.reportError(invalidPositionError('ng-map-marker', lng, lat));
+      }
       if (marker.isDraggable() !== draggable) marker.setDraggable(draggable);
       if (marker.getRotation() !== rotation) marker.setRotation(rotation);
       if (marker.getRotationAlignment() !== rotationAlignment) {
