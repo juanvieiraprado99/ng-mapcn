@@ -346,15 +346,15 @@ export class BasemapsPageComponent {
     const key = this.basemap.keys()['maptiler'];
     if (!key) return undefined;
     return {
-      light: `https://api.maptiler.com/maps/streets-v4/style.json?key=${key}`,
-      dark: `https://api.maptiler.com/maps/streets-v4-dark/style.json?key=${key}`,
+      light: `https://api.maptiler.com/maps/streets-v4/style.json?key=${encodeURIComponent(key)}`,
+      dark: `https://api.maptiler.com/maps/streets-v4-dark/style.json?key=${encodeURIComponent(key)}`,
     };
   });
 
   /** Stadia works without a key on localhost, so always render it. */
   readonly stadiaStyles = computed<MapStylesConfig>(() => {
     const key = this.basemap.keys()['stadia'];
-    const auth = key ? `?api_key=${key}` : '';
+    const auth = key ? `?api_key=${encodeURIComponent(key)}` : '';
     return {
       light: `https://tiles.stadiamaps.com/styles/alidade_smooth.json${auth}`,
       dark: `https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json${auth}`,

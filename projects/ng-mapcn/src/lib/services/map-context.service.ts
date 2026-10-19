@@ -1,4 +1,4 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, Injectable, type Signal, signal } from '@angular/core';
 import { type LngLatBoundsLike, type Map as MapLibreMap } from 'maplibre-gl';
 
 import {
@@ -30,13 +30,15 @@ export class MapContextService {
   /** Ids of the sources currently added to the map by source components. */
   readonly sourceIds = this.sourceIdsSignal.asReadonly();
 
-  private readonly boundsSources = signal<ReadonlyMap<symbol, BoundsGetter>>(new Map());
+  private readonly boundsSources = signal<ReadonlyMap<symbol, Signal<BoundsTuple | null>>>(
+    new Map(),
+  );
   /**
    * Union of the bounds the child components registered (`registerBounds`), or `null` when none
    * has data. Reactive: it changes only when the resulting bounds really change.
    */
   readonly dataBounds = computed<BoundsTuple | null>(
-    () => unionBounds([...this.boundsSources().values()].map(safeBounds)),
+    () => unionBounds([...this.boundsSources().values()].map((bounds) => bounds())),
     { equal: sameBounds },
   );
 
@@ -89,7 +91,10 @@ export class MapContextService {
    */
   registerBounds(getter: BoundsGetter): () => void {
     const key = Symbol('bounds');
-    this.boundsSources.update((m) => new Map(m).set(key, getter));
+    // Memoized per source: when one child's data changes, only its bounds are recomputed (a
+    // GeoJSON walk can be costly), the others are read from cache.
+    const bounds = computed(() => toBoundsTuple(safeBounds(getter)), { equal: sameBounds });
+    this.boundsSources.update((m) => new Map(m).set(key, bounds));
     return () =>
       this.boundsSources.update((m) => {
         const next = new Map(m);

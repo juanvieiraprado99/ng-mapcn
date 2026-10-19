@@ -270,6 +270,20 @@ describe('MapMarkerComponent', () => {
 
       expect(zone.runs).toBe(0);
     });
+
+    it('does not enter the zone on click or hover when nothing listens', async () => {
+      await renderMap('<ng-map><ng-map-marker [longitude]="0" [latitude]="0" /></ng-map>', {
+        imports: [MapMarkerComponent],
+      });
+      const zone = trackZoneRun();
+      const el = fakeRegistry.markers[0].getElement();
+
+      el.dispatchEvent(new MouseEvent('click'));
+      el.dispatchEvent(new MouseEvent('mouseenter'));
+      el.dispatchEvent(new MouseEvent('mouseleave'));
+
+      expect(zone.runs).toBe(0);
+    });
   });
 
   describe('keyboard accessibility', () => {

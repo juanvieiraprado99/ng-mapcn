@@ -312,6 +312,18 @@ describe('MapGeoJSONComponent', () => {
       expect(emitted.originalEvent.lngLat).toEqual({ lng: 7, lat: 8 });
     });
 
+    it('keeps the handlers and the hovered feature when fillPaint gets a new object', async () => {
+      const { fixture, map, host } = await renderLoaded({ interactive: true, promoteId: 'code' });
+      map.fire('mousemove', mouseEvent(1), FILL);
+      const before = map.calls.length;
+
+      update(fixture, { fillPaint: { 'fill-opacity': 0.5 } });
+
+      expect(map.calls.slice(before).filter((c) => c.startsWith('off:'))).toEqual([]);
+      expect(featureStateCalls(map)).toEqual([[{ source: SOURCE, id: 1 }, { hover: true }]]);
+      expect(host['featureHover']).toHaveBeenCalledTimes(1);
+    });
+
     it('swaps the hover state when moving to another feature', async () => {
       const { map, host } = await renderLoaded({ interactive: true });
 
