@@ -13,17 +13,19 @@ export const LIGHT_BACKGROUND = '#eeeeee';
 export const DARK_BACKGROUND = '#222222';
 
 /**
- * Tiles URL of the `carto` vector source, which the real Carto styles also name `carto`. No layer
- * uses it, so nothing is fetched until a spec adds one (the 3D buildings extrusion does).
+ * Tiles URL of the basemap vector source, named `protomaps` like in the real Carto styles
+ * (`carto.streets/v2` tiles). No layer uses it, so nothing is fetched until a spec adds one (the
+ * 3D buildings extrusion does). `npm run check:basemaps` checks the live styles still match.
  */
+export const CARTO_SOURCE = 'protomaps';
 export const CARTO_TILES =
-  'https://tiles.basemaps.cartocdn.com/vectortiles/carto.streets/v1/{z}/{x}/{y}.mvt';
+  'https://tiles.basemaps.cartocdn.com/v/20261001-03/vectortiles/carto.streets/v2/{z}/{x}/{y}.mvt';
 
 export function minimalStyle(dark: boolean) {
   return {
     version: 8,
     glyphs: 'https://fonts.test/{fontstack}/{range}.pbf',
-    sources: { carto: { type: 'vector', tiles: [CARTO_TILES], maxzoom: 14 } },
+    sources: { [CARTO_SOURCE]: { type: 'vector', tiles: [CARTO_TILES], maxzoom: 14 } },
     layers: [
       {
         id: 'bg',
