@@ -54,9 +54,11 @@ export class MyMapComponent {}`;
         <p>
           This copies the component sources into your app (shadcn-style), installs
           <code [class]="code">maplibre-gl</code> and registers its CSS.
+          <code [class]="code">ng add</code> installs with your workspace's package manager (npm,
+          pnpm, yarn or bun).
         </p>
         <p>Alternatively, install it as a regular npm package:</p>
-        <app-code-block code="npm install ng-mapcn maplibre-gl" lang="bash" [showLineNumbers]="false" />
+        <app-install-command packages="ng-mapcn maplibre-gl" />
       </app-docs-section>
 
       <app-docs-section title="Usage">

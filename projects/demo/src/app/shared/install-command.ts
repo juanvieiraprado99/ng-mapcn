@@ -5,15 +5,16 @@ import { lucideCheck, lucideCopy } from '@ng-icons/lucide';
 import { ZardButtonComponent } from '@/shared/components/button';
 
 const PACKAGE_MANAGERS = [
-  { manager: 'pnpm', exec: 'pnpm' },
-  { manager: 'npm', exec: 'npx' },
-  { manager: 'yarn', exec: 'yarn' },
-  { manager: 'bun', exec: 'bunx' },
+  { manager: 'pnpm', exec: 'pnpm', add: 'pnpm add' },
+  { manager: 'npm', exec: 'npx', add: 'npm install' },
+  { manager: 'yarn', exec: 'yarn', add: 'yarn add' },
+  { manager: 'bun', exec: 'bunx', add: 'bun add' },
 ] as const;
 
 /**
  * mapcn `InstallCommand`: one command per package manager on "line" tabs.
- * The command runs the project's own Angular CLI (`ng add`) through each manager.
+ * By default the command runs the project's own Angular CLI (`ng add`) through each manager,
+ * which then installs with that same manager. With `packages`, it installs them directly.
  */
 @Component({
   selector: 'app-install-command',
@@ -61,13 +62,19 @@ const PACKAGE_MANAGERS = [
 export class InstallCommandComponent {
   /** Package passed to `ng add`. */
   readonly name = input('ng-mapcn');
+  /** Extra `ng add` arguments, e.g. `--draw`. */
+  readonly args = input('');
+  /** Space-separated packages to install directly (`npm install ...`) instead of `ng add`. */
+  readonly packages = input<string>();
 
-  protected readonly tabs = computed(() =>
-    PACKAGE_MANAGERS.map(({ manager, exec }) => ({
+  protected readonly tabs = computed(() => {
+    const packages = this.packages();
+    const args = this.args() ? ` ${this.args()}` : '';
+    return PACKAGE_MANAGERS.map(({ manager, exec, add }) => ({
       manager,
-      command: `${exec} ng add ${this.name()}`,
-    })),
-  );
+      command: packages ? `${add} ${packages}` : `${exec} ng add ${this.name()}${args}`,
+    }));
+  });
   protected readonly active = signal<string>(PACKAGE_MANAGERS[0].manager);
   protected readonly command = computed(
     () => this.tabs().find((tab) => tab.manager === this.active())?.command ?? '',
