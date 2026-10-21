@@ -49,19 +49,17 @@ test.describe('3D buildings', () => {
 
     expect(layer).toMatchObject({
       type: 'fill-extrusion',
-      source: 'carto',
-      sourceLayer: 'building',
+      source: 'protomaps',
+      sourceLayer: 'buildings',
       minzoom: 14,
       opacity: 0.8,
       pitch: 60,
     });
-    expect(layer.height).toEqual(['coalesce', ['to-number', ['get', 'render_height']], 0]);
-    expect(layer.base).toEqual(['coalesce', ['to-number', ['get', 'render_min_height']], 0]);
+    expect(layer.height).toEqual(['coalesce', ['to-number', ['get', 'height']], 0]);
+    expect(layer.base).toEqual(['coalesce', ['to-number', ['get', 'min_height']], 0]);
   });
 
-  test('the building tiles reach the source (render_height survives the round trip)', async ({
-    page,
-  }) => {
+  test('the building tiles reach the source (height survives the round trip)', async ({ page }) => {
     await gotoAndWaitForMap(page, PAGE, BUILDINGS);
 
     await expect
@@ -69,8 +67,8 @@ test.describe('3D buildings', () => {
         () =>
           mapCall(page, BUILDINGS, (map) =>
             map
-              .querySourceFeatures('carto', { sourceLayer: 'building' })
-              .map((f) => f.properties['render_height'] as number)
+              .querySourceFeatures('protomaps', { sourceLayer: 'buildings' })
+              .map((f) => f.properties['height'] as number)
               .sort((a, b) => a - b),
           ),
         { message: 'building features loaded from the fixture tile', timeout: 20_000 },
@@ -102,7 +100,7 @@ test.describe('3D buildings', () => {
     await page.getByRole('button', { name: 'Color by height' }).click();
     await expect
       .poll(async () => JSON.stringify(await paint('fill-extrusion-color')))
-      .toContain('render_height');
+      .toContain('"height"');
     expect(
       await mapCall(
         page,

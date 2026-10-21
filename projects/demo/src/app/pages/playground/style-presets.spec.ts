@@ -137,6 +137,16 @@ describe('style presets', () => {
     ]);
   });
 
+  it('offers 3D buildings on every vector basemap', () => {
+    const without = STYLE_PRESETS.filter((p) => !p.hasCartoSource && !p.buildingSource);
+    // Raster tiles and the blank style have no building footprints to extrude.
+    expect(without.map((p) => p.id)).toEqual(['osm', 'blank']);
+    expect(findPreset('openfreemap').buildingSource).toEqual({
+      source: 'openmaptiles',
+      sourceLayer: 'building',
+    });
+  });
+
   it('swaps the key placeholder for the picked key and exposes openmaptiles buildings', () => {
     const maptiler = findPreset('maptiler');
     expect(resolveStyles(maptiler, undefined)).toBeUndefined();

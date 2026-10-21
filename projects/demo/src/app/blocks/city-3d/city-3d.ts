@@ -5,7 +5,7 @@ import { MapComponent, MapFillExtrusionComponent, MapTerrainComponent } from 'ng
 const HEIGHT_COLOR = [
   'interpolate',
   ['linear'],
-  ['coalesce', ['to-number', ['get', 'render_height']], 0],
+  ['coalesce', ['to-number', ['get', 'height']], 0],
   0,
   '#93c5fd',
   50,

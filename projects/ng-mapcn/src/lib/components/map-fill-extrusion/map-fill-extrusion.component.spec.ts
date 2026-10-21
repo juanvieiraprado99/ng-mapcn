@@ -53,21 +53,27 @@ function hostDefaults(): Record<string, any> {
 
 const CARTO = { type: 'vector', url: 'https://example.com/tiles.json' } as never;
 
-async function render(hostProps: Record<string, unknown> = {}) {
+async function render(
+  hostProps: Record<string, unknown> = {},
+  basemapSource: string | null = 'carto',
+) {
   const host: Record<string, any> = { ...hostDefaults(), ...hostProps };
   const result = await renderMap(TEMPLATE, {
     imports: [MapFillExtrusionComponent],
     hostProps: host,
   });
   const map = result.map!;
-  // The basemap's own vector source, as in the Carto styles.
-  map.addSource('carto', CARTO);
+  // The basemap's own vector source: `carto` in the earlier Carto styles, `protomaps` now.
+  if (basemapSource) map.addSource(basemapSource, CARTO);
   map.calls.length = 0;
   return { ...result, map, host };
 }
 
-async function renderLoaded(hostProps: Record<string, unknown> = {}) {
-  const result = await render(hostProps);
+async function renderLoaded(
+  hostProps: Record<string, unknown> = {},
+  basemapSource: string | null = 'carto',
+) {
+  const result = await render(hostProps, basemapSource);
   loadAndSettle(result.fixture, result.map);
   return result;
 }
@@ -123,6 +129,76 @@ describe('MapFillExtrusionComponent', () => {
       expect(map.calls.find((c) => c.startsWith('addLayer:'))).toMatch(
         /^addLayer:fill-extrusion-layer-ng-fill-extrusion-\d+$/,
       );
+    });
+  });
+
+  describe('current Carto styles (protomaps source)', () => {
+    it('extrudes the buildings layer with its height and min_height', async () => {
+      const { map } = await renderLoaded({}, 'protomaps');
+
+      const layer = map.getLayer(LAYER);
+      expect(layer.source).toBe('protomaps');
+      expect(layer['source-layer']).toBe('buildings');
+      expect(layer.paint['fill-extrusion-height']).toEqual([
+        'coalesce',
+        ['to-number', ['get', 'height']],
+        0,
+      ]);
+      expect(layer.paint['fill-extrusion-base']).toEqual([
+        'coalesce',
+        ['to-number', ['get', 'min_height']],
+        0,
+      ]);
+    });
+
+    it('takes the schema defaults for an explicit protomaps source, under explicit inputs', async () => {
+      const { map } = await renderLoaded(
+        { source: 'protomaps', heightProperty: 'levels' },
+        'protomaps',
+      );
+
+      const layer = map.getLayer(LAYER);
+      expect(layer['source-layer']).toBe('buildings');
+      expect(layer.paint['fill-extrusion-height']).toEqual([
+        'coalesce',
+        ['to-number', ['get', 'levels']],
+        0,
+      ]);
+      expect(layer.paint['fill-extrusion-base']).toEqual([
+        'coalesce',
+        ['to-number', ['get', 'min_height']],
+        0,
+      ]);
+    });
+
+    it('waits for either Carto source and picks up the one the style brings', async () => {
+      const { fixture, map } = await renderLoaded({}, null);
+      expect(structuralCalls(map)).toEqual([]);
+
+      map.addSource('protomaps', CARTO);
+      map.fire('sourcedata');
+      fixture.detectChanges();
+
+      expect(map.getLayer(LAYER).source).toBe('protomaps');
+    });
+
+    it('follows the schema when a style swap moves from the earlier to the current tiles', async () => {
+      const { fixture, map } = await renderLoaded();
+      expect(map.getLayer(LAYER)['source-layer']).toBe('building');
+
+      update(fixture, { theme: 'dark' });
+      map.finishStyleLoad();
+      map.addSource('protomaps', CARTO);
+      reloadStyle(fixture, map);
+
+      const layer = map.getLayer(LAYER);
+      expect(layer.source).toBe('protomaps');
+      expect(layer['source-layer']).toBe('buildings');
+      expect(layer.paint['fill-extrusion-height']).toEqual([
+        'coalesce',
+        ['to-number', ['get', 'height']],
+        0,
+      ]);
     });
   });
 

@@ -61,7 +61,7 @@ export interface PlaygroundSpec {
   attrs?: Record<string, string>;
   controls: Control[];
   fixed: FixedInput[];
-  /** The component draws from the `carto` vector source, so it shows nothing on other basemaps. */
+  /** The component draws from the Carto building source, so it needs a basemap with buildings. */
   requiresCarto?: boolean;
   /** Content projected into the layer element (e.g. the marker's `<ng-marker-content />`). */
   content?: { template: string; imports: string[] };

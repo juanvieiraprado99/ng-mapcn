@@ -382,7 +382,7 @@ The map fits once loaded and again whenever the union of the children's bounds c
   [zoom]="15.5"
   [options]="{ pitch: 60, bearing: -20, maxPitch: 85 }"
 >
-  <!-- Carto basemap buildings: source "carto", layer "building", render_height. Needs zoom >= 14. -->
+  <!-- Carto basemap buildings: source "protomaps", layer "buildings", height. Needs zoom >= 14. -->
   <ng-map-fill-extrusion id="buildings" [opacity]="0.8" />
   <!-- Public Terrarium tiles by default; the hillshade has its own DEM source. -->
   <ng-map-terrain id="relief" [exaggeration]="1.5" [hillshade]="true" />

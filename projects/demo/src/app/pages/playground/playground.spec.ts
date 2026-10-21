@@ -253,13 +253,13 @@ describe('playground page', () => {
     expect(errors).toEqual([]);
   });
 
-  it('warns when 3D buildings meet a basemap without the carto source', async () => {
+  it('warns when 3D buildings meet a basemap without building tiles', async () => {
     const { harness } = await renderRoute('/playground');
     const root = harness.fixture.nativeElement as HTMLElement;
     press$(harness, root, 'Add 3D buildings');
     expect(root.textContent).not.toContain('Carto vector tiles');
 
-    root.querySelector<HTMLButtonElement>('button[aria-label^="Apply OpenFreeMap"]')!.click();
+    root.querySelector<HTMLButtonElement>('button[aria-label^="Apply OpenStreetMap"]')!.click();
     harness.detectChanges();
     expect(root.textContent).toContain('Carto vector tiles');
   });

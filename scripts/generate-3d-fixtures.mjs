@@ -3,9 +3,9 @@
  *
  * - `e2e/fixtures/terrarium.png`: a 256x256 Terrarium-encoded elevation tile (a smooth hill), served
  *   for every `raster-dem` tile request.
- * - `e2e/fixtures/buildings.mvt`: a vector tile with a `building` layer shaped like the Carto /
- *   OpenMapTiles one (`render_height`, `render_min_height`, `hide_3d`), served for the z14 tile
- *   over lower Manhattan and as an empty tile everywhere else.
+ * - `e2e/fixtures/buildings.mvt`: a vector tile with a `buildings` layer shaped like the one of
+ *   the Carto `carto.streets/v2` tiles (`height`, `min_height`), served for the z14 tile over
+ *   lower Manhattan and as an empty tile everywhere else.
  *
  * Both are written by hand (PNG chunks, MVT protobuf) so they regenerate anywhere with
  * `node scripts/generate-3d-fixtures.mjs`, with no tile tooling.
@@ -101,8 +101,7 @@ const TILE_X = Math.floor(worldX);
 const TILE_Y = Math.floor(worldY);
 const centerPx = [Math.round((worldX - TILE_X) * EXTENT), Math.round((worldY - TILE_Y) * EXTENT)];
 
-// A 3x3 block of buildings around the center; the last one is a tall tower with a podium base,
-// and one outline is flagged hide_3d (replaced by its parts in OpenMapTiles).
+// A 3x3 block of buildings around the center, then a tall tower with a podium base.
 const BUILDINGS = [];
 const STEP = 90;
 const SIDE = 70;
@@ -113,7 +112,6 @@ for (let row = -1; row <= 1; row++) {
       y: centerPx[1] + row * STEP - SIDE / 2,
       height: 20 + ((row + 1) * 3 + (col + 1)) * 25,
       base: 0,
-      hide3d: false,
     });
   }
 }
@@ -122,17 +120,9 @@ BUILDINGS.push({
   y: centerPx[1],
   height: 200,
   base: 40,
-  hide3d: false,
-});
-BUILDINGS.push({
-  x: centerPx[0] + 3 * STEP,
-  y: centerPx[1] + 2 * STEP,
-  height: 90,
-  base: 0,
-  hide3d: true,
 });
 
-const keys = ['render_height', 'render_min_height', 'hide_3d'];
+const keys = ['height', 'min_height'];
 const values = [];
 const valueIndex = (value) => {
   values.push(value);
@@ -157,8 +147,6 @@ const features = BUILDINGS.map((b, i) => {
     valueIndex(double(3, b.height)), // Value.double_value
     1,
     valueIndex(double(3, b.base)),
-    2,
-    valueIndex([...tag(7, 0), b.hide3d ? 1 : 0]), // Value.bool_value
   ];
   return lengthDelimited(2, [
     ...uint(1, i),
@@ -170,7 +158,7 @@ const features = BUILDINGS.map((b, i) => {
 
 const layer = [
   ...uint(15, 2),
-  ...string(1, 'building'),
+  ...string(1, 'buildings'),
   ...features.flat(),
   ...keys.flatMap((key) => string(3, key)),
   ...values.flatMap((value) => lengthDelimited(4, value)),
