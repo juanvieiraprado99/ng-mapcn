@@ -21,6 +21,14 @@ describe('JsonLdService', () => {
     expect(scripts()).toEqual([{ '@context': 'https://schema.org', '@type': 'Thing', name: 'a' }]);
   });
 
+  it('escapes < so a value cannot close the script tag', () => {
+    TestBed.inject(JsonLdService).set([{ '@type': 'Thing', name: '</script><b>' }]);
+
+    const raw = document.head.querySelector('script[data-seo]')!.textContent!;
+    expect(raw).not.toContain('<');
+    expect(scripts()[0].name).toBe('</script><b>');
+  });
+
   it('replaces the previous scripts and removes them on demand', () => {
     const service = TestBed.inject(JsonLdService);
 

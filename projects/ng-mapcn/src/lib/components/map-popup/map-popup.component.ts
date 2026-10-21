@@ -20,6 +20,7 @@ import { MapContextService } from '../../services/map-context.service';
 import { applyClassName } from '../../utils/class-name';
 import { closePopupOnEscape, createPopupCloseButton } from '../../utils/popup-close-button';
 import { renderPortal } from '../../utils/portal';
+import { invalidPositionError, isValidLngLat, positionReady } from '../../utils/position';
 
 /**
  * Standalone popup anchored at a lng/lat (no marker). Created once and
@@ -61,6 +62,8 @@ export class MapPopupComponent {
   private readonly mapCtx = inject(MapContextService);
   private readonly zone = inject(NgZone);
   private readonly tpl = viewChild.required<TemplateRef<unknown>>('tpl');
+  /** The popup is created once the inputs first form a valid position (async data). */
+  private readonly ready = positionReady(this.longitude, this.latitude);
 
   /** The live popup and its content card; null until the map exists. */
   private readonly instance = signal<{
@@ -73,7 +76,7 @@ export class MapPopupComponent {
     // Create once when the map becomes available.
     effect((onCleanup) => {
       const map = this.mapCtx.map();
-      if (!map) return;
+      if (!map || !this.ready()) return;
 
       const container = document.createElement('div');
       container.className = 'ng-popup-card';
@@ -142,7 +145,9 @@ export class MapPopupComponent {
 
       const current = popup.getLngLat();
       if (!current || current.lng !== lng || current.lat !== lat) {
-        popup.setLngLat([lng, lat]);
+        // setLngLat throws on NaN/undefined; an exception escaping an effect aborts change detection.
+        if (isValidLngLat(lng, lat)) popup.setLngLat([lng, lat]);
+        else this.mapCtx.reportError(invalidPositionError('ng-map-popup', lng, lat));
       }
       popup.setOffset(offset);
       if (popup.getMaxWidth() !== maxWidth) popup.setMaxWidth(maxWidth);

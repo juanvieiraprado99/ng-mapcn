@@ -32,6 +32,7 @@ import { docsNavigation } from '@/shared/site-navigation';
                   <a
                     [href]="item.href"
                     target="_blank"
+                    rel="noopener"
                     class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground ring-sidebar-ring flex h-8 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm font-medium outline-hidden focus-visible:ring-2"
                   >
                     <span class="truncate">{{ item.title }}</span>

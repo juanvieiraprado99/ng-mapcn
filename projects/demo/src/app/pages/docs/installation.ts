@@ -92,7 +92,7 @@ export class MyMapComponent {}`;
           CLI. Pass <code [class]="code">--list</code> to preview the skill, or
           <code [class]="code">--skill ng-mapcn</code> to install it explicitly. Agents that do not
           support skills can read
-          <a href="/llms-full.txt" target="_blank" [class]="link">llms-full.txt</a> instead.
+          <a href="/llms-full.txt" target="_blank" rel="noopener" [class]="link">llms-full.txt</a> instead.
         </p>
       </app-docs-section>
     </app-docs-page>

@@ -53,8 +53,8 @@ function withKey(styles: NonNullable<StylePreset['styles']>, key: string) {
   const swap = (style: string | StyleSpecification) =>
     typeof style === 'string'
       ? style
-          .replace(`?key=${KEY_PLACEHOLDER}`, key ? `?key=${key}` : '')
-          .replace(`?api_key=${KEY_PLACEHOLDER}`, key ? `?api_key=${key}` : '')
+          .replace(`?key=${KEY_PLACEHOLDER}`, key ? `?key=${encodeURIComponent(key)}` : '')
+          .replace(`?api_key=${KEY_PLACEHOLDER}`, key ? `?api_key=${encodeURIComponent(key)}` : '')
       : style;
   return { light: swap(styles.light), dark: swap(styles.dark) };
 }
@@ -102,8 +102,8 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'MapTiler',
     description: 'MapTiler Streets vector tiles, light and dark. Needs your API key.',
     styles: {
-      light: `https://api.maptiler.com/maps/streets-v2/style.json?key=${KEY_PLACEHOLDER}`,
-      dark: `https://api.maptiler.com/maps/streets-v2-dark/style.json?key=${KEY_PLACEHOLDER}`,
+      light: `https://api.maptiler.com/maps/streets-v4/style.json?key=${KEY_PLACEHOLDER}`,
+      dark: `https://api.maptiler.com/maps/streets-v4-dark/style.json?key=${KEY_PLACEHOLDER}`,
     },
     keyed: 'maptiler',
     buildingSource: { source: 'openmaptiles', sourceLayer: 'building' },

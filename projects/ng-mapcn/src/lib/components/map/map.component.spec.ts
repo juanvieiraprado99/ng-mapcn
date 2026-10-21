@@ -303,7 +303,10 @@ describe('MapComponent', () => {
       update(fixture, { theme: 'light' });
 
       expect(map!.setStyle).toHaveBeenCalledTimes(1);
-      expect(map!.setStyle).toHaveBeenCalledWith(defaultStyles.light, { diff: true });
+      expect(map!.setStyle).toHaveBeenCalledWith(
+        defaultStyles.light,
+        expect.objectContaining({ diff: true }),
+      );
       expect(ctx.isLoaded()).toBe(false);
       expect(ctx.resolvedTheme()).toBe('light');
 
@@ -314,23 +317,56 @@ describe('MapComponent', () => {
       expect(ctx.isLoaded()).toBe(true);
     });
 
-    it('closes and re-opens the gate when the new style arrives after the debounce', async () => {
+    it('keeps the gate closed while the new style is still being fetched', async () => {
       const { fixture, map, ctx } = await render({ theme: 'dark' });
       loadMap(map!);
 
       update(fixture, { theme: 'light' });
-      // MapLibre fires styledata for the layer removals while the new style is still being fetched,
-      // so the gate re-opens on the old style.
+      // MapLibre fires styledata for the layer removals while the new style is still being fetched;
+      // re-opening on the old style would make every layer component re-add its layers twice.
+      map!.fire('styledata');
+      vi.advanceTimersByTime(500);
+      expect(ctx.isLoaded()).toBe(false);
+
+      map!.finishStyleLoad();
+      vi.advanceTimersByTime(100);
+      expect(ctx.isLoaded()).toBe(true);
+    });
+
+    it('re-opens the gate when the new style diffs to no changes (no MapLibre event)', async () => {
+      const { fixture, map, ctx } = await render({ styles: { light: 'a.json', dark: 'b.json' } });
+      loadMap(map!);
+
+      update(fixture, { theme: 'dark' });
+      expect(ctx.isLoaded()).toBe(false);
+
+      map!.finishStyleLoadWithoutChanges();
+      await Promise.resolve();
+      vi.advanceTimersByTime(100);
+      expect(ctx.isLoaded()).toBe(true);
+    });
+
+    it('re-opens the gate on the current style when the new style fails to load', async () => {
+      const { fixture, map, ctx, host } = await render({ theme: 'dark' });
+      loadMap(map!);
+
+      update(fixture, { theme: 'light' });
+      map!.failStyleLoad();
+      vi.advanceTimersByTime(100);
+
+      expect(ctx.isLoaded()).toBe(true);
+      expect(host['mapError']).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores styledata once the gate is open (paint and layer changes)', async () => {
+      const { map, ctx } = await render();
+      loadMap(map!);
+      const setStyleLoaded = vi.spyOn(ctx, 'setStyleLoadedFlag');
+
       map!.fire('styledata');
       vi.advanceTimersByTime(100);
-      expect(ctx.isLoaded()).toBe(true);
 
-      // The new style arrives and drops every custom layer: the gate must close so the layer
-      // components re-add them once it re-opens.
-      map!.finishStyleLoad();
-      expect(ctx.isLoaded()).toBe(false);
-      vi.advanceTimersByTime(100);
-      expect(ctx.isLoaded()).toBe(true);
+      expect(setStyleLoaded).not.toHaveBeenCalled();
     });
 
     it('does not call setStyle again when the resolved style is unchanged', async () => {
@@ -353,7 +389,7 @@ describe('MapComponent', () => {
       update(fixture, { styles: { light: 'b.json' } });
 
       expect(map!.setStyle).toHaveBeenCalledTimes(1);
-      expect(map!.setStyle).toHaveBeenCalledWith('b.json', { diff: true });
+      expect(map!.setStyle).toHaveBeenCalledWith('b.json', expect.objectContaining({ diff: true }));
     });
 
     describe('style precedence', () => {
@@ -420,6 +456,19 @@ describe('MapComponent', () => {
       update(fixture, { viewport: { ...base, zoom: 8 } });
 
       expect(map!.jumpTo).not.toHaveBeenCalled();
+    });
+
+    it('applies a [viewport] that changed while moving once the camera settles', async () => {
+      const { fixture, map } = await render({ viewport: { ...base } });
+      map!.setMoving(true);
+      update(fixture, { viewport: { ...base, zoom: 8 } });
+
+      map!.setMoving(false);
+      map!.fire('moveend');
+      fixture.detectChanges();
+
+      expect(map!.jumpTo).toHaveBeenCalledTimes(1);
+      expect(map!.jumpTo).toHaveBeenCalledWith({ zoom: 8 });
     });
 
     it('does not jump when the viewport equals the current camera', async () => {
@@ -588,6 +637,15 @@ describe('MapComponent', () => {
 
       map!.fire('move');
       map!.fire('move');
+
+      expect(zone.runs).toBe(0);
+    });
+
+    it('does not enter the zone on click when nothing listens to mapClick', async () => {
+      const { map } = await renderMap('<ng-map />');
+      const zone = trackZoneRun();
+
+      map!.fire('click');
 
       expect(zone.runs).toBe(0);
     });

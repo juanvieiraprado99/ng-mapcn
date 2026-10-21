@@ -67,8 +67,10 @@ export class CodeSurfaceComponent {
       void (async () => {
         const { detectLang, highlight } = await import('@/shared/highlighter');
         const html = await highlight(code, lang ?? detectLang(code));
-        // Shiki emits inline `style` attributes, which Angular's sanitizer
-        // would strip. The snippets are static and authored in this repo.
+        // Shiki emits inline `style` attributes, which Angular's sanitizer would strip. Not every
+        // snippet is static: the playground builds its snippet from user input. That stays safe
+        // because Shiki HTML-escapes all token text and only adds its own <pre>/<span> markup, so
+        // never pass anything but Shiki's output here.
         this.highlighted.set({ code, lang, html: this.sanitizer.bypassSecurityTrustHtml(html) });
       })();
     });

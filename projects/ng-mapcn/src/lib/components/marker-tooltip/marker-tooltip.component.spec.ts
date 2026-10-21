@@ -26,6 +26,19 @@ describe('MarkerTooltipComponent', () => {
     vi.useFakeTimers();
   });
 
+  it('follows its marker while it is dragged', async () => {
+    await render();
+    const marker = fakeRegistry.markers[0];
+    const popup = fakeRegistry.popups[0];
+    marker.getElement().dispatchEvent(new MouseEvent('mouseenter'));
+    expect(popup.getLngLat()).toEqual({ lng: 3, lat: 4 });
+
+    marker.setLngLat([5, 6]);
+    marker.fire('drag');
+
+    expect(popup.getLngLat()).toEqual({ lng: 5, lat: 6 });
+  });
+
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();

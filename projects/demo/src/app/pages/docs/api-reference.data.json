@@ -15,7 +15,7 @@
   ],
   "contextRows": [
     { "name": "map()", "type": "Signal<Map | null>", "default": "", "description": "The raw maplibre-gl Map instance, or null before init." },
-    { "name": "isLoaded()", "type": "Signal<boolean>", "default": "", "description": "True when the style is loaded and layers can be added. Gates every source/layer operation." },
+    { "name": "isLoaded()", "type": "Signal<boolean>", "default": "", "description": "True when the style is loaded and layers can be added. Gates every source/layer operation; closes during a theme/basemap switch and re-opens once it settles (or fails)." },
     { "name": "resolvedTheme()", "type": "Signal<'light' | 'dark'>", "default": "", "description": "Theme currently applied to the map." },
     { "name": "hasSource(id)", "type": "(id: string) => boolean", "default": "", "description": "Whether a source component (raster, vector, image overlay) currently has a source with this id on the map. Reactive inside effect(); false while a theme switch has removed the style. Wait on it before adding layers that reference source: id." },
     { "name": "sourceIds()", "type": "Signal<ReadonlySet<string>>", "default": "", "description": "Ids of the sources currently announced by source components." },
