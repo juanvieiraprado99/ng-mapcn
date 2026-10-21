@@ -254,4 +254,58 @@ test.describe('terrain', () => {
         hillshade: true,
       });
   });
+
+  test('the hillshade reads its own DEM source with the same tiles', async ({ page }) => {
+    await gotoAndWaitForMap(page, PAGE, TERRAIN);
+
+    const sources = await mapCall(
+      page,
+      TERRAIN,
+      (map, dem) => {
+        const style = map.getStyle();
+        const hillshade = style.layers.find((layer) => layer.type === 'hillshade') as
+          { source: string } | undefined;
+        const tiles = (id: string) => (style.sources[id] as { tiles?: string[] }).tiles;
+        return {
+          hillshade: hillshade?.source,
+          same: JSON.stringify(tiles(hillshade!.source)) === JSON.stringify(tiles(dem)),
+        };
+      },
+      DEM_SOURCE,
+    );
+
+    expect(sources.hillshade).not.toBe(DEM_SOURCE);
+    expect(sources.same).toBe(true);
+  });
+
+  test('a steep pitch keeps the terrain and its elevation', async ({ page }) => {
+    await gotoAndWaitForMap(page, PAGE, TERRAIN);
+
+    await mapCall(page, TERRAIN, (map) => {
+      map.jumpTo({ pitch: 80, bearing: 45 });
+    });
+
+    expect(await terrain(page)).toEqual({ source: DEM_SOURCE, exaggeration: 1.5 });
+    await expect
+      .poll(() => mapCall(page, TERRAIN, (map) => map.queryTerrainElevation(map.getCenter())))
+      .not.toBeNull();
+  });
+
+  test('the terrain survives a switch to the globe projection and back', async ({ page }) => {
+    await gotoAndWaitForMap(page, PAGE, TERRAIN);
+
+    await mapCall(page, TERRAIN, (map) => {
+      map.setProjection({ type: 'globe' });
+    });
+    await expect
+      .poll(() => mapCall(page, TERRAIN, (map) => map.getProjection()?.type))
+      .toBe('globe');
+    expect(await terrain(page)).toEqual({ source: DEM_SOURCE, exaggeration: 1.5 });
+
+    await mapCall(page, TERRAIN, (map) => {
+      map.setProjection({ type: 'mercator' });
+    });
+    expect(await terrain(page)).toEqual({ source: DEM_SOURCE, exaggeration: 1.5 });
+    // The fixture fails the test on any console error raised by the projection change.
+  });
 });

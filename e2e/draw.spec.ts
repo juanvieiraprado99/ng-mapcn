@@ -33,6 +33,29 @@ async function drawTriangle(page: Page, mapIndex: number) {
   }
 }
 
+/** Rings of the finished polygons terra-draw renders (its `td-polygon` source). */
+const polygonRings = (page: Page, mapIndex: number) =>
+  mapCall(page, mapIndex, (map) => {
+    const source = map.getSource('td-polygon') as unknown as
+      | {
+          serialize(): {
+            data: { features?: { geometry: { type: string; coordinates: unknown } }[] };
+          };
+        }
+      | undefined;
+    return (source?.serialize().data.features ?? [])
+      .filter((f) => f.geometry.type === 'Polygon')
+      .map((f) => JSON.stringify(f.geometry.coordinates));
+  });
+
+/** Clicks each point in turn (moving first, as terra-draw tracks the pointer). */
+async function clickAll(page: Page, points: { x: number; y: number }[]) {
+  for (const p of points) {
+    await page.mouse.move(p.x, p.y);
+    await page.mouse.click(p.x, p.y);
+  }
+}
+
 const featureCollection = (page: Page, mapIndex: number) =>
   mapCall(page, mapIndex, (map) => {
     const sources = Object.keys(map.getStyle().sources).filter((id) => id.startsWith('td-'));
@@ -174,5 +197,103 @@ test.describe('draw', () => {
     await page.mouse.up();
 
     await expect(page.getByTestId('draw-last')).toContainText('dragFeature');
+  });
+
+  test('Enter finishes a polygon without clicking the last vertex again', async ({ page }) => {
+    await gotoAndWaitForMap(page, URL, BASIC);
+    await page.getByRole('button', { name: 'Polygon', exact: true }).first().click();
+
+    await clickAll(page, [
+      await canvasPoint(page, BASIC, 0.3, 0.3),
+      await canvasPoint(page, BASIC, 0.6, 0.3),
+      await canvasPoint(page, BASIC, 0.45, 0.6),
+    ]);
+    await page.keyboard.press('Enter');
+
+    await expect(counts(page)).toContainText('1 polygons');
+  });
+
+  test('Escape cancels the polygon being drawn', async ({ page }) => {
+    await gotoAndWaitForMap(page, URL, BASIC);
+    await page.getByRole('button', { name: 'Polygon', exact: true }).first().click();
+
+    await clickAll(page, [
+      await canvasPoint(page, BASIC, 0.3, 0.3),
+      await canvasPoint(page, BASIC, 0.6, 0.3),
+    ]);
+    await page.keyboard.press('Escape');
+
+    // Nothing finished, and terra-draw dropped the shape in progress.
+    await expect(counts(page)).toContainText('0 polygons');
+    await expect.poll(() => polygonRings(page, BASIC)).toEqual([]);
+
+    // The tool stays active: the next polygon works.
+    await drawTriangle(page, BASIC);
+    await expect(counts(page)).toContainText('1 polygons');
+  });
+
+  test('select mode drags a polygon vertex and updates the shape', async ({ page }) => {
+    await gotoAndWaitForMap(page, URL, BASIC);
+    await page.getByRole('button', { name: 'Polygon', exact: true }).first().click();
+    await drawTriangle(page, BASIC);
+    await expect(counts(page)).toContainText('1 polygons');
+    const before = await polygonRings(page, BASIC);
+    expect(before).toHaveLength(1);
+
+    await page.getByRole('button', { name: 'Select', exact: true }).first().click();
+    const inside = await canvasPoint(page, BASIC, 0.45, 0.4);
+    await clickAll(page, [inside]);
+
+    // Drag the first vertex up and to the left.
+    const vertex = await canvasPoint(page, BASIC, 0.3, 0.3);
+    await page.mouse.move(vertex.x, vertex.y);
+    await page.mouse.down();
+    await page.mouse.move(vertex.x - 20, vertex.y - 15, { steps: 5 });
+    await page.mouse.move(vertex.x - 40, vertex.y - 30, { steps: 5 });
+    await page.mouse.up();
+
+    await expect.poll(() => polygonRings(page, BASIC)).not.toEqual(before);
+    await expect(counts(page)).toContainText('1 polygons');
+  });
+
+  test('a point is moved by dragging it in select mode', async ({ page }) => {
+    await gotoAndWaitForMap(page, URL, BASIC);
+    await page.getByRole('button', { name: 'Point', exact: true }).first().click();
+    const at = await canvasPoint(page, BASIC, 0.5, 0.5);
+    await clickAll(page, [at]);
+    await expect(counts(page)).toContainText('1 points');
+    const coordinates = () =>
+      mapCall(page, BASIC, (map) => {
+        const source = map.getSource('td-point') as unknown as
+          | { serialize(): { data: { features?: { geometry: { coordinates: number[] } }[] } } }
+          | undefined;
+        return JSON.stringify(source?.serialize().data.features?.[0]?.geometry.coordinates);
+      });
+    const before = await coordinates();
+
+    await page.getByRole('button', { name: 'Select', exact: true }).first().click();
+    await clickAll(page, [at]);
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x + 30, at.y + 20, { steps: 5 });
+    await page.mouse.move(at.x + 60, at.y + 40, { steps: 5 });
+    await page.mouse.up();
+
+    await expect.poll(coordinates).not.toBe(before);
+    await expect(counts(page)).toContainText('1 points');
+  });
+
+  test('the tools are reachable and pressed with the keyboard', async ({ page }) => {
+    await gotoAndWaitForMap(page, URL, BASIC);
+    const polygonTool = page
+      .getByRole('toolbar', { name: 'Draw tools' })
+      .getByRole('button', { name: 'Polygon', exact: true });
+
+    await polygonTool.focus();
+    await page.keyboard.press('Enter');
+
+    await expect(polygonTool).toHaveAttribute('aria-pressed', 'true');
+    await drawTriangle(page, BASIC);
+    await expect(counts(page)).toContainText('1 polygons');
   });
 });

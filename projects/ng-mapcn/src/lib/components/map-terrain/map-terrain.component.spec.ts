@@ -172,6 +172,72 @@ describe('MapTerrainComponent', () => {
       expect(map.getTerrain()).toEqual({ source: SOURCE, exaggeration: 3 });
       expect(structuralCalls(map)).toEqual([]);
     });
+
+    it('goes back to 1 when the exaggeration is cleared', async () => {
+      const { fixture, map } = await renderLoaded({ exaggeration: 2 });
+
+      update(fixture, { exaggeration: undefined });
+
+      expect(map.getTerrain()).toEqual({ source: SOURCE, exaggeration: 1 });
+    });
+
+    it('flattens the relief with 0 without disabling the terrain', async () => {
+      const { fixture, map } = await renderLoaded();
+
+      update(fixture, { exaggeration: 0 });
+
+      expect(map.getTerrain()).toEqual({ source: SOURCE, exaggeration: 0 });
+    });
+
+    it('does not touch a terrain that another source took over', async () => {
+      const { fixture, map } = await renderLoaded();
+      map.addSource('other-dem', { type: 'raster-dem', tiles: ['x'] } as never);
+      map.setTerrain({ source: 'other-dem', exaggeration: 1 });
+      map.setTerrain.mockClear();
+
+      update(fixture, { exaggeration: 4 });
+
+      expect(map.setTerrain).not.toHaveBeenCalled();
+      expect(map.getTerrain()).toEqual({ source: 'other-dem', exaggeration: 1 });
+    });
+  });
+
+  describe('source options (read at creation)', () => {
+    it('keeps the DEM source when tiles, url or encoding change later', async () => {
+      const { fixture, map } = await renderLoaded();
+      map.calls.length = 0;
+
+      update(fixture, {
+        tiles: ['https://dem.example.com/{z}/{x}/{y}.png'],
+        encoding: 'mapbox',
+        maxzoom: 10,
+      });
+
+      expect(structuralCalls(map)).toEqual([]);
+      expect(map.getSource(SOURCE).tiles).toEqual([...defaultTerrainTiles]);
+      expect(map.getSource(SOURCE).encoding).toBe('terrarium');
+    });
+
+    it('rebuilds with the current options when the id changes', async () => {
+      const { fixture, map } = await renderLoaded();
+
+      update(fixture, { tiles: ['https://dem.example.com/{z}/{x}/{y}.png'], encoding: 'mapbox' });
+      update(fixture, { id: 'u' });
+
+      const source = map.getSource('terrain-source-u');
+      expect(source.tiles).toEqual(['https://dem.example.com/{z}/{x}/{y}.png']);
+      expect(source.encoding).toBe('mapbox');
+      // Custom tiles: no default zoom cap or attribution.
+      expect(source.maxzoom).toBeUndefined();
+      expect(source.attribution).toBeUndefined();
+    });
+
+    it('treats empty tiles as the default Terrarium set', async () => {
+      const { map } = await renderLoaded({ tiles: [] });
+
+      expect(map.getSource(SOURCE).tiles).toEqual([...defaultTerrainTiles]);
+      expect(map.getSource(SOURCE).maxzoom).toBe(15);
+    });
   });
 
   describe('hillshade', () => {
@@ -250,6 +316,44 @@ describe('MapTerrainComponent', () => {
       expect(structuralCalls(map)).toEqual([]);
     });
 
+    it('gives a hillshade enabled later the same DEM as the terrain', async () => {
+      const { fixture, map } = await renderLoaded({
+        tiles: ['https://dem.example.com/{z}/{x}/{y}.png'],
+        encoding: 'mapbox',
+      });
+
+      update(fixture, { hillshade: true });
+
+      const hillshadeSource = map.getSource(HILLSHADE_SOURCE);
+      expect(hillshadeSource.tiles).toEqual(['https://dem.example.com/{z}/{x}/{y}.png']);
+      expect(hillshadeSource.encoding).toBe('mapbox');
+    });
+
+    it('waits for the layer before reconciling paint, then creates it with the latest paint', async () => {
+      const { fixture, map } = await renderLoaded();
+      map.calls.length = 0;
+
+      update(fixture, { hillshadeShadowColor: '#000000', hillshadeExaggeration: 0.2 });
+      expect(map.calls.filter((c) => c.startsWith('setPaintProperty'))).toEqual([]);
+
+      update(fixture, { hillshade: true });
+      expect(map.getLayer(HILLSHADE).paint).toEqual({
+        'hillshade-exaggeration': 0.2,
+        'hillshade-shadow-color': '#000000',
+      });
+    });
+
+    it('keeps the hillshade in sync after it was toggled off and on', async () => {
+      const { fixture, map } = await renderLoaded({ hillshade: true });
+
+      update(fixture, { hillshade: false });
+      update(fixture, { hillshade: true, hillshadeAccentColor: '#00ff00' });
+      update(fixture, { hillshadeAccentColor: '#0000ff' });
+
+      expect(map.getLayer(HILLSHADE).paint['hillshade-accent-color']).toBe('#0000ff');
+      expect(map.getLayerOrder()).toEqual([HILLSHADE]);
+    });
+
     it('inserts the hillshade layer before beforeId', async () => {
       const { fixture, map } = await render({ hillshade: true, beforeId: 'labels' });
       map.addSource('s', { type: 'geojson', data: {} } as never);
@@ -280,6 +384,16 @@ describe('MapTerrainComponent', () => {
       expect(map.getTerrain()).toEqual({ source: SOURCE, exaggeration: 2 });
     });
 
+    it('keeps a live exaggeration change across the reload', async () => {
+      const { fixture, map } = await renderLoaded({ exaggeration: 1 });
+
+      update(fixture, { exaggeration: 2.5 });
+      update(fixture, { theme: 'dark' });
+      reloadStyle(fixture, map);
+
+      expect(map.getTerrain()).toEqual({ source: SOURCE, exaggeration: 2.5 });
+    });
+
     it('re-applies the terrain when MapLibre already dropped it with the style', async () => {
       const { fixture, map } = await renderLoaded();
 
@@ -308,6 +422,17 @@ describe('MapTerrainComponent', () => {
       expect(ops).toContain(`removeSource:${SOURCE}`);
       expect(map.getTerrain()).toBeNull();
       expect(ctx.hasSource(SOURCE)).toBe(false);
+    });
+
+    it('does nothing when removed before the map loaded', async () => {
+      const { fixture, map, host } = await render({ hillshade: true });
+
+      update(fixture, { show: false });
+      loadAndSettle(fixture, map);
+
+      expect(structuralCalls(map)).toEqual([]);
+      expect(map.getTerrain()).toBeNull();
+      expect(host['mapError']).not.toHaveBeenCalled();
     });
 
     it('leaves a terrain it does not own alone', async () => {
