@@ -34,7 +34,7 @@ export class BuildingsMapComponent {
   readonly opacity = signal(0.8);
   readonly byHeight = signal(false);
   readonly heightColor = [
-    'interpolate', ['linear'], ['coalesce', ['to-number', ['get', 'render_height']], 0],
+    'interpolate', ['linear'], ['coalesce', ['to-number', ['get', 'height']], 0],
     0, '#93c5fd', 50, '#818cf8', 150, '#c084fc', 300, '#f472b6',
   ];
 }`;
@@ -66,12 +66,12 @@ export class TerrainMapComponent {
   readonly hillshade = signal(true);
 }`;
 
-const BASEMAP_CODE = `<!-- Defaults: source="carto" sourceLayer="building"
-     heightProperty="render_height" baseProperty="render_min_height"
+const BASEMAP_CODE = `<!-- Defaults: source="protomaps" sourceLayer="buildings"
+     heightProperty="height" baseProperty="min_height"
      [minZoom]="14" [opacity]="0.8" and a theme-aware color. -->
 <ng-map-fill-extrusion />
 
-<!-- Same thing, spelled out (any basemap source with an OpenMapTiles schema) -->
+<!-- Another basemap with an OpenMapTiles schema (OpenFreeMap, MapTiler, Stadia) -->
 <ng-map-fill-extrusion
   source="openmaptiles"
   sourceLayer="building"
@@ -224,17 +224,22 @@ const IDS_CODE = `<ng-map-terrain id="relief" [hillshade]="true" />
       <app-docs-section title="Basemap buildings" anchor="basemap-buildings">
         <p>
           The Carto styles (Positron, Dark Matter, Voyager) have one vector source named
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">carto</code>
-          with an OpenMapTiles
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">building</code> layer
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">protomaps</code>
+          with a
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">buildings</code> layer
           carrying
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">render_height</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">render_min_height</code>
-          and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">hide_3d</code>. Those
-          are the defaults, and the tiles stop at zoom 14, hence the default
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">minZoom</code> of 14.
-          The default filter skips outlines flagged
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">height</code> and
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">min_height</code>.
+          Those are the defaults, with buildings drawn from zoom 14, where the basemap fades in
+          their flat footprints. Earlier Carto styles named the source
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">carto</code>, with
+          the OpenMapTiles
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">building</code> layer
+          (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">render_height</code>,
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">render_min_height</code>):
+          with no <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">source</code>,
+          the component uses whichever of the two the style has. The default filter skips
+          OpenMapTiles outlines flagged
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">hide_3d</code> (their
           parts carry the real heights); pass
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">[filter]="null"</code>
@@ -312,7 +317,7 @@ export class ThreeDPageComponent {
   readonly heightColor = [
     'interpolate',
     ['linear'],
-    ['coalesce', ['to-number', ['get', 'render_height']], 0],
+    ['coalesce', ['to-number', ['get', 'height']], 0],
     0,
     '#93c5fd',
     50,
