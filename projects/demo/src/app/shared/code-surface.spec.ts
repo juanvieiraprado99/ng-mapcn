@@ -17,7 +17,16 @@ function render() {
   fixture.detectChanges();
   const root = fixture.nativeElement as HTMLElement;
   const isHighlighted = () => root.querySelector('pre.shiki span[style]') !== null;
-  return { fixture, root, isHighlighted };
+  // The first highlight loads Shiki and its grammars, well over a second on a cold run.
+  const highlighted = () =>
+    vi.waitFor(
+      () => {
+        fixture.detectChanges();
+        expect(isHighlighted()).toBe(true);
+      },
+      { timeout: 15_000 },
+    );
+  return { fixture, root, highlighted };
 }
 
 describe('CodeSurfaceComponent', () => {
@@ -26,31 +35,22 @@ describe('CodeSurfaceComponent', () => {
   });
 
   it('renders the code uncoloured, then highlighted', async () => {
-    const { fixture, root, isHighlighted } = render();
+    const { root, highlighted } = render();
     expect(root.textContent).toContain('<ng-map />');
 
-    await vi.waitFor(() => {
-      fixture.detectChanges();
-      expect(isHighlighted()).toBe(true);
-    });
+    await highlighted();
     expect(root.textContent).toContain('<ng-map />');
   });
 
   it('shows a changed snippet at once instead of the previous highlight', async () => {
-    const { fixture, root, isHighlighted } = render();
-    await vi.waitFor(() => {
-      fixture.detectChanges();
-      expect(isHighlighted()).toBe(true);
-    });
+    const { fixture, root, highlighted } = render();
+    await highlighted();
 
     fixture.componentInstance.code.set('<ng-map [zoom]="3" />');
     fixture.detectChanges();
 
     expect(root.textContent).toContain('<ng-map [zoom]="3" />');
-    await vi.waitFor(() => {
-      fixture.detectChanges();
-      expect(isHighlighted()).toBe(true);
-    });
+    await highlighted();
     expect(root.textContent).toContain('<ng-map [zoom]="3" />');
   });
 });
