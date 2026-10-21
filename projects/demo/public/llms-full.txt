@@ -499,10 +499,10 @@ Georeferenced image pinned to four corner coordinates, drawn as a raster layer. 
 | Name | Type | Default | Description |
 |---|---|---|---|
 | `id` | `string` | `auto` | Layer id prefix; the layer is fill-extrusion-layer-<id>. Changing it re-creates the layer. |
-| `source` | `string` | `'carto'` | Id of the source to extrude: the Carto basemap's vector source, a tile source component or an application source. The layer is added once map.getSource(source) exists. |
-| `sourceLayer` | `string` | `'building' for 'carto', else none` | Layer of a vector source. Omit for GeoJSON sources. |
-| `heightProperty` | `string` | `'render_height'` | Feature property with the height in meters. |
-| `baseProperty` | `string` | `'render_min_height'` | Feature property with the base height in meters. |
+| `source` | `string` | `Carto basemap source` | Id of the source to extrude: a tile source component, an application source or a basemap source. Without it, the Carto basemap's building source is used ('protomaps', or 'carto' in the earlier styles). The layer is added once map.getSource(source) exists. |
+| `sourceLayer` | `string` | `'buildings' for 'protomaps', 'building' for 'carto', else none` | Layer of a vector source. Omit for GeoJSON sources. |
+| `heightProperty` | `string` | `'height' for 'protomaps', else 'render_height'` | Feature property with the height in meters. |
+| `baseProperty` | `string` | `'min_height' for 'protomaps', else 'render_min_height'` | Feature property with the base height in meters. |
 | `color` | `string \| expression` | `theme gray` | Fill color; defaults to a theme-aware gray (defaultExtrusionColors). |
 | `opacity` | `number` | `0.8` | Layer opacity, 0..1. |
 | `minZoom` | `number` | `14` | Minimum zoom at which the extrusion is drawn (the Carto tiles stop at 14). |

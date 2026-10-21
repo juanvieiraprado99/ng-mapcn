@@ -356,22 +356,22 @@ Also exported: `ImageOverlayCoordinates`, `TileBounds`, `TileScheme`.
 
 Class `MapFillExtrusionComponent`. One MapLibre `fill-extrusion` layer, `fill-extrusion-layer-<id>` (auto `ng-fill-extrusion-N`). It creates no source: the layer is added once `map.getSource(source)` exists (a basemap source, a tile source component, or an application source announced by `sourcedata`) and re-added after a theme switch.
 
-Defaults target the Carto basemaps (verified in Positron and Dark Matter): vector source `carto`, source layer `building` with `render_height`, `render_min_height` and `hide_3d`, tiles up to zoom 14.
+Defaults target the Carto basemaps (verified in Positron, Dark Matter and Voyager): vector source `protomaps` (`carto.streets/v2` tiles), source layer `buildings` with `height` and `min_height`. With no `source`, the first of `CARTO_BUILDING_SCHEMAS` the style has is used, so the earlier styles (source `carto`, OpenMapTiles layer `building` with `render_height`, `render_min_height` and `hide_3d`) keep working. A `source` set to `protomaps` or `carto` takes that schema's layer and properties as defaults.
 
-| Input            | Type                                       | Default                             | Notes                                                  |
-| ---------------- | ------------------------------------------ | ----------------------------------- | ------------------------------------------------------ |
-| `id`             | `string`                                   | auto                                | Changing it re-creates the layer                       |
-| `source`         | `string`                                   | `'carto'`                           | Changing it re-creates the layer                       |
-| `sourceLayer`    | `string`                                   | `'building'` for `carto`, else none | Vector sources only; omit for GeoJSON                  |
-| `heightProperty` | `string`                                   | `'render_height'`                   | Meters; `coalesce(to-number(get), 0)`                  |
-| `baseProperty`   | `string`                                   | `'render_min_height'`               | Meters                                                 |
-| `color`          | `string \| expression`                     | `defaultExtrusionColors[theme]`     | Theme-aware gray (`light` `#d1d5db`, `dark` `#3f3f46`) |
-| `opacity`        | `number`                                   | `0.8`                               |                                                        |
-| `minZoom`        | `number`                                   | `14`                                | `setLayerZoomRange` on change                          |
-| `maxZoom`        | `number`                                   | `24`                                |                                                        |
-| `filter`         | `FilterSpecification \| null`              | `['!=', ['get', 'hide_3d'], true]`  | `setFilter` on change; `null` = no filter              |
-| `beforeId`       | `string`                                   | `undefined`                         | Creation only                                          |
-| `paint`          | `FillExtrusionLayerSpecification['paint']` | `undefined`                         | Escape hatch, merged last over every input above       |
+| Input            | Type                                       | Default                            | Notes                                                  |
+| ---------------- | ------------------------------------------ | ---------------------------------- | ------------------------------------------------------ |
+| `id`             | `string`                                   | auto                               | Changing it re-creates the layer                       |
+| `source`         | `string`                                   | Carto source                       | Changing it re-creates the layer                       |
+| `sourceLayer`    | `string`                                   | From the Carto schema, else none   | Vector sources only; omit for GeoJSON                  |
+| `heightProperty` | `string`                                   | `height` / `render_height`         | Meters; `coalesce(to-number(get), 0)`                  |
+| `baseProperty`   | `string`                                   | `min_height` / `render_min_height` | Meters                                                 |
+| `color`          | `string \| expression`                     | `defaultExtrusionColors[theme]`    | Theme-aware gray (`light` `#d1d5db`, `dark` `#3f3f46`) |
+| `opacity`        | `number`                                   | `0.8`                              |                                                        |
+| `minZoom`        | `number`                                   | `14`                               | `setLayerZoomRange` on change                          |
+| `maxZoom`        | `number`                                   | `24`                               |                                                        |
+| `filter`         | `FilterSpecification \| null`              | `['!=', ['get', 'hide_3d'], true]` | `setFilter` on change; `null` = no filter              |
+| `beforeId`       | `string`                                   | `undefined`                        | Creation only                                          |
+| `paint`          | `FillExtrusionLayerSpecification['paint']` | `undefined`                        | Escape hatch, merged last over every input above       |
 
 No outputs. Also exported: `defaultExtrusionColors`, `CARTO_SOURCE_ID`.
 
