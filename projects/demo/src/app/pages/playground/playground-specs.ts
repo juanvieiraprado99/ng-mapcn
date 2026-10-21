@@ -106,10 +106,11 @@ const OCEAN = [
   [1, '#08306b'],
 ];
 
+// `height` in the Carto tiles, `render_height` in the OpenMapTiles ones (OpenFreeMap, MapTiler, Stadia).
 const BY_HEIGHT = [
   'interpolate',
   ['linear'],
-  ['get', 'render_height'],
+  ['to-number', ['coalesce', ['get', 'height'], ['get', 'render_height'], 0]],
   0,
   '#bfdbfe',
   60,

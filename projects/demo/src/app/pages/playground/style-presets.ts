@@ -19,7 +19,7 @@ export interface StylePreset {
   styles?: { light: string | StyleSpecification; dark: string | StyleSpecification };
   /** Declaration of an object style for the snippets (the object itself cannot be printed). */
   stylesCode?: { name: string; declaration: string };
-  /** The basemap exposes the `carto` vector source that `ng-map-fill-extrusion` waits for. */
+  /** The basemap is a Carto style, whose building source `ng-map-fill-extrusion` finds by default. */
   hasCartoSource?: boolean;
   /** Basemap whose style needs the user's API key (read from the header's basemap picker). */
   keyed?: 'maptiler' | 'stadia';
@@ -88,6 +88,7 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
       dark: 'https://tiles.openfreemap.org/styles/dark',
     },
     note: '© OpenFreeMap, © OpenMapTiles, data from OpenStreetMap.',
+    buildingSource: { source: 'openmaptiles', sourceLayer: 'building' },
   },
   {
     id: 'osm',
