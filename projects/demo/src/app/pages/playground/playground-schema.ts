@@ -165,56 +165,99 @@ function renderElement(tag: string, attrs: string[], indent: string, selfClose: 
   return `<${tag}\n${attrs.map((a) => `${inner}${a}`).join('\n')}\n${indent}${selfClose ? '/>' : '>'}`;
 }
 
+/** One component of a scene snippet with its control values. */
+export interface SnippetLayer {
+  spec: PlaygroundSpec;
+  values: Values;
+}
+
 /** Copy-ready code for the current state: the template alone and a full standalone component. */
 export function buildSnippet(
   spec: PlaygroundSpec,
   values: Values,
   map: MapSnippetInput,
 ): { template: string; component: string } {
-  const mapAttrs = map.attrs.map(renderAttr);
-  const layerClass = spec.selector ? spec.className : undefined;
+  return buildSceneSnippet(spec.selector ? [{ spec, values }] : [], map);
+}
 
-  let template: string;
-  if (spec.selector) {
-    const attrs: string[] = [];
-    for (const [name, value] of Object.entries(spec.attrs ?? {})) {
-      attrs.push(renderAttr({ name, value }));
-    }
-    for (const fixed of spec.fixed) attrs.push(`[${fixed.input}]="${fixed.input}"`);
-    for (const control of spec.controls) {
-      if (control.into) continue;
-      if (!control.always && same(values[control.key], control.default)) continue;
-      attrs.push(renderAttr({ name: control.key, value: values[control.key] }));
-    }
-    for (const [input, bag] of groupInto(spec.controls, values, true)) {
-      attrs.push(renderAttr({ name: input, value: bag }));
-    }
-    const { content } = spec;
-    const layer = content
-      ? [
-          renderElement(spec.selector, attrs, '  ', false),
-          `    ${content.template}`,
-          `  </${spec.selector}>`,
-        ].join('\n')
-      : renderElement(spec.selector, attrs, '  ', true);
-    template = `${renderElement('ng-map', mapAttrs, '', false)}\n  ${layer}\n</ng-map>`;
-  } else {
-    template = renderElement('ng-map', mapAttrs, '', true);
+/**
+ * Renames a fixed member whose name is already taken by a different declaration (two heatmaps
+ * with their own `data`), so every layer of a scene binds its own class member.
+ */
+function claimMember(members: Map<string, string>, fixed: FixedInput): string {
+  let name = fixed.input;
+  for (let n = 2; members.has(name) && members.get(name) !== fixed.ts; n++) {
+    name = `${fixed.input}${n}`;
   }
+  if (!members.has(name)) {
+    const ts =
+      name === fixed.input
+        ? fixed.ts
+        : fixed.ts.replace(new RegExp(`^readonly ${fixed.input}\\b`), `readonly ${name}`);
+    members.set(name, ts);
+  }
+  return name;
+}
+
+function renderLayer(spec: PlaygroundSpec, values: Values, members: Map<string, string>): string {
+  const selector = spec.selector!;
+  const attrs: string[] = [];
+  for (const [name, value] of Object.entries(spec.attrs ?? {})) {
+    attrs.push(renderAttr({ name, value }));
+  }
+  for (const fixed of spec.fixed) attrs.push(`[${fixed.input}]="${claimMember(members, fixed)}"`);
+  for (const control of spec.controls) {
+    if (control.into) continue;
+    if (!control.always && same(values[control.key], control.default)) continue;
+    attrs.push(renderAttr({ name: control.key, value: values[control.key] }));
+  }
+  for (const [input, bag] of groupInto(spec.controls, values, true)) {
+    attrs.push(renderAttr({ name: input, value: bag }));
+  }
+  const { content } = spec;
+  return content
+    ? [
+        renderElement(selector, attrs, '  ', false),
+        `    ${content.template}`,
+        `  </${selector}>`,
+      ].join('\n')
+    : renderElement(selector, attrs, '  ', true);
+}
+
+/**
+ * Copy-ready code for a whole scene: every layer inside one `<ng-map>`, in creation (drawing)
+ * order, with their class members and imports merged.
+ */
+export function buildSceneSnippet(
+  layers: readonly SnippetLayer[],
+  map: MapSnippetInput,
+): { template: string; component: string } {
+  const mapAttrs = map.attrs.map(renderAttr);
+  const members = new Map<string, string>();
+  const rendered = layers
+    .filter(({ spec }) => spec.selector)
+    .map(({ spec, values }) => renderLayer(spec, values, members));
+
+  const template = rendered.length
+    ? `${renderElement('ng-map', mapAttrs, '', false)}\n${rendered.map((layer) => `  ${layer}`).join('\n')}\n</ng-map>`
+    : renderElement('ng-map', mapAttrs, '', true);
 
   const imports = [
-    'MapComponent',
-    ...(layerClass ? [layerClass] : []),
-    ...(layerClass ? (spec.content?.imports ?? []) : []),
+    ...new Set([
+      'MapComponent',
+      ...layers
+        .filter(({ spec }) => spec.selector && spec.className)
+        .flatMap(({ spec }) => [spec.className!, ...(spec.content?.imports ?? [])]),
+    ]),
   ];
   const libImports = [...imports, ...(map.imports ?? [])];
-  const members = [...spec.fixed.map((f) => f.ts), ...(map.ts ?? [])];
+  const memberLines = [...members.values(), ...(map.ts ?? [])];
   const indented = escapeLiteral(template)
     .split('\n')
     .map((line) => `      ${line}`)
     .join('\n');
-  const body = members.length
-    ? `{\n${members.map((m) => `  ${m.split('\n').join('\n  ')}`).join('\n')}\n}`
+  const body = memberLines.length
+    ? `{\n${memberLines.map((m) => `  ${m.split('\n').join('\n  ')}`).join('\n')}\n}`
     : '{}';
 
   const importLines = [

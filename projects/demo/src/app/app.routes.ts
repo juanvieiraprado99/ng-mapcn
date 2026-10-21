@@ -42,7 +42,7 @@ export const routes: Routes = [
           seo: {
             title: 'Angular Map Playground',
             description:
-              'Interactive playground for ng-mapcn: pick a map component, edit its inputs live, browse basemap styles and copy the matching Angular snippet.',
+              'Visual playground for ng-mapcn: stack map components as blocks, edit their inputs live, share the scene as a link and copy the matching Angular code.',
             keywords: ['Angular map playground', 'MapLibre Angular demo', 'Angular map styles'],
           },
         },

@@ -1,29 +1,54 @@
-import { NgComponentOutlet } from '@angular/common';
+import { DOCUMENT, Location, NgComponentOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
   inject,
-  linkedSignal,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import {
+  lucideCheck,
+  lucideChevronDown,
+  lucideChevronUp,
+  lucideCopy,
+  lucideEraser,
+  lucideFocus,
+  lucideLink,
+  lucideRotateCcw,
+} from '@ng-icons/lucide';
 import type { MarkerOptions } from 'maplibre-gl';
 import { MapComponent, type MapViewport } from 'ng-mapcn';
 
 import { FooterComponent } from '@/layout/footer';
 import { BasemapService } from '@/shared/basemap.service';
 import { CodeBlockComponent } from '@/shared/code-block';
+import { ZardButtonComponent } from '@/shared/components/button';
 import { PageHeaderImports } from '@/shared/page-header';
 
 import apiData from '../docs/api-reference.data.json';
+import { PlaygroundLayersComponent, PlaygroundPaletteComponent } from './playground-blocks';
 import { PLAYGROUND_COMPONENTS } from './playground-components';
 import { type ControlChange, PlaygroundControlsComponent } from './playground-controls';
 import { PlaygroundMarkerComponent } from './playground-marker';
 import {
-  buildSnippet,
-  controlDefaults,
+  addLayer,
+  decodeScene,
+  defaultScene,
+  duplicateLayer,
+  encodeScene,
+  frameSpec,
+  LAYER_SPECS,
+  layerSpec,
+  moveLayer,
+  removeLayer,
+  type SceneLayer,
+  updateLayer,
+} from './playground-scene';
+import {
+  buildSceneSnippet,
   type PlaygroundSpec,
   resolveInputs,
   type Values,
@@ -32,7 +57,6 @@ import { findSpec, PLAYGROUND_SPECS } from './playground-specs';
 import {
   applyPreset,
   findPreset,
-  initialMapState,
   MAP_CONTROLS,
   mapInputs,
   mapSnippetInput,
@@ -71,6 +95,17 @@ function describeControls(spec: PlaygroundSpec): PlaygroundSpec {
   };
 }
 
+/** The marker is rendered by its wrapper (anchor re-create and `dragEnd`), not the outlet. */
+function markerInputs(values: Values) {
+  return {
+    longitude: Number(values['longitude']),
+    latitude: Number(values['latitude']),
+    draggable: values['draggable'] === true,
+    rotation: Number(values['rotation']),
+    anchor: values['anchor'] as MarkerOptions['anchor'],
+  };
+}
+
 /** Tilted presets frame a city; the rest show the whole world. */
 const GALLERY_VIEW = { center: [2.35, 30] as [number, number], zoom: 1.2 };
 const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoom: 14 };
@@ -80,85 +115,122 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
   standalone: true,
   imports: [
     NgComponentOutlet,
-    RouterLink,
+    NgIcon,
     MapComponent,
     CodeBlockComponent,
     FooterComponent,
     PageHeaderImports,
     PlaygroundControlsComponent,
+    PlaygroundLayersComponent,
     PlaygroundMarkerComponent,
+    PlaygroundPaletteComponent,
+    ZardButtonComponent,
+  ],
+  viewProviders: [
+    provideIcons({
+      lucideCheck,
+      lucideChevronDown,
+      lucideChevronUp,
+      lucideCopy,
+      lucideEraser,
+      lucideFocus,
+      lucideLink,
+      lucideRotateCcw,
+    }),
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-page-header align="left" size="sm">
       <app-page-header-heading>Playground</app-page-header-heading>
       <app-page-header-description>
-        Pick a component, edit its inputs and watch the real map update. The snippet below always
-        matches what you see, ready to paste into your app.
+        Build a map from blocks: drag components onto the layer stack, tune each one and watch the
+        real map update. The code below always matches the whole scene, ready to paste into your
+        app.
       </app-page-header-description>
     </app-page-header>
 
     <section class="container space-y-20" aria-label="Playground">
-      <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div class="min-w-0 space-y-4">
-          <div role="group" aria-label="Component" class="flex flex-wrap gap-2">
-            @for (item of specs; track item.id) {
-              <button
-                type="button"
-                class="hover:bg-accent aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:border-primary rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
-                [attr.aria-pressed]="item.id === spec().id"
-                (click)="selectedId.set(item.id)"
-              >
-                {{ item.label }}
-              </button>
-            }
+      <div
+        class="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_18rem]"
+      >
+        <aside class="space-y-6" aria-label="Scene">
+          <div>
+            <h2 class="mb-3 text-sm font-semibold tracking-tight">Blocks</h2>
+            <app-playground-palette [specs]="blocks" (addBlock)="add($event)" />
           </div>
-          <p class="text-muted-foreground text-sm">{{ spec().description }}</p>
-          <p class="text-muted-foreground text-xs">
-            Popups, terrain, vector and image sources and draw are not in the playground; see the
-            <a routerLink="/docs/components/map" class="underline underline-offset-4"
-              >component docs</a
-            >.
-          </p>
+          <div>
+            <h2 class="mb-3 text-sm font-semibold tracking-tight">
+              Layers <span class="text-muted-foreground font-normal">(top first)</span>
+            </h2>
+            <app-playground-layers
+              [layers]="layers()"
+              [selected]="selectedUid()"
+              [labels]="labels"
+              (selectLayer)="selectedUid.set($event)"
+              (toggleLayer)="toggle($event)"
+              (moveLayer)="move($event)"
+              (removeLayer)="remove($event)"
+              (dropBlock)="add($event.specId, $event.index)"
+            />
+          </div>
+        </aside>
 
-          @if (
-            spec().requiresCarto && !activePreset().hasCartoSource && !activePreset().buildingSource
-          ) {
+        <div class="min-w-0 space-y-4">
+          <div class="flex flex-wrap items-center gap-2" role="toolbar" aria-label="Scene actions">
+            <button z-button zType="outline" zSize="sm" type="button" (click)="copyLink()">
+              <ng-icon [name]="linkCopied() ? 'lucideCheck' : 'lucideLink'" size="14" />
+              {{ linkCopied() ? 'Link copied' : 'Copy link' }}
+            </button>
+            <button z-button zType="ghost" zSize="sm" type="button" (click)="clear()">
+              <ng-icon name="lucideEraser" size="14" />
+              Clear
+            </button>
+            <button z-button zType="ghost" zSize="sm" type="button" (click)="reset()">
+              <ng-icon name="lucideRotateCcw" size="14" />
+              Reset
+            </button>
+            <span class="sr-only" aria-live="polite">{{ linkCopied() ? 'Link copied' : '' }}</span>
+          </div>
+
+          @if (needsCarto(); as label) {
             <p
               role="status"
               class="bg-muted text-muted-foreground rounded-md border px-3 py-2 text-sm"
             >
-              {{ spec().label }} need the Carto vector tiles: pick Carto, Carto Voyager, MapTiler,
-              Stadia Maps, Globe or 3D tilt in the Basemap control.
+              {{ label }} need the Carto vector tiles: pick Carto, Carto Voyager, MapTiler, Stadia
+              Maps, Globe or 3D tilt in the Basemap control.
             </p>
           }
           <div class="bg-card relative h-[520px] overflow-hidden rounded-xl border shadow-sm">
-            @for (key of [spec().id]; track key) {
-              <ng-map
-                class="block h-full w-full"
-                [center]="view().center"
-                [zoom]="view().zoom"
-                [styles]="mapProps().styles"
-                [blank]="mapProps().blank"
-                [theme]="mapProps().theme"
-                [projection]="mapProps().projection"
-                [viewport]="viewport()"
-                (viewportChange)="onViewport($event)"
-              >
-                @if (markerProps(); as marker) {
-                  <app-playground-marker
-                    [longitude]="marker.longitude"
-                    [latitude]="marker.latitude"
-                    [draggable]="marker.draggable"
-                    [rotation]="marker.rotation"
-                    [anchor]="marker.anchor"
-                    (moved)="onMarkerMoved($event)"
-                  />
-                } @else if (layerComponent(); as layer) {
-                  <ng-container *ngComponentOutlet="layer; inputs: layerInputs()" />
+            <ng-map
+              class="block h-full w-full"
+              [center]="initialView.center"
+              [zoom]="initialView.zoom"
+              [styles]="mapProps().styles"
+              [blank]="mapProps().blank"
+              [theme]="mapProps().theme"
+              [projection]="mapProps().projection"
+              [viewport]="viewport()"
+              (viewportChange)="onViewport($event)"
+            >
+              <!-- Re-created when the drawing order changes, so the map stacks them as listed. -->
+              @for (key of [renderKey()]; track key) {
+                @for (item of rendered(); track item.layer.uid) {
+                  @if (item.marker; as marker) {
+                    <app-playground-marker
+                      [longitude]="marker.longitude"
+                      [latitude]="marker.latitude"
+                      [draggable]="marker.draggable"
+                      [rotation]="marker.rotation"
+                      [anchor]="marker.anchor"
+                      (moved)="onMarkerMoved(item.layer.uid, $event)"
+                    />
+                  } @else if (item.component; as component) {
+                    <ng-container *ngComponentOutlet="component; inputs: item.inputs" />
+                  }
                 }
-              </ng-map>
-            }
+              }
+            </ng-map>
           </div>
 
           <div class="space-y-2" id="snippet">
@@ -184,19 +256,74 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
           </div>
         </div>
 
-        <aside class="space-y-8" aria-label="Controls">
-          @if (spec().controls.length) {
-            @for (key of [spec().id]; track key) {
+        <aside class="space-y-8 lg:col-span-2 xl:col-span-1" aria-label="Controls">
+          @if (selected(); as current) {
+            @for (key of [current.layer.uid]; track key) {
               <div>
-                <h2 class="mb-3 text-sm font-semibold tracking-tight">{{ spec().label }} inputs</h2>
+                <div class="mb-1 flex items-center justify-between gap-2">
+                  <h2 class="text-sm font-semibold tracking-tight">
+                    {{ current.spec.label }} inputs
+                    <span class="text-muted-foreground font-mono text-xs font-normal">{{
+                      current.layer.name
+                    }}</span>
+                  </h2>
+                  <div class="flex shrink-0">
+                    <button
+                      z-button
+                      zType="ghost"
+                      zSize="icon-sm"
+                      type="button"
+                      [attr.aria-label]="'Move ' + current.layer.name + ' up'"
+                      [disabled]="current.index === 0"
+                      (click)="move({ from: current.index, to: current.index - 1 })"
+                    >
+                      <ng-icon name="lucideChevronUp" size="14" />
+                    </button>
+                    <button
+                      z-button
+                      zType="ghost"
+                      zSize="icon-sm"
+                      type="button"
+                      [attr.aria-label]="'Move ' + current.layer.name + ' down'"
+                      [disabled]="current.index === layers().length - 1"
+                      (click)="move({ from: current.index, to: current.index + 1 })"
+                    >
+                      <ng-icon name="lucideChevronDown" size="14" />
+                    </button>
+                    <button
+                      z-button
+                      zType="ghost"
+                      zSize="icon-sm"
+                      type="button"
+                      [attr.aria-label]="'Duplicate ' + current.layer.name"
+                      (click)="duplicate(current.layer.uid)"
+                    >
+                      <ng-icon name="lucideCopy" size="14" />
+                    </button>
+                    <button
+                      z-button
+                      zType="ghost"
+                      zSize="icon-sm"
+                      type="button"
+                      [attr.aria-label]="'Frame ' + current.layer.name"
+                      title="Move the camera to this layer's data"
+                      (click)="frame(current.spec)"
+                    >
+                      <ng-icon name="lucideFocus" size="14" />
+                    </button>
+                  </div>
+                </div>
+                <p class="text-muted-foreground mb-3 text-xs">{{ current.spec.description }}</p>
                 <app-playground-controls
-                  [controls]="describedControls()"
-                  [values]="values()"
-                  [idPrefix]="'pg-' + spec().id"
-                  (valueChange)="onLayerChange($event)"
+                  [controls]="current.spec.controls"
+                  [values]="current.layer.values"
+                  [idPrefix]="'pg-' + current.layer.name"
+                  (valueChange)="onLayerChange(current.layer.uid, $event)"
                 />
               </div>
             }
+          } @else {
+            <p class="text-muted-foreground text-sm">Select a layer to edit its inputs.</p>
           }
           <div>
             <h2 class="mb-3 text-sm font-semibold tracking-tight">Map</h2>
@@ -270,12 +397,25 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
 })
 export class PlaygroundComponent {
   private viewportTimer: ReturnType<typeof setTimeout> | undefined;
+  private copiedTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => clearTimeout(this.viewportTimer));
+    inject(DestroyRef).onDestroy(() => {
+      clearTimeout(this.viewportTimer);
+      clearTimeout(this.copiedTimer);
+    });
   }
 
-  protected readonly specs = PLAYGROUND_SPECS;
+  private readonly basemap = inject(BasemapService);
+  private readonly location = inject(Location);
+  private readonly document = inject(DOCUMENT);
+
+  /** A shared link (`?scene=`) opens its scene; otherwise the default one. */
+  private readonly initial =
+    decodeScene(inject(ActivatedRoute).snapshot.queryParamMap.get('scene')) ?? defaultScene();
+
+  protected readonly blocks = LAYER_SPECS;
+  protected readonly labels = Object.fromEntries(PLAYGROUND_SPECS.map((s) => [s.id, s.label]));
   protected readonly presets = STYLE_PRESETS;
   protected readonly mapControls = MAP_CONTROLS;
   protected readonly globe = { type: 'globe' } as const;
@@ -284,34 +424,63 @@ export class PlaygroundComponent {
     { id: 'component', label: 'Component' },
   ];
 
-  private readonly basemap = inject(BasemapService);
-
-  protected readonly selectedId = signal(PLAYGROUND_SPECS[2].id);
+  /** Top of the stack first. */
+  protected readonly layers = signal<SceneLayer[]>(this.initial.layers);
+  protected readonly mapState = signal<MapState>(this.initial.map);
+  protected readonly selectedUid = signal<number | undefined>(this.initial.layers[0]?.uid);
   protected readonly snippetTab = signal<SnippetTab>('template');
+  protected readonly linkCopied = signal(false);
 
-  protected readonly spec = computed(() => findSpec(this.selectedId()));
-  protected readonly describedControls = computed(() => describeControls(this.spec()).controls);
-  protected readonly view = computed(() => this.spec().view);
+  /** The map's first camera; every later change goes through the controlled `viewport`. */
+  protected readonly initialView = {
+    center: this.initial.map.center ?? ([0, 20] as [number, number]),
+    zoom: this.initial.map.zoom,
+  };
 
-  /** Editable input values; reset to the defaults whenever the component changes. */
-  protected readonly values = linkedSignal<PlaygroundSpec, Values>({
-    source: this.spec,
-    computation: (spec) => controlDefaults(spec.controls),
+  private readonly presetId = computed(() => this.mapState().presetId);
+
+  protected readonly selected = computed(() => {
+    const index = this.layers().findIndex((l) => l.uid === this.selectedUid());
+    if (index < 0) return null;
+    const layer = this.layers()[index];
+    return { layer, index, spec: describeControls(findSpec(layer.specId)) };
   });
 
-  /** Map look; the basemap and theme survive a component switch, the camera is reframed. */
-  protected readonly mapState = linkedSignal<PlaygroundSpec, MapState>({
-    source: this.spec,
-    computation: (spec, previous) => {
-      const base = initialMapState(spec.view.zoom);
-      const preset = findPreset(previous?.value.presetId ?? base.presetId);
-      const next = applyPreset({ ...base, theme: previous?.value.theme ?? base.theme }, preset);
+  /** Visible layers in drawing order: the bottom of the stack is added to the map first. */
+  private readonly drawn = computed(() =>
+    this.layers()
+      .filter((layer) => layer.visible)
+      .reverse(),
+  );
+  protected readonly renderKey = computed(() =>
+    this.drawn()
+      .map((layer) => layer.uid)
+      .join(','),
+  );
+  protected readonly rendered = computed(() => {
+    const presetId = this.presetId();
+    return this.drawn().map((layer) => {
+      const spec = layerSpec(layer, presetId);
       return {
-        ...next,
-        pitch: preset.pitch ?? spec.view.pitch ?? 0,
-        bearing: preset.bearing ?? spec.view.bearing ?? 0,
+        layer,
+        marker: spec.id === 'marker' ? markerInputs(layer.values) : null,
+        component: spec.className ? (PLAYGROUND_COMPONENTS[spec.className] ?? null) : null,
+        inputs: resolveInputs(spec, layer.values),
       };
-    },
+    });
+  });
+
+  /** Labels of the visible blocks that draw from the `carto` source the basemap lacks. */
+  protected readonly needsCarto = computed(() => {
+    const preset = findPreset(this.presetId());
+    if (preset.hasCartoSource || preset.buildingSource) return null;
+    const labels = new Set(
+      this.drawn()
+        .map((layer) => findSpec(layer.specId))
+        .filter((spec) => spec.requiresCarto)
+        .map((spec) => spec.label),
+    );
+    return labels.size ? [...labels].join(', ') : null;
   });
 
   /** The sliders show a readable camera; the state itself keeps the exact values. */
@@ -325,7 +494,7 @@ export class PlaygroundComponent {
     };
   });
   protected readonly mapProps = computed(() =>
-    mapInputs(this.mapState(), this.view(), this.presetKey(this.mapState().presetId)),
+    mapInputs(this.mapState(), this.initialView, this.presetKey(this.mapState().presetId)),
   );
   /** Only changes when the camera fields do, so unrelated edits never re-jump the map. */
   protected readonly viewport = computed(() => this.mapProps().viewport, {
@@ -337,34 +506,13 @@ export class PlaygroundComponent {
       a.center?.[1] === b.center?.[1],
   });
 
-  /** The marker is rendered by its wrapper (anchor re-create and `dragEnd`), not the outlet. */
-  protected readonly markerProps = computed(() => {
-    if (this.spec().id !== 'marker') return null;
-    const values = this.values();
-    return {
-      longitude: Number(values['longitude']),
-      latitude: Number(values['latitude']),
-      draggable: values['draggable'] === true,
-      rotation: Number(values['rotation']),
-      anchor: values['anchor'] as MarkerOptions['anchor'],
-    };
+  private readonly snippet = computed(() => {
+    const presetId = this.presetId();
+    return buildSceneSnippet(
+      this.drawn().map((layer) => ({ spec: layerSpec(layer, presetId), values: layer.values })),
+      mapSnippetInput(this.mapState(), this.initialView),
+    );
   });
-  protected readonly layerComponent = computed(() => {
-    const className = this.spec().className;
-    return className ? (PLAYGROUND_COMPONENTS[className] ?? null) : null;
-  });
-  /** The picked basemap may need a non-Carto building source (`openmaptiles`). */
-  private readonly liveSpec = computed(() => {
-    const spec = this.spec();
-    const building = findPreset(this.mapState().presetId).buildingSource;
-    if (spec.id !== 'fill-extrusion' || !building) return spec;
-    return { ...spec, attrs: { ...spec.attrs, ...building } };
-  });
-  protected readonly layerInputs = computed(() => resolveInputs(this.liveSpec(), this.values()));
-
-  private readonly snippet = computed(() =>
-    buildSnippet(this.liveSpec(), this.values(), mapSnippetInput(this.mapState(), this.view())),
-  );
   protected readonly snippetCode = computed(() =>
     this.snippetTab() === 'template' ? this.snippet().template : this.snippet().component,
   );
@@ -372,16 +520,65 @@ export class PlaygroundComponent {
   protected readonly activePreset = computed(() => findPreset(this.mapState().presetId));
   protected readonly gallerySnippet = computed(() => presetSnippet(this.activePreset()));
 
-  protected onLayerChange({ key, value }: ControlChange): void {
-    this.values.update((values) => ({ ...values, [key]: value }));
+  /** Adds a block at `index` (0 = top) and selects it; the first block also frames its data. */
+  protected add(specId: string, index = 0): void {
+    const wasEmpty = !this.layers().length;
+    const { layers, layer } = addLayer(this.layers(), specId, index);
+    this.layers.set(layers);
+    this.selectedUid.set(layer.uid);
+    if (wasEmpty) this.frame(findSpec(specId));
   }
 
-  protected onMarkerMoved({ lng, lat }: { lng: number; lat: number }): void {
-    this.values.update((values) => ({
-      ...values,
-      longitude: +lng.toFixed(4),
-      latitude: +lat.toFixed(4),
-    }));
+  protected move({ from, to }: { from: number; to: number }): void {
+    this.layers.update((layers) => moveLayer(layers, from, to));
+  }
+
+  protected toggle(uid: number): void {
+    this.layers.update((layers) => {
+      const layer = layers.find((l) => l.uid === uid);
+      return layer ? updateLayer(layers, uid, { visible: !layer.visible }) : layers;
+    });
+  }
+
+  protected duplicate(uid: number): void {
+    const { layers, layer } = duplicateLayer(this.layers(), uid);
+    this.layers.set(layers);
+    if (layer) this.selectedUid.set(layer.uid);
+  }
+
+  protected remove(uid: number): void {
+    const layers = removeLayer(this.layers(), uid);
+    this.layers.set(layers);
+    if (this.selectedUid() === uid) this.selectedUid.set(layers[0]?.uid);
+  }
+
+  protected clear(): void {
+    this.layers.set([]);
+    this.selectedUid.set(undefined);
+  }
+
+  protected reset(): void {
+    const scene = defaultScene();
+    this.layers.set(scene.layers);
+    this.mapState.set(scene.map);
+    this.selectedUid.set(scene.layers[0]?.uid);
+  }
+
+  protected frame(spec: PlaygroundSpec): void {
+    this.mapState.update((state) => frameSpec(state, spec));
+  }
+
+  protected onLayerChange(uid: number, { key, value }: ControlChange): void {
+    this.layers.update((layers) => {
+      const layer = layers.find((l) => l.uid === uid);
+      if (!layer) return layers;
+      return updateLayer(layers, uid, { values: { ...layer.values, [key]: value } });
+    });
+  }
+
+  protected onMarkerMoved(uid: number, { lng, lat }: { lng: number; lat: number }): void {
+    this.onLayerChange(uid, { key: 'longitude', value: +lng.toFixed(4) });
+    this.onLayerChange(uid, { key: 'latitude', value: +lat.toFixed(4) });
   }
 
   /**
@@ -391,9 +588,7 @@ export class PlaygroundComponent {
    */
   protected onViewport(viewport: MapViewport): void {
     clearTimeout(this.viewportTimer);
-    const specId = this.spec().id;
     this.viewportTimer = setTimeout(() => {
-      if (this.spec().id !== specId) return;
       this.mapState.update((state) => ({
         ...state,
         center: viewport.center,
@@ -406,6 +601,23 @@ export class PlaygroundComponent {
 
   protected onMapChange({ key, value }: ControlChange): void {
     this.mapState.update((state) => updateMapState(state, key, value));
+  }
+
+  /** Puts the scene in the address bar and copies that link. */
+  protected async copyLink(): Promise<void> {
+    const code = encodeScene({ layers: this.layers(), map: this.mapState() });
+    const path = this.location.path().split('?')[0];
+    this.location.replaceState(path, `scene=${code}`);
+    const external = this.location.prepareExternalUrl(path);
+    const url = `${this.document.location.origin}${external}?scene=${code}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // No clipboard access: the link is still in the address bar.
+    }
+    this.linkCopied.set(true);
+    clearTimeout(this.copiedTimer);
+    this.copiedTimer = setTimeout(() => this.linkCopied.set(false), 2000);
   }
 
   protected applyStyle(preset: StylePreset): void {
