@@ -8,6 +8,7 @@ import { BLOCKS } from '../projects/demo/src/app/blocks/registry';
 export const DOCS_COMPONENT_PAGES = [
   'map',
   'controls',
+  'legend',
   'markers',
   'popups',
   'routes',
@@ -44,7 +45,8 @@ export const EXPECTED_MAPS: Record<string, number> = {
   '/docs/api-reference': 0,
   '/docs/basemaps': 5,
   '/docs/components/map': 5,
-  '/docs/components/controls': 1,
+  '/docs/components/controls': 3,
+  '/docs/components/legend': 3,
   '/docs/components/markers': 3,
   '/docs/components/popups': 1,
   '/docs/components/routes': 3,

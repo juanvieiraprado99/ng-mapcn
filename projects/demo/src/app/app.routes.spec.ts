@@ -15,6 +15,7 @@ const PAGES: [url: string, h1: string, title: string][] = [
   ['/docs/basemaps', 'Map Styles', 'Angular Map Styles and Basemaps - ng-mapcn'],
   ['/docs/components/map', 'Map', 'Angular Map Component - ng-mapcn'],
   ['/docs/components/controls', 'Controls', 'Angular Map Controls - ng-mapcn'],
+  ['/docs/components/legend', 'Legend', 'Angular Map Legend Component - ng-mapcn'],
   ['/docs/components/markers', 'Markers', 'Angular Map Markers - ng-mapcn'],
   ['/docs/components/popups', 'Popups', 'Angular Map Popups - ng-mapcn'],
   ['/docs/components/routes', 'Routes', 'Angular Map Routes and Polylines - ng-mapcn'],

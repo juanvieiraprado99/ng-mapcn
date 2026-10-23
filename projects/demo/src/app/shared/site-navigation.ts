@@ -33,6 +33,7 @@ export const docsNavigation: SiteNavigationGroup[] = [
     items: [
       { title: 'Map', href: '/docs/components/map', icon: 'lucideLayers2' },
       { title: 'Controls', href: '/docs/components/controls', icon: 'lucideLayers2' },
+      { title: 'Legend', href: '/docs/components/legend', icon: 'lucideLayers2' },
       { title: 'Markers', href: '/docs/components/markers', icon: 'lucideLayers2' },
       { title: 'Popups', href: '/docs/components/popups', icon: 'lucideLayers2' },
       { title: 'Routes', href: '/docs/components/routes', icon: 'lucideLayers2' },

@@ -102,6 +102,21 @@ export const DOCS_ROUTES: Routes = [
           import('./components/controls-page').then((m) => m.ControlsPageComponent),
       },
       {
+        path: 'components/legend',
+        title: 'Legend',
+        data: {
+          seo: {
+            title: 'Angular Map Legend Component',
+            description:
+              'Add a map legend to an Angular map with ng-map-legend: category swatches, colour gradients and custom projected content, collapsible and themeable.',
+            keywords: ['map legend Angular', 'Angular map gradient legend', 'MapLibre legend component'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () =>
+          import('./components/legend-page').then((m) => m.LegendPageComponent),
+      },
+      {
         path: 'components/markers',
         title: 'Markers',
         data: {
