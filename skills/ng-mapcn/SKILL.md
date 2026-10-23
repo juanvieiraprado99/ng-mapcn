@@ -15,7 +15,7 @@ Angular port of [mapcn](https://mapcn.dev): composable MapLibre GL v6 map compon
 - npm: `npm i ng-mapcn maplibre-gl` (`@types/geojson` comes with it). Then add `maplibre-gl/dist/maplibre-gl.css` to `angular.json` `styles`, the worker assets (`references/troubleshooting.md`), and in global `styles.scss`: `@use 'ng-mapcn/src/lib/styles/index' as *;` and `@use 'ng-mapcn/styles.scss' as *;`.
 - Which one does the app use? Sources in `src/app/components/ui/map` (or another `--path`) → copy-paste; otherwise import from `'ng-mapcn'`.
 - Optional app-wide basemap: `provideMapStyles({ light, dark })` in `app.config.ts`.
-- Optional translations: `provideMapLabels({ zoomIn: "Aproximar", ... })` (partial; keys zoomIn, zoomOut, resetNorth, locate, fullscreen, loading, closePopup), or a `[labels]` input on `ng-map`, `ng-map-controls`, `ng-map-popup`.
+- Optional translations: `provideMapLabels({ zoomIn: "Aproximar", ... })` (partial; keys zoomIn, zoomOut, resetNorth, locate, fullscreen, loading, closePopup, marker, scale, legend, showLegend, hideLegend, mapStyle), or a `[labels]` input on `ng-map`, `ng-map-controls`, `ng-map-popup`.
 
 ## Minimal example
 
@@ -62,6 +62,9 @@ Coordinates are always `[longitude, latitude]`.
 | ------------------------------------------------------ | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ng-map`                                               | Map host                             | `center`, `zoom`, `theme`, `styles`, `blank`, `projection`, `viewport`, `fitBounds`, `loading`, `options`; `viewportChange`, `mapReady`, `mapClick`, `mapError` |
 | `ng-map-controls`                                      | Zoom/compass/locate/fullscreen       | `position`, `showZoom`, `showCompass`, `showLocate`, `showFullscreen`, `labels`; `locateChange`, `locateError`                                                  |
+| `ng-map-scale`                                         | Scale bar                            | `unit`, `maxWidth`, `position`, `labels`, `className`                                                                                                           |
+| `ng-map-legend`                                        | Legend card                          | `sections`, `title`, `position`, `collapsible`, `collapsed` (model), `labels`, `className`                                                                      |
+| `ng-map-style-switcher`                                | Basemap switcher                     | `options` (keep stable), `value` (model), `position`, `labels`, `className`; overrides `styles`/`provideMapStyles()`                                            |
 | `ng-map-marker`                                        | Marker                               | `longitude`, `latitude`, `draggable`, `offset`, `rotation`, `ariaLabel`; `markerClick`, `dragEnd` (keyboard: Enter/Space, arrow keys)                           |
 | `ng-marker-content` / `-popup` / `-tooltip` / `-label` | Marker children                      | content, click popup (`closeButton`, `offset`, `anchor`, `maxWidth`, `closeOnClick`), hover/focus tooltip, label                                                |
 | `ng-map-popup`                                         | Popup at coordinates                 | `longitude`, `latitude`, `closeButton`, `closeOnClick`, `className`; `popupClose`                                                                               |
@@ -83,6 +86,8 @@ Full inputs, types and defaults: `references/components.md`.
 ## Rules
 
 - Give the map's parent an explicit height; `<ng-map>` fills its parent.
+- `ng-map-controls`, `ng-map-scale`, `ng-map-legend` and `ng-map-style-switcher` render inside MapLibre's `.maplibregl-ctrl-<position>` corner containers, so they stack instead of overlapping. Style them with their `className` input, not host-descendant selectors; there are no fixed bottom offsets to work around.
+- `ng-map-style-switcher` overrides `[styles]` / `provideMapStyles()` for its map while an option is selected. Keep each `MapStyleOption` (and its `styles` object) referentially stable: an inline literal re-runs `setStyle` on every change.
 - Pass new array/object references to update `data` / `coordinates`; do not mutate in place.
 - Inputs are reconciled by diff; MapLibre objects are not recreated. `anchor` (marker, tooltip, marker popup), `beforeId` and `closeOnClick` apply at creation only.
 - Theme switches call `setStyle`, which wipes custom sources and layers. Gate custom layer code on `isLoaded()` and re-add inside the effect.

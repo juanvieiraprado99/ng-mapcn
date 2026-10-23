@@ -149,7 +149,10 @@ The map fills its parent, so give the parent an explicit height. More building b
 | Component                                                   | Description                                                                                                                                                                                                                                                                                        |
 | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ng-map`                                                    | Map host. Inputs: `center`, `zoom`, `theme` (`light`/`dark`/`auto`), `styles` (per-theme basemap), `blank` (tile-less dataviz style), `projection`, `viewport` (controlled mode), `loading`, `options` (raw MapLibre `MapOptions`). Outputs: `viewportChange`, `mapReady`, `mapClick`, `mapError`. |
-| `ng-map-controls`                                           | Zoom / compass / locate / fullscreen buttons (custom UI, not MapLibre `IControl`).                                                                                                                                                                                                                 |
+| `ng-map-controls`                                           | Zoom / compass / locate / fullscreen buttons Rendered inside MapLibre's corner containers, so it stacks with the scale, legend and style switcher.                                                                                                                                                 |
+| `ng-map-scale`                                              | Scale bar as a MapLibre control. `unit` (`metric`/`imperial`/`both`), `maxWidth`, `position`.                                                                                                                                                                                                      |
+| `ng-map-legend`                                             | Legend card: category swatches and colour gradients from `sections`. `title`, `collapsible`, `[(collapsed)]`, `position`; content projects below.                                                                                                                                                  |
+| `ng-map-style-switcher`                                     | Basemap listbox. `options`, `[(value)]`, `position`; the selected option overrides `provideMapStyles()` and `[styles]` for that map.                                                                                                                                                               |
 | `ng-map-marker`                                             | Declarative marker. `longitude`, `latitude`, `draggable`, `offset`, `rotation`, `anchor`, alignments, `ariaLabel`; click/hover/drag outputs. Keyboard: Enter/Space click, arrow keys drag.                                                                                                         |
 | `ng-marker-content`                                         | Projects custom HTML into the marker element (empty = default dot).                                                                                                                                                                                                                                |
 | `ng-marker-popup` / `ng-marker-tooltip` / `ng-marker-label` | Popup on click, tooltip on hover or focus, CSS label above/below the marker.                                                                                                                                                                                                                       |
@@ -193,7 +196,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-Precedence: `[styles]` → `[blank]` → `provideMapStyles()` → Carto default.
+Precedence: `ng-map-style-switcher` selection → `[styles]` → `[blank]` → `provideMapStyles()` → Carto default.
 
 ### Labels and translations
 
@@ -211,7 +214,7 @@ provideMapLabels({
 // follow the active locale: provideMapLabels(() => inject(I18nService).mapLabels)
 ```
 
-Keys: `zoomIn`, `zoomOut`, `resetNorth`, `locate`, `fullscreen`, `loading`, `closePopup`, `marker`.
+Keys: `zoomIn`, `zoomOut`, `resetNorth`, `locate`, `fullscreen`, `loading`, `closePopup`, `marker`, `scale`, `legend`, `showLegend`, `hideLegend`, `mapStyle`.
 
 | Provider        | Style URL                                                                                                                                                                                         | API key                |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |

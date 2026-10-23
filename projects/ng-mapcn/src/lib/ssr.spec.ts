@@ -11,13 +11,19 @@ import { MapFillExtrusionComponent } from './components/map-fill-extrusion/map-f
 import { MapGeoJSONComponent } from './components/map-geojson/map-geojson.component';
 import { MapHeatmapComponent } from './components/map-heatmap/map-heatmap.component';
 import { MapImageOverlayComponent } from './components/map-image-overlay/map-image-overlay.component';
-import { MapLegendComponent } from './components/map-legend/map-legend.component';
+import {
+  MapLegendComponent,
+  type MapLegendSection,
+} from './components/map-legend/map-legend.component';
 import { MapMarkerComponent } from './components/map-marker/map-marker.component';
 import { MapPopupComponent } from './components/map-popup/map-popup.component';
 import { MapRasterSourceComponent } from './components/map-raster-source/map-raster-source.component';
 import { MapRouteComponent } from './components/map-route/map-route.component';
 import { MapScaleComponent } from './components/map-scale/map-scale.component';
-import { MapStyleSwitcherComponent } from './components/map-style-switcher/map-style-switcher.component';
+import {
+  type MapStyleOption,
+  MapStyleSwitcherComponent,
+} from './components/map-style-switcher/map-style-switcher.component';
 import { MapTerrainComponent } from './components/map-terrain/map-terrain.component';
 import { MapVectorSourceComponent } from './components/map-vector-source/map-vector-source.component';
 import { MarkerContentComponent } from './components/marker-content/marker-content.component';
@@ -36,8 +42,8 @@ const TEMPLATE = `
   <ng-map>
     <ng-map-controls [showCompass]="true" [showLocate]="true" [showFullscreen]="true" />
     <ng-map-scale unit="both" />
-    <ng-map-legend title="Legend" [collapsible]="true" [sections]="[]">Extra</ng-map-legend>
-    <ng-map-style-switcher [options]="[]" />
+    <ng-map-legend title="L" [sections]="legend" [collapsible]="true">Extra</ng-map-legend>
+    <ng-map-style-switcher [options]="styleOptions" value="a" />
     <ng-map-marker [longitude]="1" [latitude]="2">
       <ng-marker-content><ng-marker-label>Label</ng-marker-label></ng-marker-content>
       <ng-marker-tooltip>Tip</ng-marker-tooltip>
@@ -85,6 +91,22 @@ describe('server-side rendering', () => {
       [0, 0],
     ];
 
+    const legend: MapLegendSection[] = [
+      { type: 'categories', title: 'Kinds', entries: [{ color: '#f00', label: 'Red' }] },
+      {
+        type: 'gradient',
+        title: 'Density',
+        stops: [
+          { color: '#fff', value: 0 },
+          { color: '#000', value: 100 },
+        ],
+      },
+    ];
+    const styleOptions: MapStyleOption[] = [
+      { id: 'a', label: 'A', styles: { light: 'https://example.com/a.json' } },
+      { id: 'b', label: 'B', styles: { light: 'https://example.com/b.json' } },
+    ];
+
     const { fixture, ctx } = await renderMap(TEMPLATE, {
       imports: [
         MapControlsComponent,
@@ -110,7 +132,7 @@ describe('server-side rendering', () => {
         MapFillExtrusionComponent,
         MapTerrainComponent,
       ],
-      hostProps: { route, collection, arcs, corners },
+      hostProps: { route, collection, arcs, corners, legend, styleOptions },
       providers: [{ provide: PLATFORM_ID, useValue: 'server' }],
     });
     vi.advanceTimersByTime(1000);

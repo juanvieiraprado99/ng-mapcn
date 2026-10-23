@@ -2,7 +2,7 @@
 
 All components are standalone, `OnPush`, and use signal inputs/outputs. Everything below is exported from `ng-mapcn` (or from the folder `ng add` copied into your app). Coordinates are `[longitude, latitude]`.
 
-Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [ng-map-draw](#ng-map-draw) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
+Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-scale](#ng-map-scale) | [ng-map-legend](#ng-map-legend) | [ng-map-style-switcher](#ng-map-style-switcher) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [ng-map-draw](#ng-map-draw) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
 
 ## ng-map
 
@@ -33,13 +33,13 @@ Method: `getMap(): MapLibreMap | null` (escape hatch to the raw map).
 
 Fit to bounds: `<ng-map [fitBounds]="{ padding: 48, maxZoom: 14 }">` fits the camera to the union of the bounds of the children (markers, `ng-map-geojson`/`-cluster-layer`/`-heatmap` object data, routes, arcs; URL `data` is not fetched, so it contributes nothing) once the map is loaded, and again only when those bounds really change. The first fit never animates; later ones animate unless `animate: false`; `maxZoom` defaults to 16. `bounds` (any `LngLatBoundsLike`) fits explicit bounds instead. The fit is not guarded against a controlled `[viewport]`: `viewportChange` reports the new camera, and the viewport sync is idempotent. Arc bounds follow the unwrapped curve (an antimeridian arc spans e.g. 170 to 190); other antimeridian-crossing data is not handled. A draggable marker bound to signals refits continuously while dragged: pass explicit `bounds` or leave `fitBounds` off for that case.
 
-Basemap precedence: `styles` input, then `blank`, then `provideMapStyles()`, then Carto default. Changing these inputs at runtime re-applies the style.
+Basemap precedence: a selected `ng-map-style-switcher` option, then `styles` input, then `blank`, then `provideMapStyles()`, then Carto default. Changing these inputs at runtime re-applies the style.
 
 The map is created in `afterNextRender` (browser only). If the container has no size yet, initialization waits for a resize.
 
 ## ng-map-controls
 
-Class `MapControlsComponent`. Custom button UI (not a MapLibre `IControl`).
+Class `MapControlsComponent`. Custom button UI, mounted as a MapLibre control: the `.ng-controls` card renders inside `.maplibregl-ctrl-<position>`, so it stacks with `ng-map-scale`, `ng-map-legend` and `ng-map-style-switcher` in the same corner. Breaking DOM change: the card no longer sits in a host element with fixed bottom offsets, so style it with `className`, not host-descendant selectors.
 
 | Input            | Type                                                           | Default          |
 | ---------------- | -------------------------------------------------------------- | ---------------- |
@@ -57,6 +57,74 @@ Class `MapControlsComponent`. Custom button UI (not a MapLibre `IControl`).
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `locateChange` | `{ longitude: number; latitude: number }` (after a successful geolocation; the map flies there at zoom 14)                                                                                                                   |
 | `locateError`  | `GeolocationPositionError \| Error`: the geolocation error (permission denied, timeout, position unavailable), or an `Error` when the browser has no `navigator.geolocation` (insecure context). Never emitted on the server |
+
+## ng-map-scale
+
+Class `MapScaleComponent`. Scale bar mounted as a MapLibre control. It follows `move`/zoom, picks a 1/2/5 round length that fits `maxWidth`, and formats the value with `Intl.NumberFormat` for the app `LOCALE_ID`. Not rendered on the server.
+
+| Input       | Type                                                           | Default         |
+| ----------- | -------------------------------------------------------------- | --------------- |
+| `unit`      | `'metric' \| 'imperial' \| 'both'`                             | `'metric'`      |
+| `maxWidth`  | `number` (longest bar, in pixels)                              | `100`           |
+| `position`  | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'bottom-left'` |
+| `labels`    | `Partial<MapLabels>`                                           | `undefined`     |
+| `className` | `string`                                                       | `undefined`     |
+
+`labels.scale` (default `'Map scale'`) names the bar; the aria-label also carries the current reading. `className` adds classes to the rendered `.ng-scale` element. No outputs.
+
+## ng-map-legend
+
+Class `MapLegendComponent`. Legend card mounted as a MapLibre control; projected content renders below the sections.
+
+| Input         | Type                                                           | Default      |
+| ------------- | -------------------------------------------------------------- | ------------ |
+| `sections`    | `MapLegendSection[]`                                           | `[]`         |
+| `title`       | `string`                                                       | `undefined`  |
+| `position`    | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'top-left'` |
+| `collapsible` | `boolean`                                                      | `false`      |
+| `collapsed`   | `boolean` (model)                                              | `false`      |
+| `labels`      | `Partial<MapLabels>`                                           | `undefined`  |
+| `className`   | `string`                                                       | `undefined`  |
+
+```ts
+interface MapLegendCategory {
+  color: string;
+  label: string;
+  shape?: 'circle' | 'square' | 'line'; // default 'circle'
+}
+type MapLegendSection =
+  | { type: 'categories'; title?: string; entries: MapLegendCategory[] }
+  | {
+      type: 'gradient';
+      title?: string;
+      stops: { color: string; value: number | string }[];
+      format?: (value: number | string) => string;
+    };
+```
+
+Gradients with up to 5 stops label every stop; with more, only the first and last (`format` applies to the labels). `title` is the heading and the accessible name; `collapsible` adds a header toggle named by `labels.showLegend` / `labels.hideLegend` (`'Show legend'` / `'Hide legend'`), and `labels.legend` (`'Map legend'`) names the region when there is no `title`. `[(collapsed)]` two-way binds the state (`collapsedChange` output). `className` adds classes to the rendered `.ng-legend` element.
+
+## ng-map-style-switcher
+
+Class `MapStyleSwitcherComponent`. A listbox button mounted as a MapLibre control (keyboard: Arrow keys, Home, End, Enter/Space, Escape, Tab). The selected option's `styles` override `provideMapStyles()` and the map's `[styles]` / `[blank]` for that map (through `MapContextService.setStyleOverride`; the map re-applies the style, so layer components re-add themselves). With no `value` the map keeps its own style, and the override is removed when the switcher is destroyed.
+
+| Input       | Type                                                           | Default       |
+| ----------- | -------------------------------------------------------------- | ------------- |
+| `options`   | `MapStyleOption[]` (required)                                  | none          |
+| `value`     | `string \| undefined` (model)                                  | `undefined`   |
+| `position`  | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'top-right'` |
+| `labels`    | `Partial<MapLabels>`                                           | `undefined`   |
+| `className` | `string`                                                       | `undefined`   |
+
+```ts
+interface MapStyleOption {
+  id: string;
+  label: string;
+  styles: MapStylesConfig; // per-theme basemap, like ng-map's [styles]
+}
+```
+
+Keep `MapStyleOption` objects referentially stable (declare the array once as a field or constant). An inline object or array in the template is a new style on every change detection pass and re-runs `setStyle`. `labels.mapStyle` (`'Map style'`) names the button; the visible text is `Map style: <selected label>`. `[(value)]` two-way binds the selected id (`valueChange` output). `className` adds classes to the rendered `.ng-style-switcher` element.
 
 ## ng-map-marker
 
@@ -479,7 +547,7 @@ provideMapLabels(
 ): Provider
 ```
 
-Translates the control buttons, the loader and the popup close button. Same three forms as `provideMapStyles`; a signal relabels every map when the locale changes. Missing keys fall back to `DEFAULT_MAP_LABELS` (English). A `labels` input on `ng-map`, `ng-map-controls`, `ng-map-popup` and `ng-marker-popup` wins over the provider. `MAP_LABELS` is the underlying `InjectionToken<Signal<Partial<MapLabels> | undefined>>`; `injectMapLabels(override?)` resolves defaults, then provider, then override, in an injection context.
+Translates the control buttons, the loader, the popup close button and the scale, legend and style switcher names. Same three forms as `provideMapStyles`; a signal relabels every map when the locale changes. Missing keys fall back to `DEFAULT_MAP_LABELS` (English). A `labels` input on `ng-map`, `ng-map-controls`, `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher`, `ng-map-popup` and `ng-marker-popup` wins over the provider. `MAP_LABELS` is the underlying `InjectionToken<Signal<Partial<MapLabels> | undefined>>`; `injectMapLabels(override?)` resolves defaults, then provider, then override, in an injection context.
 
 ```ts
 interface MapLabels {
@@ -491,6 +559,11 @@ interface MapLabels {
   loading: string; // 'Loading map' (loader aria-label)
   closePopup: string; // 'Close popup'
   marker: string; // 'Map marker' (name of an interactive marker with no text)
+  scale: string; // 'Map scale'
+  legend: string; // 'Map legend'
+  showLegend: string; // 'Show legend'
+  hideLegend: string; // 'Hide legend'
+  mapStyle: string; // 'Map style'
 }
 ```
 
@@ -523,6 +596,17 @@ interface MapGeoJSONEvent<P = Record<string, unknown>> {
   latitude: number;
   originalEvent: MapMouseEvent;
 }
+
+type MapControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+interface ScaleReading {
+  value: number;
+  unit: 'meter' | 'kilometer' | 'foot' | 'mile';
+  width: number; // bar length in pixels
+}
+
+computeScale(metersPerPixel: number, maxWidth: number, system: 'metric' | 'imperial'): ScaleReading;
+// largest round 1/2/5 length that fits maxWidth pixels; km above 1000 m, miles above 5280 ft
 
 nextId(prefix: string): string; // 'prefix-N', unique per page
 getViewport(map: MapLibreMap): MapViewport;

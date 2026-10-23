@@ -8,7 +8,7 @@
   ],
   "provideLabelsCode": "import { inject } from '@angular/core';\nimport { provideMapLabels } from 'ng-mapcn';\n\nexport const appConfig: ApplicationConfig = {\n  providers: [\n    // Static (partial) labels merge over the English defaults...\n    provideMapLabels({\n      zoomIn: 'Aproximar',\n      zoomOut: 'Afastar',\n      resetNorth: 'Apontar para o norte',\n      locate: 'Minha localização',\n      fullscreen: 'Tela cheia',\n      loading: 'Carregando mapa',\n      closePopup: 'Fechar',\n    }),\n\n    // ...or a signal, so the labels follow the active locale\n    provideMapLabels(() => inject(I18nService).mapLabels),\n  ],\n};\n\n// Per component: <ng-map-controls [labels]=\"{ zoomIn: 'Acercar' }\" />",
   "provideLabelsRows": [
-    { "name": "MapLabels", "type": "{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; marker: string }", "default": "", "description": "Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map marker'." },
+    { "name": "MapLabels", "type": "{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; marker; scale; legend; showLegend; hideLegend; mapStyle: string }", "default": "", "description": "Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map marker', 'Map scale', 'Map legend', 'Show legend', 'Hide legend', 'Map style'." },
     { "name": "provideMapLabels(source)", "type": "Partial<MapLabels> | Signal<Partial<MapLabels> | undefined> | (() => Signal<Partial<MapLabels> | undefined>)", "default": "", "description": "Provider for app-wide labels; missing keys fall back to the English defaults. The factory form runs in an injection context, so it can inject() a service holding the signal." },
     { "name": "MAP_LABELS", "type": "InjectionToken<Signal<Partial<MapLabels> | undefined>>", "default": "", "description": "The token itself, if you want to provide it by hand." },
     { "name": "DEFAULT_MAP_LABELS", "type": "MapLabels", "default": "", "description": "The English defaults." }
@@ -54,7 +54,7 @@
       "id": "mapcontrols",
       "title": "MapControls",
       "selector": "ng-map-controls",
-      "description": "Renders map control buttons: zoom, compass, locate, and fullscreen. Must be used inside ng-map.",
+      "description": "Renders map control buttons: zoom, compass, locate, and fullscreen. Mounted inside MapLibre's corner containers, so it stacks with the scale, legend and style switcher; style it with className. Must be used inside ng-map.",
       "inputs": [
         { "name": "position", "type": "'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'", "default": "'bottom-right'", "description": "Corner of the map to place the controls in." },
         { "name": "showZoom", "type": "boolean", "default": "true", "description": "Show zoom in/out buttons." },
@@ -67,6 +67,54 @@
       "outputs": [
         { "name": "locateChange", "type": "{ longitude: number; latitude: number }", "default": "", "description": "Emits the user position after a successful locate." },
         { "name": "locateError", "type": "GeolocationPositionError | Error", "default": "", "description": "Emits when locating fails (denied, timeout) or when the browser has no geolocation." }
+      ]
+    },
+    {
+      "id": "mapscale",
+      "title": "MapScale",
+      "selector": "ng-map-scale",
+      "description": "A scale bar mounted as a MapLibre control in a corner of the map. It updates while the map moves or zooms, rounds to a 1/2/5 length and formats the value with Intl for the app locale. Must be used inside ng-map.",
+      "inputs": [
+        { "name":"unit", "type":"'metric' | 'imperial' | 'both'", "default":"'metric'", "description":"Unit system of the bar. 'both' draws a metric and an imperial bar." },
+        { "name":"maxWidth", "type":"number", "default":"100", "description":"Longest bar length in pixels." },
+        { "name":"position", "type":"'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'", "default":"'bottom-left'", "description":"Corner of the map to place the scale in." },
+        { "name":"labels", "type":"Partial<MapLabels>", "default":"", "description":"Label overrides (scale), merged over provideMapLabels() and the English defaults." },
+        { "name":"className", "type":"string", "default":"", "description":"Extra space-separated classes added to the rendered .ng-scale element. Reactive; the built-in class is always kept." }
+      ],
+      "outputs": []
+    },
+    {
+      "id": "maplegend",
+      "title": "MapLegend",
+      "selector": "ng-map-legend",
+      "description": "A legend card mounted as a MapLibre control. Describes data with category swatches and colour gradients; projected content renders below the sections. Must be used inside ng-map.",
+      "inputs": [
+        { "name":"sections", "type":"MapLegendSection[]", "default":"[]", "description":"Legend sections: { type: 'categories', title?, entries: { color, label, shape?: 'circle' | 'square' | 'line' }[] } or { type: 'gradient', title?, stops: { color, value }[], format?: (value) => string }. Gradients with more than 5 stops label only the first and last stop." },
+        { "name":"title", "type":"string", "default":"", "description":"Heading of the legend; also its accessible name." },
+        { "name":"position", "type":"'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'", "default":"'top-left'", "description":"Corner of the map to place the legend in." },
+        { "name":"collapsible", "type":"boolean", "default":"false", "description":"Shows a header button that hides the legend body." },
+        { "name":"collapsed", "type":"boolean", "default":"false", "description":"Whether the body is hidden. A model(): supports two-way binding with [(collapsed)]." },
+        { "name":"labels", "type":"Partial<MapLabels>", "default":"", "description":"Label overrides (legend, showLegend, hideLegend), merged over provideMapLabels() and the English defaults." },
+        { "name":"className", "type":"string", "default":"", "description":"Extra space-separated classes added to the rendered .ng-legend element. Reactive; the built-in class is always kept." }
+      ],
+      "outputs": [
+        { "name":"collapsedChange", "type":"boolean", "default":"", "description":"Emits when the legend is collapsed or expanded (the model output of collapsed)." }
+      ]
+    },
+    {
+      "id": "mapstyleswitcher",
+      "title": "MapStyleSwitcher",
+      "selector": "ng-map-style-switcher",
+      "description": "A listbox in a map corner that switches the basemap between the given options. The selected option overrides provideMapStyles() and the map's [styles] for that map; with no value the map keeps its own style. Keep each option's styles object referentially stable: an inline object literal is a new style every render and re-runs setStyle. Must be used inside ng-map.",
+      "inputs": [
+        { "name":"options", "type":"MapStyleOption[]", "default":"required", "description":"Choices: { id: string; label: string; styles: MapStylesConfig }. Keep the array and each styles object referentially stable (declare them once, not inline in the template)." },
+        { "name":"value", "type":"string | undefined", "default":"undefined", "description":"Id of the selected option. A model(): supports [(value)]. undefined leaves the map's own style untouched." },
+        { "name":"position", "type":"'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'", "default":"'top-right'", "description":"Corner of the map to place the switcher in." },
+        { "name":"labels", "type":"Partial<MapLabels>", "default":"", "description":"Label overrides (mapStyle), merged over provideMapLabels() and the English defaults." },
+        { "name":"className", "type":"string", "default":"", "description":"Extra space-separated classes added to the rendered .ng-style-switcher element. Reactive; the built-in class is always kept." }
+      ],
+      "outputs": [
+        { "name":"valueChange", "type":"string | undefined", "default":"", "description":"Emits the selected option id (the model output of value)." }
       ]
     },
     {
