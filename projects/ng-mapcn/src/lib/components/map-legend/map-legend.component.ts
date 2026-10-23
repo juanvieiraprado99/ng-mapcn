@@ -1,5 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import {
+  afterNextRender,
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -12,6 +14,7 @@ import {
   type TemplateRef,
   viewChild,
 } from '@angular/core';
+import { type Map as MapLibreMap } from 'maplibre-gl';
 
 import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MapContextService } from '../../services/map-context.service';
@@ -36,8 +39,8 @@ export type MapLegendSection =
       format?: (value: number | string) => string;
     };
 
-/** Gradients with more stops than this label only their first and last stop. */
-const MAX_LABELLED_STOPS = 5;
+/** Minimum gap (px) kept between two visible gradient labels. */
+const LABEL_GAP = 4;
 
 @Component({
   selector: 'ng-map-legend',
@@ -61,7 +64,8 @@ export class MapLegendComponent {
   readonly className = input<string>();
 
   private readonly control = viewChild.required<TemplateRef<unknown>>('control');
-  protected readonly bodyId = nextId('ng-legend-body');
+  protected readonly id = nextId('ng-legend');
+  protected readonly bodyId = `${this.id}-body`;
 
   protected readonly rootClass = computed(() =>
     classTokens(this.className(), ['ng-legend']).join(' '),
@@ -79,7 +83,46 @@ export class MapLegendComponent {
       const map = this.ctx.map();
       if (!map || !this.isBrowser) return;
       onCleanup(mountMapControl(map, this.control(), this.injector, this.position()));
+      // The portal view renders on the next application render; measure the labels then.
+      afterNextRender(() => this.fitAll(map), { injector: this.injector });
     });
+
+    // Once the portal view has rendered (and whenever the sections change), hide the middle
+    // gradient labels that would overlap a neighbour. Browser only: it needs layout.
+    afterRenderEffect(() => {
+      const map = this.ctx.map();
+      if (!map || !this.isBrowser) return;
+      this.sections();
+      this.collapsed();
+      this.position();
+      this.fitAll(map);
+    });
+  }
+
+  private fitAll(map: MapLibreMap): void {
+    const root = map.getContainer().querySelector<HTMLElement>(`[data-legend-id="${this.id}"]`);
+    if (!root) return;
+    for (const group of root.querySelectorAll<HTMLElement>('.ng-legend-gradient-labels')) {
+      this.fitLabels(group);
+    }
+  }
+
+  /** Greedy left-to-right: a middle label stays only if it clears the previous visible label and the last one. */
+  private fitLabels(group: HTMLElement): void {
+    const labels = Array.from(group.querySelectorAll<HTMLElement>('.ng-legend-gradient-label'));
+    if (labels.length < 3) return;
+    for (const label of labels) label.hidden = false;
+
+    const last = labels[labels.length - 1].getBoundingClientRect();
+    let previousRight = labels[0].getBoundingClientRect().right;
+    for (const label of labels.slice(1, -1)) {
+      const rect = label.getBoundingClientRect();
+      if (rect.left >= previousRight + LABEL_GAP && rect.right + LABEL_GAP <= last.left) {
+        previousRight = rect.right;
+      } else {
+        label.hidden = true;
+      }
+    }
   }
 
   protected toggle(): void {
@@ -92,14 +135,13 @@ export class MapLegendComponent {
     return `linear-gradient(to right, ${colors.join(', ')})`;
   }
 
-  /** Every stop is labelled up to {@link MAX_LABELLED_STOPS} stops; beyond that only the ends. */
+  /** One label per stop; the middle ones are hidden after render when they would overlap. */
   protected gradientLabels(
     section: Extract<MapLegendSection, { type: 'gradient' }>,
   ): { text: string; left: number; edge: 'first' | 'last' | null }[] {
     const { stops, format } = section;
     const last = stops.length - 1;
-    const indexes = stops.length <= MAX_LABELLED_STOPS ? stops.map((_, index) => index) : [0, last];
-    return indexes.map((index) => {
+    return stops.map((_, index) => {
       const { value } = stops[index];
       return {
         text: format ? format(value) : String(value),

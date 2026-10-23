@@ -99,12 +99,14 @@
 }
 
 .ng-legend-gradient {
+  min-width: 160px;
   height: 8px;
   border-radius: 4px;
 }
 
 .ng-legend-gradient-labels {
   position: relative;
+  min-width: 160px;
   height: 14px;
   margin-top: 2px;
   font-size: 10px;
@@ -117,6 +119,10 @@
   top: 0;
   transform: translateX(-50%);
   white-space: nowrap;
+
+  &[hidden] {
+    display: none;
+  }
 
   &--first {
     transform: none;

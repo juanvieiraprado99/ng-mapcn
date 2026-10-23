@@ -101,22 +101,54 @@ describe('MapLegendComponent', () => {
     expect(values[1].textContent).toBe('100');
   });
 
-  it('labels the middle stops at their fraction when there are at most 5 stops', async () => {
-    const stops = [0, 50, 100].map((value) => ({ color: '#000', value }));
-    const { map } = await render({ sections: [{ type: 'gradient', stops }] });
+  // jsdom has no layout: a 200px bar where each label is `width` wide, placed like the CSS does
+  // (first left-aligned, last right-aligned, middle centred on its fraction).
+  function stubLabelLayout(width: number): void {
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: Element,
+    ) {
+      if (!this.classList.contains('ng-legend-gradient-label')) return new DOMRect();
+      const at = (parseFloat((this as HTMLElement).style.left) / 100) * 200;
+      const left = this.classList.contains('ng-legend-gradient-label--first')
+        ? at
+        : this.classList.contains('ng-legend-gradient-label--last')
+          ? at - width
+          : at - width / 2;
+      return new DOMRect(left, 0, width, 10);
+    });
+  }
+  const fiveStops = [0, 25, 50, 75, 100].map((value) => ({ color: '#000', value }));
+  const hiddenLabels = (map: { getContainer(): HTMLElement }) =>
+    qa(map, '.ng-legend-gradient-label').map((l) => l.hidden);
+
+  it('keeps middle labels that fit at their fraction', async () => {
+    stubLabelLayout(10);
+    const { map } = await render({ sections: [{ type: 'gradient', stops: fiveStops }] });
     const labels = qa(map, '.ng-legend-gradient-label');
-    expect(labels.map((l) => l.textContent)).toEqual(['0', '50', '100']);
-    expect(labels.map((l) => l.style.left)).toEqual(['0%', '50%', '100%']);
+    expect(labels.map((l) => l.textContent)).toEqual(['0', '25', '50', '75', '100']);
+    expect(labels.map((l) => l.style.left)).toEqual(['0%', '25%', '50%', '75%', '100%']);
+    expect(hiddenLabels(map)).toEqual([false, false, false, false, false]);
   });
 
-  it('labels only the first and last stop with more than 5 stops', async () => {
-    const stops = [0, 1, 2, 3, 4, 5].map((value) => ({ color: '#000', value }));
-    const { map } = await render({
-      sections: [{ type: 'gradient', stops, format: (v: number | string) => `${v}u` }],
-    });
-    const labels = qa(map, '.ng-legend-gradient-label');
-    expect(labels.map((l) => l.textContent)).toEqual(['0u', '5u']);
-    expect(labels.map((l) => l.style.left)).toEqual(['0%', '100%']);
+  it('hides middle labels that would overlap, greedily left to right', async () => {
+    stubLabelLayout(60);
+    const { map } = await render({ sections: [{ type: 'gradient', stops: fiveStops }] });
+    // 25 overlaps the first label, 50 clears it, 75 overlaps 50.
+    expect(hiddenLabels(map)).toEqual([false, true, false, true, false]);
+  });
+
+  it('never hides the first and last labels', async () => {
+    stubLabelLayout(500);
+    const { map } = await render({ sections: [{ type: 'gradient', stops: fiveStops }] });
+    expect(hiddenLabels(map)).toEqual([false, true, true, true, false]);
+  });
+
+  it('measures again when the sections change', async () => {
+    stubLabelLayout(60);
+    const { fixture, map } = await render({ sections: [{ type: 'gradient', stops: fiveStops }] });
+    update(fixture, { sections: [{ type: 'gradient', stops: fiveStops.slice(0, 3) }] });
+    await fixture.whenStable();
+    expect(hiddenLabels(map)).toEqual([false, false, false]);
   });
 
   it('formats gradient values with format', async () => {

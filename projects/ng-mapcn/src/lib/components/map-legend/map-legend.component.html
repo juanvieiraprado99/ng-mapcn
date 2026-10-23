@@ -1,6 +1,7 @@
 <ng-template #control>
   <div
     class="ng-legend"
+    [attr.data-legend-id]="id"
     [class]="rootClass()"
     role="region"
     [attr.aria-label]="title() || l().legend"
