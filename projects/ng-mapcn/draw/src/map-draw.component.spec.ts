@@ -501,6 +501,48 @@ describe('MapDrawComponent', () => {
       expect(host['features'].features.map((f: any) => f.id)).toEqual(['p-1']);
     });
 
+    it('mirrors lines and points drawn in terra-draw, with their mode', async () => {
+      const { fixture, host } = await renderLoaded({ mode: 'line' });
+      const line = {
+        id: 'l-1',
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            [0, 0],
+            [1, 1],
+          ],
+        },
+        properties: { mode: 'line' },
+      };
+
+      draw().finishDraw(line as any);
+      draw().finishDraw(point('p-1'));
+      fixture.detectChanges();
+
+      expect(host['features'].features).toEqual([line, point('p-1')]);
+    });
+
+    it('empties terra-draw when the model is set to null', async () => {
+      const { fixture } = await renderLoaded({ features: collection(polygon('a-1')) });
+
+      update(fixture, { features: null });
+
+      expect(draw().store.size).toBe(0);
+    });
+
+    it('rejects features whose shape is not offered and keeps the others', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const { host } = await renderLoaded({
+        modes: ['polygon'],
+        features: collection(point('p-1'), polygon('a-1')),
+      });
+
+      expect([...draw().store.keys()]).toEqual(['a-1']);
+      expect(host['features'].features.map((f: any) => f.id)).toEqual(['a-1']);
+      expect(host['mapError'].mock.calls[0][0].message).toContain('p-1');
+    });
+
     it('clear() empties terra-draw and the model', async () => {
       const { fixture, host } = await renderLoaded({ features: collection(polygon('a-1')) });
       const component = fixture.debugElement.query(By.directive(MapDrawComponent))
@@ -591,6 +633,59 @@ describe('MapDrawComponent', () => {
       expect(first.modeStyles['polygon']?.['fillColor']).toBe('#00ff00');
       expect(first.store.has('a-1')).toBe(true);
     });
+
+    it('goes back to the theme palette when the color is cleared', async () => {
+      const { fixture } = await renderLoaded({ color: '#ff0000' });
+      const first = draw();
+
+      update(fixture, { color: undefined });
+
+      expect(fakes.instances).toHaveLength(1);
+      expect(first.modeStyles['polygon']?.['fillColor']).toBe('#2563eb');
+    });
+
+    it('only restyles the registered modes', async () => {
+      const { fixture } = await renderLoaded({ modes: ['polygon'], editable: false });
+      const d = draw();
+      d.calls.length = 0;
+
+      update(fixture, { color: '#00ff00' });
+
+      expect(d.calls).toEqual(['updateModeOptions:polygon']);
+    });
+
+    it('does nothing when the same color is assigned again', async () => {
+      const { fixture } = await renderLoaded({ color: '#ff0000' });
+      const d = draw();
+      d.calls.length = 0;
+
+      update(fixture, { color: '#ff0000' });
+
+      expect(d.calls).toEqual([]);
+    });
+
+    it('reports a failing restyle instead of throwing', async () => {
+      const { fixture, host } = await renderLoaded();
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      draw().updateModeOptions = () => {
+        throw new Error('restyle failed');
+      };
+
+      expect(() => update(fixture, { color: '#00ff00' })).not.toThrow();
+      expect(host['mapError']).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'restyle failed' }),
+      );
+    });
+
+    it('keeps the color input over the new palette after a theme switch', async () => {
+      const { fixture, map } = await renderLoaded({ color: '#ff0000' });
+
+      update(fixture, { theme: 'dark' });
+      reloadStyle(fixture, map);
+
+      const polygonMode = draw().options.modes.find((m: any) => m.kind === 'polygon');
+      expect(polygonMode.options.styles.fillColor).toBe('#ff0000');
+    });
   });
 
   describe('outputs', () => {
@@ -677,6 +772,57 @@ describe('MapDrawComponent', () => {
       expect(modeNames(draw())).toEqual(['point', 'polygon', 'select']);
       expect(draw().store.has('p-1')).toBe(true);
     });
+
+    it('restarts without the select mode when editing is turned off, keeping the features', async () => {
+      const { fixture, host } = await renderLoaded({ features: collection(polygon('a-1')) });
+      const first = draw();
+
+      update(fixture, { editable: false });
+
+      expect(first.stopped).toBe(true);
+      expect(modeNames(draw())).toEqual(['point', 'line', 'polygon']);
+      expect(draw().store.has('a-1')).toBe(true);
+      expect(host['features'].features.map((f: any) => f.id)).toEqual(['a-1']);
+
+      update(fixture, { editable: true });
+      expect(modeNames(draw())).toEqual(['point', 'line', 'polygon', 'select']);
+    });
+
+    it('falls back to static when editing is turned off during select', async () => {
+      const { fixture } = await renderLoaded({ mode: 'select' });
+      expect(draw().getMode()).toBe('select');
+
+      update(fixture, { editable: false });
+
+      expect(draw().getMode()).toBe('static');
+    });
+
+    it('falls back to static when the active shape is no longer offered', async () => {
+      const { fixture } = await renderLoaded({ mode: 'polygon' });
+
+      update(fixture, { modes: ['point'] });
+
+      expect(draw().getMode()).toBe('static');
+      // Offered again: the mode the model still asks for comes back.
+      update(fixture, { modes: ['point', 'polygon'] });
+      expect(draw().getMode()).toBe('polygon');
+    });
+
+    it('ignores unknown shapes in modes', async () => {
+      await renderLoaded({ modes: ['polygon', 'circle'] });
+
+      expect(modeNames(draw())).toEqual(['polygon', 'select']);
+    });
+
+    it('applies a mode set before the map loaded once terra-draw starts', async () => {
+      const { fixture, map } = await render({ mode: 'line' });
+      update(fixture, { mode: 'polygon' });
+      expect(fakes.instances).toHaveLength(0);
+
+      loadAndSettle(fixture, map);
+
+      expect(draw().getMode()).toBe('polygon');
+    });
   });
 
   describe('teardown (invariant 4)', () => {
@@ -689,6 +835,20 @@ describe('MapDrawComponent', () => {
 
       expect(d.stopped).toBe(true);
       expect(d.listenerCount()).toBe(0);
+    });
+
+    it('ignores terra-draw events fired after destroy', async () => {
+      const { fixture, host } = await renderLoaded({ mode: 'polygon' });
+      const d = draw();
+      const before = host['features'];
+      const finish = [...(d.listeners['finish'] ?? [])];
+
+      fixture.destroy();
+      // A late event from a handler terra-draw captured before it was removed.
+      for (const handler of finish) handler('a-1', { mode: 'polygon', action: 'draw' });
+
+      expect(host['features']).toBe(before);
+      expect(host['drawEnd']).not.toHaveBeenCalled();
     });
 
     it('does not write the model during destroy', async () => {
