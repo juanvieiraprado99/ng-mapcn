@@ -47,6 +47,8 @@ Copy-paste (recommended, shadcn-style):
 ng add ng-mapcn@beta
 ```
 
+`ng add` installs with your workspace's package manager (npm, pnpm, yarn or bun), so run it as `npx ng add`, `pnpm ng add`, `yarn ng add` or `bunx ng add` as you prefer.
+
 This will:
 
 1. Add `maplibre-gl` to your dependencies (and `@types/geojson` to your dev dependencies)
@@ -63,12 +65,14 @@ Or as a regular npm package:
 
 ```bash
 npm install ng-mapcn@beta maplibre-gl
+# or: pnpm add / yarn add / bun add ng-mapcn@beta maplibre-gl
 ```
 
 To draw with `ng-map-draw`, also install its optional peer dependencies and import from the `ng-mapcn/draw` entry point (the core `ng-mapcn` entry never loads terra-draw):
 
 ```bash
 npm install terra-draw terra-draw-maplibre-gl-adapter
+# or: pnpm add / yarn add / bun add terra-draw terra-draw-maplibre-gl-adapter
 ```
 
 Then in your global `styles.scss`:

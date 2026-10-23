@@ -11,6 +11,7 @@ Angular port of [mapcn](https://mapcn.dev): composable MapLibre GL v6 map compon
 
 - Copy-paste (shadcn-style): `ng add ng-mapcn` adds `maplibre-gl`, registers its CSS and worker assets, appends the `.maplibregl-popup-*` CSS overrides, and copies sources to `src/app/components/ui/map` (`--path` to change). Import from that folder instead of `'ng-mapcn'`.
 - Drawing is opt-in: `ng add ng-mapcn --draw` (copies `<path>/draw`, adds `terra-draw` + `terra-draw-maplibre-gl-adapter`) or `npm i terra-draw terra-draw-maplibre-gl-adapter` and import `MapDrawComponent` from `'ng-mapcn/draw'` (the core entry never loads terra-draw).
+- `ng add` installs with the workspace's package manager (npm, pnpm, yarn or bun); install the package with that same manager too (`pnpm add`, `yarn add`, `bun add`).
 - npm: `npm i ng-mapcn maplibre-gl` (`@types/geojson` comes with it). Then add `maplibre-gl/dist/maplibre-gl.css` to `angular.json` `styles`, the worker assets (`references/troubleshooting.md`), and in global `styles.scss`: `@use 'ng-mapcn/src/lib/styles/index' as *;` and `@use 'ng-mapcn/styles.scss' as *;`.
 - Which one does the app use? Sources in `src/app/components/ui/map` (or another `--path`) → copy-paste; otherwise import from `'ng-mapcn'`.
 - Optional app-wide basemap: `provideMapStyles({ light, dark })` in `app.config.ts`.

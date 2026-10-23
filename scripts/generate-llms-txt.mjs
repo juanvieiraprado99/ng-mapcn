@@ -33,12 +33,13 @@ const INSTALLATION = `## Installation
 ng add ng-mapcn
 \`\`\`
 
-Adds \`maplibre-gl\`, registers its CSS, appends the required \`.maplibregl-popup-*\` overrides and copies the component sources into \`src/app/components/ui/map\` (customize with \`--path\`).
+Adds \`maplibre-gl\`, registers its CSS, appends the required \`.maplibregl-popup-*\` overrides and copies the component sources into \`src/app/components/ui/map\` (customize with \`--path\`). \`ng add\` installs with the workspace's package manager (npm, pnpm, yarn or bun).
 
 ### npm package
 
 \`\`\`bash
 npm install ng-mapcn maplibre-gl
+# or: pnpm add / yarn add / bun add ng-mapcn maplibre-gl
 \`\`\`
 
 \`\`\`scss

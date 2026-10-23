@@ -10,12 +10,7 @@ import {
 import { CodeBlockComponent } from '../../../shared/code-block';
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
-
-const INSTALL_CODE = `# terra-draw and its MapLibre adapter are optional peer dependencies
-npm i terra-draw terra-draw-maplibre-gl-adapter
-
-# Copy-paste distribution: copies the draw sources to <path>/draw and adds the dependencies
-ng add ng-mapcn --draw`;
+import { InstallCommandComponent } from '../../../shared/install-command';
 
 const BASIC_CODE = `import { Component, signal, viewChild } from '@angular/core';
 import { MapComponent } from 'ng-mapcn';
@@ -129,6 +124,7 @@ import { buildDrawStyles, defaultDrawPalettes } from 'ng-mapcn/draw';
     DocsImports,
     CodeBlockComponent,
     ExampleSectionComponent,
+    InstallCommandComponent,
     MapComponent,
     MapDrawComponent,
   ],
@@ -148,7 +144,15 @@ import { buildDrawStyles, defaultDrawPalettes } from 'ng-mapcn/draw';
           MapLibre adapter, then import from
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-mapcn/draw</code>.
         </p>
-        <app-code-block [code]="installCode" />
+        <app-install-command packages="terra-draw terra-draw-maplibre-gl-adapter" />
+        <p>
+          With the copy-paste distribution, add
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">--draw</code> instead:
+          it copies the draw sources to
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;path&gt;/draw</code>
+          and adds both dependencies.
+        </p>
+        <app-install-command args="--draw" />
       </app-docs-section>
 
       <app-example-section
@@ -280,7 +284,6 @@ import { buildDrawStyles, defaultDrawPalettes } from 'ng-mapcn/draw';
   `,
 })
 export class DrawPageComponent {
-  readonly installCode = INSTALL_CODE;
   readonly basicCode = BASIC_CODE;
   readonly preloadedCode = PRELOADED_CODE;
   readonly modelCode = MODEL_CODE;
