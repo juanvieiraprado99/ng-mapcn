@@ -73,6 +73,12 @@ export class MapLegendComponent {
 
   // Hierarchical DI — throws when placed outside <ng-map>, like mapcn's useMap()
   protected readonly l = injectMapLabels(this.labels);
+
+  /** Starts with the visible title (WCAG 2.5.3 label in name), then states the action. */
+  protected readonly toggleLabel = computed(
+    () =>
+      `${this.title() || this.l().legend}, ${this.collapsed() ? this.l().showLegend : this.l().hideLegend}`,
+  );
   private readonly ctx = inject(MapContextService);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly injector = inject(Injector);

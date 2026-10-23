@@ -92,7 +92,7 @@
         { "name":"sections", "type":"MapLegendSection[]", "default":"[]", "description":"Legend sections: { type: 'categories', title?, entries: { color, label, shape?: 'circle' | 'square' | 'line' }[] } or { type: 'gradient', title?, stops: { color, value }[], format?: (value) => string }. Gradients always label the first and last stop; middle stops are hidden when they would overlap a neighbour." },
         { "name":"title", "type":"string", "default":"", "description":"Heading of the legend; also its accessible name." },
         { "name":"position", "type":"'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'", "default":"'top-left'", "description":"Corner of the map to place the legend in." },
-        { "name":"collapsible", "type":"boolean", "default":"false", "description":"Shows a header button that hides the legend body." },
+        { "name":"collapsible", "type":"boolean", "default":"false", "description":"Shows a header button that hides the legend body; its accessible name is the heading followed by the show/hide label (e.g. \"Places, Hide legend\")." },
         { "name":"collapsed", "type":"boolean", "default":"false", "description":"Whether the body is hidden. A model(): supports two-way binding with [(collapsed)]." },
         { "name":"labels", "type":"Partial<MapLabels>", "default":"", "description":"Label overrides (legend, showLegend, hideLegend), merged over provideMapLabels() and the English defaults." },
         { "name":"className", "type":"string", "default":"", "description":"Extra space-separated classes added to the rendered .ng-legend element. Reactive; the built-in class is always kept." }

@@ -193,7 +193,7 @@ describe('MapLegendComponent', () => {
     const { map, fixture } = await render({ collapsible: true, sections: [categories()] });
     const button = q<HTMLButtonElement>(map, '.ng-legend-toggle');
     expect(button.getAttribute('aria-expanded')).toBe('true');
-    expect(button.getAttribute('aria-label')).toBe('Hide legend');
+    expect(button.getAttribute('aria-label')).toBe('Map legend, Hide legend');
 
     button.click();
     fixture.detectChanges();
@@ -203,7 +203,15 @@ describe('MapLegendComponent', () => {
     expect(q(map, '.ng-legend-body')).toBeNull();
     const after = q<HTMLButtonElement>(map, '.ng-legend-toggle');
     expect(after.getAttribute('aria-expanded')).toBe('false');
-    expect(after.getAttribute('aria-label')).toBe('Show legend');
+    expect(after.getAttribute('aria-label')).toBe('Map legend, Show legend');
+  });
+
+  it('starts the toggle name with its visible title (WCAG 2.5.3)', async () => {
+    const { map } = await render({ collapsible: true, title: 'Places', sections: [categories()] });
+    const button = q<HTMLButtonElement>(map, '.ng-legend-toggle');
+
+    expect(button.textContent).toContain('Places');
+    expect(button.getAttribute('aria-label')).toBe('Places, Hide legend');
   });
 
   it('has no button when not collapsible', async () => {
@@ -247,6 +255,6 @@ describe('MapLegendComponent', () => {
 
   it('uses label overrides', async () => {
     const { map } = await render({ collapsible: true, labels: { hideLegend: 'Ocultar' } });
-    expect(q(map, '.ng-legend-toggle').getAttribute('aria-label')).toBe('Ocultar');
+    expect(q(map, '.ng-legend-toggle').getAttribute('aria-label')).toBe('Map legend, Ocultar');
   });
 });

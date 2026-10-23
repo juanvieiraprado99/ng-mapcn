@@ -102,7 +102,7 @@ type MapLegendSection =
     };
 ```
 
-Gradients always label the first and last stop; middle stops are labelled only when they fit without overlapping (`format` applies to every label). `title` is the heading and the accessible name; `collapsible` adds a header toggle named by `labels.showLegend` / `labels.hideLegend` (`'Show legend'` / `'Hide legend'`), and `labels.legend` (`'Map legend'`) names the region when there is no `title`. `[(collapsed)]` two-way binds the state (`collapsedChange` output). `className` adds classes to the rendered `.ng-legend` element.
+Gradients always label the first and last stop; middle stops are labelled only when they fit without overlapping (`format` applies to every label). `title` is the heading and the accessible name; `collapsible` adds a header toggle whose accessible name is the visible heading followed by `labels.showLegend` / `labels.hideLegend` (`'Show legend'` / `'Hide legend'`), e.g. `'Places, Hide legend'`, and `labels.legend` (`'Map legend'`) names the region when there is no `title`. `[(collapsed)]` two-way binds the state (`collapsedChange` output). `className` adds classes to the rendered `.ng-legend` element.
 
 ## ng-map-style-switcher
 

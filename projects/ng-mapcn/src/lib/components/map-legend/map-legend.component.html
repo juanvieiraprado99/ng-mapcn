@@ -12,7 +12,7 @@
         class="ng-legend-toggle"
         [attr.aria-expanded]="!collapsed()"
         [attr.aria-controls]="bodyId"
-        [attr.aria-label]="collapsed() ? l().showLegend : l().hideLegend"
+        [attr.aria-label]="toggleLabel()"
         (click)="toggle()"
       >
         <span class="ng-legend-title">{{ title() || l().legend }}</span>
