@@ -78,6 +78,7 @@ describe('map labels', () => {
 
     labels.set({ zoomIn: 'Acercar', closePopup: 'Cerrar' });
     update(fixture, {});
+    // The control renders in a portal view attached to the ApplicationRef, which fixture.detectChanges() does not refresh.
     TestBed.inject(ApplicationRef).tick();
     expect(titles(map!.getContainer())[0]).toBe('Acercar');
     expect(aria(popup(), '.ng-popup-close')).toBe('Cerrar');

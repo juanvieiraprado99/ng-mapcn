@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderMap, update } from '../../../testing/render';
+import { trackZoneRun } from '../../../testing/zone';
 import { MapControlsComponent } from './map-controls.component';
 
 const TEMPLATE = `
@@ -159,13 +160,26 @@ describe('MapControlsComponent', () => {
 
       map.jumpTo({ bearing: 30, pitch: 40 });
       map.fire('rotate');
-      TestBed.inject(ApplicationRef).tick();
       expect(svg.style.transform).toBe('rotateX(40deg) rotateZ(-30deg)');
 
       map.jumpTo({ bearing: -10, pitch: 5 });
       map.fire('pitch');
-      TestBed.inject(ApplicationRef).tick();
       expect(svg.style.transform).toBe('rotateX(5deg) rotateZ(10deg)');
+    });
+
+    it('writes the compass transform without entering the zone or ticking per event', async () => {
+      const { map } = await render({ showCompass: true });
+      const zone = trackZoneRun();
+      const tick = vi.spyOn(TestBed.inject(ApplicationRef), 'tick');
+      const svg = button(map, 'Reset north').querySelector('svg')!;
+
+      map.jumpTo({ bearing: 20, pitch: 10 });
+      map.fire('rotate');
+      map.fire('pitch');
+
+      expect(svg.style.transform).toBe('rotateX(10deg) rotateZ(-20deg)');
+      expect(zone.runs).toBe(0);
+      expect(tick).not.toHaveBeenCalled();
     });
 
     it('syncs the compass immediately when it is enabled on a rotated map', async () => {

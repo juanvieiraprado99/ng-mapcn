@@ -85,15 +85,16 @@ export class MapControlsComponent {
       onCleanup(mountMapControl(map, this.control(), this.injector, this.position()));
     });
 
-    // Compass sync: rotate/pitch events feed the svg transform binding.
+    // Compass sync. The per-frame writes go straight to the DOM (no signal, so no change detection
+    // per rotate/pitch event); the signal only seeds the svg when it (re)renders.
     effect((onCleanup) => {
       const map = this.ctx.map();
       if (!map || !this.showCompass()) return;
 
-      const sync = () => this.syncCompass(map);
+      const sync = () => this.writeCompass(map);
       map.on('rotate', sync);
       map.on('pitch', sync);
-      sync();
+      this.compassTransform.set(this.compassTransformFor(map));
 
       onCleanup(() => {
         map.off('rotate', sync);
@@ -170,7 +171,15 @@ export class MapControlsComponent {
     Promise.resolve(request).catch(() => {});
   }
 
-  private syncCompass(map: MapLibreMap): void {
-    this.compassTransform.set(`rotateX(${map.getPitch()}deg) rotateZ(${-map.getBearing()}deg)`);
+  private compassTransformFor(map: MapLibreMap): string {
+    return `rotateX(${map.getPitch()}deg) rotateZ(${-map.getBearing()}deg)`;
+  }
+
+  /** Every compass on this map shows the same rotation, so write them all without a query. */
+  private writeCompass(map: MapLibreMap): void {
+    const transform = this.compassTransformFor(map);
+    for (const el of map.getContainer().querySelectorAll<SVGElement>('.ng-control-compass')) {
+      el.style.transform = transform;
+    }
   }
 }
