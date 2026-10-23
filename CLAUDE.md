@@ -33,7 +33,9 @@ npm run test:coverage   # library with v8 coverage (coverage/ng-mapcn)
 
 # End-to-end tests (Playwright + headless Chromium, offline fixtures)
 npm run e2e:build       # prod build (dist/demo) + dev build (dist/demo-e2e)
-npm run e2e             # dev project (interaction specs) + prod project (smoke)
+npm run e2e:build:dev   # dev build only, against the installed ng-mapcn (run npm run install:lib after lib changes)
+npm run e2e             # dev project (interaction specs) + prod project (smoke); 4 workers locally
+npm run e2e:dev         # dev project only (no prod build needed); add a spec path to run one file
 npm run e2e:ui          # Playwright UI mode
 # Pages for smoke/SSR/axe specs live in e2e/routes.ts; a new component adds its docs page + map count there
 # and its tag to projects/ng-mapcn/src/lib/ssr.spec.ts (see CONTRIBUTING.md > E2E tests)
