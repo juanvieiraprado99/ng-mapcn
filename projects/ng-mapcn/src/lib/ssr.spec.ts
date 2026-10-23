@@ -11,6 +11,7 @@ import { MapFillExtrusionComponent } from './components/map-fill-extrusion/map-f
 import { MapGeoJSONComponent } from './components/map-geojson/map-geojson.component';
 import { MapHeatmapComponent } from './components/map-heatmap/map-heatmap.component';
 import { MapImageOverlayComponent } from './components/map-image-overlay/map-image-overlay.component';
+import { MapLegendComponent } from './components/map-legend/map-legend.component';
 import { MapMarkerComponent } from './components/map-marker/map-marker.component';
 import { MapPopupComponent } from './components/map-popup/map-popup.component';
 import { MapRasterSourceComponent } from './components/map-raster-source/map-raster-source.component';
@@ -34,6 +35,7 @@ const TEMPLATE = `
   <ng-map>
     <ng-map-controls [showCompass]="true" [showLocate]="true" [showFullscreen]="true" />
     <ng-map-scale unit="both" />
+    <ng-map-legend title="Legend" [collapsible]="true" [sections]="[]">Extra</ng-map-legend>
     <ng-map-marker [longitude]="1" [latitude]="2">
       <ng-marker-content><ng-marker-label>Label</ng-marker-label></ng-marker-content>
       <ng-marker-tooltip>Tip</ng-marker-tooltip>
@@ -84,6 +86,7 @@ describe('server-side rendering', () => {
     const { fixture, ctx } = await renderMap(TEMPLATE, {
       imports: [
         MapControlsComponent,
+        MapLegendComponent,
         MapScaleComponent,
         MapMarkerComponent,
         MarkerContentComponent,

@@ -12,6 +12,7 @@ export * from './lib/components/map-fill-extrusion/map-fill-extrusion.component'
 export * from './lib/components/map-geojson/map-geojson.component';
 export * from './lib/components/map-heatmap/map-heatmap.component';
 export * from './lib/components/map-image-overlay/map-image-overlay.component';
+export * from './lib/components/map-legend/map-legend.component';
 export * from './lib/components/map-marker/map-marker.component';
 export * from './lib/components/map-marker/marker-context.service';
 export * from './lib/components/map-popup/map-popup.component';

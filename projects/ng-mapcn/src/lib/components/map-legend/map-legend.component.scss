@@ -1,0 +1,112 @@
+// Positioning is MapLibre's: the card is mounted in its `.maplibregl-ctrl-<position>` container.
+
+.ng-legend {
+  box-sizing: border-box;
+  min-width: 120px;
+  max-width: 240px;
+  padding: 8px 10px;
+  background: var(--background, #fff);
+  color: var(--foreground, #1a1a1a);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-md, 6px);
+  box-shadow:
+    0 1px 3px 0 rgb(0 0 0 / 0.1),
+    0 1px 2px -1px rgb(0 0 0 / 0.1);
+  font-size: 12px;
+  line-height: 1.3;
+  text-align: left;
+}
+
+.ng-legend-title {
+  font-weight: 600;
+}
+
+.ng-legend-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}
+
+.ng-legend-chevron {
+  flex: none;
+  transition: transform 150ms;
+
+  &--collapsed {
+    transform: rotate(180deg);
+  }
+}
+
+.ng-legend-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ng-legend-toggle + .ng-legend-body,
+.ng-legend-title + .ng-legend-body {
+  margin-top: 6px;
+}
+
+.ng-legend-section-title {
+  margin-bottom: 4px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.ng-legend-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ng-legend-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ng-legend-swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+
+  &--square {
+    border-radius: 2px;
+  }
+
+  &--line {
+    width: 16px;
+    height: 3px;
+    border-radius: 2px;
+  }
+}
+
+.ng-legend-gradient {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.ng-legend-gradient-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  font-size: 10px;
+  opacity: 0.8;
+}
