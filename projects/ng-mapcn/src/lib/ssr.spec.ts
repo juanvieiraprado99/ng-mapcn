@@ -17,6 +17,7 @@ import { MapPopupComponent } from './components/map-popup/map-popup.component';
 import { MapRasterSourceComponent } from './components/map-raster-source/map-raster-source.component';
 import { MapRouteComponent } from './components/map-route/map-route.component';
 import { MapScaleComponent } from './components/map-scale/map-scale.component';
+import { MapStyleSwitcherComponent } from './components/map-style-switcher/map-style-switcher.component';
 import { MapTerrainComponent } from './components/map-terrain/map-terrain.component';
 import { MapVectorSourceComponent } from './components/map-vector-source/map-vector-source.component';
 import { MarkerContentComponent } from './components/marker-content/marker-content.component';
@@ -36,6 +37,7 @@ const TEMPLATE = `
     <ng-map-controls [showCompass]="true" [showLocate]="true" [showFullscreen]="true" />
     <ng-map-scale unit="both" />
     <ng-map-legend title="Legend" [collapsible]="true" [sections]="[]">Extra</ng-map-legend>
+    <ng-map-style-switcher [options]="[]" />
     <ng-map-marker [longitude]="1" [latitude]="2">
       <ng-marker-content><ng-marker-label>Label</ng-marker-label></ng-marker-content>
       <ng-marker-tooltip>Tip</ng-marker-tooltip>
@@ -87,6 +89,7 @@ describe('server-side rendering', () => {
       imports: [
         MapControlsComponent,
         MapLegendComponent,
+        MapStyleSwitcherComponent,
         MapScaleComponent,
         MapMarkerComponent,
         MarkerContentComponent,

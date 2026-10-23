@@ -20,6 +20,7 @@ export * from './lib/components/map-raster-source/map-raster-source.component';
 export * from './lib/components/map-route/map-route.component';
 export * from './lib/components/map-route/route-context.service';
 export * from './lib/components/map-scale/map-scale.component';
+export * from './lib/components/map-style-switcher/map-style-switcher.component';
 export * from './lib/components/map-terrain/map-terrain.component';
 export * from './lib/components/map-vector-source/map-vector-source.component';
 export * from './lib/components/marker-content/marker-content.component';

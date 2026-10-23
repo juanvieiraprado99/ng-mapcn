@@ -1,0 +1,60 @@
+<ng-template #control>
+  <div class="ng-style-switcher" [class]="rootClass()" [id]="baseId">
+    <button
+      type="button"
+      class="ng-style-switcher-button"
+      [id]="buttonId"
+      aria-haspopup="listbox"
+      [attr.aria-expanded]="open()"
+      [attr.aria-controls]="open() ? listId : null"
+      [attr.aria-label]="l().mapStyle"
+      (click)="toggle()"
+      (keydown)="onButtonKeydown($event)"
+    >
+      <span>{{ selected()?.label ?? l().mapStyle }}</span>
+      <svg
+        class="ng-style-switcher-chevron"
+        viewBox="0 0 24 24"
+        width="14"
+        height="14"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </button>
+
+    @if (open()) {
+      <ul
+        class="ng-style-switcher-list"
+        [class.ng-style-switcher-list--up]="opensUp()"
+        role="listbox"
+        tabindex="-1"
+        [id]="listId"
+        [attr.aria-label]="l().mapStyle"
+        [attr.aria-activedescendant]="activeId()"
+        (keydown)="onListKeydown($event)"
+      >
+        @for (option of options(); track option.id; let i = $index) {
+          <!-- Keyboard access is the listbox's (aria-activedescendant); options are not focusable. -->
+          <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+          <li
+            class="ng-style-switcher-option"
+            [class.ng-style-switcher-option--active]="i === activeIndex()"
+            role="option"
+            [id]="optionId(i)"
+            [attr.aria-selected]="option.id === value()"
+            (click)="select(i)"
+            (pointermove)="activeIndex.set(i)"
+          >
+            {{ option.label }}
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</ng-template>
