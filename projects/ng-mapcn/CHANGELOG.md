@@ -1,5 +1,25 @@
 # Changelog
 
+## [22.0.0-beta.8](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.7...v22.0.0-beta.8) (2026-10-23)
+
+
+### Features
+
+* **demo:** scene builder playground with a draggable layer stack ([#106](https://github.com/juanvieiraprado99/ng-mapcn/issues/106)) ([c7b61e9](https://github.com/juanvieiraprado99/ng-mapcn/commit/c7b61e931b788235135e14240b0e8327233e753f))
+
+
+### Bug Fixes
+
+* **fill-extrusion:** find the buildings in Carto's current vector tiles ([#109](https://github.com/juanvieiraprado99/ng-mapcn/issues/109)) ([6bf3b19](https://github.com/juanvieiraprado99/ng-mapcn/commit/6bf3b198967036739f1f133ac4e57992c2a1ce4c))
+* **map:** keep the load gate consistent across style swaps ([#91](https://github.com/juanvieiraprado99/ng-mapcn/issues/91)) ([a6e97d2](https://github.com/juanvieiraprado99/ng-mapcn/commit/a6e97d24a4c206b97059297b674bb22532ef3ecd))
+* **schematics:** make ng add robust to real-world workspaces ([#94](https://github.com/juanvieiraprado99/ng-mapcn/issues/94)) ([8af6c74](https://github.com/juanvieiraprado99/ng-mapcn/commit/8af6c7432aefb9eaa4151924bb08874616e0131c))
+* small correctness fixes in geojson, marker content, tooltip and cluster layer ([#92](https://github.com/juanvieiraprado99/ng-mapcn/issues/92)) ([feec6b1](https://github.com/juanvieiraprado99/ng-mapcn/commit/feec6b108a9c6c728299b8efeb9ceb2ad8383179))
+
+
+### Performance Improvements
+
+* cheaper fit-to-bounds and fewer zone re-entries ([#93](https://github.com/juanvieiraprado99/ng-mapcn/issues/93)) ([e44111e](https://github.com/juanvieiraprado99/ng-mapcn/commit/e44111efb5e6d518cb54e787580f7e7d5d686d0e))
+
 ## [22.0.0-beta.7](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.6...v22.0.0-beta.7) (2026-10-15)
 
 
