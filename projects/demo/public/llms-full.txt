@@ -2,7 +2,7 @@
 
 > Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
 
-Version: 22.0.0-beta.7 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
+Version: 22.0.0-beta.8 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
 
 ## Installation
 
@@ -120,7 +120,7 @@ The root container component that initializes MapLibre GL and provides context t
 
 `ng-map-controls`
 
-Renders map control buttons: zoom, compass, locate, and fullscreen. Must be used inside ng-map.
+Renders map control buttons: zoom, compass, locate, and fullscreen. Mounted inside MapLibre's corner containers, so it stacks with the scale, legend and style switcher; style it with className. Must be used inside ng-map.
 
 **Inputs**
 
@@ -140,6 +140,68 @@ Renders map control buttons: zoom, compass, locate, and fullscreen. Must be used
 |---|---|---|---|
 | `locateChange` | `{ longitude: number; latitude: number }` | — | Emits the user position after a successful locate. |
 | `locateError` | `GeolocationPositionError \| Error` | — | Emits when locating fails (denied, timeout) or when the browser has no geolocation. |
+
+### MapScale
+
+`ng-map-scale`
+
+A scale bar mounted as a MapLibre control in a corner of the map. It updates while the map moves or zooms, rounds to a 1/2/5 length and formats the value with Intl for the app locale. Must be used inside ng-map.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `unit` | `'metric' \| 'imperial' \| 'both'` | `'metric'` | Unit system of the bar. 'both' draws a metric and an imperial bar. |
+| `maxWidth` | `number` | `100` | Longest bar length in pixels. |
+| `position` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'bottom-left'` | Corner of the map to place the scale in. |
+| `labels` | `Partial<MapLabels>` | — | Label overrides (scale), merged over provideMapLabels() and the English defaults. |
+| `className` | `string` | — | Extra space-separated classes added to the rendered .ng-scale element. Reactive; the built-in class is always kept. |
+
+### MapLegend
+
+`ng-map-legend`
+
+A legend card mounted as a MapLibre control. Describes data with category swatches and colour gradients; projected content renders below the sections. Must be used inside ng-map.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `sections` | `MapLegendSection[]` | `[]` | Legend sections: { type: 'categories', title?, entries: { color, label, shape?: 'circle' \| 'square' \| 'line' }[] } or { type: 'gradient', title?, stops: { color, value }[], format?: (value) => string }. Gradients with more than 5 stops label only the first and last stop. |
+| `title` | `string` | — | Heading of the legend; also its accessible name. |
+| `position` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'top-left'` | Corner of the map to place the legend in. |
+| `collapsible` | `boolean` | `false` | Shows a header button that hides the legend body. |
+| `collapsed` | `boolean` | `false` | Whether the body is hidden. A model(): supports two-way binding with [(collapsed)]. |
+| `labels` | `Partial<MapLabels>` | — | Label overrides (legend, showLegend, hideLegend), merged over provideMapLabels() and the English defaults. |
+| `className` | `string` | — | Extra space-separated classes added to the rendered .ng-legend element. Reactive; the built-in class is always kept. |
+
+**Outputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `collapsedChange` | `boolean` | — | Emits when the legend is collapsed or expanded (the model output of collapsed). |
+
+### MapStyleSwitcher
+
+`ng-map-style-switcher`
+
+A listbox in a map corner that switches the basemap between the given options. The selected option overrides provideMapStyles() and the map's [styles] for that map; with no value the map keeps its own style. Keep each option's styles object referentially stable: an inline object literal is a new style every render and re-runs setStyle. Must be used inside ng-map.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `options` | `MapStyleOption[]` | `required` | Choices: { id: string; label: string; styles: MapStylesConfig }. Keep the array and each styles object referentially stable (declare them once, not inline in the template). |
+| `value` | `string \| undefined` | `undefined` | Id of the selected option. A model(): supports [(value)]. undefined leaves the map's own style untouched. |
+| `position` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'top-right'` | Corner of the map to place the switcher in. |
+| `labels` | `Partial<MapLabels>` | — | Label overrides (mapStyle), merged over provideMapLabels() and the English defaults. |
+| `className` | `string` | — | Extra space-separated classes added to the rendered .ng-style-switcher element. Reactive; the built-in class is always kept. |
+
+**Outputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `valueChange` | `string \| undefined` | — | Emits the selected option id (the model output of value). |
 
 ### MapMarker
 
@@ -639,7 +701,7 @@ export const appConfig: ApplicationConfig = {
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `MapLabels` | `{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; marker: string }` | — | Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map marker'. |
+| `MapLabels` | `{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; marker; scale; legend; showLegend; hideLegend; mapStyle: string }` | — | Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map marker', 'Map scale', 'Map legend', 'Show legend', 'Hide legend', 'Map style'. |
 | `provideMapLabels(source)` | `Partial<MapLabels> \| Signal<Partial<MapLabels> \| undefined> \| (() => Signal<Partial<MapLabels> \| undefined>)` | — | Provider for app-wide labels; missing keys fall back to the English defaults. The factory form runs in an injection context, so it can inject() a service holding the signal. |
 | `MAP_LABELS` | `InjectionToken<Signal<Partial<MapLabels> \| undefined>>` | — | The token itself, if you want to provide it by hand. |
 | `DEFAULT_MAP_LABELS` | `MapLabels` | — | The English defaults. |

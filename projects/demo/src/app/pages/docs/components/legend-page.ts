@@ -19,13 +19,20 @@ import {
   MapLegendComponent,
   MapMarkerComponent,
   MarkerContentComponent,
+  MarkerTooltipComponent,
   type MapLegendSection,
 } from 'ng-mapcn';
 
 @Component({
   selector: 'app-legend-categories-map',
   standalone: true,
-  imports: [MapComponent, MapLegendComponent, MapMarkerComponent, MarkerContentComponent],
+  imports: [
+    MapComponent,
+    MapLegendComponent,
+    MapMarkerComponent,
+    MarkerContentComponent,
+    MarkerTooltipComponent,
+  ],
   template: \`
     <div class="h-[420px]">
       <ng-map [center]="[2.3522, 48.8566]" [zoom]="11.5">
@@ -37,6 +44,7 @@ import {
                 [style.background-color]="place.color"
               ></span>
             </ng-marker-content>
+            <ng-marker-tooltip>{{ place.name }}</ng-marker-tooltip>
           </ng-map-marker>
         }
         <ng-map-legend title="Places" [sections]="sections" />
@@ -81,13 +89,34 @@ const STOPS = [
   { color: '#7f1d1d', value: 100 },
 ];
 
+// one 1.9° x 3° square per stop, laid out west to east
+function square(index: number): GeoJSON.Feature<GeoJSON.Polygon> {
+  const west = -5 + index * 2;
+  return {
+    type: 'Feature',
+    properties: {},
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [west, -1.5],
+          [west + 1.9, -1.5],
+          [west + 1.9, 1.5],
+          [west, 1.5],
+          [west, -1.5],
+        ],
+      ],
+    },
+  };
+}
+
 @Component({
   selector: 'app-legend-gradient-map',
   standalone: true,
   imports: [MapComponent, MapGeoJSONComponent, MapLegendComponent],
   template: \`
     <div class="h-[420px]">
-      <ng-map [blank]="true" [center]="[0, 0]" [zoom]="3.2">
+      <ng-map [blank]="true" [center]="[0, 0]" [zoom]="5">
         @for (cell of cells; track cell.id) {
           <ng-map-geojson
             [id]="cell.id"
@@ -110,7 +139,6 @@ export class LegendGradientMapComponent {
       format: (value) => value + ' / km²',
     },
   ];
-  // one square per stop; square(i) returns a GeoJSON polygon west of the next one
   readonly cells = STOPS.map((stop, index) => ({
     id: 'legend-cell-' + index,
     color: stop.color,
@@ -175,8 +203,9 @@ const GRADIENT_STOPS = [
   { color: '#7f1d1d', value: 100 },
 ];
 
+// one 1.9° x 3° square per stop, laid out west to east
 function square(index: number): GeoJSON.Feature<GeoJSON.Polygon> {
-  const west = -4 + index * 1.6;
+  const west = -5 + index * 2;
   return {
     type: 'Feature',
     properties: {},
@@ -184,11 +213,11 @@ function square(index: number): GeoJSON.Feature<GeoJSON.Polygon> {
       type: 'Polygon',
       coordinates: [
         [
-          [west, -1],
-          [west + 1.5, -1],
-          [west + 1.5, 1],
-          [west, 1],
-          [west, -1],
+          [west, -1.5],
+          [west + 1.9, -1.5],
+          [west + 1.9, 1.5],
+          [west, 1.5],
+          [west, -1.5],
         ],
       ],
     },
@@ -258,7 +287,7 @@ function square(index: number): GeoJSON.Feature<GeoJSON.Polygon> {
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">format</code>
           to render the values.
         </span>
-        <ng-map [blank]="true" [center]="[0, 0]" [zoom]="3.2">
+        <ng-map [blank]="true" [center]="[0, 0]" [zoom]="5">
           @for (cell of cells; track cell.id) {
             <ng-map-geojson
               [id]="cell.id"
