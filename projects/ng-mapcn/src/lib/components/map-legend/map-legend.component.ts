@@ -35,7 +35,7 @@ export type MapLegendSection =
       type: 'gradient';
       title?: string;
       stops: { color: string; value: number | string }[];
-      /** Formats the first and last stop values. */
+      /** Formats every stop value. */
       format?: (value: number | string) => string;
     };
 

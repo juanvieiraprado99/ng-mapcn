@@ -282,8 +282,8 @@ function square(index: number): GeoJSON.Feature<GeoJSON.Polygon> {
         <span description>
           A
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">gradient</code>
-          section draws a colour ramp from its stops. Every stop is labelled up
-          to five stops; use
+          section draws a colour ramp from its stops. The first and last stops are
+          always labelled; middle stops are labelled when they fit. Use
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">format</code>
           to render the values.
         </span>

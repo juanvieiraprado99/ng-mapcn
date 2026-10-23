@@ -167,7 +167,7 @@ A legend card mounted as a MapLibre control. Describes data with category swatch
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `sections` | `MapLegendSection[]` | `[]` | Legend sections: { type: 'categories', title?, entries: { color, label, shape?: 'circle' \| 'square' \| 'line' }[] } or { type: 'gradient', title?, stops: { color, value }[], format?: (value) => string }. Gradients with more than 5 stops label only the first and last stop. |
+| `sections` | `MapLegendSection[]` | `[]` | Legend sections: { type: 'categories', title?, entries: { color, label, shape?: 'circle' \| 'square' \| 'line' }[] } or { type: 'gradient', title?, stops: { color, value }[], format?: (value) => string }. Gradients always label the first and last stop; middle stops are hidden when they would overlap a neighbour. |
 | `title` | `string` | — | Heading of the legend; also its accessible name. |
 | `position` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'top-left'` | Corner of the map to place the legend in. |
 | `collapsible` | `boolean` | `false` | Shows a header button that hides the legend body. |
