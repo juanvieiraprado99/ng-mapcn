@@ -63,8 +63,15 @@
                 [style.background-image]="gradientImage(section.stops)"
               ></div>
               <div class="ng-legend-gradient-labels">
-                <span class="ng-legend-gradient-label">{{ gradientEnd(section, 'first') }}</span>
-                <span class="ng-legend-gradient-label">{{ gradientEnd(section, 'last') }}</span>
+                @for (label of gradientLabels(section); track $index) {
+                  <span
+                    class="ng-legend-gradient-label"
+                    [class.ng-legend-gradient-label--first]="label.edge === 'first'"
+                    [class.ng-legend-gradient-label--last]="label.edge === 'last'"
+                    [style.left.%]="label.left"
+                    >{{ label.text }}</span
+                  >
+                }
               </div>
             }
           </div>

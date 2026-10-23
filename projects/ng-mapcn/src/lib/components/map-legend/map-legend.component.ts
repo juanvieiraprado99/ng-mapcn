@@ -36,6 +36,9 @@ export type MapLegendSection =
       format?: (value: number | string) => string;
     };
 
+/** Gradients with more stops than this label only their first and last stop. */
+const MAX_LABELLED_STOPS = 5;
+
 @Component({
   selector: 'ng-map-legend',
   templateUrl: './map-legend.component.html',
@@ -89,12 +92,20 @@ export class MapLegendComponent {
     return `linear-gradient(to right, ${colors.join(', ')})`;
   }
 
-  protected gradientEnd(
+  /** Every stop is labelled up to {@link MAX_LABELLED_STOPS} stops; beyond that only the ends. */
+  protected gradientLabels(
     section: Extract<MapLegendSection, { type: 'gradient' }>,
-    end: 'first' | 'last',
-  ): string {
-    const stop = section.stops.at(end === 'first' ? 0 : -1);
-    if (!stop) return '';
-    return section.format ? section.format(stop.value) : String(stop.value);
+  ): { text: string; left: number; edge: 'first' | 'last' | null }[] {
+    const { stops, format } = section;
+    const last = stops.length - 1;
+    const indexes = stops.length <= MAX_LABELLED_STOPS ? stops.map((_, index) => index) : [0, last];
+    return indexes.map((index) => {
+      const { value } = stops[index];
+      return {
+        text: format ? format(value) : String(value),
+        left: last > 0 ? (index / last) * 100 : 0,
+        edge: index === 0 ? 'first' : index === last ? 'last' : null,
+      };
+    });
   }
 }

@@ -101,6 +101,24 @@ describe('MapLegendComponent', () => {
     expect(values[1].textContent).toBe('100');
   });
 
+  it('labels the middle stops at their fraction when there are at most 5 stops', async () => {
+    const stops = [0, 50, 100].map((value) => ({ color: '#000', value }));
+    const { map } = await render({ sections: [{ type: 'gradient', stops }] });
+    const labels = qa(map, '.ng-legend-gradient-label');
+    expect(labels.map((l) => l.textContent)).toEqual(['0', '50', '100']);
+    expect(labels.map((l) => l.style.left)).toEqual(['0%', '50%', '100%']);
+  });
+
+  it('labels only the first and last stop with more than 5 stops', async () => {
+    const stops = [0, 1, 2, 3, 4, 5].map((value) => ({ color: '#000', value }));
+    const { map } = await render({
+      sections: [{ type: 'gradient', stops, format: (v: number | string) => `${v}u` }],
+    });
+    const labels = qa(map, '.ng-legend-gradient-label');
+    expect(labels.map((l) => l.textContent)).toEqual(['0u', '5u']);
+    expect(labels.map((l) => l.style.left)).toEqual(['0%', '100%']);
+  });
+
   it('formats gradient values with format', async () => {
     const { map } = await render({
       sections: [{ ...gradient, format: (v: number | string) => `${v}%` }],

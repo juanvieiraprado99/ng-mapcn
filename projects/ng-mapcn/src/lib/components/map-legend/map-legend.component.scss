@@ -104,9 +104,25 @@
 }
 
 .ng-legend-gradient-labels {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 14px;
   margin-top: 2px;
   font-size: 10px;
   opacity: 0.8;
+}
+
+// Each label sits at its stop's fraction; the ends align inward so they stay inside the card.
+.ng-legend-gradient-label {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+
+  &--first {
+    transform: none;
+  }
+
+  &--last {
+    transform: translateX(-100%);
+  }
 }
