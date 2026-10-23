@@ -83,6 +83,8 @@ export class MapControlsComponent {
       const map = this.ctx.map();
       if (!map || !this.isBrowser) return;
       onCleanup(mountMapControl(map, this.control(), this.injector, this.position()));
+      // The view was re-created (portals render synchronously): its compass starts unrotated.
+      this.writeCompass(map);
     });
 
     // Compass sync. The per-frame writes go straight to the DOM (no signal, so no change detection

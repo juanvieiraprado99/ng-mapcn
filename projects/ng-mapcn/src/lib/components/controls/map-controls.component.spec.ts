@@ -194,6 +194,18 @@ describe('MapControlsComponent', () => {
       expect(map.listenerCount('rotate')).toBe(1);
     });
 
+    it('resyncs the compass after a position change re-creates the view', async () => {
+      const { fixture, map } = await render({ showCompass: true });
+      map.jumpTo({ bearing: 30, pitch: 40 });
+      map.fire('rotate');
+
+      update(fixture, { position: 'top-left' });
+      await fixture.whenStable();
+
+      const svg = button(map, 'Reset north').querySelector('svg')!;
+      expect(svg.style.transform).toBe('rotateX(40deg) rotateZ(-30deg)');
+    });
+
     it('registers no compass handlers when the compass is hidden', async () => {
       const { map } = await render();
 
