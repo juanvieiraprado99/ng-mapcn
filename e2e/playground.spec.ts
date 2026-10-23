@@ -191,4 +191,82 @@ test.describe('playground', () => {
       .toBe('raster');
     expect(await mapCall(page, PLAYGROUND, (map) => map.getSource('osm')?.type)).toBe('raster');
   });
+
+  test('the terrain block enables 3D terrain with a hillshade', async ({ page }) => {
+    await gotoAndWaitForMap(page, '/playground', PLAYGROUND);
+    await page.getByRole('button', { name: 'Add Terrain' }).click();
+
+    await expect
+      .poll(() => mapCall(page, PLAYGROUND, (map) => map.getTerrain()?.exaggeration))
+      .toBe(1);
+    expect(
+      await mapCall(page, PLAYGROUND, (map) =>
+        map.getStyle().layers.some((layer) => layer.type === 'hillshade'),
+      ),
+    ).toBe(true);
+    await expect(page.getByRole('button', { name: 'Add Terrain' })).toBeDisabled();
+
+    await setSlider(page, '#pg-terrain-exaggeration', { min: 0, step: 0.1, value: 2 });
+    await expect
+      .poll(() => mapCall(page, PLAYGROUND, (map) => map.getTerrain()?.exaggeration))
+      .toBe(2);
+  });
+
+  test('the draw block draws a polygon on the playground map', async ({ page }) => {
+    await gotoAndWaitForMap(page, '/playground', PLAYGROUND);
+    await page.getByRole('button', { name: 'Remove route' }).click();
+    await page.getByRole('button', { name: 'Add Draw' }).click();
+    await expect
+      .poll(async () => (await layerIds(page, PLAYGROUND)).some((id) => id.startsWith('td-')))
+      .toBe(true);
+
+    const box = (await page.locator('ng-map').first().locator('canvas').boundingBox())!;
+    const at = (fx: number, fy: number) => ({
+      x: box.x + box.width * fx,
+      y: box.y + box.height * fy,
+    });
+    const [a, b, c] = [at(0.3, 0.3), at(0.6, 0.3), at(0.45, 0.6)];
+    for (const point of [a, b, c, c]) {
+      await page.mouse.move(point.x, point.y);
+      await page.mouse.click(point.x, point.y);
+    }
+
+    await expect
+      .poll(() =>
+        mapCall(page, PLAYGROUND, (map) => {
+          const layers = map
+            .getStyle()
+            .layers.filter((layer) => layer.id.startsWith('td-polygon'))
+            .map((layer) => layer.id);
+          return map
+            .queryRenderedFeatures({ layers })
+            .filter((feature) => feature.geometry.type === 'Polygon').length;
+        }),
+      )
+      .toBeGreaterThan(0);
+  });
+
+  test('the popup block opens a popup with its content', async ({ page }) => {
+    await gotoAndWaitForMap(page, '/playground', PLAYGROUND);
+    await page.getByRole('button', { name: 'Add Popup' }).click();
+
+    await expect(page.locator('.maplibregl-popup')).toContainText('Hello from ng-mapcn');
+    await page.locator('#pg-popup-closeButton').click();
+    await page.locator('.maplibregl-popup .ng-popup-close').click();
+    await expect(page.locator('.maplibregl-popup')).toHaveCount(0);
+    await expect(snippet(page)).toContainText('[open]="false"');
+  });
+
+  test('an example loads its scene: satellite imagery under terrain', async ({ page }) => {
+    await gotoAndWaitForMap(page, '/playground', PLAYGROUND);
+    await page.getByRole('button', { name: 'Open the Alpine terrain example' }).click();
+
+    await expect(stackNames(page)).toHaveText(['terrain']);
+    await expect
+      .poll(() => mapCall(page, PLAYGROUND, (map) => map.getSource('imagery')?.type))
+      .toBe('raster');
+    await expect
+      .poll(() => mapCall(page, PLAYGROUND, (map) => map.getTerrain()?.exaggeration))
+      .toBe(1.5);
+  });
 });

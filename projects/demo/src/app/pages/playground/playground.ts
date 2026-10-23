@@ -29,10 +29,17 @@ import { ZardButtonComponent } from '@/shared/components/button';
 import { PageHeaderImports } from '@/shared/page-header';
 
 import apiData from '../docs/api-reference.data.json';
-import { PlaygroundLayersComponent, PlaygroundPaletteComponent } from './playground-blocks';
+import {
+  BLOCK_ICON_SET,
+  blockIcon,
+  PlaygroundLayersComponent,
+  PlaygroundPaletteComponent,
+} from './playground-blocks';
 import { PLAYGROUND_COMPONENTS } from './playground-components';
 import { type ControlChange, PlaygroundControlsComponent } from './playground-controls';
+import { PLAYGROUND_EXAMPLES, type PlaygroundExample } from './playground-examples';
 import { PlaygroundMarkerComponent } from './playground-marker';
+import { PlaygroundPopupComponent } from './playground-popup';
 import {
   addLayer,
   decodeScene,
@@ -56,6 +63,7 @@ import {
 import { findSpec, PLAYGROUND_SPECS } from './playground-specs';
 import {
   applyPreset,
+  BUILDING_PRESETS,
   findPreset,
   MAP_CONTROLS,
   mapInputs,
@@ -106,6 +114,16 @@ function markerInputs(values: Values) {
   };
 }
 
+function popupInputs(values: Values) {
+  return {
+    longitude: Number(values['longitude']),
+    latitude: Number(values['latitude']),
+    open: values['open'] !== false,
+    closeButton: values['closeButton'] === true,
+    closeOnClick: values['closeOnClick'] !== false,
+  };
+}
+
 /** Tilted presets frame a city; the rest show the whole world. */
 const GALLERY_VIEW = { center: [2.35, 30] as [number, number], zoom: 1.2 };
 const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoom: 14 };
@@ -124,10 +142,12 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
     PlaygroundLayersComponent,
     PlaygroundMarkerComponent,
     PlaygroundPaletteComponent,
+    PlaygroundPopupComponent,
     ZardButtonComponent,
   ],
   viewProviders: [
     provideIcons({
+      ...BLOCK_ICON_SET,
       lucideCheck,
       lucideChevronDown,
       lucideChevronUp,
@@ -151,12 +171,17 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
 
     <section class="container space-y-20" aria-label="Playground">
       <div
-        class="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_18rem]"
+        id="builder"
+        class="grid scroll-mt-20 gap-6 lg:grid-cols-[16rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_18rem]"
       >
         <aside class="space-y-6" aria-label="Scene">
           <div>
             <h2 class="mb-3 text-sm font-semibold tracking-tight">Blocks</h2>
-            <app-playground-palette [specs]="blocks" (addBlock)="add($event)" />
+            <app-playground-palette
+              [specs]="blocks"
+              [disabled]="usedSingles()"
+              (addBlock)="add($event)"
+            />
           </div>
           <div>
             <h2 class="mb-3 text-sm font-semibold tracking-tight">
@@ -197,8 +222,8 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
               role="status"
               class="bg-muted text-muted-foreground rounded-md border px-3 py-2 text-sm"
             >
-              {{ label }} need the Carto vector tiles: pick Carto, Carto Voyager, MapTiler, Stadia
-              Maps, Globe or 3D tilt in the Basemap control.
+              {{ label }} need building vector tiles: pick {{ buildingPresets }} in the Basemap
+              control.
             </p>
           }
           <div class="bg-card relative h-[520px] overflow-hidden rounded-xl border shadow-sm">
@@ -224,6 +249,15 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
                       [rotation]="marker.rotation"
                       [anchor]="marker.anchor"
                       (moved)="onMarkerMoved(item.layer.uid, $event)"
+                    />
+                  } @else if (item.popup; as popup) {
+                    <app-playground-popup
+                      [longitude]="popup.longitude"
+                      [latitude]="popup.latitude"
+                      [open]="popup.open"
+                      [closeButton]="popup.closeButton"
+                      [closeOnClick]="popup.closeOnClick"
+                      (openChange)="onLayerChange(item.layer.uid, { key: 'open', value: $event })"
                     />
                   } @else if (item.component; as component) {
                     <ng-container *ngComponentOutlet="component; inputs: item.inputs" />
@@ -337,6 +371,37 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
         </aside>
       </div>
 
+      <section id="examples" class="scroll-mt-20 space-y-6" aria-labelledby="examples-title">
+        <div>
+          <h2 id="examples-title" class="text-2xl font-semibold tracking-tight">Examples</h2>
+          <p class="text-muted-foreground mt-1 max-w-2xl text-sm">
+            Ready-made scenes to start from: open one in the builder above, then tweak it, share it
+            or copy its code.
+          </p>
+        </div>
+        <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Examples">
+          @for (example of examples; track example.id) {
+            <li class="bg-card hover:bg-accent/50 relative rounded-xl border p-4 shadow-sm">
+              <div class="mb-3 flex gap-1.5" aria-hidden="true">
+                @for (block of example.blocks; track $index) {
+                  <span class="bg-muted text-muted-foreground rounded-md p-1.5">
+                    <ng-icon [name]="icon(block)" size="16" />
+                  </span>
+                }
+              </div>
+              <p class="text-sm font-medium">{{ example.title }}</p>
+              <p class="text-muted-foreground mt-1 text-xs">{{ example.description }}</p>
+              <button
+                type="button"
+                class="focus-visible:ring-ring absolute inset-0 rounded-xl outline-none focus-visible:ring-[3px]"
+                [attr.aria-label]="'Open the ' + example.title + ' example'"
+                (click)="loadExample(example)"
+              ></button>
+            </li>
+          }
+        </ul>
+      </section>
+
       <section id="gallery" class="scroll-mt-20 space-y-6" aria-labelledby="gallery-title">
         <div>
           <h2 id="gallery-title" class="text-2xl font-semibold tracking-tight">Style gallery</h2>
@@ -417,6 +482,9 @@ export class PlaygroundComponent {
   protected readonly blocks = LAYER_SPECS;
   protected readonly labels = Object.fromEntries(PLAYGROUND_SPECS.map((s) => [s.id, s.label]));
   protected readonly presets = STYLE_PRESETS;
+  protected readonly examples = PLAYGROUND_EXAMPLES;
+  protected readonly icon = blockIcon;
+  protected readonly buildingPresets = BUILDING_PRESETS.map((preset) => preset.label).join(', ');
   protected readonly mapControls = MAP_CONTROLS;
   protected readonly globe = { type: 'globe' } as const;
   protected readonly tabs: { id: SnippetTab; label: string }[] = [
@@ -464,11 +532,22 @@ export class PlaygroundComponent {
       return {
         layer,
         marker: spec.id === 'marker' ? markerInputs(layer.values) : null,
+        popup: spec.id === 'popup' ? popupInputs(layer.values) : null,
         component: spec.className ? (PLAYGROUND_COMPONENTS[spec.className] ?? null) : null,
         inputs: resolveInputs(spec, layer.values),
       };
     });
   });
+
+  /** Blocks allowed once per map that are already in the scene. */
+  protected readonly usedSingles = computed(
+    () =>
+      new Set(
+        this.layers()
+          .filter((layer) => findSpec(layer.specId).single)
+          .map((layer) => layer.specId),
+      ),
+  );
 
   /** Labels of the visible blocks that draw from the `carto` source the basemap lacks. */
   protected readonly needsCarto = computed(() => {
@@ -524,6 +603,7 @@ export class PlaygroundComponent {
   protected add(specId: string, index = 0): void {
     const wasEmpty = !this.layers().length;
     const { layers, layer } = addLayer(this.layers(), specId, index);
+    if (!layer) return;
     this.layers.set(layers);
     this.selectedUid.set(layer.uid);
     if (wasEmpty) this.frame(findSpec(specId));
@@ -562,6 +642,14 @@ export class PlaygroundComponent {
     this.layers.set(scene.layers);
     this.mapState.set(scene.map);
     this.selectedUid.set(scene.layers[0]?.uid);
+  }
+
+  protected loadExample(example: PlaygroundExample): void {
+    const scene = example.scene();
+    this.layers.set(scene.layers);
+    this.mapState.set(scene.map);
+    this.selectedUid.set(scene.layers[0]?.uid);
+    this.document.getElementById('builder')?.scrollIntoView?.({ behavior: 'smooth' });
   }
 
   protected frame(spec: PlaygroundSpec): void {

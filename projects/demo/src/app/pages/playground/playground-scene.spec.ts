@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   addLayer,
+  canAdd,
   createLayer,
   decodeScene,
   defaultScene,
@@ -246,5 +247,37 @@ describe('buildSceneSnippet', () => {
 
   it('is a bare map without layers', () => {
     expect(snippetOf([]).template).toBe('<ng-map [zoom]="3" />');
+  });
+});
+
+describe('single blocks', () => {
+  it('allows terrain and draw once per map', () => {
+    const layers = stack('terrain', 'route');
+    expect(canAdd(layers, 'terrain')).toBe(false);
+    expect(canAdd(layers, 'draw')).toBe(true);
+    expect(canAdd(layers, 'route')).toBe(true);
+    expect(addLayer(layers, 'terrain').layer).toBeUndefined();
+    expect(duplicateLayer(layers, layers[0].uid).layers).toHaveLength(2);
+  });
+
+  it('drops a second single block from a link', () => {
+    const code = encodeScene({ layers: stack('route'), map: initialMapState(2) });
+    const raw = JSON.parse(atob(code.replace(/-/g, '+').replace(/_/g, '/')));
+    raw.l = [{ s: 'terrain' }, { s: 'terrain' }, { s: 'draw' }];
+    const scene = decodeScene(btoa(JSON.stringify(raw)))!;
+    expect(scene.layers.map((l) => l.specId)).toEqual(['terrain', 'draw']);
+  });
+
+  it('imports the draw tool from its own entry point', () => {
+    const [draw, route] = stack('draw', 'route');
+    const { component, template } = buildSceneSnippet(
+      [route, draw].map((layer) => ({ spec: layerSpec(layer, 'carto'), values: layer.values })),
+      { attrs: [] },
+    );
+    expect(component).toContain("import { MapComponent, MapRouteComponent } from 'ng-mapcn';");
+    expect(component).toContain("import { MapDrawComponent } from 'ng-mapcn/draw';");
+    expect(component).toContain('imports: [MapComponent, MapRouteComponent, MapDrawComponent]');
+    expect(template).toContain('mode="polygon"');
+    expect(template).toContain('[features]="features"');
   });
 });

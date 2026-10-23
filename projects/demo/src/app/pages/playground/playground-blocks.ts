@@ -9,8 +9,12 @@ import {
   lucideFlame,
   lucideGrid3x3,
   lucideGripVertical,
+  lucideImage,
   lucideLayers,
   lucideMapPin,
+  lucideMessageSquare,
+  lucideMountain,
+  lucidePencil,
   lucideRoute,
   lucideShapes,
   lucideSpline,
@@ -35,11 +39,16 @@ const BLOCK_ICONS: Record<string, string> = {
   heatmap: 'lucideFlame',
   raster: 'lucideGrid3x3',
   'fill-extrusion': 'lucideBuilding2',
+  terrain: 'lucideMountain',
+  image: 'lucideImage',
+  popup: 'lucideMessageSquare',
+  draw: 'lucidePencil',
 };
 
 export const blockIcon = (specId: string) => BLOCK_ICONS[specId] ?? 'lucideLayers';
 
-const ICONS = {
+/** Every icon of the blocks and the stack, for the components that show them. */
+export const BLOCK_ICON_SET = {
   lucideBoxes,
   lucideBuilding2,
   lucideEye,
@@ -48,7 +57,11 @@ const ICONS = {
   lucideGrid3x3,
   lucideGripVertical,
   lucideLayers,
+  lucideImage,
   lucideMapPin,
+  lucideMessageSquare,
+  lucideMountain,
+  lucidePencil,
   lucideRoute,
   lucideShapes,
   lucideSpline,
@@ -63,7 +76,7 @@ const ICONS = {
   selector: 'app-playground-palette',
   standalone: true,
   imports: [CdkDropList, CdkDrag, NgIcon],
-  viewProviders: [provideIcons(ICONS)],
+  viewProviders: [provideIcons(BLOCK_ICON_SET)],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ul
@@ -76,12 +89,20 @@ const ICONS = {
       class="grid grid-cols-2 gap-2"
     >
       @for (spec of specs(); track spec.id) {
-        <li cdkDrag [cdkDragData]="spec.id" class="list-none">
+        <li
+          cdkDrag
+          [cdkDragData]="spec.id"
+          [cdkDragDisabled]="disabled().has(spec.id)"
+          class="list-none"
+        >
           <button
             type="button"
-            class="bg-card hover:bg-accent flex w-full cursor-grab items-center gap-2 rounded-md border px-2.5 py-2 text-left text-sm font-medium transition-colors active:cursor-grabbing"
+            [disabled]="disabled().has(spec.id)"
+            class="bg-card hover:bg-accent flex w-full cursor-grab items-center gap-2 rounded-md border px-2.5 py-2 text-left text-sm font-medium transition-colors active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-50"
             [attr.aria-label]="'Add ' + spec.label"
-            [title]="spec.description"
+            [title]="
+              disabled().has(spec.id) ? 'Already in the scene (one per map)' : spec.description
+            "
             (click)="addBlock.emit(spec.id)"
           >
             <ng-icon [name]="icon(spec.id)" size="16" class="text-muted-foreground shrink-0" />
@@ -94,6 +115,8 @@ const ICONS = {
 })
 export class PlaygroundPaletteComponent {
   readonly specs = input.required<readonly PlaygroundSpec[]>();
+  /** Spec ids that cannot be added again (`single` blocks already in the scene). */
+  readonly disabled = input<ReadonlySet<string>>(new Set());
   /** A block was clicked: add it on top of the stack. */
   readonly addBlock = output<string>();
 
@@ -112,7 +135,7 @@ export class PlaygroundPaletteComponent {
   selector: 'app-playground-layers',
   standalone: true,
   imports: [CdkDropList, CdkDrag, CdkDragHandle, NgIcon, ZardButtonComponent],
-  viewProviders: [provideIcons(ICONS)],
+  viewProviders: [provideIcons(BLOCK_ICON_SET)],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ol

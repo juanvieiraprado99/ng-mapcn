@@ -3,7 +3,7 @@ import type { PlaygroundSpec } from './playground-schema';
 /**
  * Every component the playground can show. Adding one is a single entry here plus its class in
  * `playground-components.ts`: the controls, the live preview and the snippet are all generated.
- * (`ng-map-draw` is left out: it needs the optional terra-draw peer, see /docs/components/draw.)
+ * (`ng-map-vector-source` is left out: a source alone draws nothing.)
  */
 
 const EARTHQUAKES = 'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson';
@@ -118,6 +118,17 @@ const BY_HEIGHT = [
   200,
   '#1e3a8a',
 ];
+
+/** Corners of the image overlay: top-left, top-right, bottom-right, bottom-left. */
+const IMAGE_CORNERS = [
+  [-74.25, 40.92],
+  [-73.75, 40.92],
+  [-73.75, 40.5],
+  [-74.25, 40.5],
+];
+
+const POPUP_CONTENT =
+  '<div class="bg-background rounded-md border px-3 py-2 text-sm shadow-md">Hello from ng-mapcn</div>';
 
 export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
   {
@@ -534,6 +545,160 @@ export const PLAYGROUND_SPECS: readonly PlaygroundSpec[] = [
     ],
     fixed: [],
     view: { center: [-74.0134, 40.7061], zoom: 15.5, pitch: 60, bearing: -20 },
+  },
+  {
+    id: 'terrain',
+    label: 'Terrain',
+    description:
+      '3D terrain from the public Terrarium elevation tiles, with an optional hillshade layer. Tilt the map to see the relief.',
+    selector: 'ng-map-terrain',
+    className: 'MapTerrainComponent',
+    single: true,
+    attrs: { id: 'terrain' },
+    controls: [
+      {
+        kind: 'range',
+        key: 'exaggeration',
+        label: 'Exaggeration',
+        min: 0,
+        max: 3,
+        step: 0.1,
+        default: 1,
+      },
+      // The component defaults to no hillshade; the playground shows it, so it is always printed.
+      { kind: 'boolean', key: 'hillshade', label: 'Hillshade', default: true, always: true },
+      {
+        kind: 'range',
+        key: 'hillshadeExaggeration',
+        label: 'Hillshade strength',
+        min: 0,
+        max: 1,
+        step: 0.05,
+        default: 0.5,
+      },
+      {
+        kind: 'select',
+        key: 'hillshadeShadowColor',
+        label: 'Shadow color',
+        default: undefined,
+        options: [OFF, { value: '#1e293b', label: 'Slate' }, { value: '#7c2d12', label: 'Rust' }],
+      },
+    ],
+    fixed: [],
+    view: { center: [11.85, 46.5], zoom: 10.5, pitch: 65, bearing: -30 },
+  },
+  {
+    id: 'image',
+    label: 'Image overlay',
+    description: 'An image pinned to four corner coordinates, drawn as a raster layer.',
+    selector: 'ng-map-image-overlay',
+    className: 'MapImageOverlayComponent',
+    attrs: { id: 'compass', url: '/compass.png' },
+    controls: [
+      { kind: 'range', key: 'opacity', label: 'Opacity', min: 0, max: 1, step: 0.05, default: 1 },
+      { kind: 'boolean', key: 'visible', label: 'Visible', default: true },
+    ],
+    fixed: [
+      {
+        input: 'coordinates',
+        value: IMAGE_CORNERS,
+        ts: `readonly coordinates = ${JSON.stringify(IMAGE_CORNERS).replace(/,/g, ', ')} as const;`,
+      },
+    ],
+    view: { center: [-74, 40.7], zoom: 9 },
+  },
+  {
+    id: 'popup',
+    label: 'Popup',
+    description: 'A standalone popup at a coordinate, with your own content.',
+    selector: 'ng-map-popup',
+    className: 'MapPopupComponent',
+    content: { template: POPUP_CONTENT, imports: [] },
+    controls: [
+      {
+        kind: 'range',
+        key: 'longitude',
+        always: true,
+        label: 'Longitude',
+        min: -75,
+        max: -73,
+        step: 0.01,
+        default: -73.9857,
+      },
+      {
+        kind: 'range',
+        key: 'latitude',
+        always: true,
+        label: 'Latitude',
+        min: 40,
+        max: 41.5,
+        step: 0.01,
+        default: 40.7484,
+      },
+      { kind: 'boolean', key: 'open', label: 'Open', default: true },
+      { kind: 'boolean', key: 'closeButton', label: 'Close button', default: false },
+      { kind: 'boolean', key: 'closeOnClick', label: 'Close on map click', default: true },
+    ],
+    fixed: [],
+    view: { center: [-73.9857, 40.7484], zoom: 11 },
+  },
+  {
+    id: 'draw',
+    label: 'Draw',
+    description:
+      'Draw points, lines and polygons (terra-draw). Pick a mode, then click the map; Select edits a shape.',
+    selector: 'ng-map-draw',
+    className: 'MapDrawComponent',
+    module: 'ng-mapcn/draw',
+    single: true,
+    controls: [
+      {
+        kind: 'select',
+        key: 'mode',
+        label: 'Mode',
+        default: 'polygon',
+        always: true,
+        options: [
+          { value: 'static', label: 'Pan (static)' },
+          { value: 'point', label: 'Point' },
+          { value: 'line', label: 'Line' },
+          { value: 'polygon', label: 'Polygon' },
+          { value: 'select', label: 'Select' },
+        ],
+      },
+      {
+        kind: 'select',
+        key: 'modes',
+        label: 'Shapes',
+        // Explicit: the outlet would pass `undefined` over the component's own default.
+        default: ['point', 'line', 'polygon'],
+        options: [
+          { value: ['point', 'line', 'polygon'], label: 'All' },
+          { value: ['polygon'], label: 'Polygons only' },
+          { value: ['point', 'line'], label: 'Points and lines' },
+        ],
+      },
+      { kind: 'boolean', key: 'editable', label: 'Editable', default: true },
+      {
+        kind: 'select',
+        key: 'color',
+        label: 'Color',
+        default: undefined,
+        options: [
+          { value: undefined, label: 'Theme default' },
+          { value: '#e11d48', label: 'Rose' },
+          { value: '#16a34a', label: 'Green' },
+        ],
+      },
+    ],
+    fixed: [
+      {
+        input: 'features',
+        value: { type: 'FeatureCollection', features: [] },
+        ts: "readonly features = { type: 'FeatureCollection' as const, features: [] };",
+      },
+    ],
+    view: { center: [-46.6333, -23.5505], zoom: 11 },
   },
 ];
 
