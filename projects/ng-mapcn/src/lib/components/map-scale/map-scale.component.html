@@ -1,0 +1,10 @@
+<ng-template #control>
+  <div class="ng-scale" [class]="rootClass()" role="img" [attr.data-scale-id]="id">
+    @for (system of systems(); track system) {
+      <div class="ng-scale-row" [attr.data-system]="system">
+        <div class="ng-scale-bar"></div>
+        <span class="ng-scale-label"></span>
+      </div>
+    }
+  </div>
+</ng-template>

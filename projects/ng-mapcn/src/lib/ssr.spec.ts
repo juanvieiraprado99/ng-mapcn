@@ -15,6 +15,7 @@ import { MapMarkerComponent } from './components/map-marker/map-marker.component
 import { MapPopupComponent } from './components/map-popup/map-popup.component';
 import { MapRasterSourceComponent } from './components/map-raster-source/map-raster-source.component';
 import { MapRouteComponent } from './components/map-route/map-route.component';
+import { MapScaleComponent } from './components/map-scale/map-scale.component';
 import { MapTerrainComponent } from './components/map-terrain/map-terrain.component';
 import { MapVectorSourceComponent } from './components/map-vector-source/map-vector-source.component';
 import { MarkerContentComponent } from './components/marker-content/marker-content.component';
@@ -32,6 +33,7 @@ import { RouteProgressComponent } from './components/route-progress/route-progre
 const TEMPLATE = `
   <ng-map>
     <ng-map-controls [showCompass]="true" [showLocate]="true" [showFullscreen]="true" />
+    <ng-map-scale unit="both" />
     <ng-map-marker [longitude]="1" [latitude]="2">
       <ng-marker-content><ng-marker-label>Label</ng-marker-label></ng-marker-content>
       <ng-marker-tooltip>Tip</ng-marker-tooltip>
@@ -82,6 +84,7 @@ describe('server-side rendering', () => {
     const { fixture, ctx } = await renderMap(TEMPLATE, {
       imports: [
         MapControlsComponent,
+        MapScaleComponent,
         MapMarkerComponent,
         MarkerContentComponent,
         MarkerLabelComponent,
