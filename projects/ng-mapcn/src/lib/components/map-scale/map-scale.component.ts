@@ -73,7 +73,8 @@ export class MapScaleComponent {
       const map = this.ctx.map();
       if (!map || !this.isBrowser) return;
       onCleanup(mountMapControl(map, this.control(), this.injector, this.position()));
-      // The portal view renders on the next application render; draw the initial reading then.
+      // The portal renders synchronously, but the view is not laid out yet: draw the initial
+      // reading once this render is done (covers a mount that does not change the signals below).
       afterNextRender(() => this.write(map), { injector: this.injector });
     });
 
@@ -86,10 +87,13 @@ export class MapScaleComponent {
       let frame = 0;
       const onMove = () => {
         if (frame) return;
-        frame = requestAnimationFrame(() => {
-          frame = 0;
-          this.write(map);
-        });
+        // Scheduled outside the zone whichever zone fired the event.
+        frame = this.zone.runOutsideAngular(() =>
+          requestAnimationFrame(() => {
+            frame = 0;
+            this.write(map);
+          }),
+        );
       };
       this.zone.runOutsideAngular(() => map.on('move', onMove));
       onCleanup(() => {

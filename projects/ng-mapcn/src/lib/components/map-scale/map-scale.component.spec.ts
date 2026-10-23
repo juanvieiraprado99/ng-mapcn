@@ -1,4 +1,4 @@
-import { ApplicationRef } from '@angular/core';
+import { ApplicationRef, NgZone } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -98,6 +98,21 @@ describe('MapScaleComponent', () => {
     expect(q(map, '.ng-scale-label').textContent).toBe(format('kilometer', 5));
     expect(zone.runs).toBe(0);
     expect(tick).not.toHaveBeenCalled();
+  });
+
+  it('schedules the frame outside the zone, whichever zone fired the move', async () => {
+    const { map } = await render();
+    const outside = vi.spyOn(TestBed.inject(NgZone), 'runOutsideAngular');
+    const raf = vi.spyOn(globalThis, 'requestAnimationFrame');
+    outside.mockImplementation(((fn: () => unknown) => {
+      expect(raf).not.toHaveBeenCalled();
+      return fn();
+    }) as NgZone['runOutsideAngular']);
+
+    map.fire('move');
+
+    expect(outside).toHaveBeenCalledTimes(1);
+    expect(raf).toHaveBeenCalledTimes(1);
   });
 
   it('adds the className and keeps ng-scale', async () => {
