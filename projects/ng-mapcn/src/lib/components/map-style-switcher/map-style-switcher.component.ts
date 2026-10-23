@@ -63,6 +63,11 @@ export class MapStyleSwitcherComponent {
   protected readonly selected = computed(() =>
     this.options().find((option) => option.id === this.value()),
   );
+  /** Contains the visible text (WCAG 2.5.3) and announces the current selection. */
+  protected readonly buttonLabel = computed(() => {
+    const selected = this.selected();
+    return selected ? `${this.l().mapStyle}: ${selected.label}` : this.l().mapStyle;
+  });
   protected readonly opensUp = computed(() => this.position().startsWith('bottom'));
   protected readonly activeId = computed(() => this.optionId(this.activeIndex()));
 

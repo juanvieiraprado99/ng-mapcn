@@ -236,6 +236,20 @@ describe('MapStyleSwitcherComponent', () => {
     expect(card.classList).toContain('other');
   });
 
+  it('names the button "Map style" with no selection', async () => {
+    const { map } = await render();
+    const button = q(map, '.ng-style-switcher-button');
+    expect(button.getAttribute('aria-label')).toBe('Map style');
+    expect(button.textContent!.trim()).toBe('Map style');
+  });
+
+  it('names the button with the selection, containing the visible text', async () => {
+    const { map } = await render({ value: 'sat', labels: { mapStyle: 'Estilo' } });
+    const button = q(map, '.ng-style-switcher-button');
+    expect(button.getAttribute('aria-label')).toBe('Estilo: Satellite');
+    expect(button.getAttribute('aria-label')).toContain(button.textContent!.trim());
+  });
+
   it('uses label overrides', async () => {
     const { map } = await render({ labels: { mapStyle: 'Estilo' } });
     expect(q(map, '.ng-style-switcher-button').textContent!.trim()).toBe('Estilo');

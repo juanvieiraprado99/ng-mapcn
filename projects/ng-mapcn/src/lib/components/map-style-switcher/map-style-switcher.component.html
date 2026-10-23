@@ -7,7 +7,7 @@
       aria-haspopup="listbox"
       [attr.aria-expanded]="open()"
       [attr.aria-controls]="open() ? listId : null"
-      [attr.aria-label]="l().mapStyle"
+      [attr.aria-label]="buttonLabel()"
       (click)="toggle()"
       (keydown)="onButtonKeydown($event)"
     >
