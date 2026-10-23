@@ -124,7 +124,7 @@ interface MapStyleOption {
 }
 ```
 
-Keep `MapStyleOption` objects referentially stable (declare the array once as a field or constant). An inline object or array in the template is a new style on every change detection pass and re-runs `setStyle`. `labels.mapStyle` (`'Map style'`) names the button; the visible text is `Map style: <selected label>`. `[(value)]` two-way binds the selected id (`valueChange` output). `className` adds classes to the rendered `.ng-style-switcher` element.
+Keep `MapStyleOption` objects referentially stable (declare the array once as a field or constant). An inline object or array in the template is a new style on every change detection pass and re-runs `setStyle`. `labels.mapStyle` (`'Map style'`) is the button's accessible name: `<labels.mapStyle>: <selected label>`, or just `labels.mapStyle` with nothing selected. The visible text is the selected option's label (`labels.mapStyle` with no selection). `[(value)]` two-way binds the selected id (`valueChange` output). `className` adds classes to the rendered `.ng-style-switcher` element.
 
 ## ng-map-marker
 
