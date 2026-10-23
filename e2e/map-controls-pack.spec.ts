@@ -42,6 +42,19 @@ test.describe('map controls pack', () => {
     const before = own(await layerIds(page, SWITCHER));
     expect(before.length).toBeGreaterThan(0);
 
+    // Count `style.load` events and record whether the layer was gone when the new style loaded.
+    await mapCall(page, SWITCHER, (map) => {
+      const w = window as unknown as { __styleLoads?: { count: number; ownAtLoad: number } };
+      const state = (w.__styleLoads = { count: 0, ownAtLoad: -1 });
+      map.on('style.load', () => {
+        state.count++;
+        state.ownAtLoad = map
+          .getStyle()
+          .layers.filter((l) => l.id.includes('switcher-area')).length;
+      });
+    });
+
+    // Assumes the example starts on the first option (positron): ArrowDown selects dark-matter.
     const button = page.locator('ng-map').nth(SWITCHER).locator('.ng-style-switcher-button');
     await button.focus();
     const request = page.waitForRequest((req) =>
@@ -53,6 +66,16 @@ test.describe('map controls pack', () => {
     await request;
 
     await expect.poll(() => mapCall(page, SWITCHER, (map) => map.isStyleLoaded())).toBe(true);
+
+    // A new style really loaded, without our layers (setStyle destroys them), and they came back.
+    const loads = () =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __styleLoads: { count: number; ownAtLoad: number } })
+            .__styleLoads,
+      );
+    await expect.poll(async () => (await loads()).count).toBeGreaterThan(0);
+    expect((await loads()).ownAtLoad).toBe(0);
     await expect.poll(async () => own(await layerIds(page, SWITCHER))).toEqual(before);
   });
 
