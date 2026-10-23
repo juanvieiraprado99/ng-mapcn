@@ -3,10 +3,10 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fakeRegistry } from '../../../testing/maplibre-fake';
-import { loadMap, renderMap, setMapSize } from '../../../testing/render';
+import { loadMap, reloadStyle, renderMap, setMapSize } from '../../../testing/render';
 import { trackZoneRun } from '../../../testing/zone';
 import { provideMapStyles } from '../../providers/map-styles.provider';
-import { blankMapStyle, defaultStyles } from '../../styles/map-styles';
+import { blankMapStyle, defaultStyles, getDarkMapStyle } from '../../styles/map-styles';
 import { type MapComponent } from './map.component';
 
 const TEMPLATE = `
@@ -390,6 +390,74 @@ describe('MapComponent', () => {
 
       expect(map!.setStyle).toHaveBeenCalledTimes(1);
       expect(map!.setStyle).toHaveBeenCalledWith('b.json', expect.objectContaining({ diff: true }));
+    });
+
+    describe('style override', () => {
+      it('an override wins over [styles]', async () => {
+        const { fixture, map, ctx } = await render({ styles: { light: 'a.json' } });
+        loadMap(map!);
+        ctx.setStyleOverride({ light: 'b.json' });
+        fixture.detectChanges();
+        expect(map!.setStyle).toHaveBeenCalledWith(
+          'b.json',
+          expect.objectContaining({ diff: true }),
+        );
+      });
+
+      it('clearing the override restores [styles]', async () => {
+        const { fixture, map, ctx } = await render({ styles: { light: 'a.json' } });
+        loadMap(map!);
+        ctx.setStyleOverride({ light: 'b.json' });
+        fixture.detectChanges();
+        ctx.setStyleOverride(undefined);
+        fixture.detectChanges();
+        expect(map!.setStyle).toHaveBeenLastCalledWith('a.json', expect.anything());
+      });
+
+      it('the override goes through the load gate', async () => {
+        const { fixture, map, ctx } = await render({ styles: { light: 'a.json' } });
+        loadMap(map!);
+        expect(ctx.isLoaded()).toBe(true);
+        ctx.setStyleOverride({ light: 'b.json' });
+        fixture.detectChanges();
+        expect(ctx.isLoaded()).toBe(false);
+        reloadStyle(fixture, map!);
+        expect(ctx.isLoaded()).toBe(true);
+      });
+
+      it('a one-theme override keeps its variant in dark mode', async () => {
+        const { fixture, map, ctx } = await render({ theme: 'dark' });
+        loadMap(map!);
+        ctx.setStyleOverride({ light: 'sat.json' });
+        fixture.detectChanges();
+        expect(map!.setStyle).toHaveBeenCalledWith('sat.json', expect.anything());
+        expect(map!.setStyle).not.toHaveBeenCalledWith(getDarkMapStyle(), expect.anything());
+      });
+
+      it('a dark-only override is used in light mode', async () => {
+        const { fixture, map, ctx } = await render();
+        loadMap(map!);
+        ctx.setStyleOverride({ dark: 'night.json' });
+        fixture.detectChanges();
+        expect(map!.setStyle).toHaveBeenCalledWith('night.json', expect.anything());
+      });
+
+      it('a two-theme override follows the theme', async () => {
+        const { fixture, map, ctx } = await render();
+        loadMap(map!);
+        ctx.setStyleOverride({ light: 'l.json', dark: 'd.json' });
+        fixture.detectChanges();
+        expect(map!.setStyle).toHaveBeenLastCalledWith('l.json', expect.anything());
+        update(fixture, { theme: 'dark' });
+        expect(map!.setStyle).toHaveBeenLastCalledWith('d.json', expect.anything());
+      });
+
+      it('[styles] without dark still falls back to Carto', async () => {
+        const { fixture, map } = await render({ styles: { light: 'a.json' } });
+        loadMap(map!);
+        update(fixture, { theme: 'dark' });
+        expect(map!.setStyle).toHaveBeenCalledWith(getDarkMapStyle(), expect.anything());
+      });
     });
 
     describe('style precedence', () => {
