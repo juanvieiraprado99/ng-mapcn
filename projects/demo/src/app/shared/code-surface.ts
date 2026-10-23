@@ -37,13 +37,26 @@ export class CodeSurfaceComponent {
 
   private readonly sanitizer = inject(DomSanitizer);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
-  private readonly highlighted = signal<SafeHtml | null>(null);
+  /** Shiki output, kept with the code it was made for. */
+  private readonly highlighted = signal<{ code: string; lang?: CodeLang; html: SafeHtml } | null>(
+    null,
+  );
 
   protected readonly classes = computed(() =>
     mergeClasses('bg-code no-scrollbar block py-4 pr-4 text-sm', this.class()),
   );
 
-  protected readonly html = computed(() => this.highlighted() ?? plainHtml(this.code()));
+  /**
+   * Highlighted only while it matches the current code: a changed snippet shows uncoloured at once
+   * instead of the previous highlight, and a late result for an older snippet is never shown.
+   */
+  protected readonly html = computed(() => {
+    const highlighted = this.highlighted();
+    const code = this.code();
+    return highlighted?.code === code && highlighted.lang === this.lang()
+      ? highlighted.html
+      : plainHtml(code);
+  });
 
   constructor() {
     effect(() => {
@@ -58,7 +71,7 @@ export class CodeSurfaceComponent {
         // snippet is static: the playground builds its snippet from user input. That stays safe
         // because Shiki HTML-escapes all token text and only adds its own <pre>/<span> markup, so
         // never pass anything but Shiki's output here.
-        this.highlighted.set(this.sanitizer.bypassSecurityTrustHtml(html));
+        this.highlighted.set({ code, lang, html: this.sanitizer.bypassSecurityTrustHtml(html) });
       })();
     });
   }
