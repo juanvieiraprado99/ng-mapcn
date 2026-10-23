@@ -151,6 +151,28 @@ describe('MapLegendComponent', () => {
     expect(hiddenLabels(map)).toEqual([false, false, false]);
   });
 
+  it('measures again once web fonts have loaded', async () => {
+    let loaded!: () => void;
+    const ready = new Promise<void>((resolve) => (loaded = resolve));
+    Object.defineProperty(document, 'fonts', { configurable: true, value: { ready } });
+    try {
+      stubLabelLayout(10);
+      const { map } = await render({ sections: [{ type: 'gradient', stops: fiveStops }] });
+      expect(hiddenLabels(map)).toEqual([false, false, false, false, false]);
+
+      // The fallback font was narrower than the web font that just arrived.
+      vi.restoreAllMocks();
+      stubLabelLayout(60);
+      loaded();
+      await ready;
+      await Promise.resolve();
+
+      expect(hiddenLabels(map)).toEqual([false, true, false, true, false]);
+    } finally {
+      delete (document as { fonts?: unknown }).fonts;
+    }
+  });
+
   it('formats gradient values with format', async () => {
     const { map } = await render({
       sections: [{ ...gradient, format: (v: number | string) => `${v}%` }],

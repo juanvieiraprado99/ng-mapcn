@@ -89,8 +89,15 @@ export class MapLegendComponent {
       const map = this.ctx.map();
       if (!map || !this.isBrowser) return;
       onCleanup(mountMapControl(map, this.control(), this.injector, this.position()));
-      // The portal view renders on the next application render; measure the labels then.
+
+      // The portal renders synchronously but is only laid out once this render is done: measure
+      // then. Web fonts can still change the label widths later, so measure again once loaded.
       afterNextRender(() => this.fitAll(map), { injector: this.injector });
+      let active = true;
+      onCleanup(() => (active = false));
+      document.fonts?.ready.then(() => {
+        if (active) this.fitAll(map);
+      });
     });
 
     // Once the portal view has rendered (and whenever the sections change), hide the middle
