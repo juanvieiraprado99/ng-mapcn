@@ -203,6 +203,23 @@ describe('MapStyleSwitcherComponent', () => {
     expect(q(map, '[role="listbox"]')).toBeNull();
   });
 
+  it('raises its control above later siblings while the list is open', async () => {
+    const { map, fixture } = await render();
+    const wrapper = q(map, '.ng-map-control');
+    const button = q<HTMLButtonElement>(map, '.ng-style-switcher-button');
+    expect(wrapper.style.zIndex).toBe('');
+
+    button.click();
+    await settle(fixture);
+    expect(wrapper.style.zIndex).toBe('3');
+    expect(wrapper.style.position).toBe('relative');
+
+    button.click();
+    await settle(fixture);
+    expect(wrapper.style.zIndex).toBe('');
+    expect(wrapper.style.position).toBe('');
+  });
+
   it('opens upward for bottom positions', async () => {
     const { map, fixture } = await render({ position: 'bottom-left' });
     q<HTMLButtonElement>(map, '.ng-style-switcher-button').click();

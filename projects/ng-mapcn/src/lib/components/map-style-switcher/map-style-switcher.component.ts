@@ -103,6 +103,27 @@ export class MapStyleSwitcherComponent {
       if (applied) this.ctx.setStyleOverride(undefined);
     });
 
+    // MapLibre makes every control its own stacking context, so the list's z-index only counts
+    // inside this control: while it is open, lift the whole control above the ones added after
+    // it. Inline on the wrapper (created outside this component's styles) so that the npm and
+    // copy-paste installs behave alike, with no global CSS to ship.
+    effect((onCleanup) => {
+      const map = this.ctx.map();
+      if (!map || !this.open() || !this.isBrowser) return;
+      this.position(); // a position change re-creates the wrapper
+      const wrapper = map
+        .getContainer()
+        .querySelector<HTMLElement>(`#${this.baseId}`)
+        ?.closest<HTMLElement>('.ng-map-control');
+      if (!wrapper) return;
+      wrapper.style.position = 'relative';
+      wrapper.style.zIndex = '3';
+      onCleanup(() => {
+        wrapper.style.position = '';
+        wrapper.style.zIndex = '';
+      });
+    });
+
     // Close on a pointer press anywhere outside the card.
     effect((onCleanup) => {
       if (!this.open() || !this.isBrowser) return;
