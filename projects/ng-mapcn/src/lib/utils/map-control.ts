@@ -1,4 +1,4 @@
-import { type Injector, type TemplateRef } from '@angular/core';
+import { type Injector, type TemplateRef, untracked } from '@angular/core';
 import { type Map as MapLibreMap } from 'maplibre-gl';
 
 import { renderPortal } from './portal';
@@ -22,7 +22,8 @@ export function mountMapControl(
     onRemove: () => element.remove(),
   };
   map.addControl(control, position);
-  const destroyView = renderPortal(tpl, injector, element);
+  // Rendering reads the template's signals: keep them out of the caller's effect.
+  const destroyView = untracked(() => renderPortal(tpl, injector, element));
 
   return () => {
     try {

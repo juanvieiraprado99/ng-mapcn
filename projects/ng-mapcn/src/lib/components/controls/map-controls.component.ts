@@ -5,12 +5,13 @@ import {
   computed,
   DestroyRef,
   effect,
-  type ElementRef,
   inject,
+  Injector,
   input,
   output,
   PLATFORM_ID,
   signal,
+  type TemplateRef,
   viewChild,
 } from '@angular/core';
 import { type Map as MapLibreMap } from 'maplibre-gl';
@@ -18,6 +19,7 @@ import { type Map as MapLibreMap } from 'maplibre-gl';
 import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MapContextService } from '../../services/map-context.service';
 import { classTokens } from '../../utils/class-name';
+import { type MapControlPosition, mountMapControl } from '../../utils/map-control';
 
 @Component({
   selector: 'ng-map-controls',
@@ -27,9 +29,7 @@ import { classTokens } from '../../utils/class-name';
   host: { class: 'ng-map-controls-host' },
 })
 export class MapControlsComponent {
-  readonly position = input<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'>(
-    'bottom-right',
-  );
+  readonly position = input<MapControlPosition>('bottom-right');
   readonly showZoom = input(true);
   readonly showCompass = input(false);
   readonly showLocate = input(false);
@@ -49,7 +49,8 @@ export class MapControlsComponent {
    */
   readonly locateError = output<GeolocationPositionError | Error>();
 
-  protected readonly compassSvg = viewChild<ElementRef<SVGElement>>('compassSvg');
+  private readonly control = viewChild.required<TemplateRef<unknown>>('control');
+  protected readonly compassTransform = signal('');
   protected readonly locating = signal(false);
   protected readonly isFullscreen = signal(false);
 
@@ -73,10 +74,18 @@ export class MapControlsComponent {
   protected readonly l = injectMapLabels(this.labels);
   private readonly ctx = inject(MapContextService);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly injector = inject(Injector);
   private destroyed = false;
 
   constructor() {
-    // Compass sync. Reading compassSvg() makes the effect re-run once the @if'd SVG renders.
+    // Mounted as a MapLibre control, so the corner containers stack it with the other controls.
+    effect((onCleanup) => {
+      const map = this.ctx.map();
+      if (!map || !this.isBrowser) return;
+      onCleanup(mountMapControl(map, this.control(), this.injector, this.position()));
+    });
+
+    // Compass sync: rotate/pitch events feed the svg transform binding.
     effect((onCleanup) => {
       const map = this.ctx.map();
       if (!map || !this.showCompass()) return;
@@ -162,8 +171,6 @@ export class MapControlsComponent {
   }
 
   private syncCompass(map: MapLibreMap): void {
-    const el = this.compassSvg()?.nativeElement;
-    if (!el) return;
-    el.style.transform = `rotateX(${map.getPitch()}deg) rotateZ(${-map.getBearing()}deg)`;
+    this.compassTransform.set(`rotateX(${map.getPitch()}deg) rotateZ(${-map.getBearing()}deg)`);
   }
 }

@@ -1,35 +1,4 @@
-:host {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
-  display: block;
-}
-
-// ── Positioning ───────────────────────────────────────────────────────────────
-
-.ng-controls {
-  position: absolute;
-  pointer-events: all;
-
-  &--top-right {
-    top: 10px;
-    right: 10px;
-  }
-  &--top-left {
-    top: 10px;
-    left: 10px;
-  }
-  // Clears the compact attribution below it (10px margin + 26px button), like mapcn's bottom-10.
-  &--bottom-right {
-    bottom: 40px;
-    right: 10px;
-  }
-  &--bottom-left {
-    bottom: 32px;
-    left: 10px;
-  }
-}
+// Positioning is MapLibre's: the card is mounted in its `.maplibregl-ctrl-<position>` container.
 
 // ── Control group ─────────────────────────────────────────────────────────────
 
