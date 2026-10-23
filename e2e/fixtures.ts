@@ -82,6 +82,13 @@ const TERRARIUM_TILES_PATH = '/elevation-tiles-prod/terrarium/';
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
 
+/** Raster basemap tile servers (OpenStreetMap, the playground's satellite and HOT presets). */
+const RASTER_TILE_HOSTS = new Set([
+  'tile.openstreetmap.org',
+  'server.arcgisonline.com',
+  'a.tile.openstreetmap.fr',
+]);
+
 /** Fails the test if the page asked for anything that is not served locally or faked below. */
 export interface NetworkState {
   /** Requests that no fixture intercepted (asserted empty after every test). */
@@ -159,11 +166,8 @@ export const test = base.extend<{ network: NetworkState }>({
             body: Buffer.alloc(0),
           });
         }
-        // Raster basemap tiles (the OpenStreetMap example on the basemaps page) and <img> sources.
-        if (
-          url.hostname === 'tile.openstreetmap.org' ||
-          route.request().resourceType() === 'image'
-        ) {
+        // Raster basemap tiles and <img> sources.
+        if (RASTER_TILE_HOSTS.has(url.hostname) || route.request().resourceType() === 'image') {
           return route.fulfill({ contentType: 'image/png', body: PIXEL_PNG });
         }
         blocked.push(`${route.request().method()} ${url.href}`);

@@ -1,6 +1,7 @@
 import type { StyleSpecification } from 'maplibre-gl';
 
 import { OSM_RASTER_STYLE, OSM_RASTER_STYLE_CODE } from '../../shared/osm-style';
+import { ESRI_IMAGERY, OSM_HUMANITARIAN } from '../../shared/raster-styles';
 import type { Control, MapSnippetInput, TemplateAttr } from './playground-schema';
 import { toTemplateExpr } from './playground-schema';
 
@@ -123,6 +124,60 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     note: '© Stadia Maps, © OpenMapTiles, © OpenStreetMap contributors.',
   },
   {
+    id: 'positron',
+    label: 'Carto Positron',
+    description: 'The light Carto basemap in both themes: a calm canvas for colorful data.',
+    styles: { light: CARTO.light, dark: CARTO.light },
+    note: '© CARTO, © OpenStreetMap contributors.',
+    hasCartoSource: true,
+  },
+  {
+    id: 'dark-matter',
+    label: 'Carto Dark Matter',
+    description: 'The dark Carto basemap in both themes, for glowing heatmaps and arcs.',
+    styles: { light: CARTO.dark, dark: CARTO.dark },
+    note: '© CARTO, © OpenStreetMap contributors.',
+    hasCartoSource: true,
+  },
+  {
+    id: 'liberty',
+    label: 'OpenFreeMap Liberty',
+    description: 'A detailed, colorful street style with no key; Dark in dark mode.',
+    styles: {
+      light: 'https://tiles.openfreemap.org/styles/liberty',
+      dark: 'https://tiles.openfreemap.org/styles/dark',
+    },
+    note: '© OpenFreeMap, © OpenMapTiles, data from OpenStreetMap.',
+    buildingSource: { source: 'openmaptiles', sourceLayer: 'building' },
+  },
+  {
+    id: 'bright',
+    label: 'OpenFreeMap Bright',
+    description: 'A bright, high-contrast street style with no key; Dark in dark mode.',
+    styles: {
+      light: 'https://tiles.openfreemap.org/styles/bright',
+      dark: 'https://tiles.openfreemap.org/styles/dark',
+    },
+    note: '© OpenFreeMap, © OpenMapTiles, data from OpenStreetMap.',
+    buildingSource: { source: 'openmaptiles', sourceLayer: 'building' },
+  },
+  {
+    id: 'imagery',
+    label: 'Satellite (Esri)',
+    description: 'Esri World Imagery raster tiles: satellite and aerial photos, no key.',
+    note: 'Dev/demo use; check the Esri terms before shipping. © Esri, Maxar, Earthstar Geographics.',
+    styles: { light: ESRI_IMAGERY.style, dark: ESRI_IMAGERY.style },
+    stylesCode: ESRI_IMAGERY.code,
+  },
+  {
+    id: 'osm-hot',
+    label: 'OSM Humanitarian',
+    description: 'The Humanitarian OpenStreetMap style (HOT) as raster tiles.',
+    note: '© OpenStreetMap contributors, tiles by HOT and OSM France. Fair use only.',
+    styles: { light: OSM_HUMANITARIAN.style, dark: OSM_HUMANITARIAN.style },
+    stylesCode: OSM_HUMANITARIAN.code,
+  },
+  {
     id: 'blank',
     label: 'Blank',
     description: 'A transparent, tile-less canvas for your own layers.',
@@ -148,6 +203,11 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
 ];
 
 export const DEFAULT_PRESET_ID = 'carto';
+
+/** Presets whose basemap has the building tiles `ng-map-fill-extrusion` draws from. */
+export const BUILDING_PRESETS: readonly StylePreset[] = STYLE_PRESETS.filter(
+  (preset) => preset.hasCartoSource || preset.buildingSource,
+);
 
 export function findPreset(id: string): StylePreset {
   return STYLE_PRESETS.find((preset) => preset.id === id) ?? STYLE_PRESETS[0];

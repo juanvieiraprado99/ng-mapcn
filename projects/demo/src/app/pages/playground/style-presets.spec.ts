@@ -1,3 +1,4 @@
+import type { StyleSpecification } from 'maplibre-gl';
 import { describe, expect, it } from 'vitest';
 
 import { buildSnippet } from './playground-schema';
@@ -132,19 +133,48 @@ describe('style presets', () => {
     expect(STYLE_PRESETS.filter((p) => p.hasCartoSource).map((p) => p.id)).toEqual([
       'carto',
       'voyager',
+      'positron',
+      'dark-matter',
       'globe',
       'tilted',
     ]);
   });
 
+  it('pins Positron and Dark Matter to one look in both themes', () => {
+    expect(findPreset('positron').styles?.light).toBe(findPreset('positron').styles?.dark);
+    expect(String(findPreset('dark-matter').styles?.light)).toContain('dark-matter');
+    // Not the library default, so the snippet spells the styles out.
+    expect(
+      mapSnippetInput(applyPreset(initialMapState(2), findPreset('positron')), VIEW).attrs,
+    ).toContainEqual({
+      name: 'styles',
+      expr: 'styles',
+    });
+  });
+
+  it('builds the satellite and HOT raster styles with their declarations', () => {
+    for (const id of ['imagery', 'osm-hot']) {
+      const preset = findPreset(id);
+      const style = preset.styles!.light as StyleSpecification;
+      expect(Object.values(style.sources)[0]).toMatchObject({ type: 'raster', tileSize: 256 });
+      expect(preset.styles!.dark).toBe(style);
+      const snippet = presetSnippet(preset);
+      expect(snippet.provider).toContain(preset.stylesCode!.declaration);
+      expect(snippet.provider).toContain(`provideMapStyles({ light: ${preset.stylesCode!.name}`);
+    }
+    expect(findPreset('osm-hot').stylesCode!.declaration).toContain("'osm-hot': {");
+  });
+
   it('offers 3D buildings on every vector basemap', () => {
     const without = STYLE_PRESETS.filter((p) => !p.hasCartoSource && !p.buildingSource);
     // Raster tiles and the blank style have no building footprints to extrude.
-    expect(without.map((p) => p.id)).toEqual(['osm', 'blank']);
-    expect(findPreset('openfreemap').buildingSource).toEqual({
-      source: 'openmaptiles',
-      sourceLayer: 'building',
-    });
+    expect(without.map((p) => p.id)).toEqual(['osm', 'imagery', 'osm-hot', 'blank']);
+    for (const id of ['openfreemap', 'liberty', 'bright']) {
+      expect(findPreset(id).buildingSource, id).toEqual({
+        source: 'openmaptiles',
+        sourceLayer: 'building',
+      });
+    }
   });
 
   it('swaps the key placeholder for the picked key and exposes openmaptiles buildings', () => {

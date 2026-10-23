@@ -68,12 +68,21 @@ export function createLayer(
   };
 }
 
-/** Inserts a new instance of `specId` at `index` (0 = top of the stack). */
+/** A `single` spec (terrain, draw) is allowed once per map. */
+export function canAdd(layers: readonly SceneLayer[], specId: string): boolean {
+  return !findSpec(specId).single || !layers.some((layer) => layer.specId === specId);
+}
+
+/**
+ * Inserts a new instance of `specId` at `index` (0 = top of the stack); `layer` is undefined
+ * when the spec is `single` and already in the scene.
+ */
 export function addLayer(
   layers: readonly SceneLayer[],
   specId: string,
   index = 0,
-): { layers: SceneLayer[]; layer: SceneLayer } {
+): { layers: SceneLayer[]; layer?: SceneLayer } {
+  if (!canAdd(layers, specId)) return { layers: [...layers] };
   const layer = createLayer(layers, specId);
   const next = [...layers];
   next.splice(Math.max(0, Math.min(index, next.length)), 0, layer);
@@ -100,6 +109,7 @@ export function duplicateLayer(
   const index = layers.findIndex((layer) => layer.uid === uid);
   if (index < 0) return { layers: [...layers] };
   const source = layers[index];
+  if (!canAdd(layers, source.specId)) return { layers: [...layers] };
   const layer = createLayer(layers, source.specId, structuredClone(source.values));
   const next = [...layers];
   next.splice(index, 0, layer);
@@ -261,7 +271,7 @@ export function decodeScene(code: string | null | undefined): Scene | null {
   let layers: SceneLayer[] = [];
   for (const entry of l.slice(0, MAX_LAYERS)) {
     const spec = LAYER_SPECS.find((candidate) => candidate.id === entry?.s);
-    if (!spec) continue;
+    if (!spec || !canAdd(layers, spec.id)) continue;
     const stored = entry.v && typeof entry.v === 'object' ? entry.v : {};
     const values = Object.fromEntries(
       spec.controls.map((control) => [

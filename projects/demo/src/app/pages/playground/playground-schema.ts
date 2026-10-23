@@ -65,6 +65,10 @@ export interface PlaygroundSpec {
   requiresCarto?: boolean;
   /** Content projected into the layer element (e.g. the marker's `<ng-marker-content />`). */
   content?: { template: string; imports: string[] };
+  /** Entry point the class is imported from, when not `ng-mapcn` (e.g. `ng-mapcn/draw`). */
+  module?: string;
+  /** At most one per map (one terrain, one draw tool): the palette disables a second one. */
+  single?: boolean;
   /** Initial view that frames the component's data. */
   view: { center: [number, number]; zoom: number; pitch?: number; bearing?: number };
 }
@@ -250,7 +254,22 @@ export function buildSceneSnippet(
         .flatMap(({ spec }) => [spec.className!, ...(spec.content?.imports ?? [])]),
     ]),
   ];
-  const libImports = [...imports, ...(map.imports ?? [])];
+  // Classes from a secondary entry point (`ng-mapcn/draw`) get their own import line.
+  const fromModule = new Map<string, string>();
+  for (const { spec } of layers) {
+    if (!spec.selector || !spec.className || !spec.module) continue;
+    for (const name of [spec.className, ...(spec.content?.imports ?? [])]) {
+      fromModule.set(name, spec.module);
+    }
+  }
+  const libImports = [...imports.filter((name) => !fromModule.has(name)), ...(map.imports ?? [])];
+  const moduleImports = [...new Set(fromModule.values())].map(
+    (module) =>
+      `import { ${[...fromModule]
+        .filter(([, m]) => m === module)
+        .map(([name]) => name)
+        .join(', ')} } from '${module}';`,
+  );
   const memberLines = [...members.values(), ...(map.ts ?? [])];
   const indented = escapeLiteral(template)
     .split('\n')
@@ -266,6 +285,7 @@ export function buildSceneSnippet(
       (t) => `import type { ${t.names.join(', ')} } from '${t.from}';`,
     ),
     `import { ${libImports.join(', ')} } from 'ng-mapcn';`,
+    ...moduleImports,
   ];
   const declarations = (map.declarations ?? []).map((d) => `${d}\n\n`).join('');
   const component = `${importLines.join('\n')}\n\n${declarations}@Component({

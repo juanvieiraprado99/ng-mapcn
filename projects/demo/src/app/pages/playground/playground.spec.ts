@@ -257,10 +257,56 @@ describe('playground page', () => {
     const { harness } = await renderRoute('/playground');
     const root = harness.fixture.nativeElement as HTMLElement;
     press$(harness, root, 'Add 3D buildings');
-    expect(root.textContent).not.toContain('Carto vector tiles');
+    expect(root.textContent).not.toContain('need building vector tiles');
 
     root.querySelector<HTMLButtonElement>('button[aria-label^="Apply OpenStreetMap"]')!.click();
     harness.detectChanges();
-    expect(root.textContent).toContain('Carto vector tiles');
+    expect(root.textContent).toContain('need building vector tiles');
+  });
+
+  it('opens an example scene in the builder', async () => {
+    const { harness, errors } = await renderRoute('/playground');
+    const root = harness.fixture.nativeElement as HTMLElement;
+
+    press$(harness, root, 'Open the Earthquake density example');
+
+    expect(layerNames(root)).toEqual(['cluster', 'heatmap']);
+    expect(snippet(root)).toContain('[radius]="20"');
+    expect(
+      root.querySelector('#pg-map-presetId button[role="combobox"]')?.textContent?.trim(),
+    ).toBe('Carto Dark Matter');
+    expect(errors).toEqual([]);
+  });
+
+  it('allows a single terrain and draw tool per map', async () => {
+    const { harness, errors } = await renderRoute('/playground');
+    const root = harness.fixture.nativeElement as HTMLElement;
+    const addTerrain = () =>
+      root.querySelector<HTMLButtonElement>('button[aria-label="Add Terrain"]')!;
+
+    expect(addTerrain().disabled).toBe(false);
+    press$(harness, root, 'Add Terrain');
+    expect(addTerrain().disabled).toBe(true);
+    expect(snippet(root)).toContain('<ng-map-terrain');
+    expect(snippet(root)).toContain('[hillshade]="true"');
+
+    press$(harness, root, 'Add Draw');
+    expect(layerNames(root)).toEqual(['draw', 'terrain', 'route']);
+    expect(snippet(root)).toContain('<ng-map-draw');
+    expect(errors).toEqual([]);
+  });
+
+  it('renders the popup with its content and the image overlay', async () => {
+    const { harness, errors } = await renderRoute('/playground');
+    const root = harness.fixture.nativeElement as HTMLElement;
+
+    press$(harness, root, 'Add Popup');
+    press$(harness, root, 'Add Image overlay');
+
+    expect(root.querySelector('app-playground-popup')).not.toBeNull();
+    expect(snippet(root)).toContain('Hello from ng-mapcn');
+    expect(snippet(root)).toContain('url="/compass.png"');
+    expect(snippet(root)).toContain('[coordinates]="coordinates"');
+    expect(errors).toEqual([]);
   });
 });
