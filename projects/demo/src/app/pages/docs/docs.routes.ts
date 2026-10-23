@@ -72,6 +72,20 @@ export const DOCS_ROUTES: Routes = [
           import('./components/basemaps-page').then((m) => m.BasemapsPageComponent),
       },
       {
+        path: 'roadmap',
+        title: 'Roadmap',
+        data: {
+          seo: {
+            title: 'Angular Map Components Roadmap',
+            description:
+              'The ng-mapcn roadmap: what has shipped in the 22.x betas and what comes next, from new map components, search and routing to Angular forms integration and AI tooling.',
+            keywords: ['ng-mapcn roadmap', 'Angular map library roadmap', 'mapcn Angular'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }],
+          },
+        },
+        loadComponent: () => import('./roadmap').then((m) => m.RoadmapComponent),
+      },
+      {
         path: 'components/map',
         title: 'Map',
         data: {

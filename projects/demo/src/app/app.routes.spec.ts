@@ -13,6 +13,7 @@ const PAGES: [url: string, h1: string, title: string][] = [
   ['/docs/installation', 'Installation', 'Install Angular Map Components - ng-mapcn'],
   ['/docs/api-reference', 'API Reference', 'Angular Map API Reference - ng-mapcn'],
   ['/docs/basemaps', 'Map Styles', 'Angular Map Styles and Basemaps - ng-mapcn'],
+  ['/docs/roadmap', 'Roadmap', 'Angular Map Components Roadmap - ng-mapcn'],
   ['/docs/components/map', 'Map', 'Angular Map Component - ng-mapcn'],
   ['/docs/components/controls', 'Controls', 'Angular Map Controls - ng-mapcn'],
   ['/docs/components/markers', 'Markers', 'Angular Map Markers - ng-mapcn'],

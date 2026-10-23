@@ -152,6 +152,7 @@ Version: ${pkg.version} · License: ${pkg.license ?? 'MIT'} · npm: https://www.
 - [Installation](${SITE_URL}/docs/installation): \`ng add\` (copy-paste) or npm package.
 - [Map Styles](${SITE_URL}/docs/basemaps): a working example per provider (Carto, OpenFreeMap, OpenStreetMap, MapTiler, Stadia).
 - [API Reference](${SITE_URL}/docs/api-reference): every component with inputs and outputs.
+- [Roadmap](${SITE_URL}/docs/roadmap): what has shipped and what comes next.
 - [Credits](${SITE_URL}/credits): mapcn, Zard UI, MapLibre, Carto.
 - [Repository](${REPO_URL}): source, issues, releases.
 - [llms-full.txt](${SITE_URL}/llms-full.txt): the complete API in one file, for agents.

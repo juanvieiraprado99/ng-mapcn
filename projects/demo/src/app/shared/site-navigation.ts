@@ -26,6 +26,7 @@ export const docsNavigation: SiteNavigationGroup[] = [
       { title: 'llms.txt', href: '/llms.txt', icon: 'lucideBookOpen', file: true },
       { title: 'API Reference', href: '/docs/api-reference', icon: 'lucideBookOpen' },
       { title: 'Map Styles', href: '/docs/basemaps', icon: 'lucideBookOpen' },
+      { title: 'Roadmap', href: '/docs/roadmap', icon: 'lucideBookOpen' },
     ],
   },
   {
