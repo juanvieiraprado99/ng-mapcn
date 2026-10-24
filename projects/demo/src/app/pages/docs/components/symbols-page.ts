@@ -23,21 +23,19 @@ const places: GeoJSON.FeatureCollection<GeoJSON.Point, { name: string; kind: str
   standalone: true,
   imports: [MapComponent, MapSymbolLayerComponent],
   template: \`
+    <!-- No textColor / textHaloColor: the defaults follow the map theme. -->
     <ng-map [center]="[-9.14, 38.722]" [zoom]="13.5">
       <ng-map-symbol-layer
         [data]="places"
         [textField]="['get', 'name']"
-        textColor="#ffffff"
-        [textHaloColor]="halo"
-        [textHaloWidth]="2.5"
+        [textSize]="14"
+        [textHaloWidth]="2"
       />
     </ng-map>
   \`,
 })
 export class SymbolLabelsComponent {
   readonly places = places;
-  readonly halo = ['match', ['get', 'kind'],
-    'cafe', '#c2410c', 'viewpoint', '#15803d', 'station', '#1d4ed8', '#334155'];
 }`;
 
 const ICONS_CODE = `import { Component } from '@angular/core';
@@ -181,7 +179,9 @@ export class SymbolImagesComponent {
     'cafe', '#c2410c', 'viewpoint', '#15803d', 'station', '#1d4ed8', '#334155'];
 }
 // Images are decoded once per URL and registered again after a theme switch.
-// A failed image is reported through (mapError) and skipped.`;
+// Both layers share the ids: each id is added once and removed with the last layer using it
+// (the first layer to add an id provides its image). A failed image is reported through
+// (mapError) and skipped.`;
 
 const TEXT_CODE = `import { Component, computed, signal } from '@angular/core';
 import type { FilterSpecification } from 'maplibre-gl';
@@ -369,15 +369,19 @@ function pinkDot(size: number, radius: number): MapSymbolImage {
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">{{ '{name}' }}</code>
           template. The places in these examples are fictional, so every label you see on the map
           comes from the layer, not from the basemap. Labels collide by default, so crowded ones
-          thin out as you zoom out.
+          thin out as you zoom out. Without
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">textColor</code> and
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">textHaloColor</code>
+          the colors follow the map theme: dark text on a white halo in light mode, light text on a
+          black halo in dark mode. Switch the site theme to see them change. The other examples set
+          their own colors.
         </span>
         <ng-map [center]="[-9.14, 38.722]" [zoom]="13.5">
           <ng-map-symbol-layer
             [data]="places"
             [textField]="['get', 'name']"
-            textColor="#ffffff"
-            [textHaloColor]="halo"
-            [textHaloWidth]="2.5"
+            [textSize]="14"
+            [textHaloWidth]="2"
           />
         </ng-map>
       </app-example-section>
@@ -453,9 +457,12 @@ function pinkDot(size: number, radius: number): MapSymbolImage {
           already decoded pixels. This map uses all three forms: the blue pin is a URL, the pink dot
           is raw pixels built in code, and the diamond is an SDF image that
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">iconColor</code>
-          recolors to purple (only SDF images are recolored, and SDF and regular images cannot share a layer, so there is one layer for each). Changing
+          recolors to purple. Only SDF images are recolored, and SDF and regular images cannot be
+          mixed in one layer, so there is one layer for each. Both layers pass the same
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">images</code>: an id is
+          registered once per map and stays until the last layer using it is gone. Changing
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">images</code> adds,
-          swaps or removes only the images this component added, without re-creating the layer.
+          swaps or removes images without re-creating the layer.
         </span>
         <ng-map [center]="[-9.14, 38.722]" [zoom]="13.5">
           <ng-map-symbol-layer
@@ -488,7 +495,9 @@ function pinkDot(size: number, radius: number): MapSymbolImage {
         [code]="textCode"
       >
         <span description>
-          Text options are reconciled live, and the default colors follow the map theme.
+          Text options are reconciled live, so a new
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">textSize</code> or
+          color never re-creates the layer.
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">filter</code>,
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">minZoom</code> and
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">maxZoom</code> work like
