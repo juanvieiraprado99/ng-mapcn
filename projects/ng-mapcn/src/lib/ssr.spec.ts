@@ -24,6 +24,7 @@ import {
   type MapStyleOption,
   MapStyleSwitcherComponent,
 } from './components/map-style-switcher/map-style-switcher.component';
+import { MapSymbolLayerComponent } from './components/map-symbol-layer/map-symbol-layer.component';
 import { MapTerrainComponent } from './components/map-terrain/map-terrain.component';
 import { MapVectorSourceComponent } from './components/map-vector-source/map-vector-source.component';
 import { MarkerContentComponent } from './components/marker-content/marker-content.component';
@@ -58,6 +59,7 @@ const TEMPLATE = `
     <ng-map-arc [data]="arcs" />
     <ng-map-cluster-layer [data]="collection" />
     <ng-map-heatmap [data]="collection" />
+    <ng-map-symbol-layer [data]="collection" textField="{name}" />
     <ng-map-raster-source id="radar" [tiles]="['https://tiles.example.com/{z}/{x}/{y}.png']" />
     <ng-map-vector-source id="parcels" url="https://example.com/parcels.json" />
     <ng-map-image-overlay [url]="'https://example.com/a.png'" [coordinates]="corners" />
@@ -113,6 +115,7 @@ describe('server-side rendering', () => {
         MapLegendComponent,
         MapStyleSwitcherComponent,
         MapScaleComponent,
+        MapSymbolLayerComponent,
         MapMarkerComponent,
         MarkerContentComponent,
         MarkerLabelComponent,
