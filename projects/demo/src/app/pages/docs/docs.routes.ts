@@ -236,6 +236,21 @@ export const DOCS_ROUTES: Routes = [
           import('./components/heatmap-page').then((m) => m.HeatmapPageComponent),
       },
       {
+        path: 'components/symbols',
+        title: 'Symbols',
+        data: {
+          seo: {
+            title: 'Angular Map Symbol Layer',
+            description:
+              'Draw text labels and icons for GeoJSON points on an Angular map with ng-map-symbol-layer: images by id, data-driven icons, collision-aware labels and live options powered by MapLibre GL.',
+            keywords: ['symbol layer Angular', 'map labels MapLibre', 'custom map icons'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () =>
+          import('./components/symbols-page').then((m) => m.SymbolsPageComponent),
+      },
+      {
         path: 'components/tile-sources',
         title: 'Tile Sources',
         data: {
