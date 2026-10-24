@@ -494,7 +494,7 @@ Renders GeoJSON points as a MapLibre heatmap layer with a theme-aware default gr
 
 `ng-map-symbol-layer`
 
-Icons and text labels for GeoJSON points as a MapLibre symbol layer (collision-aware). Images are registered from a URL or decoded pixels and survive theme switches. Generic over the feature properties: MapSymbolLayerComponent<P>, with P inferred from data. Must be used inside ng-map.
+Icons and text labels for GeoJSON points as a MapLibre symbol layer (collision-aware). Images are registered from a URL or decoded pixels, shared by id between layers and survive theme switches; SDF and non-SDF images cannot be mixed in one layer. Generic over the feature properties: MapSymbolLayerComponent<P>, with P inferred from data. Must be used inside ng-map.
 
 **Inputs**
 
@@ -503,10 +503,10 @@ Icons and text labels for GeoJSON points as a MapLibre symbol layer (collision-a
 | `data` | `string \| FeatureCollection<Point, P> \| Feature<Point, P>` | `required` | GeoJSON points (object or URL string). |
 | `id` | `string` | `auto` | Optional stable id prefix for the source and layer: symbol-source-<id>, symbol-layer-<id>. Changing it re-creates them. |
 | `beforeId` | `string` | — | Insert the layer before this layer id. Applied at creation only. |
-| `images` | `Record<string, MapSymbolImage>` | `{}` | Images to register by id, referenced from icon. A MapSymbolImage is a URL (PNG, WebP or JPEG), { url, sdf?, pixelRatio? } or { data, sdf?, pixelRatio? } with decoded pixels. URLs are decoded once and re-added after a theme switch; only images this component added are removed. |
+| `images` | `Record<string, MapSymbolImage>` | `{}` | Images to register by id, referenced from icon. A MapSymbolImage is a URL (PNG, WebP or JPEG), { url, sdf?, pixelRatio? } or { data, sdf?, pixelRatio? } with decoded pixels. URLs are decoded once and re-added after a theme switch. Ids are shared per map: layers registering the same id use one image (the first to add it provides the pixels, so give different images different ids), removed when the last layer using it goes away; an id the style already has is never removed. SDF and non-SDF images cannot be mixed in one layer; use one layer per kind. |
 | `icon` | `string \| expression` | — | Image id, or an expression resolving to one (["get", "kind"]). |
 | `iconSize` | `number \| expression` | `1` | Icon scale. |
-| `iconColor` | `string \| expression` | — | Icon color. Only applies to SDF images. |
+| `iconColor` | `string \| expression` | — | Icon color. Only applies to SDF images ({ url, sdf: true }). SDF and non-SDF images cannot be mixed in one layer; use one layer per kind. |
 | `textField` | `string \| expression` | — | Label text: a {property} template, a plain string or an expression. Needs the style glyphs; ignored (with a console warning) on the blank style. |
 | `textFont` | `string[]` | `basemap's font` | Font stack for the labels. Defaults to the basemap's own, which its glyph server serves. |
 | `textSize` | `number \| expression` | `12` | Label size in pixels. |
@@ -528,7 +528,7 @@ Icons and text labels for GeoJSON points as a MapLibre symbol layer (collision-a
 | Name | Type | Default | Description |
 |---|---|---|---|
 | `featureClick` | `MapGeoJSONEvent<P>` | — | Emits { feature, longitude, latitude, originalEvent } when a symbol is clicked. Requires interactive. |
-| `featureHover` | `MapGeoJSONEvent<P> \| null` | — | Emits the hovered symbol, and null when the pointer leaves. Requires interactive. |
+| `featureHover` | `MapGeoJSONEvent<P> \| null` | — | Emits the hovered symbol (again when the pointer moves to another one), and null when the pointer leaves. Requires interactive. Inline data without feature ids gets ids generated from the feature index (generateId); data with ids keeps them. |
 
 ### MapRasterSource
 
@@ -681,6 +681,7 @@ Component-scoped service provided by `ng-map` — the Angular equivalent of mapc
 | `registerSource(id)` | `(id: string) => () => void` | — | Announces a source you added yourself so hasSource(id) sees it; returns the release function to call when you remove it. |
 | `fitBounds(options?)` | `(options?: MapFitBoundsOptions) => boolean` | — | Fits the camera to options.bounds, or to the union of the children's data. Returns false when the map is not loaded or there are no bounds. |
 | `dataBounds()` | `Signal<[number, number, number, number] \| null>` | — | Union of the bounds registered by the children, as [west, south, east, north]. |
+| `acquireImage(id, data, options)` | `(id: string, data, options: { sdf: boolean; pixelRatio: number }) => () => void` | — | Takes a reference to a style image, adding it when the style has none under that id (the first user provides the pixels). Returns the release function: the image is removed with its last reference, and only if it is still the one added here. Release while the gate is closed and acquire again once it re-opens. Used by ng-map-symbol-layer. |
 | `registerBounds(getter)` | `(getter: () => LngLatBoundsLike \| null) => () => void` | — | Contributes a bounds source to fit-to-bounds. The getter runs reactively; returns the unregister function (call it on destroy). |
 
 ## provideMapStyles()

@@ -22,6 +22,7 @@
     { "name": "registerSource(id)", "type": "(id: string) => () => void", "default": "", "description": "Announces a source you added yourself so hasSource(id) sees it; returns the release function to call when you remove it." },
     { "name": "fitBounds(options?)", "type": "(options?: MapFitBoundsOptions) => boolean", "default": "", "description": "Fits the camera to options.bounds, or to the union of the children's data. Returns false when the map is not loaded or there are no bounds." },
     { "name": "dataBounds()", "type": "Signal<[number, number, number, number] | null>", "default": "", "description": "Union of the bounds registered by the children, as [west, south, east, north]." },
+    { "name": "acquireImage(id, data, options)", "type": "(id: string, data, options: { sdf: boolean; pixelRatio: number }) => () => void", "default": "", "description": "Takes a reference to a style image, adding it when the style has none under that id (the first user provides the pixels). Returns the release function: the image is removed with its last reference, and only if it is still the one added here. Release while the gate is closed and acquire again once it re-opens. Used by ng-map-symbol-layer." },
     { "name": "registerBounds(getter)", "type": "(getter: () => LngLatBoundsLike | null) => () => void", "default": "", "description": "Contributes a bounds source to fit-to-bounds. The getter runs reactively; returns the unregister function (call it on destroy)." }
   ],
   "sections": [
@@ -353,15 +354,15 @@
       "id": "mapsymbollayer",
       "title": "MapSymbolLayer",
       "selector": "ng-map-symbol-layer",
-      "description": "Icons and text labels for GeoJSON points as a MapLibre symbol layer (collision-aware). Images are registered from a URL or decoded pixels and survive theme switches. Generic over the feature properties: MapSymbolLayerComponent<P>, with P inferred from data. Must be used inside ng-map.",
+      "description": "Icons and text labels for GeoJSON points as a MapLibre symbol layer (collision-aware). Images are registered from a URL or decoded pixels, shared by id between layers and survive theme switches; SDF and non-SDF images cannot be mixed in one layer. Generic over the feature properties: MapSymbolLayerComponent<P>, with P inferred from data. Must be used inside ng-map.",
       "inputs": [
         { "name": "data", "type": "string | FeatureCollection<Point, P> | Feature<Point, P>", "default": "required", "description": "GeoJSON points (object or URL string)." },
         { "name": "id", "type": "string", "default": "auto", "description": "Optional stable id prefix for the source and layer: symbol-source-<id>, symbol-layer-<id>. Changing it re-creates them." },
         { "name": "beforeId", "type": "string", "default": "", "description": "Insert the layer before this layer id. Applied at creation only." },
-        { "name": "images", "type": "Record<string, MapSymbolImage>", "default": "{}", "description": "Images to register by id, referenced from icon. A MapSymbolImage is a URL (PNG, WebP or JPEG), { url, sdf?, pixelRatio? } or { data, sdf?, pixelRatio? } with decoded pixels. URLs are decoded once and re-added after a theme switch; only images this component added are removed." },
+        { "name": "images", "type": "Record<string, MapSymbolImage>", "default": "{}", "description": "Images to register by id, referenced from icon. A MapSymbolImage is a URL (PNG, WebP or JPEG), { url, sdf?, pixelRatio? } or { data, sdf?, pixelRatio? } with decoded pixels. URLs are decoded once and re-added after a theme switch. Ids are shared per map: layers registering the same id use one image (the first to add it provides the pixels, so give different images different ids), removed when the last layer using it goes away; an id the style already has is never removed. SDF and non-SDF images cannot be mixed in one layer; use one layer per kind." },
         { "name": "icon", "type": "string | expression", "default": "", "description": "Image id, or an expression resolving to one ([\"get\", \"kind\"])." },
         { "name": "iconSize", "type": "number | expression", "default": "1", "description": "Icon scale." },
-        { "name": "iconColor", "type": "string | expression", "default": "", "description": "Icon color. Only applies to SDF images." },
+        { "name": "iconColor", "type": "string | expression", "default": "", "description": "Icon color. Only applies to SDF images ({ url, sdf: true }). SDF and non-SDF images cannot be mixed in one layer; use one layer per kind." },
         { "name": "textField", "type": "string | expression", "default": "", "description": "Label text: a {property} template, a plain string or an expression. Needs the style glyphs; ignored (with a console warning) on the blank style." },
         { "name": "textFont", "type": "string[]", "default": "basemap's font", "description": "Font stack for the labels. Defaults to the basemap's own, which its glyph server serves." },
         { "name": "textSize", "type": "number | expression", "default": "12", "description": "Label size in pixels." },
@@ -380,7 +381,7 @@
       ],
       "outputs": [
         { "name": "featureClick", "type": "MapGeoJSONEvent<P>", "default": "", "description": "Emits { feature, longitude, latitude, originalEvent } when a symbol is clicked. Requires interactive." },
-        { "name": "featureHover", "type": "MapGeoJSONEvent<P> | null", "default": "", "description": "Emits the hovered symbol, and null when the pointer leaves. Requires interactive." }
+        { "name": "featureHover", "type": "MapGeoJSONEvent<P> | null", "default": "", "description": "Emits the hovered symbol (again when the pointer moves to another one), and null when the pointer leaves. Requires interactive. Inline data without feature ids gets ids generated from the feature index (generateId); data with ids keeps them." }
       ]
     },
     {

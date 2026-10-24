@@ -308,7 +308,7 @@ Gotchas: set `weightRange` to the real `[min, max]` of `weightProperty`, otherwi
 icons = { city: '/icons/city.png', park: { url: '/icons/park.png', pixelRatio: 2 } };
 ```
 
-`icon` is an image id or an expression, so `['get', 'kind']` picks the image per feature. Text-only labels need no `images`: just `textField="{name}"`. Labels need the style glyphs, so on `[blank]` they are skipped with one console warning (icons still render). `allowOverlap`, `textSize`, `filter` and `data` update the existing layer in place; `images` changes add, swap or remove images without re-creating it. Pass `{ url, sdf: true }` and `iconColor` to recolor a monochrome icon.
+`icon` is an image id or an expression, so `['get', 'kind']` picks the image per feature. Text-only labels need no `images`: just `textField="{name}"`. Labels need the style glyphs, so on `[blank]` they are skipped with one console warning (icons still render). `allowOverlap`, `textSize`, `filter` and `data` update the existing layer in place; `images` changes add, swap or remove images without re-creating it. Pass `{ url, sdf: true }` and `iconColor` to recolor a monochrome icon; SDF and non-SDF images cannot be mixed in one layer, so put SDF icons in a layer of their own. Layers may share `images`: an id is added once per map and stays until the last layer using it is gone.
 
 ## Tile sources
 

@@ -100,7 +100,7 @@ Full inputs, types and defaults: `references/components.md`.
 - The global `.maplibregl-popup-*` overrides and `maplibre-gl.css` are required.
 - Tile sources: the source id is the `id` input verbatim; a layer of your own that draws it should wait for `ctx.hasSource(id)` (see `references/recipes.md`). `ng-map-vector-source` adds no layers. PMTiles: the library does not depend on `pmtiles`; install it and call `maplibregl.addProtocol('pmtiles', new Protocol().tile)` once, then use `url="pmtiles://<archive url>"`.
 - 3D: `ng-map-fill-extrusion` creates only a layer and defaults to the Carto basemap (`source="protomaps"`, `sourceLayer="buildings"`, `height` / `min_height`, `minZoom` 14; the earlier `carto` / `building` / `render_height` styles are still detected); for any other source it waits for `map.getSource(source)` and omits `sourceLayer` unless given. Tilt the map with `[options]="{ pitch: 60 }"` (terrain needs `maxPitch` up to 85). `ng-map-terrain` works with no inputs (public Terrarium tiles), is re-applied after theme switches, and only one terrain per map is active.
-- Many points: use `ng-map-cluster-layer`, `ng-map-heatmap` or `ng-map-geojson` (GPU), not hundreds of `ng-map-marker` (one DOM element each).
+- Many points: use `ng-map-cluster-layer`, `ng-map-heatmap`, `ng-map-symbol-layer` (icons and labels) or `ng-map-geojson` (GPU), not hundreds of `ng-map-marker` (one DOM element each).
 - MapLibre is ~1 MB: lazy-load the map (`loadComponent` route or `@defer (on viewport)`). Any eager import of `ng-mapcn` pulls it into the main bundle.
 - Only pass trusted URLs to `styles`, `provideMapStyles()` and `data`; attributions render as HTML.
 
