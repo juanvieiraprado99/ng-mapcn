@@ -97,6 +97,8 @@ function toPoint(value: unknown): Point {
 export class Map extends Evented {
   private sources: Record<string, any> = {};
   private layers: any[] = [];
+  /** Images of the style (`addImage`); a style change drops them, like MapLibre. */
+  private images = new globalThis.Map<string, { data: unknown; options: unknown }>();
   private terrain: { source: string; exaggeration?: number } | null = null;
   private moving = false;
   private camera = { lng: 0, lat: 0, zoom: 0, bearing: 0, pitch: 0 };
@@ -267,6 +269,7 @@ export class Map extends Evented {
     this.transformPendingStyle();
     this.sources = {};
     this.layers = [];
+    this.images.clear();
     this.terrain = null;
     this.styleLoading = false;
     this.fire('style.load');
@@ -394,6 +397,31 @@ export class Map extends Evented {
   getTerrain(): { source: string; exaggeration?: number } | null {
     return this.terrain;
   }
+  /** Like MapLibre: adding an image under an existing id throws. */
+  addImage(id: string, data: unknown, options: unknown = {}): this {
+    if (this.images.has(id)) throw new Error(`An image named "${id}" already exists.`);
+    this.calls.push(`addImage:${id}`);
+    this.images.set(id, { data, options });
+    return this;
+  }
+  hasImage(id: string): boolean {
+    return this.images.has(id);
+  }
+  removeImage(id: string): this {
+    this.calls.push(`removeImage:${id}`);
+    this.images.delete(id);
+    return this;
+  }
+  updateImage(id: string, data: unknown): this {
+    if (!this.images.has(id)) throw new Error(`The map has no image with that id: ${id}`);
+    this.calls.push(`updateImage:${id}`);
+    this.images.set(id, { ...this.images.get(id)!, data });
+    return this;
+  }
+  /** Resolves a decoded 1x1 image, like `map.loadImage` (override per spec to reject). */
+  loadImage = vi.fn((_url: string) =>
+    Promise.resolve({ data: { width: 1, height: 1, data: new Uint8Array(4) } }),
+  );
   private controls: any[] = [];
 
   /** Like MapLibre: the control's element goes into a lazily created corner container. */
