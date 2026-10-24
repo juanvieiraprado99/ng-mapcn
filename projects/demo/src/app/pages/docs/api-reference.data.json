@@ -1,5 +1,5 @@
 {
-  "anatomyCode": "<ng-map [center]=\"[-74.006, 40.7128]\" [zoom]=\"11\">\n  <ng-map-controls />\n\n  <ng-map-marker [longitude]=\"-74.006\" [latitude]=\"40.7128\">\n    <ng-marker-content>\n      <div class=\"size-4 rounded-full bg-blue-500\"></div>\n      <ng-marker-label position=\"top\">New York</ng-marker-label>\n    </ng-marker-content>\n    <ng-marker-tooltip>Hover content</ng-marker-tooltip>\n    <ng-marker-popup>Click content</ng-marker-popup>\n  </ng-map-marker>\n\n  <ng-map-popup [longitude]=\"-74\" [latitude]=\"40.7\">Standalone popup</ng-map-popup>\n  <ng-map-route [coordinates]=\"coordinates\" />\n  <ng-map-arc [data]=\"arcs\" />\n  <ng-map-geojson [data]=\"geojson\" />\n  <ng-map-cluster-layer [data]=\"points\" />\n  <ng-map-heatmap [data]=\"points\" weightProperty=\"mag\" />\n  <ng-map-raster-source id=\"radar\" [tiles]=\"radarTiles\" [opacity]=\"0.7\" />\n  <ng-map-vector-source id=\"parcels\" url=\"pmtiles://https://example.com/parcels.pmtiles\" />\n  <ng-map-image-overlay [url]=\"imageUrl\" [coordinates]=\"corners\" />\n</ng-map>",
+  "anatomyCode": "<ng-map [center]=\"[-74.006, 40.7128]\" [zoom]=\"11\">\n  <ng-map-controls />\n\n  <ng-map-marker [longitude]=\"-74.006\" [latitude]=\"40.7128\">\n    <ng-marker-content>\n      <div class=\"size-4 rounded-full bg-blue-500\"></div>\n      <ng-marker-label position=\"top\">New York</ng-marker-label>\n    </ng-marker-content>\n    <ng-marker-tooltip>Hover content</ng-marker-tooltip>\n    <ng-marker-popup>Click content</ng-marker-popup>\n  </ng-map-marker>\n\n  <ng-map-popup [longitude]=\"-74\" [latitude]=\"40.7\">Standalone popup</ng-map-popup>\n  <ng-map-route [coordinates]=\"coordinates\" />\n  <ng-map-arc [data]=\"arcs\" />\n  <ng-map-geojson [data]=\"geojson\" />\n  <ng-map-cluster-layer [data]=\"points\" />\n  <ng-map-heatmap [data]=\"points\" weightProperty=\"mag\" />\n  <ng-map-symbol-layer [data]=\"points\" textField=\"{name}\" />\n  <ng-map-raster-source id=\"radar\" [tiles]=\"radarTiles\" [opacity]=\"0.7\" />\n  <ng-map-vector-source id=\"parcels\" url=\"pmtiles://https://example.com/parcels.pmtiles\" />\n  <ng-map-image-overlay [url]=\"imageUrl\" [coordinates]=\"corners\" />\n</ng-map>",
   "provideStylesCode": "import { inject } from '@angular/core';\nimport { provideMapStyles } from 'ng-mapcn';\n\nexport const appConfig: ApplicationConfig = {\n  providers: [\n    // Static config...\n    provideMapStyles({\n      light: 'https://tiles.openfreemap.org/styles/positron',\n      dark: 'https://tiles.openfreemap.org/styles/dark',\n    }),\n\n    // ...or a signal, so the basemap can be switched at runtime\n    provideMapStyles(() => inject(BasemapService).styles),\n  ],\n};",
   "provideStylesRows": [
     { "name": "MapStylesConfig", "type": "{ light?: string | StyleSpecification; dark?: string | StyleSpecification }", "default": "", "description": "Per-theme basemap. A theme left undefined falls back to the Carto default for that theme." },
@@ -348,6 +348,40 @@
         { "name": "paint", "type": "HeatmapLayerSpecification[\"paint\"]", "default": "", "description": "Escape hatch: heatmap paint properties merged last." }
       ],
       "outputs": []
+    },
+    {
+      "id": "mapsymbollayer",
+      "title": "MapSymbolLayer",
+      "selector": "ng-map-symbol-layer",
+      "description": "Icons and text labels for GeoJSON points as a MapLibre symbol layer (collision-aware). Images are registered from a URL or decoded pixels and survive theme switches. Generic over the feature properties: MapSymbolLayerComponent<P>, with P inferred from data. Must be used inside ng-map.",
+      "inputs": [
+        { "name": "data", "type": "string | FeatureCollection<Point, P> | Feature<Point, P>", "default": "required", "description": "GeoJSON points (object or URL string)." },
+        { "name": "id", "type": "string", "default": "auto", "description": "Optional stable id prefix for the source and layer: symbol-source-<id>, symbol-layer-<id>. Changing it re-creates them." },
+        { "name": "beforeId", "type": "string", "default": "", "description": "Insert the layer before this layer id. Applied at creation only." },
+        { "name": "images", "type": "Record<string, MapSymbolImage>", "default": "{}", "description": "Images to register by id, referenced from icon. A MapSymbolImage is a URL (PNG, WebP or JPEG), { url, sdf?, pixelRatio? } or { data, sdf?, pixelRatio? } with decoded pixels. URLs are decoded once and re-added after a theme switch; only images this component added are removed." },
+        { "name": "icon", "type": "string | expression", "default": "", "description": "Image id, or an expression resolving to one ([\"get\", \"kind\"])." },
+        { "name": "iconSize", "type": "number | expression", "default": "1", "description": "Icon scale." },
+        { "name": "iconColor", "type": "string | expression", "default": "", "description": "Icon color. Only applies to SDF images." },
+        { "name": "textField", "type": "string | expression", "default": "", "description": "Label text: a {property} template, a plain string or an expression. Needs the style glyphs; ignored (with a console warning) on the blank style." },
+        { "name": "textFont", "type": "string[]", "default": "basemap's font", "description": "Font stack for the labels. Defaults to the basemap's own, which its glyph server serves." },
+        { "name": "textSize", "type": "number | expression", "default": "12", "description": "Label size in pixels." },
+        { "name": "textColor", "type": "string | expression", "default": "theme default", "description": "Label color (#171717 light, #fafafa dark)." },
+        { "name": "textHaloColor", "type": "string | expression", "default": "theme default", "description": "Label halo color (#ffffff light, #0a0a0a dark)." },
+        { "name": "textHaloWidth", "type": "number | expression", "default": "1", "description": "Label halo width in pixels." },
+        { "name": "textAnchor", "type": "string", "default": "top with icon, else center", "description": "Which part of the label touches the anchor." },
+        { "name": "textOffset", "type": "[number, number]", "default": "[0, 0.8] with icon, else [0, 0]", "description": "Label offset in ems." },
+        { "name": "allowOverlap", "type": "boolean", "default": "false", "description": "Draw icons and labels even when they collide (sets icon-allow-overlap and text-allow-overlap)." },
+        { "name": "minZoom", "type": "number", "default": "0", "description": "Minimum zoom at which the layer is rendered." },
+        { "name": "maxZoom", "type": "number", "default": "24", "description": "Zoom from which the layer is no longer rendered." },
+        { "name": "filter", "type": "FilterSpecification", "default": "", "description": "MapLibre filter expression, reconciled live." },
+        { "name": "layout", "type": "SymbolLayerSpecification[\"layout\"]", "default": "", "description": "Escape hatch: layout properties merged last." },
+        { "name": "paint", "type": "SymbolLayerSpecification[\"paint\"]", "default": "", "description": "Escape hatch: paint properties merged last." },
+        { "name": "interactive", "type": "boolean", "default": "false", "description": "Whether features respond to mouse events." }
+      ],
+      "outputs": [
+        { "name": "featureClick", "type": "MapGeoJSONEvent<P>", "default": "", "description": "Emits { feature, longitude, latitude, originalEvent } when a symbol is clicked. Requires interactive." },
+        { "name": "featureHover", "type": "MapGeoJSONEvent<P> | null", "default": "", "description": "Emits the hovered symbol, and null when the pointer leaves. Requires interactive." }
+      ]
     },
     {
       "id": "maprastersource",

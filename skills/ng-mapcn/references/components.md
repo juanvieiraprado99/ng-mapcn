@@ -2,7 +2,7 @@
 
 All components are standalone, `OnPush`, and use signal inputs/outputs. Everything below is exported from `ng-mapcn` (or from the folder `ng add` copied into your app). Coordinates are `[longitude, latitude]`.
 
-Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-scale](#ng-map-scale) | [ng-map-legend](#ng-map-legend) | [ng-map-style-switcher](#ng-map-style-switcher) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [ng-map-draw](#ng-map-draw) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
+Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-scale](#ng-map-scale) | [ng-map-legend](#ng-map-legend) | [ng-map-style-switcher](#ng-map-style-switcher) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-symbol-layer](#ng-map-symbol-layer) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [ng-map-draw](#ng-map-draw) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
 
 ## ng-map
 
@@ -359,6 +359,44 @@ Ids derive from `id` (auto `ng-heatmap-N`): source `heatmap-source-<id>`, layer 
 | `paint`          | `HeatmapLayerSpecification['paint']`                            | `undefined`           | Escape hatch, merged last over every input above                                                                                                                             |
 
 No outputs. Also exported: `heatmapColorExpression(stops, theme?)`, `defaultHeatmapGradients`, `MapHeatmapData`, `HeatmapGradient`.
+
+## ng-map-symbol-layer
+
+Class `MapSymbolLayerComponent<P = Record<string, unknown>>`. A GeoJSON point source rendered as one MapLibre `symbol` layer: icons, text labels or both, with collision detection. `P` is inferred from `data`.
+
+Ids derive from `id` (auto `ng-symbol-N`): source `symbol-source-<id>`, layer `symbol-layer-<id>`.
+
+| Input           | Type                                                                         | Default                             | Notes                                                                                                                                             |
+| --------------- | ---------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`          | `string \| Feature<Point, P \| null> \| FeatureCollection<Point, P \| null>` | required                            | String is a URL; new data goes through `setData`                                                                                                  |
+| `id`            | `string`                                                                     | auto (`ng-symbol-N`)                | Changing it re-creates the source and layer                                                                                                       |
+| `beforeId`      | `string`                                                                     | `undefined`                         | Layer to insert before; creation only                                                                                                             |
+| `images`        | `Record<string, MapSymbolImage>`                                             | `{}`                                | Registered by id for `icon`. `MapSymbolImage` = URL \| `{ url, sdf?, pixelRatio? }` \| `{ data, sdf?, pixelRatio? }`. PNG, WebP or JPEG (not SVG) |
+| `icon`          | `string \| expression`                                                       | `undefined`                         | Image id or expression such as `['get', 'kind']`                                                                                                  |
+| `iconSize`      | `number \| expression`                                                       | `1`                                 |                                                                                                                                                   |
+| `iconColor`     | `string \| expression`                                                       | `undefined`                         | Only recolors SDF images                                                                                                                          |
+| `textField`     | `string \| expression`                                                       | `undefined`                         | `'{name}'` template or expression. Needs style `glyphs`; on `blank` all text options are ignored with one console warning                         |
+| `textFont`      | `string[]`                                                                   | the basemap's font                  | Glyph servers only serve their own fonts                                                                                                          |
+| `textSize`      | `number \| expression`                                                       | `12`                                |                                                                                                                                                   |
+| `textColor`     | `string \| expression`                                                       | theme (`#171717`/`#fafafa`)         |                                                                                                                                                   |
+| `textHaloColor` | `string \| expression`                                                       | theme (`#ffffff`/`#0a0a0a`)         |                                                                                                                                                   |
+| `textHaloWidth` | `number \| expression`                                                       | `1`                                 |                                                                                                                                                   |
+| `textAnchor`    | `SymbolLayerSpecification['layout']['text-anchor']`                          | `'top'` with icon, else `'center'`  |                                                                                                                                                   |
+| `textOffset`    | `[number, number]`                                                           | `[0, 0.8]` with icon, else `[0, 0]` | Ems                                                                                                                                               |
+| `allowOverlap`  | `boolean`                                                                    | `false`                             | Sets both `icon-allow-overlap` and `text-allow-overlap`                                                                                           |
+| `minZoom`       | `number`                                                                     | `0`                                 | Reconciled with `setLayerZoomRange`                                                                                                               |
+| `maxZoom`       | `number`                                                                     | `24`                                |                                                                                                                                                   |
+| `filter`        | `FilterSpecification`                                                        | `undefined`                         | Reconciled with `setFilter`                                                                                                                       |
+| `layout`        | `SymbolLayerSpecification['layout']`                                         | `undefined`                         | Escape hatch, merged last                                                                                                                         |
+| `paint`         | `SymbolLayerSpecification['paint']`                                          | `undefined`                         | Escape hatch, merged last                                                                                                                         |
+| `interactive`   | `boolean`                                                                    | `false`                             | Binds click and hover to the layer (pointer cursor on hover)                                                                                      |
+
+| Output         | Payload                                                                  |
+| -------------- | ------------------------------------------------------------------------ |
+| `featureClick` | `MapGeoJSONEvent<P>` = `{ feature, longitude, latitude, originalEvent }` |
+| `featureHover` | `MapGeoJSONEvent<P> \| null` (`null` on leave)                           |
+
+Images belong to the style: URLs are decoded once (cached per URL) and re-added after a theme switch; a failed image is reported through `mapError` and skipped, the layer is still created. Changing `images` adds, swaps or removes only the images this component added, without re-creating the layer; an id that already exists in the style is never replaced or removed. Also exported: `MapSymbolData`, `MapSymbolImage`, `MapSymbolImageData`.
 
 ## ng-map-raster-source
 

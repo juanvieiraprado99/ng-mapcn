@@ -2,7 +2,7 @@
 
 Copy-paste examples. Import from `'ng-mapcn'` (or from the folder `ng add` copied into your app). Every map needs a parent with an explicit height. Coordinates are `[longitude, latitude]`.
 
-Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Tile sources](#tile-sources) | [Draw](#draw) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading) | [Fit to data](#fit-to-data) | [3D buildings and terrain](#3d-buildings-and-terrain)
+Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Symbols](#symbols) | [Tile sources](#tile-sources) | [Draw](#draw) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading) | [Fit to data](#fit-to-data) | [3D buildings and terrain](#3d-buildings-and-terrain)
 
 ## Controls
 
@@ -286,6 +286,29 @@ Extra datum properties (here `color`) are available to paint expressions through
 `data` also accepts a `GeoJSON.FeatureCollection<GeoJSON.Point, P>`. Without `gradient` the ramp follows the map theme (`defaultHeatmapGradients`); a custom `[gradient]="[[0, 'rgba(0,0,0,0)'], [1, '#ef4444']]"` is kept across theme switches. `radius`, `intensity` and `opacity` accept zoom expressions such as `['interpolate', ['linear'], ['zoom'], 0, 8, 6, 34]`. `maxZoom` stops rendering from that zoom, so a custom circle layer placed after the heatmap in the template can take over when zoomed in. Ids: `heatmap-source-<id>`, `heatmap-layer-<id>`.
 
 Gotchas: set `weightRange` to the real `[min, max]` of `weightProperty`, otherwise raw values (e.g. a magnitude of 0-7) saturate the layer. `radius`, `intensity`, `opacity`, `gradient`, `minZoom`/`maxZoom` and `data` update the existing layer in place, so binding them to signals is cheap. The component has no outputs and a heatmap is not hit-testable (`queryRenderedFeatures` returns nothing), so use a circle layer or markers for interaction.
+
+## Symbols
+
+```html
+<ng-map [center]="[11.25, 43.77]" [zoom]="5">
+  <ng-map-symbol-layer
+    id="places"
+    [data]="places"
+    [images]="icons"
+    [icon]="['get', 'kind']"
+    textField="{name}"
+    [interactive]="true"
+    (featureClick)="selected.set($event.feature.properties?.name ?? null)"
+  />
+</ng-map>
+```
+
+```ts
+// Local or same-origin PNG/WebP/JPEG (CORS applies to remote URLs; SVG cannot be decoded).
+icons = { city: '/icons/city.png', park: { url: '/icons/park.png', pixelRatio: 2 } };
+```
+
+`icon` is an image id or an expression, so `['get', 'kind']` picks the image per feature. Text-only labels need no `images`: just `textField="{name}"`. Labels need the style glyphs, so on `[blank]` they are skipped with one console warning (icons still render). `allowOverlap`, `textSize`, `filter` and `data` update the existing layer in place; `images` changes add, swap or remove images without re-creating it. Pass `{ url, sdf: true }` and `iconColor` to recolor a monochrome icon.
 
 ## Tile sources
 
