@@ -89,26 +89,20 @@ const STOPS = [
   { color: '#7f1d1d', value: 100 },
 ];
 
-// one 1.9° x 3° square per stop, laid out west to east
-function square(index: number): GeoJSON.Feature<GeoJSON.Polygon> {
-  const west = -5 + index * 2;
-  return {
-    type: 'Feature',
-    properties: {},
-    geometry: {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [west, -1.5],
-          [west + 1.9, -1.5],
-          [west + 1.9, 1.5],
-          [west, 1.5],
-          [west, -1.5],
-        ],
-      ],
-    },
-  };
-}
+// visitors (in thousands) per country, keyed by the feature's NAME_LONG
+const VISITORS: Record<string, number> = {
+  'United States': 100,
+  'United Kingdom': 95,
+  India: 90,
+  Germany: 80,
+  Canada: 70,
+  Brazil: 65,
+  France: 55,
+  China: 45,
+  Japan: 35,
+  Australia: 25,
+  'South Africa': 20,
+};
 
 @Component({
   selector: 'app-legend-gradient-map',
@@ -116,34 +110,40 @@ function square(index: number): GeoJSON.Feature<GeoJSON.Polygon> {
   imports: [MapComponent, MapGeoJSONComponent, MapLegendComponent],
   template: \`
     <div class="h-[420px]">
-      <ng-map [blank]="true" [center]="[0, 0]" [zoom]="5">
-        @for (cell of cells; track cell.id) {
-          <ng-map-geojson
-            [id]="cell.id"
-            [data]="cell.data"
-            [fillPaint]="{ 'fill-color': cell.color, 'fill-opacity': 0.85 }"
-            [linePaint]="false"
-          />
-        }
+      <ng-map [blank]="true" [center]="[12, 28]" [zoom]="1.4">
+        <ng-map-geojson [data]="worldUrl" [fillPaint]="fillPaint" />
         <ng-map-legend position="bottom-left" [sections]="sections" />
       </ng-map>
     </div>
   \`,
 })
 export class LegendGradientMapComponent {
+  readonly worldUrl =
+    'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@v5.1.2/geojson/ne_110m_admin_0_countries.geojson';
+
+  // The legend only explains the colours; the map paints them. Both read the same STOPS.
+  readonly fillPaint = {
+    'fill-color': [
+      'let',
+      'visitors',
+      ['match', ['get', 'NAME_LONG'], ...Object.entries(VISITORS).flat(), -1],
+      [
+        'case',
+        ['<', ['var', 'visitors'], 0],
+        '#d4d4d8', // no data
+        ['interpolate', ['linear'], ['var', 'visitors'], ...STOPS.flatMap((s) => [s.value, s.color])],
+      ],
+    ] as never,
+  };
+
   readonly sections: MapLegendSection[] = [
     {
       type: 'gradient',
-      title: 'Population density',
+      title: 'Visitors',
       stops: STOPS,
-      format: (value) => value + ' / km²',
+      format: (value) => value + 'k',
     },
   ];
-  readonly cells = STOPS.map((stop, index) => ({
-    id: 'legend-cell-' + index,
-    color: stop.color,
-    data: square(index),
-  }));
 }`;
 
 const COLLAPSIBLE_CODE = `import { Component, signal } from '@angular/core';
@@ -203,26 +203,23 @@ const GRADIENT_STOPS = [
   { color: '#7f1d1d', value: 100 },
 ];
 
-// one 1.9° x 3° square per stop, laid out west to east
-function square(index: number): GeoJSON.Feature<GeoJSON.Polygon> {
-  const west = -5 + index * 2;
-  return {
-    type: 'Feature',
-    properties: {},
-    geometry: {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [west, -1.5],
-          [west + 1.9, -1.5],
-          [west + 1.9, 1.5],
-          [west, 1.5],
-          [west, -1.5],
-        ],
-      ],
-    },
-  };
-}
+const WORLD_GEOJSON =
+  'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@v5.1.2/geojson/ne_110m_admin_0_countries.geojson';
+
+// visitors (in thousands) per country, keyed by the feature's NAME_LONG
+const VISITORS: Record<string, number> = {
+  'United States': 100,
+  'United Kingdom': 95,
+  India: 90,
+  Germany: 80,
+  Canada: 70,
+  Brazil: 65,
+  France: 55,
+  China: 45,
+  Japan: 35,
+  Australia: 25,
+  'South Africa': 20,
+};
 
 @Component({
   selector: 'app-legend-page',
@@ -287,15 +284,8 @@ function square(index: number): GeoJSON.Feature<GeoJSON.Polygon> {
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">format</code>
           to render the values.
         </span>
-        <ng-map [blank]="true" [center]="[0, 0]" [zoom]="5">
-          @for (cell of cells; track cell.id) {
-            <ng-map-geojson
-              [id]="cell.id"
-              [data]="cell.data"
-              [fillPaint]="{ 'fill-color': cell.color, 'fill-opacity': 0.85 }"
-              [linePaint]="false"
-            />
-          }
+        <ng-map [blank]="true" [center]="[12, 28]" [zoom]="1.4">
+          <ng-map-geojson [data]="worldUrl" [fillPaint]="fillPaint" />
           <ng-map-legend position="bottom-left" [sections]="gradientSections" />
         </ng-map>
       </app-example-section>
@@ -365,16 +355,31 @@ export class LegendPageComponent {
   readonly gradientSections: MapLegendSection[] = [
     {
       type: 'gradient',
-      title: 'Population density',
+      title: 'Visitors',
       stops: GRADIENT_STOPS,
-      format: (value) => `${value} / km²`,
+      format: (value) => `${value}k`,
     },
   ];
-  readonly cells = GRADIENT_STOPS.map((stop, index) => ({
-    id: `legend-cell-${index}`,
-    color: stop.color,
-    data: square(index),
-  }));
+  readonly worldUrl = WORLD_GEOJSON;
+  // Countries without data stay grey; the rest follow the same stops as the legend.
+  readonly fillPaint = {
+    'fill-color': [
+      'let',
+      'visitors',
+      ['match', ['get', 'NAME_LONG'], ...Object.entries(VISITORS).flat(), -1],
+      [
+        'case',
+        ['<', ['var', 'visitors'], 0],
+        '#d4d4d8',
+        [
+          'interpolate',
+          ['linear'],
+          ['var', 'visitors'],
+          ...GRADIENT_STOPS.flatMap((stop) => [stop.value, stop.color]),
+        ],
+      ],
+    ] as never,
+  };
 
   readonly collapsed = signal(false);
   readonly note = signal('');
