@@ -80,26 +80,26 @@ test.describe('tile sources', () => {
     expect(await sourceType(page, IMAGE, 'compass')).toBe('image');
   });
 
-  test('vector source over PMTiles: the archive is read and the parcels are drawn', async ({
+  test('vector source over PMTiles: the archive is read and the buildings are drawn', async ({
     page,
   }) => {
     await gotoAndWaitForMap(page, PAGE, PMTILES);
 
-    expect(await sourceType(page, PMTILES, 'parcels')).toBe('vector');
+    expect(await sourceType(page, PMTILES, 'florence')).toBe('vector');
     await expect
       .poll(
         () =>
           mapCall(
             page,
             PMTILES,
-            (map) => map.queryRenderedFeatures({ layers: ['parcels-fill'] }).length,
+            (map) => map.queryRenderedFeatures({ layers: ['florence-fill'] }).length,
           ),
-        { message: 'parcels rendered from the .pmtiles fixture' },
+        { message: 'buildings rendered from the .pmtiles fixture' },
       )
       .toBeGreaterThan(0);
   });
 
-  test('vector source: hovering a parcel sets its feature-state through promoteId', async ({
+  test('vector source: hovering a building sets its feature-state from the tile feature ids', async ({
     page,
   }) => {
     await gotoAndWaitForMap(page, PAGE, PMTILES);
@@ -108,13 +108,13 @@ test.describe('tile sources', () => {
         mapCall(
           page,
           PMTILES,
-          (map) => map.queryRenderedFeatures({ layers: ['parcels-fill'] }).length,
+          (map) => map.queryRenderedFeatures({ layers: ['florence-fill'] }).length,
         ),
       )
       .toBeGreaterThan(0);
 
     const point = await mapCall(page, PMTILES, (map) => {
-      const p = map.project([-74.0046, 40.5811]);
+      const p = map.project([11.2543, 43.7672]);
       const rect = map.getCanvas().getBoundingClientRect();
       return { x: rect.left + p.x, y: rect.top + p.y };
     });
@@ -125,16 +125,16 @@ test.describe('tile sources', () => {
       .poll(
         () =>
           mapCall(page, PMTILES, (map) =>
-            map.queryRenderedFeatures({ layers: ['parcels-fill'] }).some(
+            map.queryRenderedFeatures({ layers: ['florence-fill'] }).some(
               (f) =>
                 map.getFeatureState({
-                  source: 'parcels',
-                  sourceLayer: 'parcels',
+                  source: 'florence',
+                  sourceLayer: 'buildings',
                   id: f.id as number,
                 })['hover'] === true,
             ),
           ),
-        { message: 'a parcel has hover feature-state' },
+        { message: 'a building has hover feature-state' },
       )
       .toBe(true);
   });
@@ -142,7 +142,7 @@ test.describe('tile sources', () => {
   test('a theme switch re-adds the sources and the layers that wait for them', async ({ page }) => {
     await gotoAndWaitForMap(page, PAGE, PMTILES);
     await expect
-      .poll(() => mapCall(page, PMTILES, (map) => !!map.getLayer('parcels-fill')))
+      .poll(() => mapCall(page, PMTILES, (map) => !!map.getLayer('florence-fill')))
       .toBe(true);
 
     await page.locator('app-theme-toggle button').click();
@@ -151,11 +151,11 @@ test.describe('tile sources', () => {
       .poll(
         () =>
           mapCall(page, PMTILES, (map) => ({
-            source: map.getSource('parcels')?.type,
-            fill: !!map.getLayer('parcels-fill'),
-            line: !!map.getLayer('parcels-line'),
+            source: map.getSource('florence')?.type,
+            fill: !!map.getLayer('florence-fill'),
+            line: !!map.getLayer('florence-line'),
           })),
-        { message: 'parcels source and layers after setStyle' },
+        { message: 'florence source and layers after setStyle' },
       )
       .toEqual({ source: 'vector', fill: true, line: true });
     await expect
@@ -163,7 +163,7 @@ test.describe('tile sources', () => {
         mapCall(
           page,
           PMTILES,
-          (map) => map.queryRenderedFeatures({ layers: ['parcels-fill'] }).length,
+          (map) => map.queryRenderedFeatures({ layers: ['florence-fill'] }).length,
         ),
       )
       .toBeGreaterThan(0);

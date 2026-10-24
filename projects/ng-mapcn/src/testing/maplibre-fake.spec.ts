@@ -18,6 +18,30 @@ function geojsonSource() {
 }
 
 describe('maplibre-fake', () => {
+  it('addControl places the element in the corner container', () => {
+    const map = createMap();
+    const el = document.createElement('div');
+    map.addControl({ onAdd: () => el, onRemove: vi.fn() }, 'bottom-left');
+
+    expect(map.getContainer().querySelector('.maplibregl-ctrl-bottom-left')!.contains(el)).toBe(
+      true,
+    );
+    expect(map.calls).toContain('addControl:bottom-left');
+  });
+
+  it('removeControl calls onRemove', () => {
+    const map = createMap();
+    const control = { onAdd: () => document.createElement('div'), onRemove: vi.fn() };
+    map.addControl(control);
+    expect(map.hasControl(control)).toBe(true);
+
+    map.removeControl(control);
+
+    expect(control.onRemove).toHaveBeenCalledWith(map);
+    expect(map.hasControl(control)).toBe(false);
+    expect(map.calls).toContain('removeControl');
+  });
+
   it('removeSource throws while a layer uses the source', () => {
     const map = createMap();
     map.addSource('s', geojsonSource());

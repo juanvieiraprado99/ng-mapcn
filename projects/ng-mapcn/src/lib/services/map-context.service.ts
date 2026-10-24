@@ -1,6 +1,7 @@
 import { computed, Injectable, type Signal, signal } from '@angular/core';
 import { type LngLatBoundsLike, type Map as MapLibreMap } from 'maplibre-gl';
 
+import { type MapStylesConfig } from '../styles/map-styles';
 import {
   type BoundsGetter,
   type BoundsTuple,
@@ -24,6 +25,13 @@ export class MapContextService {
   readonly styleLoaded = this.styleLoadedFlagSignal.asReadonly();
   /** Theme currently applied to the map (mapcn context `resolvedTheme`). */
   readonly resolvedTheme = this.resolvedThemeSignal.asReadonly();
+
+  private readonly styleOverrideSignal = signal<MapStylesConfig | undefined>(undefined);
+  /**
+   * Basemap chosen at runtime by a child (the style switcher). `<ng-map>` gives it the top
+   * precedence and applies it through its own `setStyle` path, so the load gate closes and reopens.
+   */
+  readonly styleOverride = this.styleOverrideSignal.asReadonly();
 
   private readonly sourceCounts = new Map<string, number>();
   private readonly sourceIdsSignal = signal<ReadonlySet<string>>(new Set());
@@ -50,6 +58,11 @@ export class MapContextService {
 
   setResolvedTheme(theme: 'light' | 'dark'): void {
     this.resolvedThemeSignal.set(theme);
+  }
+
+  /** Sets (or clears, with `undefined`) the runtime basemap override. Applied by `<ng-map>`. */
+  setStyleOverride(config: MapStylesConfig | undefined): void {
+    this.styleOverrideSignal.set(config);
   }
 
   setLoadedFlag(value: boolean): void {
@@ -143,6 +156,7 @@ export class MapContextService {
     this.mapSignal.set(null);
     this.loadedFlagSignal.set(false);
     this.styleLoadedFlagSignal.set(false);
+    this.styleOverrideSignal.set(undefined);
     this.sourceCounts.clear();
     this.sourceIdsSignal.set(new Set());
   }

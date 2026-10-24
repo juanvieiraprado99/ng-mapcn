@@ -89,7 +89,7 @@ type CountryFeatureCollection = GeoJSON.FeatureCollection<GeoJSON.Geometry, Coun
             (featureHover)="onHover($event)"
           />
         }
-        <ng-map-controls class="[&_.ng-controls]:bottom-2!" />
+        <ng-map-controls />
         @if (hover(); as info) {
           <ng-map-popup
             [longitude]="info.lng"

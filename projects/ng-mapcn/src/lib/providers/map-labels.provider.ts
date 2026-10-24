@@ -25,6 +25,16 @@ export interface MapLabels {
   closePopup: string;
   /** Accessible name of an interactive marker that shows the default dot and has no `ariaLabel`. */
   marker: string;
+  /** Accessible name of the scale bar. */
+  scale: string;
+  /** Accessible name of the legend. */
+  legend: string;
+  /** Legend toggle button while the legend is hidden. */
+  showLegend: string;
+  /** Legend toggle button while the legend is shown. */
+  hideLegend: string;
+  /** Accessible name of the style switcher. */
+  mapStyle: string;
 }
 
 /** English defaults, used for every key that is not overridden. */
@@ -37,6 +47,11 @@ export const DEFAULT_MAP_LABELS: Readonly<MapLabels> = {
   loading: 'Loading map',
   closePopup: 'Close popup',
   marker: 'Map marker',
+  scale: 'Map scale',
+  legend: 'Map legend',
+  showLegend: 'Show legend',
+  hideLegend: 'Hide legend',
+  mapStyle: 'Map style',
 };
 
 /**

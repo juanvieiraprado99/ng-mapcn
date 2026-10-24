@@ -31,7 +31,7 @@ import { edgeNodes, mapView, WORLD_GEOJSON } from './data';
               <app-edge-node-marker [node]="node" />
             }
 
-            <ng-map-controls class="[&_.ng-controls]:bottom-2!" />
+            <ng-map-controls />
           </ng-map>
         </div>
       </div>

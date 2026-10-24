@@ -1,0 +1,84 @@
+<ng-template #control>
+  <div
+    class="ng-legend"
+    [attr.data-legend-id]="id"
+    [class]="rootClass()"
+    role="region"
+    [attr.aria-label]="title() || l().legend"
+  >
+    @if (collapsible()) {
+      <button
+        type="button"
+        class="ng-legend-toggle"
+        [attr.aria-expanded]="!collapsed()"
+        [attr.aria-controls]="bodyId"
+        [attr.aria-label]="toggleLabel()"
+        (click)="toggle()"
+      >
+        <span class="ng-legend-title">{{ title() || l().legend }}</span>
+        <svg
+          class="ng-legend-chevron"
+          [class.ng-legend-chevron--collapsed]="collapsed()"
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m18 15-6-6-6 6" />
+        </svg>
+      </button>
+    } @else if (title()) {
+      <div class="ng-legend-title">{{ title() }}</div>
+    }
+
+    @if (!collapsed()) {
+      <div class="ng-legend-body" [id]="bodyId">
+        @for (section of sections(); track $index) {
+          <div class="ng-legend-section">
+            @if (section.title) {
+              <div class="ng-legend-section-title">{{ section.title }}</div>
+            }
+            @if (section.type === 'categories') {
+              <ul class="ng-legend-entries">
+                @for (entry of section.entries; track $index) {
+                  <li class="ng-legend-entry">
+                    <span
+                      class="ng-legend-swatch"
+                      [class.ng-legend-swatch--square]="entry.shape === 'square'"
+                      [class.ng-legend-swatch--line]="entry.shape === 'line'"
+                      [style.background-color]="entry.color"
+                      aria-hidden="true"
+                    ></span>
+                    <span>{{ entry.label }}</span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <div
+                class="ng-legend-gradient"
+                [style.background-image]="gradientImage(section.stops)"
+              ></div>
+              <div class="ng-legend-gradient-labels">
+                @for (label of gradientLabels(section); track $index) {
+                  <span
+                    class="ng-legend-gradient-label"
+                    [class.ng-legend-gradient-label--first]="label.edge === 'first'"
+                    [class.ng-legend-gradient-label--last]="label.edge === 'last'"
+                    [style.left.%]="label.left"
+                    >{{ label.text }}</span
+                  >
+                }
+              </div>
+            }
+          </div>
+        }
+        <ng-content />
+      </div>
+    }
+  </div>
+</ng-template>

@@ -1,4 +1,4 @@
-import { ApplicationRef, type Injector, type TemplateRef } from '@angular/core';
+import { ApplicationRef, type Injector, type TemplateRef, untracked } from '@angular/core';
 
 /**
  * Renders `tpl` into `target`, a DOM node owned by MapLibre (marker element, popup content) — the
@@ -19,7 +19,8 @@ export function renderPortal(
   const view = tpl.createEmbeddedView(null, injector);
   appRef.attachView(view);
   for (const node of view.rootNodes as Node[]) target.appendChild(node);
-  view.detectChanges();
+  // Refreshing the view reads the template's signals: keep them out of a calling effect.
+  untracked(() => view.detectChanges());
   // Destroying an attached view also detaches it from the ApplicationRef.
   return () => view.destroy();
 }

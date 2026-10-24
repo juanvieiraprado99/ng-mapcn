@@ -394,6 +394,35 @@ export class Map extends Evented {
   getTerrain(): { source: string; exaggeration?: number } | null {
     return this.terrain;
   }
+  private controls: any[] = [];
+
+  /** Like MapLibre: the control's element goes into a lazily created corner container. */
+  addControl(control: any, position = 'top-right'): this {
+    const element: HTMLElement = control.onAdd(this);
+    const className = `maplibregl-ctrl-${position}`;
+    let corner = this.container.querySelector(`.${className}`);
+    if (!corner) {
+      corner = document.createElement('div');
+      corner.className = className;
+      this.container.appendChild(corner);
+    }
+    corner.appendChild(element);
+    this.controls.push(control);
+    this.calls.push(`addControl:${position}`);
+    return this;
+  }
+
+  removeControl(control: any): this {
+    control.onRemove(this);
+    this.controls = this.controls.filter((c) => c !== control);
+    this.calls.push('removeControl');
+    return this;
+  }
+
+  hasControl(control: unknown): boolean {
+    return this.controls.includes(control);
+  }
+
   setFeatureState = vi.fn((_feature: unknown, _state: unknown) => {
     this.calls.push('setFeatureState');
     return this;

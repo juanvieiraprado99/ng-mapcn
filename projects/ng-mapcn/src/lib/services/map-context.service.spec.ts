@@ -59,6 +59,14 @@ describe('MapContextService', () => {
     expect(ctx.isLoaded()).toBe(false);
   });
 
+  it('stores the style override and reset clears it', () => {
+    expect(ctx.styleOverride()).toBeUndefined();
+    ctx.setStyleOverride({ light: 'a.json' });
+    expect(ctx.styleOverride()).toEqual({ light: 'a.json' });
+    ctx.reset();
+    expect(ctx.styleOverride()).toBeUndefined();
+  });
+
   describe('source registry', () => {
     it('hasSource tracks registered ids reactively', () => {
       const seen: boolean[] = [];

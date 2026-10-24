@@ -5,12 +5,13 @@ import {
   computed,
   DestroyRef,
   effect,
-  type ElementRef,
   inject,
+  Injector,
   input,
   output,
   PLATFORM_ID,
   signal,
+  type TemplateRef,
   viewChild,
 } from '@angular/core';
 import { type Map as MapLibreMap } from 'maplibre-gl';
@@ -18,6 +19,7 @@ import { type Map as MapLibreMap } from 'maplibre-gl';
 import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MapContextService } from '../../services/map-context.service';
 import { classTokens } from '../../utils/class-name';
+import { type MapControlPosition, mountMapControl } from '../../utils/map-control';
 
 @Component({
   selector: 'ng-map-controls',
@@ -27,9 +29,7 @@ import { classTokens } from '../../utils/class-name';
   host: { class: 'ng-map-controls-host' },
 })
 export class MapControlsComponent {
-  readonly position = input<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'>(
-    'bottom-right',
-  );
+  readonly position = input<MapControlPosition>('bottom-right');
   readonly showZoom = input(true);
   readonly showCompass = input(false);
   readonly showLocate = input(false);
@@ -49,7 +49,8 @@ export class MapControlsComponent {
    */
   readonly locateError = output<GeolocationPositionError | Error>();
 
-  protected readonly compassSvg = viewChild<ElementRef<SVGElement>>('compassSvg');
+  private readonly control = viewChild.required<TemplateRef<unknown>>('control');
+  protected readonly compassTransform = signal('');
   protected readonly locating = signal(false);
   protected readonly isFullscreen = signal(false);
 
@@ -73,18 +74,29 @@ export class MapControlsComponent {
   protected readonly l = injectMapLabels(this.labels);
   private readonly ctx = inject(MapContextService);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly injector = inject(Injector);
   private destroyed = false;
 
   constructor() {
-    // Compass sync. Reading compassSvg() makes the effect re-run once the @if'd SVG renders.
+    // Mounted as a MapLibre control, so the corner containers stack it with the other controls.
+    effect((onCleanup) => {
+      const map = this.ctx.map();
+      if (!map || !this.isBrowser) return;
+      onCleanup(mountMapControl(map, this.control(), this.injector, this.position()));
+      // The view was re-created (portals render synchronously): its compass starts unrotated.
+      this.writeCompass(map);
+    });
+
+    // Compass sync. The per-frame writes go straight to the DOM (no signal, so no change detection
+    // per rotate/pitch event); the signal only seeds the svg when it (re)renders.
     effect((onCleanup) => {
       const map = this.ctx.map();
       if (!map || !this.showCompass()) return;
 
-      const sync = () => this.syncCompass(map);
+      const sync = () => this.writeCompass(map);
       map.on('rotate', sync);
       map.on('pitch', sync);
-      sync();
+      this.compassTransform.set(this.compassTransformFor(map));
 
       onCleanup(() => {
         map.off('rotate', sync);
@@ -161,9 +173,15 @@ export class MapControlsComponent {
     Promise.resolve(request).catch(() => {});
   }
 
-  private syncCompass(map: MapLibreMap): void {
-    const el = this.compassSvg()?.nativeElement;
-    if (!el) return;
-    el.style.transform = `rotateX(${map.getPitch()}deg) rotateZ(${-map.getBearing()}deg)`;
+  private compassTransformFor(map: MapLibreMap): string {
+    return `rotateX(${map.getPitch()}deg) rotateZ(${-map.getBearing()}deg)`;
+  }
+
+  /** Every compass on this map shows the same rotation, so write them all without a query. */
+  private writeCompass(map: MapLibreMap): void {
+    const transform = this.compassTransformFor(map);
+    for (const el of map.getContainer().querySelectorAll<SVGElement>('.ng-control-compass')) {
+      el.style.transform = transform;
+    }
   }
 }

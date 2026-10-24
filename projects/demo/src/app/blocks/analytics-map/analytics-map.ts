@@ -37,7 +37,7 @@ const WORLD_GEOJSON =
       <div class="bg-card relative h-(--map-height)">
         <ng-map [center]="[-2, 16]" [zoom]="1.4" [blank]="true" [options]="mapOptions">
           <ng-map-geojson [data]="worldGeoJson" [linePaint]="false" />
-          <ng-map-controls class="[&_.ng-controls]:bottom-2!" />
+          <ng-map-controls />
           @for (location of locations; track location.city) {
             <ng-map-marker [longitude]="location.lng" [latitude]="location.lat">
               <ng-marker-content>

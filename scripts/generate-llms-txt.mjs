@@ -124,6 +124,7 @@ const componentList = api.sections
 const DOCS_COMPONENT_PAGES = [
   { label: 'Map', slug: 'map' },
   { label: 'Controls', slug: 'controls' },
+  { label: 'Legend', slug: 'legend' },
   { label: 'Markers', slug: 'markers' },
   { label: 'Popups', slug: 'popups' },
   { label: 'Routes', slug: 'routes' },

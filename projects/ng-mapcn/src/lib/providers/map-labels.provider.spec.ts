@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { ApplicationRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -45,41 +45,42 @@ describe('map labels', () => {
   });
 
   it('uses the English defaults without a provider', async () => {
-    const { fixture } = await render();
+    const { fixture, map } = await render();
     const el = fixture.nativeElement as HTMLElement;
-    expect(titles(el)).toEqual([
+    expect(titles(map!.getContainer())).toEqual([
       DEFAULT_MAP_LABELS.zoomIn,
       DEFAULT_MAP_LABELS.zoomOut,
       DEFAULT_MAP_LABELS.resetNorth,
       DEFAULT_MAP_LABELS.locate,
       DEFAULT_MAP_LABELS.fullscreen,
     ]);
-    expect(aria(el, '.ng-control-btn')).toBe('Zoom in');
+    expect(aria(map!.getContainer(), '.ng-control-btn')).toBe('Zoom in');
     expect(aria(el, '.ng-map-loader')).toBe('Loading map');
     expect(aria(popup(), '.ng-popup-close')).toBe('Close popup');
   });
 
   it('merges a static provider value over the defaults', async () => {
-    const { fixture } = await render({}, [
+    const { fixture, map } = await render({}, [
       provideMapLabels({ zoomIn: 'Aproximar', loading: 'Carregando mapa', closePopup: 'Fechar' }),
     ]);
     const el = fixture.nativeElement as HTMLElement;
-    expect(titles(el)[0]).toBe('Aproximar');
-    expect(titles(el)[1]).toBe('Zoom out');
-    expect(aria(el, '.ng-control-btn')).toBe('Aproximar');
+    expect(titles(map!.getContainer())[0]).toBe('Aproximar');
+    expect(titles(map!.getContainer())[1]).toBe('Zoom out');
+    expect(aria(map!.getContainer(), '.ng-control-btn')).toBe('Aproximar');
     expect(aria(el, '.ng-map-loader')).toBe('Carregando mapa');
     expect(aria(popup(), '.ng-popup-close')).toBe('Fechar');
   });
 
   it('follows a signal provider', async () => {
     const labels = signal<Partial<MapLabels>>({ zoomIn: 'Aproximar', closePopup: 'Fechar' });
-    const { fixture } = await render({}, [provideMapLabels(labels)]);
-    const el = fixture.nativeElement as HTMLElement;
-    expect(titles(el)[0]).toBe('Aproximar');
+    const { fixture, map } = await render({}, [provideMapLabels(labels)]);
+    expect(titles(map!.getContainer())[0]).toBe('Aproximar');
 
     labels.set({ zoomIn: 'Acercar', closePopup: 'Cerrar' });
     update(fixture, {});
-    expect(titles(el)[0]).toBe('Acercar');
+    // The control renders in a portal view attached to the ApplicationRef, which fixture.detectChanges() does not refresh.
+    TestBed.inject(ApplicationRef).tick();
+    expect(titles(map!.getContainer())[0]).toBe('Acercar');
     expect(aria(popup(), '.ng-popup-close')).toBe('Cerrar');
   });
 
@@ -93,7 +94,7 @@ describe('map labels', () => {
   });
 
   it('lets per-component labels win over the provider', async () => {
-    const { fixture } = await render(
+    const { fixture, map } = await render(
       {
         mapLabels: { loading: 'Map load' },
         controlLabels: { zoomIn: 'Local zoom' },
@@ -102,7 +103,7 @@ describe('map labels', () => {
       [provideMapLabels({ zoomIn: 'Provider zoom', zoomOut: 'Provider out' })],
     );
     const el = fixture.nativeElement as HTMLElement;
-    expect(titles(el).slice(0, 2)).toEqual(['Local zoom', 'Provider out']);
+    expect(titles(map!.getContainer()).slice(0, 2)).toEqual(['Local zoom', 'Provider out']);
     expect(aria(el, '.ng-map-loader')).toBe('Map load');
     expect(aria(popup(), '.ng-popup-close')).toBe('Local close');
   });
