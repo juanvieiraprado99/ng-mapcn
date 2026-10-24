@@ -159,7 +159,7 @@ export const nextMilestones: RoadmapMilestone[] = [
       done('ng-map-legend for choropleth, heatmap and cluster scales'),
       done('ng-map-scale: metric and imperial scale bar'),
       todo('ng-map-minimap: overview map synced with the main viewport'),
-      todo('ng-map-symbol-layer: icons and text labels from sprites or images'),
+      done('ng-map-symbol-layer: icons and text labels from sprites or images'),
       done('ng-map-style-switcher: basemap picker as a control'),
       todo('Animated route playback with play, pause and speed'),
     ],
