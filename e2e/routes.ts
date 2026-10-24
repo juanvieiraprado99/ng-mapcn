@@ -57,7 +57,7 @@ export const EXPECTED_MAPS: Record<string, number> = {
   '/docs/components/geojson': 2,
   '/docs/components/clusters': 1,
   '/docs/components/heatmap': 1,
-  '/docs/components/symbols': 3,
+  '/docs/components/symbols': 6,
   '/docs/components/tile-sources': 3,
   '/docs/components/3d': 2,
   '/docs/components/draw': 1,

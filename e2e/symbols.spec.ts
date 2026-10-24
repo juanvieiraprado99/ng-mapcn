@@ -5,8 +5,11 @@ import { gotoAndWaitForMap, layerIds, mapCall } from './map-helpers';
 const LABELS = 0;
 const ICONS = 1;
 const LIVE = 2;
+const IMAGES = 3;
+const FILTERS = 4;
+const INTERACTION = 5;
 
-const ICON_IDS = ['pin', 'compass', 'locate'];
+const ICON_IDS = ['cafe', 'viewpoint', 'station'];
 
 const symbolLayer = async (page: Parameters<typeof layerIds>[0], mapIndex: number) => {
   const ids = await layerIds(page, mapIndex);
@@ -73,5 +76,59 @@ test.describe('symbols', () => {
     await expect.poll(() => layout('text-allow-overlap')).toBe(true);
     await expect.poll(() => layout('text-size')).toBe(18);
     expect(await symbolLayer(page, LIVE)).toBe(idBefore);
+  });
+
+  test('the images example registers a URL, a data and an SDF image', async ({ page }) => {
+    await gotoAndWaitForMap(page, '/docs/components/symbols', IMAGES);
+    const info = () =>
+      mapCall(page, IMAGES, (map) => ({
+        has: ['pin', 'dot', 'badge'].map((id) => map.hasImage(id)),
+        iconColors: map
+          .getStyle()
+          .layers.filter((l) => l.id.startsWith('symbol-layer-'))
+          .map((l) => map.getPaintProperty(l.id, 'icon-color')),
+      }));
+    await expect.poll(async () => (await info()).has).toEqual([true, true, true]);
+    expect((await info()).iconColors).toContain('#7c3aed');
+  });
+
+  test('the filter buttons change the layer filter and the zoom range is set', async ({ page }) => {
+    await gotoAndWaitForMap(page, '/docs/components/symbols', FILTERS);
+    const idBefore = await symbolLayer(page, FILTERS);
+    const read = () =>
+      mapCall(
+        page,
+        FILTERS,
+        (map, layer: string) => ({
+          filter: map.getFilter(layer) ?? null,
+          minzoom: map.getLayer(layer)?.minzoom,
+          maxzoom: map.getLayer(layer)?.maxzoom,
+          textSize: JSON.stringify(map.getLayoutProperty(layer, 'text-size')),
+        }),
+        idBefore,
+      );
+
+    const initial = await read();
+    expect(initial.filter).toBeNull();
+    expect(initial.minzoom).toBe(11);
+    expect(initial.maxzoom).toBe(19);
+    expect(initial.textSize).toContain('zoom');
+
+    await page.getByTestId('filter-cafe').click();
+    await expect.poll(async () => JSON.stringify((await read()).filter)).toContain('cafe');
+    await page.getByTestId('filter-all').click();
+    await expect.poll(async () => (await read()).filter).toBeNull();
+    expect(await symbolLayer(page, FILTERS)).toBe(idBefore);
+  });
+
+  test('the interaction example has two layers with their own ids', async ({ page }) => {
+    await gotoAndWaitForMap(page, '/docs/components/symbols', INTERACTION);
+    const ids = await layerIds(page, INTERACTION);
+    expect(ids).toContain('symbol-layer-cafes');
+    expect(ids).toContain('symbol-layer-viewpoints');
+
+    // Clicks need rendered text, and the offline fixture's empty glyph set renders none.
+    await expect(page.getByTestId('clicked')).toContainText('none');
+    await expect(page.getByTestId('hovered')).toContainText('none');
   });
 });
