@@ -18,6 +18,46 @@ const symbolLayer = async (page: Parameters<typeof layerIds>[0], mapIndex: numbe
   return id!;
 };
 
+/**
+ * Tags the MapLibre style layer object of `layer`, so `isSameLayer` can tell whether the layer
+ * was re-created since (a new object), which the id alone cannot show.
+ */
+const tagLayer = (page: Parameters<typeof layerIds>[0], mapIndex: number, layer: string) =>
+  mapCall(
+    page,
+    mapIndex,
+    (map, id: string) => {
+      const styleLayer = map.getLayer(id) as unknown as { __e2eTag?: boolean } | undefined;
+      if (styleLayer) styleLayer.__e2eTag = true;
+      return !!styleLayer;
+    },
+    layer,
+  );
+
+const isSameLayer = (page: Parameters<typeof layerIds>[0], mapIndex: number, layer: string) =>
+  mapCall(
+    page,
+    mapIndex,
+    (map, id: string) =>
+      (map.getLayer(id) as unknown as { __e2eTag?: boolean } | undefined)?.__e2eTag === true,
+    layer,
+  );
+
+/** Text colors of `layer`, for checking the theme-aware defaults. */
+const textColors = (page: Parameters<typeof layerIds>[0], mapIndex: number, layer: string) =>
+  mapCall(
+    page,
+    mapIndex,
+    (map, id: string) => [
+      String(map.getPaintProperty(id, 'text-color')),
+      String(map.getPaintProperty(id, 'text-halo-color')),
+    ],
+    layer,
+  );
+
+const isDark = (page: Parameters<typeof layerIds>[0]) =>
+  page.evaluate(() => document.documentElement.classList.contains('dark'));
+
 test.describe('symbols', () => {
   test('the labels example has a symbol layer with a text field', async ({ page }) => {
     await gotoAndWaitForMap(page, '/docs/components/symbols', LABELS);
@@ -36,22 +76,64 @@ test.describe('symbols', () => {
     expect(JSON.stringify(info.textField)).toContain('name');
   });
 
+  test('the labels example uses the theme-aware default colors', async ({ page }) => {
+    await gotoAndWaitForMap(page, '/docs/components/symbols', LABELS);
+    const id = await symbolLayer(page, LABELS);
+    const LIGHT = ['#171717', '#ffffff'];
+    const DARK = ['#fafafa', '#0a0a0a'];
+
+    const darkBefore = await isDark(page);
+    expect(await textColors(page, LABELS, id)).toEqual(darkBefore ? DARK : LIGHT);
+
+    await page.locator('app-theme-toggle button').click();
+    await expect.poll(() => isDark(page)).toBe(!darkBefore);
+    // The id stays the same; the layer is re-added on the new style with the other colors.
+    await expect
+      .poll(() =>
+        mapCall(page, LABELS, (map, layer: string) => !!map.getLayer(layer), id).then((exists) =>
+          exists ? textColors(page, LABELS, id) : null,
+        ),
+      )
+      .toEqual(darkBefore ? LIGHT : DARK);
+  });
+
   test('the icon images are registered, and again after a theme switch', async ({ page }) => {
     await gotoAndWaitForMap(page, '/docs/components/symbols', ICONS);
     const has = () =>
       mapCall(page, ICONS, (map, ids: string[]) => ids.map((id) => map.hasImage(id)), ICON_IDS);
 
     await expect.poll(has).toEqual([true, true, true]);
-    const darkBefore = await page.evaluate(() =>
-      document.documentElement.classList.contains('dark'),
+    const darkBefore = await isDark(page);
+
+    // Record whether the images were still there when the new style loaded, so the final poll
+    // cannot pass against the old style.
+    await mapCall(
+      page,
+      ICONS,
+      (map, ids: string[]) => {
+        const w = window as unknown as { __symbolStyleLoad?: { count: number; had: boolean[] } };
+        const state = (w.__symbolStyleLoad = { count: 0, had: [] as boolean[] });
+        map.on('style.load', () => {
+          state.count++;
+          state.had = ids.map((id) => map.hasImage(id));
+        });
+      },
+      ICON_IDS,
     );
+    const styleLoad = () =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __symbolStyleLoad: { count: number; had: boolean[] } })
+            .__symbolStyleLoad,
+      );
 
     await page.locator('app-theme-toggle button').click();
-    await expect
-      .poll(() => page.evaluate(() => document.documentElement.classList.contains('dark')))
-      .toBe(!darkBefore);
+    await expect.poll(() => isDark(page)).toBe(!darkBefore);
+    await expect.poll(async () => (await styleLoad()).count).toBeGreaterThan(0);
 
-    // setStyle drops the style's images: the component registers them again from its cache.
+    // The images were gone when the new style loaded; the component registers them again from
+    // its cache once the gate re-opens.
+    expect((await styleLoad()).had).toEqual([false, false, false]);
     await expect.poll(has).toEqual([true, true, true]);
     await expect.poll(() => symbolLayer(page, ICONS)).toMatch(/^symbol-layer-/);
   });
@@ -61,6 +143,7 @@ test.describe('symbols', () => {
   }) => {
     await gotoAndWaitForMap(page, '/docs/components/symbols', LIVE);
     const idBefore = await symbolLayer(page, LIVE);
+    expect(await tagLayer(page, LIVE, idBefore)).toBe(true);
     const layout = (property: string) =>
       mapCall(page, LIVE, (map, [layer, prop]) => map.getLayoutProperty(layer, prop), [
         idBefore,
@@ -75,7 +158,7 @@ test.describe('symbols', () => {
 
     await expect.poll(() => layout('text-allow-overlap')).toBe(true);
     await expect.poll(() => layout('text-size')).toBe(18);
-    expect(await symbolLayer(page, LIVE)).toBe(idBefore);
+    expect(await isSameLayer(page, LIVE, idBefore)).toBe(true);
   });
 
   test('the images example registers a URL, a data and an SDF image', async ({ page }) => {
@@ -95,6 +178,7 @@ test.describe('symbols', () => {
   test('the filter buttons change the layer filter and the zoom range is set', async ({ page }) => {
     await gotoAndWaitForMap(page, '/docs/components/symbols', FILTERS);
     const idBefore = await symbolLayer(page, FILTERS);
+    expect(await tagLayer(page, FILTERS, idBefore)).toBe(true);
     const read = () =>
       mapCall(
         page,
@@ -118,7 +202,7 @@ test.describe('symbols', () => {
     await expect.poll(async () => JSON.stringify((await read()).filter)).toContain('cafe');
     await page.getByTestId('filter-all').click();
     await expect.poll(async () => (await read()).filter).toBeNull();
-    expect(await symbolLayer(page, FILTERS)).toBe(idBefore);
+    expect(await isSameLayer(page, FILTERS, idBefore)).toBe(true);
   });
 
   test('the interaction example has two layers with their own ids', async ({ page }) => {
