@@ -53,9 +53,9 @@ export class SymbolIconsComponent {
   // Each feature has a "kind" property; it picks the image registered under that id.
   // PNG, WebP or JPEG: SVG cannot be decoded by map.loadImage.
   readonly images: Record<string, MapSymbolImage> = {
-    pin: { url: '/my_location.png', pixelRatio: 16 },
-    compass: { url: '/compass.png', pixelRatio: 16 },
-    locate: { url: '/locateme.png', pixelRatio: 6 },
+    pin: { url: '/pin-blue.png', pixelRatio: 4 },
+    compass: { url: '/pin-green.png', pixelRatio: 4 },
+    locate: { url: '/pin-orange.png', pixelRatio: 4 },
   };
   readonly places = places;
 }`;
@@ -288,9 +288,9 @@ export class SymbolsPageComponent {
 
   /** Local PNGs from /public: remote images are blocked in the e2e run. */
   readonly images: Record<string, MapSymbolImage> = {
-    pin: { url: '/my_location.png', pixelRatio: 16 },
-    compass: { url: '/compass.png', pixelRatio: 16 },
-    locate: { url: '/locateme.png', pixelRatio: 6 },
+    pin: { url: '/pin-blue.png', pixelRatio: 4 },
+    compass: { url: '/pin-green.png', pixelRatio: 4 },
+    locate: { url: '/pin-orange.png', pixelRatio: 4 },
   };
 
   readonly overlap = signal(false);
