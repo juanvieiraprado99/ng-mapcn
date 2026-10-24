@@ -48,6 +48,31 @@ const REMOTE_DATA: { match: RegExp; file: string }[] = [
   },
 ];
 
+/**
+ * The PMTiles archive of the vector-tiles example (a Protomaps extract of Florence on pmtiles.io).
+ * The fixture stands in for it: same layer name and feature ids, one tile, served with the HTTP
+ * range support that the `pmtiles://` protocol requires.
+ */
+const PMTILES_ARCHIVE = /pmtiles\.io\/.*firenze\.pmtiles$/;
+
+function pmtilesResponse(rangeHeader: string | undefined) {
+  const archive = readFileSync(join(FIXTURES_DIR, 'firenze.pmtiles'));
+  const headers = {
+    'access-control-allow-origin': '*',
+    'access-control-expose-headers': 'Content-Range, ETag',
+    'accept-ranges': 'bytes',
+  };
+  const range = /^bytes=(\d+)-(\d*)$/.exec(rangeHeader ?? '');
+  if (!range) return { status: 200, headers, body: archive };
+  const start = Number(range[1]);
+  const end = Math.min(range[2] ? Number(range[2]) : archive.length - 1, archive.length - 1);
+  return {
+    status: 206,
+    headers: { ...headers, 'content-range': `bytes ${start}-${end}/${archive.length}` },
+    body: archive.subarray(start, end + 1),
+  };
+}
+
 /** 1x1 transparent PNG for remote images and raster tiles, so they never hit the network. */
 const PIXEL_PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
@@ -132,6 +157,12 @@ export const test = base.extend<{ network: NetworkState }>({
           return route.fulfill({
             json: { stargazers_count: 1234 },
             headers: { 'access-control-allow-origin': '*' },
+          });
+        }
+        if (PMTILES_ARCHIVE.test(url.href)) {
+          return route.fulfill({
+            contentType: 'application/octet-stream',
+            ...pmtilesResponse(route.request().headers()['range']),
           });
         }
         const data = REMOTE_DATA.find(({ match }) => match.test(url.href));

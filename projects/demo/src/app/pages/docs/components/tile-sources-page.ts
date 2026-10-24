@@ -7,7 +7,7 @@ import {
   MapVectorSourceComponent,
 } from 'ng-mapcn';
 
-import { ParcelsLayerComponent, registerPmtilesProtocol } from '../../../blocks/pmtiles/pmtiles';
+import { BuildingsLayerComponent, registerPmtilesProtocol } from '../../../blocks/pmtiles/pmtiles';
 import { CodeBlockComponent } from '../../../shared/code-block';
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
@@ -93,22 +93,21 @@ function registerPmtilesProtocol() {
 }
 
 @Component({
-  selector: 'app-parcels-map',
+  selector: 'app-florence-map',
   standalone: true,
-  // ParcelsLayerComponent: see the "Draw the layers" section below.
-  imports: [MapComponent, MapVectorSourceComponent, ParcelsLayerComponent],
+  // BuildingsLayerComponent: see the "Draw the layers" section below.
+  imports: [MapComponent, MapVectorSourceComponent, BuildingsLayerComponent],
   template: \`
-    <ng-map [center]="[-74.0046, 40.5811]" [zoom]="11.6">
+    <ng-map [center]="[11.2543, 43.7672]" [zoom]="15.5">
       <ng-map-vector-source
-        id="parcels"
-        url="pmtiles://https://example.com/parcels.pmtiles"
-        promoteId="parcel"
+        id="florence"
+        url="pmtiles://https://pmtiles.io/protomaps%28vector%29ODbL_firenze.pmtiles"
       />
-      <app-parcels-layer source="parcels" />
+      <app-buildings-layer source="florence" />
     </ng-map>
   \`,
 })
-export class ParcelsMapComponent {
+export class FlorenceMapComponent {
   constructor() {
     afterNextRender(() => registerPmtilesProtocol());
   }
@@ -131,8 +130,8 @@ export const appConfig: ApplicationConfig = {
 const LAYER_CODE = `import { Component, effect, inject, input } from '@angular/core';
 import { MapContextService } from 'ng-mapcn';
 
-@Component({ selector: 'app-parcels-layer', standalone: true, template: '' })
-export class ParcelsLayerComponent {
+@Component({ selector: 'app-buildings-layer', standalone: true, template: '' })
+export class BuildingsLayerComponent {
   readonly source = input.required<string>();
   private readonly ctx = inject(MapContextService);
 
@@ -148,7 +147,7 @@ export class ParcelsLayerComponent {
         id: \`\${source}-fill\`,
         type: 'fill',
         source,
-        'source-layer': 'parcels',
+        'source-layer': 'buildings',
         paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.5 },
       });
       onCleanup(() => {
@@ -182,8 +181,8 @@ const ctx = inject(MapContextService);
 
 effect(() => {
   // Reactive: true only while a source component has the source on the map.
-  if (ctx.hasSource('parcels')) {
-    // safe to add a layer with source: 'parcels'
+  if (ctx.hasSource('florence')) {
+    // safe to add a layer with source: 'florence'
   }
   // ctx.sourceIds() is the whole set (a ReadonlySet<string> signal).
 });`;
@@ -199,7 +198,7 @@ effect(() => {
     MapRasterSourceComponent,
     MapImageOverlayComponent,
     MapVectorSourceComponent,
-    ParcelsLayerComponent,
+    BuildingsLayerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -286,16 +285,21 @@ effect(() => {
       >
         <span description>
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-vector-source</code>
-          adds the source only. This example reads a single static
+          adds the source only. This example reads a real static
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">.pmtiles</code>
-          archive (no tile server) and draws it with a small layer component that waits for the
-          source by id. Hover a parcel to highlight it with feature-state. The same code is the
+          archive (no tile server): a small Protomaps extract of central Florence, built from
+          OpenStreetMap data. A small layer component draws its
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">buildings</code>
+          layer once it finds the source by id. Hover a building to highlight it with
+          feature-state (the tiles already carry feature ids, so no
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code>
+          is needed). The same code is the
           <a class="underline" href="/blocks">pmtiles block</a>; copying it requires
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">npm i pmtiles</code>.
         </span>
-        <ng-map [center]="[-74.0046, 40.5811]" [zoom]="11.6">
-          <ng-map-vector-source id="parcels" [url]="archiveUrl" promoteId="parcel" />
-          <app-parcels-layer source="parcels" />
+        <ng-map [center]="[11.2543, 43.7672]" [zoom]="15.5">
+          <ng-map-vector-source id="florence" [url]="archiveUrl" />
+          <app-buildings-layer source="florence" />
         </ng-map>
       </app-example-section>
 
@@ -333,7 +337,7 @@ effect(() => {
           The MapLibre source id is exactly the
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> input
           (auto-generated when omitted), so layers can reference it as
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">source: 'parcels'</code>.
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">source: 'florence'</code>.
           Raster layers are named
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">raster-layer-&lt;id&gt;</code>
           and image layers
@@ -379,7 +383,8 @@ export class TileSourcesPageComponent {
   readonly tileJsonCode = TILEJSON_CODE;
 
   readonly osmTiles = ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'];
-  readonly archiveUrl = 'pmtiles:///data/parcels.pmtiles';
+  readonly archiveUrl =
+    'pmtiles://https://pmtiles.io/protomaps%28vector%29ODbL_firenze.pmtiles';
 
   readonly opacity = signal(0.7);
   readonly visible = signal(true);
