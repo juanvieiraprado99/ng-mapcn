@@ -74,8 +74,18 @@ const SYMBOL_TEXT_COLORS: Record<'light' | 'dark', { color: string; halo: string
  * Icons come from `images`: a map of id to image (URL or decoded pixels) that is registered with
  * `map.addImage` and referenced from `icon` by id, or by a data-driven expression such as
  * `['get', 'kind']`. URLs are decoded once and re-registered after a theme switch (`setStyle`
- * drops the style's images). Only images this component added are ever removed; an id that
- * already exists in the style is left alone.
+ * drops the style's images). Image ids are shared per map: layers that register the same id use
+ * one image (the first layer to add it provides the pixels, so give different images different
+ * ids), and it is removed only when the last layer using it goes away. An id that already exists
+ * in the style (a sprite icon, an image the app added) is used as is and never removed.
+ *
+ * SDF and non-SDF images cannot be mixed in one layer (MapLibre renders a layer's icons as one or
+ * the other): use one layer per kind. `iconColor` only tints SDF images.
+ *
+ * Hover (`featureHover`) tells features apart by `id`. When the data the source is created with
+ * is inline, non-empty and has no feature `id`s, the source generates them from the feature index
+ * (MapLibre `generateId`, decided at creation), so the events carry those ids; data with ids keeps
+ * its own. Features that still have no id (URL data) are told apart by position and properties.
  *
  * Text needs the style's `glyphs`. The `blank` style has none, so the text options are ignored
  * there (with a console warning) and only icons render.
@@ -105,13 +115,19 @@ export class MapSymbolLayerComponent<P extends Record<string, any> = Record<stri
    * Applied at layer creation only; later changes are ignored.
    */
   readonly beforeId = input<string>();
-  /** Images to register by id, to be referenced from `icon`. */
+  /**
+   * Images to register by id, to be referenced from `icon`. Ids are shared with the other layers of
+   * the map (the first to add an id provides the image). Use SDF or non-SDF images, not both.
+   */
   readonly images = input<Record<string, MapSymbolImage>>({});
   /** Image id, or a MapLibre expression resolving to one (`['get', 'kind']`). */
   readonly icon = input<string | Expression>();
   /** Icon scale (number or MapLibre expression). */
   readonly iconSize = input<number | Expression>(1);
-  /** Icon color. Only applies to SDF images (`{ url, sdf: true }`). */
+  /**
+   * Icon color. Only applies to SDF images (`{ url, sdf: true }`), which cannot be mixed with
+   * non-SDF ones in one layer: use one layer per kind.
+   */
   readonly iconColor = input<string | Expression>();
   /** Label text: a `{property}` template, a plain string or a MapLibre expression. */
   readonly textField = input<string | Expression>();
@@ -178,8 +194,8 @@ export class MapSymbolLayerComponent<P extends Record<string, any> = Record<stri
   private resolvedFor: Record<string, MapSymbolImage> | null = null;
   /** Decoded images that should exist in the style. */
   private resolved = new Map<string, ResolvedImage>();
-  /** Images this component added to the style, which it alone may swap or remove. */
-  private readonly owned = new Map<string, ResolvedImage>();
+  /** Images this component holds a reference to (`MapContextService.acquireImage`). */
+  private readonly held = new Map<string, { image: ResolvedImage; release: () => void }>();
   /** Decoded images per URL: the style drops its images on `setStyle`, the pixels are kept. */
   private readonly urlCache = new Map<string, Promise<MapSymbolImageData>>();
   private imageVersion = 0;
@@ -269,7 +285,7 @@ export class MapSymbolLayerComponent<P extends Record<string, any> = Record<stri
         this.styleFont.set(hasGlyphs ? basemapTextFont(map) : null);
         if (!hasGlyphs && this.textField() !== undefined) this.warnNoGlyphs();
 
-        this.addOwnedImages(map);
+        this.acquireImages();
 
         const data = this.data();
         const beforeId = this.beforeId();
@@ -281,7 +297,11 @@ export class MapSymbolLayerComponent<P extends Record<string, any> = Record<stri
         const remove = addMapLayers(
           map,
           (b) => {
-            b.addSource(sourceId, { type: 'geojson', data: data as never });
+            b.addSource(sourceId, {
+              type: 'geojson',
+              data: data as never,
+              ...(lacksIds(data) ? { generateId: true } : {}),
+            });
             b.addLayer(
               {
                 id: layerId,
@@ -299,7 +319,7 @@ export class MapSymbolLayerComponent<P extends Record<string, any> = Record<stri
           (error) => this.ctx.reportError(error),
         );
         if (!remove) {
-          this.removeOwnedImages(map);
+          this.releaseImages();
           return null;
         }
         this.appliedData = data;
@@ -316,7 +336,7 @@ export class MapSymbolLayerComponent<P extends Record<string, any> = Record<stri
         this.created.set(false);
         // The layer goes first (a source in use cannot be removed), then the images it used.
         teardown();
-        this.removeOwnedImages(map);
+        this.releaseImages();
       });
     });
 
@@ -331,7 +351,7 @@ export class MapSymbolLayerComponent<P extends Record<string, any> = Record<stri
       void this.resolveImages(map, images).then((resolved) => {
         if (this.destroyed || version !== this.imageVersion) return;
         this.resolved = resolved;
-        if (untracked(() => this.created()) && this.ctx.map() === map) this.syncOwnedImages(map);
+        if (untracked(() => this.created()) && this.ctx.map() === map) this.syncImages();
       });
     });
 
@@ -408,9 +428,7 @@ export class MapSymbolLayerComponent<P extends Record<string, any> = Record<stri
       if (!this.interactive()) return;
 
       const layerId = this.layerId();
-      let hoveredId: string | number | null = null;
-      // Features without an id cannot be told apart: hover is reported once on enter instead of
-      // on every mousemove.
+      let hoveredKey: unknown = null;
       let hovering = false;
 
       const toEvent = (
@@ -426,18 +444,18 @@ export class MapSymbolLayerComponent<P extends Record<string, any> = Record<stri
       const handleMouseMove = (e: MapLayerMouseEvent) => {
         const feature = e.features?.[0];
         if (!feature) return;
-        const id = feature.id ?? null;
-        if (hovering && id === hoveredId) return;
+        const key = hoverKey(feature);
+        if (hovering && key === hoveredKey) return;
         map.getCanvas().style.cursor = 'pointer';
         hovering = true;
-        hoveredId = id;
+        hoveredKey = key;
         // Map events fire outside the zone: re-enter for outputs.
         this.zone.run(() => this.featureHover.emit(toEvent(feature, e)));
       };
 
       const handleMouseLeave = () => {
         hovering = false;
-        hoveredId = null;
+        hoveredKey = null;
         map.getCanvas().style.cursor = '';
         this.zone.run(() => this.featureHover.emit(null));
       };
@@ -477,7 +495,7 @@ export class MapSymbolLayerComponent<P extends Record<string, any> = Record<stri
           const data = 'url' in options ? await this.loadUrl(map, options.url) : options.data;
           return [id, { data, sdf: options.sdf ?? false, pixelRatio: options.pixelRatio ?? 1 }];
         } catch (error) {
-          this.ctx.reportError(error);
+          if (!this.destroyed) this.ctx.reportError(error);
           return null;
         }
       }),
@@ -496,61 +514,46 @@ export class MapSymbolLayerComponent<P extends Record<string, any> = Record<stri
     return pending;
   }
 
-  private addImage(map: MapLibreMap, id: string, image: ResolvedImage): void {
-    try {
-      map.addImage(id, image.data as never, { sdf: image.sdf, pixelRatio: image.pixelRatio });
-      this.owned.set(id, image);
-    } catch (error) {
-      this.ctx.reportError(error);
-    }
+  private acquireImage(id: string, image: ResolvedImage): void {
+    const release = this.ctx.acquireImage(id, image.data as never, {
+      sdf: image.sdf,
+      pixelRatio: image.pixelRatio,
+    });
+    this.held.set(id, { image, release });
   }
 
-  /** Registers the decoded images the style does not have yet (after creation or `setStyle`). */
-  private addOwnedImages(map: MapLibreMap): void {
-    // Whatever was owned is gone with the previous style (or was removed by the teardown).
-    this.owned.clear();
+  /** Takes a reference to every decoded image (after creation or `setStyle`). */
+  private acquireImages(): void {
+    for (const [id, image] of this.resolved) this.acquireImage(id, image);
+  }
+
+  /** Brings the held images in line with `resolved`. */
+  private syncImages(): void {
     for (const [id, image] of this.resolved) {
-      if (!map.hasImage(id)) this.addImage(map, id, image);
+      const current = this.held.get(id);
+      if (!current) {
+        this.acquireImage(id, image);
+      } else if (
+        current.image.data !== image.data ||
+        current.image.sdf !== image.sdf ||
+        current.image.pixelRatio !== image.pixelRatio
+      ) {
+        // `updateImage` cannot change `sdf` or `pixelRatio`: swap the image instead. It only
+        // changes when no other layer shares the id (the first one to add an id provides it).
+        current.release();
+        this.acquireImage(id, image);
+      }
+    }
+    for (const [id, { release }] of [...this.held]) {
+      if (this.resolved.has(id)) continue;
+      release();
+      this.held.delete(id);
     }
   }
 
-  /** Brings the style's images in line with `resolved`; never touches images owned elsewhere. */
-  private syncOwnedImages(map: MapLibreMap): void {
-    try {
-      for (const [id, image] of this.resolved) {
-        const current = this.owned.get(id);
-        if (!current) {
-          if (!map.hasImage(id)) this.addImage(map, id, image);
-        } else if (
-          current.data !== image.data ||
-          current.sdf !== image.sdf ||
-          current.pixelRatio !== image.pixelRatio
-        ) {
-          // `updateImage` cannot change `sdf` or `pixelRatio`: swap the image instead.
-          if (map.hasImage(id)) map.removeImage(id);
-          this.owned.delete(id);
-          this.addImage(map, id, image);
-        }
-      }
-      for (const id of [...this.owned.keys()]) {
-        if (this.resolved.has(id)) continue;
-        if (map.hasImage(id)) map.removeImage(id);
-        this.owned.delete(id);
-      }
-    } catch (error) {
-      this.ctx.reportError(error);
-    }
-  }
-
-  private removeOwnedImages(map: MapLibreMap): void {
-    for (const id of this.owned.keys()) {
-      try {
-        if (map.hasImage(id)) map.removeImage(id);
-      } catch {
-        // style may be mid-reload
-      }
-    }
-    this.owned.clear();
+  private releaseImages(): void {
+    for (const { release } of this.held.values()) release();
+    this.held.clear();
   }
 
   private warnNoGlyphs(): void {
@@ -560,4 +563,29 @@ export class MapSymbolLayerComponent<P extends Record<string, any> = Record<stri
       'ng-map-symbol-layer: the map style has no `glyphs` (e.g. the `blank` style), so text labels are not shown.',
     );
   }
+}
+
+/**
+ * Whether inline data has no feature ids, so the source should generate them (`generateId`, which
+ * would overwrite ids the data has). A URL is not known yet: it keeps whatever ids it brings.
+ */
+function lacksIds(data: unknown): boolean {
+  if (typeof data !== 'object' || data === null) return false;
+  const geojson = data as GeoJSON.GeoJSON;
+  if (geojson.type === 'Feature') return geojson.id === undefined;
+  if (geojson.type === 'FeatureCollection') {
+    // An empty collection says nothing yet: the data that replaces it may carry ids.
+    return geojson.features.length > 0 && geojson.features.every((f) => f.id === undefined);
+  }
+  return false;
+}
+
+/**
+ * Tells hovered features apart: by id, else (URL data without ids) by position and properties,
+ * so moving straight from one symbol to another still reports the new one.
+ */
+function hoverKey(feature: NonNullable<MapLayerMouseEvent['features']>[number]): unknown {
+  if (feature.id !== undefined) return feature.id;
+  const geometry = feature.geometry as GeoJSON.Point | undefined;
+  return JSON.stringify([geometry?.coordinates, feature.properties]);
 }

@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Map as FakeMapClass } from '../../../testing/maplibre-fake';
+import { fakeRegistry, Map as FakeMapClass } from '../../../testing/maplibre-fake';
 import {
   loadAndSettle,
   reloadStyle,
@@ -95,14 +95,14 @@ async function renderLoaded(hostProps: Record<string, unknown> = {}) {
 const SOURCE = 'symbol-source-s';
 const LAYER = 'symbol-layer-s';
 
-const feature = (id?: number) => ({
+const feature = (id?: number, coordinates = [1, 2]) => ({
   type: 'Feature',
   id,
   properties: { name: 'Florence' },
-  geometry: { type: 'Point', coordinates: [1, 2] },
+  geometry: { type: 'Point', coordinates },
 });
-const mouseEvent = (id?: number, lng = 5, lat = 6) => ({
-  features: [feature(id)],
+const mouseEvent = (id?: number, lng = 5, lat = 6, coordinates?: number[]) => ({
+  features: [feature(id, coordinates)],
   lngLat: { lng, lat },
 });
 
@@ -224,6 +224,20 @@ describe('MapSymbolLayerComponent', () => {
 
       expect(map.getLayer(LAYER).layout['text-size']).toBe(30);
       expect(map.getLayer(LAYER).paint['text-color']).toBe('#ff0000');
+    });
+
+    const WITH_IDS = { ...DATA, features: DATA.features.map((f, i) => ({ ...f, id: i + 10 })) };
+    it.each([
+      ['a collection without ids', DATA, true],
+      ['a feature without an id', DATA.features[0], true],
+      ['a collection with ids', WITH_IDS, false],
+      ['a feature with an id', WITH_IDS.features[0], false],
+      ['an empty collection', { type: 'FeatureCollection', features: [] }, false],
+      ['a URL', '/points.geojson', false],
+    ])('generates feature ids for %s', async (_name, data, generated) => {
+      const { map } = await renderLoaded({ data });
+
+      expect(map.getSource(SOURCE).generateId === true).toBe(generated);
     });
 
     it('applies the filter and zoom range at creation', async () => {
@@ -423,6 +437,180 @@ describe('MapSymbolLayerComponent', () => {
     });
   });
 
+  describe('shared image ids', () => {
+    const SHARED = `
+      <ng-map [theme]="theme">
+        @if (showA) {
+          <ng-map-symbol-layer id="a" [data]="data" [images]="imagesA" icon="pin" />
+        }
+        @if (showB) {
+          <ng-map-symbol-layer id="b" [data]="data" [images]="imagesB" icon="pin" />
+        }
+      </ng-map>
+    `;
+
+    async function renderShared(hostProps: Record<string, unknown> = {}) {
+      const host = {
+        theme: 'light',
+        data: DATA,
+        showA: true,
+        showB: true,
+        imagesA: { pin: '/pin.png' },
+        imagesB: { pin: '/pin.png' },
+        ...hostProps,
+      };
+      const result = await renderMap(SHARED, {
+        imports: [MapSymbolLayerComponent],
+        hostProps: host,
+      });
+      await settle(result.fixture);
+      loadAndSettle(result.fixture, result.map!);
+      return { ...result, map: result.map! };
+    }
+
+    it('adds a shared id once and keeps it while another layer still uses it', async () => {
+      const { fixture, map } = await renderShared();
+      expect(map.calls.filter((c) => c === 'addImage:pin')).toHaveLength(1);
+
+      update(fixture, { showA: false });
+      expect(map.hasImage('pin')).toBe(true);
+      expect(map.getLayerOrder()).toEqual(['symbol-layer-b']);
+
+      update(fixture, { showB: false });
+      expect(map.hasImage('pin')).toBe(false);
+    });
+
+    it('keeps the image when the layer that added it is re-created', async () => {
+      const { fixture, map } = await renderShared();
+
+      update(fixture, { showA: false });
+      update(fixture, { showA: true });
+      await settle(fixture);
+      expect(map.getLayerOrder()).toEqual(['symbol-layer-b', 'symbol-layer-a']);
+      update(fixture, { showB: false });
+
+      expect(map.hasImage('pin')).toBe(true);
+      expect(addImageCalls(map)).toEqual(['addImage:pin']);
+    });
+
+    it('keeps the image when one layer drops the id from its images', async () => {
+      const { fixture, map } = await renderShared();
+
+      update(fixture, { imagesA: {} });
+      await settle(fixture);
+      expect(map.hasImage('pin')).toBe(true);
+
+      update(fixture, { imagesB: {} });
+      await settle(fixture);
+      expect(map.hasImage('pin')).toBe(false);
+    });
+
+    it('re-adds a shared id once after a theme switch', async () => {
+      const { fixture, map } = await renderShared();
+      map.calls.length = 0;
+
+      update(fixture, { theme: 'dark' });
+      reloadStyle(fixture, map);
+
+      expect(addImageCalls(map)).toEqual(['removeImage:pin', 'addImage:pin']);
+      update(fixture, { showA: false });
+      expect(map.hasImage('pin')).toBe(true);
+    });
+  });
+
+  describe('pending images', () => {
+    const settleLoads = async (fixture: { detectChanges(): void }) => {
+      for (const load of fakeRegistry.imageLoads.splice(0)) load.resolve();
+      await settle(fixture);
+    };
+
+    beforeEach(() => {
+      fakeRegistry.deferImageLoads = true;
+    });
+
+    it('creates the layer only once the initial images are decoded', async () => {
+      const { fixture, map } = await render({ images: { a: '/a.png' }, icon: 'a' });
+      loadAndSettle(fixture, map);
+
+      expect(fakeRegistry.imageLoads.map((l) => l.url)).toEqual(['/a.png']);
+      expect(structuralCalls(map)).toEqual([]);
+      expect(map.hasImage('a')).toBe(false);
+
+      await settleLoads(fixture);
+
+      expect(map.hasImage('a')).toBe(true);
+      expect(structuralCalls(map)).toEqual([`addSource:${SOURCE}`, `addLayer:${LAYER}`]);
+      expect(map.calls.indexOf('addImage:a')).toBeLessThan(map.calls.indexOf(`addLayer:${LAYER}`));
+    });
+
+    it('reports a failed initial image and still creates the layer', async () => {
+      const { fixture, map, host } = await render({ images: { bad: '/bad.png', ok: '/ok.png' } });
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      loadAndSettle(fixture, map);
+      const [bad, ok] = fakeRegistry.imageLoads.splice(0);
+      bad.reject(new Error('404'));
+      ok.resolve();
+      await settle(fixture);
+
+      expect(host['mapError']).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ message: '404' }),
+      );
+      expect(map.hasImage('bad')).toBe(false);
+      expect(map.hasImage('ok')).toBe(true);
+      expect(map.getLayerOrder()).toEqual([LAYER]);
+    });
+
+    it('adds and reports nothing when destroyed while images are loading', async () => {
+      const { fixture, map, host } = await render({ images: { a: '/a.png', b: '/b.png' } });
+      const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      loadAndSettle(fixture, map);
+
+      update(fixture, { show: false });
+      const [a, b] = fakeRegistry.imageLoads.splice(0);
+      a.resolve();
+      b.reject(new Error('404'));
+      await settle(fixture);
+
+      expect(map.hasImage('a')).toBe(false);
+      expect(structuralCalls(map)).toEqual([]);
+      expect(host['mapError']).not.toHaveBeenCalled();
+      expect(error).not.toHaveBeenCalled();
+    });
+
+    it('applies an images change that finishes loading during a theme switch', async () => {
+      fakeRegistry.deferImageLoads = false;
+      const { fixture, map } = await renderLoaded({ images: { a: '/a.png' } });
+      fakeRegistry.deferImageLoads = true;
+
+      update(fixture, { images: { b: '/b.png' } });
+      update(fixture, { theme: 'dark' });
+      expect(map.getLayer(LAYER)).toBeUndefined();
+      await settleLoads(fixture);
+      reloadStyle(fixture, map);
+
+      expect(map.hasImage('a')).toBe(false);
+      expect(map.hasImage('b')).toBe(true);
+      expect(map.getLayerOrder()).toEqual([LAYER]);
+    });
+
+    it('applies an images change that finishes loading after a theme switch', async () => {
+      fakeRegistry.deferImageLoads = false;
+      const { fixture, map } = await renderLoaded({ images: { a: '/a.png' } });
+      fakeRegistry.deferImageLoads = true;
+
+      update(fixture, { images: { b: '/b.png' } });
+      update(fixture, { theme: 'dark' });
+      reloadStyle(fixture, map);
+      expect(map.hasImage('a')).toBe(true);
+
+      await settleLoads(fixture);
+
+      expect(map.hasImage('a')).toBe(false);
+      expect(map.hasImage('b')).toBe(true);
+      expect(map.calls.filter((c) => c === `addLayer:${LAYER}`)).toHaveLength(2);
+    });
+  });
+
   describe('teardown (invariant 4)', () => {
     it('removes the layer, then the source, then its own images', async () => {
       const { fixture, map } = await renderLoaded({ images: { a: '/a.png' } });
@@ -498,13 +686,17 @@ describe('MapSymbolLayerComponent', () => {
       expect(map.getCanvas().style.cursor).toBe('');
     });
 
-    it('reports a hover without an id once per enter', async () => {
+    it('tells features without an id apart by position', async () => {
       const { map, host } = await renderLoaded({ interactive: true });
 
       map.fire('mousemove', mouseEvent(undefined), LAYER);
-      map.fire('mousemove', mouseEvent(undefined), LAYER);
-
+      map.fire('mousemove', mouseEvent(undefined, 9, 9), LAYER);
       expect(host['featureHover']).toHaveBeenCalledTimes(1);
+
+      // Straight onto another symbol, without leaving the layer.
+      map.fire('mousemove', mouseEvent(undefined, 5, 6, [3, 4]), LAYER);
+      expect(host['featureHover']).toHaveBeenCalledTimes(2);
+      expect(host['featureHover'].mock.calls[1][0].feature.geometry.coordinates).toEqual([3, 4]);
     });
 
     it('unbinds symmetrically when interactive turns off', async () => {

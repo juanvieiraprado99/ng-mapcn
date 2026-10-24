@@ -407,6 +407,10 @@ export class Map extends Evented {
   hasImage(id: string): boolean {
     return this.images.has(id);
   }
+  /** Like MapLibre: the stored image object, the same one on every call until it is replaced. */
+  getImage(id: string): unknown {
+    return this.images.get(id);
+  }
   removeImage(id: string): this {
     this.calls.push(`removeImage:${id}`);
     this.images.delete(id);
@@ -418,10 +422,17 @@ export class Map extends Evented {
     this.images.set(id, { ...this.images.get(id)!, data });
     return this;
   }
-  /** Resolves a decoded 1x1 image, like `map.loadImage` (override per spec to reject). */
-  loadImage = vi.fn((_url: string) =>
-    Promise.resolve({ data: { width: 1, height: 1, data: new Uint8Array(4) } }),
-  );
+  /**
+   * Resolves a decoded 1x1 image, like `map.loadImage` (override per spec to reject). With
+   * `fakeRegistry.deferImageLoads` set, the decode waits in `fakeRegistry.imageLoads` instead.
+   */
+  loadImage = vi.fn((url: string) => {
+    const decoded = { data: { width: 1, height: 1, data: new Uint8Array(4) } };
+    if (!fakeRegistry.deferImageLoads) return Promise.resolve(decoded);
+    return new Promise<typeof decoded>((resolve, reject) => {
+      fakeRegistry.imageLoads.push({ url, resolve: () => resolve(decoded), reject });
+    });
+  });
   private controls: any[] = [];
 
   /** Like MapLibre: the control's element goes into a lazily created corner container. */
@@ -655,6 +666,10 @@ export const fakeRegistry: {
   constructError: Error | null;
   /** MapLibre's global worker URL (`''` until `setWorkerUrl` is called, like the real one). */
   workerUrl: string;
+  /** When set, `map.loadImage` calls wait in `imageLoads` until a spec settles them. */
+  deferImageLoads: boolean;
+  /** The `loadImage` calls held by `deferImageLoads`, in call order. */
+  imageLoads: { url: string; resolve(): void; reject(error: Error): void }[];
   reset(): void;
 } = {
   maps: [],
@@ -663,9 +678,13 @@ export const fakeRegistry: {
   protocols: {},
   constructError: null,
   workerUrl: '',
+  deferImageLoads: false,
+  imageLoads: [],
   reset() {
     this.constructError = null;
     this.workerUrl = '';
+    this.deferImageLoads = false;
+    this.imageLoads = [];
     this.maps.length = 0;
     this.markers.length = 0;
     this.popups.length = 0;
