@@ -77,6 +77,7 @@ Every part of the component set, and how they nest:
   <ng-map-geojson [data]="geojson" />
   <ng-map-cluster-layer [data]="points" />
   <ng-map-heatmap [data]="points" weightProperty="mag" />
+  <ng-map-symbol-layer [data]="points" textField="{name}" />
   <ng-map-raster-source id="radar" [tiles]="radarTiles" [opacity]="0.7" />
   <ng-map-vector-source id="parcels" url="pmtiles://https://example.com/parcels.pmtiles" />
   <ng-map-image-overlay [url]="imageUrl" [coordinates]="corners" />
@@ -489,6 +490,46 @@ Renders GeoJSON points as a MapLibre heatmap layer with a theme-aware default gr
 | `maxZoom` | `number` | `24` | Zoom from which the heatmap is no longer rendered (e.g. to hand over to a point layer). |
 | `paint` | `HeatmapLayerSpecification["paint"]` | — | Escape hatch: heatmap paint properties merged last. |
 
+### MapSymbolLayer
+
+`ng-map-symbol-layer`
+
+Icons and text labels for GeoJSON points as a MapLibre symbol layer (collision-aware). Images are registered from a URL or decoded pixels and survive theme switches. Generic over the feature properties: MapSymbolLayerComponent<P>, with P inferred from data. Must be used inside ng-map.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `data` | `string \| FeatureCollection<Point, P> \| Feature<Point, P>` | `required` | GeoJSON points (object or URL string). |
+| `id` | `string` | `auto` | Optional stable id prefix for the source and layer: symbol-source-<id>, symbol-layer-<id>. Changing it re-creates them. |
+| `beforeId` | `string` | — | Insert the layer before this layer id. Applied at creation only. |
+| `images` | `Record<string, MapSymbolImage>` | `{}` | Images to register by id, referenced from icon. A MapSymbolImage is a URL (PNG, WebP or JPEG), { url, sdf?, pixelRatio? } or { data, sdf?, pixelRatio? } with decoded pixels. URLs are decoded once and re-added after a theme switch; only images this component added are removed. |
+| `icon` | `string \| expression` | — | Image id, or an expression resolving to one (["get", "kind"]). |
+| `iconSize` | `number \| expression` | `1` | Icon scale. |
+| `iconColor` | `string \| expression` | — | Icon color. Only applies to SDF images. |
+| `textField` | `string \| expression` | — | Label text: a {property} template, a plain string or an expression. Needs the style glyphs; ignored (with a console warning) on the blank style. |
+| `textFont` | `string[]` | `basemap's font` | Font stack for the labels. Defaults to the basemap's own, which its glyph server serves. |
+| `textSize` | `number \| expression` | `12` | Label size in pixels. |
+| `textColor` | `string \| expression` | `theme default` | Label color (#171717 light, #fafafa dark). |
+| `textHaloColor` | `string \| expression` | `theme default` | Label halo color (#ffffff light, #0a0a0a dark). |
+| `textHaloWidth` | `number \| expression` | `1` | Label halo width in pixels. |
+| `textAnchor` | `string` | `top with icon, else center` | Which part of the label touches the anchor. |
+| `textOffset` | `[number, number]` | `[0, 0.8] with icon, else [0, 0]` | Label offset in ems. |
+| `allowOverlap` | `boolean` | `false` | Draw icons and labels even when they collide (sets icon-allow-overlap and text-allow-overlap). |
+| `minZoom` | `number` | `0` | Minimum zoom at which the layer is rendered. |
+| `maxZoom` | `number` | `24` | Zoom from which the layer is no longer rendered. |
+| `filter` | `FilterSpecification` | — | MapLibre filter expression, reconciled live. |
+| `layout` | `SymbolLayerSpecification["layout"]` | — | Escape hatch: layout properties merged last. |
+| `paint` | `SymbolLayerSpecification["paint"]` | — | Escape hatch: paint properties merged last. |
+| `interactive` | `boolean` | `false` | Whether features respond to mouse events. |
+
+**Outputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `featureClick` | `MapGeoJSONEvent<P>` | — | Emits { feature, longitude, latitude, originalEvent } when a symbol is clicked. Requires interactive. |
+| `featureHover` | `MapGeoJSONEvent<P> \| null` | — | Emits the hovered symbol, and null when the pointer leaves. Requires interactive. |
+
 ### MapRasterSource
 
 `ng-map-raster-source`
@@ -738,7 +779,7 @@ The map is created in `afterNextRender` (browser-only, after hydration) and ever
 ## Key Features
 
 - **MapLibre GL JS v6** under the hood — no API keys required (Carto basemaps)
-- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, tile sources, image overlays, 3D buildings and terrain are children of `<ng-map>`
+- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, symbol labels, tile sources, image overlays, 3D buildings and terrain are children of `<ng-map>`
 - **Signals-first** — standalone components, `input()`/`output()`, `effect()`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
 - **SSR-safe** — the map is created in `afterNextRender`; nothing touches `document` on the server
