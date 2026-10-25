@@ -94,8 +94,8 @@ ng test ng-mapcn       # watch mode
 ```
 
 - Specs live next to the code as `*.spec.ts` under `projects/ng-mapcn/src/lib/`. They are not copied by the `ng add` schematic.
-- MapLibre is mocked globally in `projects/ng-mapcn/src/testing/setup.ts`, so specs never create a real map. Import `projects/ng-mapcn/src/testing/maplibre-fake.ts` to inspect the fake instances.
-- Test helpers go in `projects/ng-mapcn/src/testing/`, never in `src/lib`, so they are not shipped by the package or the schematic.
+- MapLibre is mocked globally in `projects/ng-mapcn/src/testing/setup.ts`, so specs never create a real map. The fake is published as the `ng-mapcn/testing/maplibre` entry point (`projects/ng-mapcn/testing/maplibre/`): it has no imports, and its methods become `vi.fn` spies through `configureFakeMapLibre({ spy: vi.fn })` in the setup. Import `projects/ng-mapcn/src/testing/maplibre-fake.ts` (a re-export) to inspect the fake instances.
+- Test helpers go in `projects/ng-mapcn/src/testing/`, never in `src/lib`, so they are not shipped by the package or the schematic. Helpers meant for consumers go in the `ng-mapcn/testing` entry point (`projects/ng-mapcn/testing/src/`), which the package ships and the schematic never copies; `src/testing/render.ts` wraps them with the synchronous fake-timer `loadMap` the specs use.
 - jsdom has no layout, so `ng-map` would wait forever for a non-zero container size. Render maps with `renderMap` from `src/testing/render.ts`, which stubs the size, and use `loadMap` (with `vi.useFakeTimers()`) to open the load gate.
 - Restore global state in `afterEach`: real timers, `vi.restoreAllMocks()` and the `<html>` class.
 

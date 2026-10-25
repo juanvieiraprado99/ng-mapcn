@@ -1,5 +1,6 @@
-import { beforeEach, vi } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
 
+import { resetMapTesting } from '../../testing/src/public-api';
 import { configureFakeMapLibre, fakeRegistry } from './maplibre-fake';
 
 vi.mock('maplibre-gl', () => import('./maplibre-fake'));
@@ -8,3 +9,5 @@ vi.mock('maplibre-gl', () => import('./maplibre-fake'));
 configureFakeMapLibre({ spy: vi.fn });
 
 beforeEach(() => fakeRegistry.reset());
+// Restores the layout getters `renderMap` patches.
+afterEach(() => resetMapTesting());

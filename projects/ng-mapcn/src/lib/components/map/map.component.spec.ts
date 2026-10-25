@@ -3,7 +3,13 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fakeRegistry } from '../../../testing/maplibre-fake';
-import { loadMap, reloadStyle, renderMap, setMapSize } from '../../../testing/render';
+import {
+  loadMap,
+  reloadStyle,
+  renderMap,
+  type RenderMapOptions,
+  setMapSize,
+} from '../../../testing/render';
 import { trackZoneRun } from '../../../testing/zone';
 import { provideMapStyles } from '../../providers/map-styles.provider';
 import { blankMapStyle, defaultStyles, getDarkMapStyle } from '../../styles/map-styles';
@@ -47,7 +53,10 @@ function hostDefaults() {
 
 async function render(
   hostProps: Record<string, unknown> = {},
-  extra: { providers?: unknown[]; size?: { width: number; height: number } | null } = {},
+  extra: {
+    providers?: RenderMapOptions['providers'];
+    size?: { width: number; height: number } | null;
+  } = {},
 ) {
   const host = { ...hostDefaults(), ...hostProps };
   const result = await renderMap(TEMPLATE, { ...extra, hostProps: host });

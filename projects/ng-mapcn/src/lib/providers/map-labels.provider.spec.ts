@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { fakeRegistry } from '../../testing/maplibre-fake';
-import { renderMap, update } from '../../testing/render';
+import { renderMap, type RenderMapOptions, update } from '../../testing/render';
 import { MapControlsComponent } from '../components/controls/map-controls.component';
 import { MapPopupComponent } from '../components/map-popup/map-popup.component';
 import {
@@ -20,7 +20,10 @@ const TEMPLATE = `
   </ng-map>
 `;
 
-const render = (hostProps: Record<string, unknown> = {}, providers: unknown[] = []) =>
+const render = (
+  hostProps: Record<string, unknown> = {},
+  providers: RenderMapOptions['providers'] = [],
+) =>
   renderMap(TEMPLATE, {
     imports: [MapControlsComponent, MapPopupComponent],
     providers,

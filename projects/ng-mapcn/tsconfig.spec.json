@@ -6,7 +6,9 @@
     "outDir": "../../out-tsc/spec",
     "types": ["vitest/globals"],
     "paths": {
-      "ng-mapcn": ["./src/public-api.ts"]
+      "ng-mapcn": ["./src/public-api.ts"],
+      "ng-mapcn/testing": ["./testing/src/public-api.ts"],
+      "ng-mapcn/testing/maplibre": ["./testing/maplibre/src/public-api.ts"]
     }
   },
   "include": [
