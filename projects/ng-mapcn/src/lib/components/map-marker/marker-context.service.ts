@@ -9,6 +9,10 @@ export class MarkerContextService {
 
   /** Set by `ng-marker-popup`: the marker opens a popup (MapLibre handles Enter/Space itself). */
   readonly hasPopup = signal(false);
+  /** Set by `ng-marker-popup` from the MapLibre popup's `open` / `close` events. */
+  readonly popupOpen = signal(false);
+  /** Set by `ng-marker-popup`: the id of its `.ng-popup-card`, for `aria-controls`. */
+  readonly popupCardId = signal<string | null>(null);
   /** Set by `ng-marker-tooltip`: the marker must be reachable by keyboard to show it. */
   readonly hasTooltip = signal(false);
   /**

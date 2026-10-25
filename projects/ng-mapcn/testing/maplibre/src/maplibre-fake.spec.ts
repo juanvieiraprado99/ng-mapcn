@@ -403,6 +403,29 @@ describe('maplibre-fake', () => {
       expect(popup.isOpen()).toBe(false);
     });
 
+    it('a map click closes the popup unless closeOnClick is false, like MapLibre', () => {
+      const { map, popup, marker, close } = markerWithPopup();
+      const kept = new Popup({ closeOnClick: false }).addTo(map);
+
+      marker.togglePopup();
+      map.fire('click');
+
+      expect(popup.isOpen()).toBe(false);
+      expect(close).toHaveBeenCalledTimes(1);
+      expect(kept.isOpen()).toBe(true);
+      expect(map.listenerCount('click')).toBe(0);
+    });
+
+    it('removing the marker closes its open popup', () => {
+      const { popup, marker, close } = markerWithPopup();
+      marker.togglePopup();
+
+      marker.remove();
+
+      expect(popup.isOpen()).toBe(false);
+      expect(close).toHaveBeenCalledTimes(1);
+    });
+
     it('clearing the popup removes the click toggle', () => {
       const { popup, marker } = markerWithPopup();
 

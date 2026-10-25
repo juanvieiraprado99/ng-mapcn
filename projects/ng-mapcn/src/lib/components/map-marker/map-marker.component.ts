@@ -262,6 +262,28 @@ export class MapMarkerComponent {
       onCleanup(() => applied.forEach((name) => el.removeAttribute(name)));
     });
 
+    // Popup state (`ng-marker-popup`): `aria-expanded` follows the popup's open/close events and
+    // `aria-controls` names its card while it is open (the card is only in the DOM then). Runs
+    // after the role effect above; only on a `role="button"` element, since `aria-expanded` is not
+    // allowed on one without a role (content with its own control keeps that control's state).
+    effect((onCleanup) => {
+      const marker = this.markerCtx.marker();
+      if (!marker || !this.markerCtx.hasPopup()) return;
+      this.markerCtx.contentKind(); // the role depends on it
+      const el = marker.getElement();
+      if (el.getAttribute('role') !== 'button') return;
+      const open = this.markerCtx.popupOpen();
+      const cardId = this.markerCtx.popupCardId();
+      el.setAttribute('aria-expanded', String(open));
+      if (open && cardId) el.setAttribute('aria-controls', cardId);
+      else el.removeAttribute('aria-controls');
+
+      onCleanup(() => {
+        el.removeAttribute('aria-expanded');
+        el.removeAttribute('aria-controls');
+      });
+    });
+
     // Reconcile prop changes without recreating the marker (field-by-field diff)
     effect(() => {
       const lng = this.longitude();

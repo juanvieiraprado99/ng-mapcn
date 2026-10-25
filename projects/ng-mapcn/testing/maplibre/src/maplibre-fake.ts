@@ -574,10 +574,12 @@ export class Marker extends Evented {
     this.calls.push('addTo');
     return this;
   }
+  /** Like MapLibre: the element leaves the map and an open popup closes. */
   remove(): this {
     this.element.remove();
     this.map = null;
     this.calls.push('remove');
+    this.popup?.remove();
     return this;
   }
   /** Like MapLibre: clicking the element (or Enter/Space on it) toggles the popup. */
@@ -715,12 +717,16 @@ export class Popup extends Evented {
     return this.open ? this.element : undefined;
   }
   private readonly onMapRemove = () => this.remove();
+  /** Like MapLibre: a map click closes the popup unless `closeOnClick: false`. */
+  private readonly closeOnClick = (): boolean => this.options.closeOnClick !== false;
+  private readonly onMapClick = () => this.remove();
   addTo(map: Map): this {
     // Like MapLibre: an open popup closes first (leaving its map), then opens on `map`.
     if (this.map) this.remove();
     this.map = map;
     this.calls.push('addTo');
     map.on('remove', this.onMapRemove);
+    if (this.closeOnClick()) map.on('click', this.onMapClick);
     this.element.className = 'maplibregl-popup';
     this.contentElement.className = 'maplibregl-popup-content';
     this.element.appendChild(this.contentElement);
@@ -735,6 +741,7 @@ export class Popup extends Evented {
     this.calls.push('remove');
     this.element.remove();
     this.map?.off('remove', this.onMapRemove);
+    if (this.closeOnClick()) this.map?.off('click', this.onMapClick);
     this.map = null;
     if (this.open) {
       this.open = false;
