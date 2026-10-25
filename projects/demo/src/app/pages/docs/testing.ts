@@ -255,9 +255,22 @@ import {
           <code [class]="code">(ms) =&gt; jest.advanceTimersByTime(ms)</code>. If fake timers are
           installed and <code [class]="code">advanceTimers</code> is not set, both helpers throw
           right away with an error that names <code [class]="code">configureMapTesting</code>,
-          instead of hanging until the test times out. They detect Vitest's and Jest's fake timers
-          (both <code [class]="code">&#64;sinonjs/fake-timers</code>) and Jest's legacy timers.
+          instead of hanging until the test times out. Any fake-timer library is detected:
+          <code [class]="code">&#64;sinonjs/fake-timers</code> (Vitest, Jest) by its tag, anything
+          else because <code [class]="code">setTimeout</code> is no longer the one in place when
+          <code [class]="code">ng-mapcn/testing</code> was imported (zone.js patching it does not
+          count). A replaced or mocked <code [class]="code">setTimeout</code> is then checked
+          behaviourally, so a spy or wrapper that still runs on real time is not mistaken for a
+          fake clock.
         </p>
+        <app-docs-note>
+          <strong>Install untagged fake timers after the import.</strong> Without zone.js, a library
+          other than <code [class]="code">&#64;sinonjs/fake-timers</code> that replaces
+          <code [class]="code">setTimeout</code> before <code [class]="code">ng-mapcn/testing</code>
+          is first imported cannot be detected: the helpers then wait on the fake clock until the
+          test times out. With zone.js loaded, the original it saved is the reference, so the order
+          does not matter.
+        </app-docs-note>
       </app-docs-section>
 
       <app-docs-section title="Limitations">

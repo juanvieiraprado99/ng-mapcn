@@ -107,6 +107,89 @@ describe('ng-mapcn/testing', () => {
     expect(ctx.isLoaded()).toBe(false);
   });
 
+  describe('fake-timer detection with any library', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    });
+
+    /** A fake-timer library without the sinon/Jest tags: it queues timers and never fires them. */
+    function installForeignFakeTimers(): Array<() => void> {
+      const queued: Array<() => void> = [];
+      vi.stubGlobal('setTimeout', (fn: () => void) => queued.push(fn));
+      return queued;
+    }
+
+    it('throws for an untagged fake setTimeout installed after the import', async () => {
+      const { fixture, ctx } = await render();
+      installForeignFakeTimers();
+
+      await expect(loadMap(fixture)).rejects.toThrow(/fake timers are installed/);
+      await expect(reloadStyle(fixture)).rejects.toThrow(/^reloadStyle\(\) cannot wait/);
+      expect(ctx.isLoaded()).toBe(false);
+    });
+
+    it('accepts a wrapper that still runs on real time (no false positive)', async () => {
+      const { fixture, ctx } = await render();
+      const original = globalThis.setTimeout;
+      const delays: (number | undefined)[] = [];
+      vi.stubGlobal('setTimeout', (fn: () => void, ms?: number) => {
+        delays.push(ms);
+        return original(fn, ms);
+      });
+
+      await loadMap(fixture);
+
+      expect(ctx.isLoaded()).toBe(true);
+      // The 0 ms probe runs first; the style debounce and the app timers follow through the wrapper.
+      expect(delays[0]).toBe(0);
+      expect(delays).toContain(110);
+    });
+
+    it('accepts a spy on setTimeout that calls through, although spies look like Jest mocks', async () => {
+      const { fixture, ctx } = await render();
+      const spy = vi.spyOn(globalThis, 'setTimeout');
+
+      await loadMap(fixture);
+
+      expect(ctx.isLoaded()).toBe(true);
+      expect(spy).toHaveBeenCalledWith(expect.any(Function), 0);
+    });
+
+    it('throws for a Jest-legacy-like mock that never fires', async () => {
+      const { fixture } = await render();
+      vi.stubGlobal(
+        'setTimeout',
+        vi.fn(() => 0),
+      );
+
+      await expect(loadMap(fixture)).rejects.toThrow(/fake timers are installed/);
+    });
+
+    it('treats a zone.js-patched setTimeout as the real one, without probing', async () => {
+      const { fixture, ctx } = await render();
+      const original = globalThis.setTimeout as typeof setTimeout & {
+        __zone_symbol__OriginalDelegate?: typeof setTimeout;
+      };
+      // Like zone.js: the patch wraps the real function and is tagged with it.
+      const delays: (number | undefined)[] = [];
+      const patched = (fn: () => void, ms?: number) => {
+        delays.push(ms);
+        return original(fn, ms);
+      };
+      Object.assign(patched, {
+        __zone_symbol__OriginalDelegate: original.__zone_symbol__OriginalDelegate ?? original,
+      });
+      vi.stubGlobal('setTimeout', patched);
+
+      await loadMap(fixture);
+
+      expect(ctx.isLoaded()).toBe(true);
+      expect(delays).not.toContain(0);
+      expect(delays).toContain(110);
+    });
+  });
+
   it('update re-renders the host without zone.js (zoneless change detection)', async () => {
     const { fixture, map } = await renderMap(TEMPLATE, {
       imports: [MapRouteComponent],

@@ -629,7 +629,7 @@
           "name": "configureMapTesting",
           "type": "(options: { advanceTimers?: ((ms: number) => void) | null }): void",
           "default": "",
-          "description": "advanceTimers advances the runner fake clock by ms; loadMap() and reloadStyle() use it to wait out the style debounce. Vitest: (ms) => vi.advanceTimersByTime(ms). Set it only while fake timers are installed and reset it to null afterwards. Without it the helpers wait on a real timer, and throw if fake timers (Vitest, Jest modern or legacy) are installed."
+          "description": "advanceTimers advances the runner fake clock by ms; loadMap() and reloadStyle() use it to wait out the style debounce. Vitest: (ms) => vi.advanceTimersByTime(ms). Set it only while fake timers are installed and reset it to null afterwards. Without it the helpers wait on a real timer, and throw if fake timers are installed: @sinonjs/fake-timers (Vitest, Jest) by its tag, any other library because setTimeout is no longer the one in place when ng-mapcn/testing was imported (zone.js patching does not count), confirmed with a 0 ms probe so a spy or wrapper that still runs on real time is not reported. Without zone.js, an untagged library installed before the import cannot be detected."
         },
         {
           "name": "resetMapTesting",

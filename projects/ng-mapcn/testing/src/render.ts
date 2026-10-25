@@ -154,18 +154,90 @@ export function getFakeMap(fixture: ComponentFixture<unknown>): FakeMap {
   return map;
 }
 
+type TimerFn = typeof setTimeout & {
+  clock?: unknown;
+  _isMockFunction?: true;
+  __zone_symbol__OriginalDelegate?: typeof setTimeout;
+};
+
+/** zone.js tags the functions it patches with the function they wrap. */
+const unwrapZone = (fn: TimerFn): TimerFn =>
+  (fn.__zone_symbol__OriginalDelegate as TimerFn | undefined) ?? fn;
+
 /**
- * Whether the runner's fake timers replaced `setTimeout`: `@sinonjs/fake-timers` (Vitest, Jest's
- * modern timers) tags the functions it installs with `clock`, Jest's legacy timers are mocks.
+ * The `setTimeout` / `clearTimeout` in place when this entry point was imported, before any test
+ * could install fake timers (a test setup file imports it, or a spec does, at module load).
  */
-function fakeTimersInstalled(): boolean {
-  const timeout = globalThis.setTimeout as unknown as { clock?: unknown; _isMockFunction?: true };
-  return timeout.clock !== undefined || timeout._isMockFunction === true;
+const loadedSetTimeout = unwrapZone(globalThis.setTimeout as TimerFn);
+const loadedClearTimeout = globalThis.clearTimeout;
+
+/**
+ * A `setTimeout` that is known to run on real time: zone.js keeps the browser's/Node's original as
+ * `__zone_symbol__setTimeout` (it patches before any spec code runs, so this holds even when fake
+ * timers were installed before this module loaded), else the one captured at import.
+ */
+function realTimers(): { set: typeof setTimeout; clear: typeof clearTimeout } {
+  const g = globalThis as unknown as Record<string, unknown>;
+  const set = g['__zone_symbol__setTimeout'];
+  const clear = g['__zone_symbol__clearTimeout'];
+  return typeof set === 'function' && typeof clear === 'function'
+    ? { set: set as typeof setTimeout, clear: clear as typeof clearTimeout }
+    : { set: loadedSetTimeout, clear: loadedClearTimeout };
+}
+
+/**
+ * Whether `setTimeout` is not the real-time reference: replaced since this module loaded or, with
+ * zone.js, not the original zone.js saved. zone.js patching it is not a replacement: a patched
+ * function is compared by the function it wraps.
+ */
+function timersReplaced(): boolean {
+  return unwrapZone(globalThis.setTimeout as TimerFn) !== realTimers().set;
+}
+
+/**
+ * Behavioural check, for a replaced `setTimeout` without a known tag: a fake clock never fires a
+ * 0 ms timer on its own, a real (or merely wrapped) one fires it long before a real 50 ms timer.
+ */
+function zeroTimerFires(): Promise<boolean> {
+  const real = realTimers();
+  return new Promise((resolve) => {
+    // Runs after `probe` is assigned: a real timer never fires synchronously.
+    const watchdog = real.set(() => {
+      try {
+        globalThis.clearTimeout(probe);
+      } catch {}
+      resolve(false);
+    }, 50);
+    const probe = globalThis.setTimeout(() => {
+      real.clear(watchdog);
+      resolve(true);
+    }, 0);
+  });
+}
+
+/**
+ * Whether fake timers replaced `setTimeout`, with any library:
+ * - `@sinonjs/fake-timers` (Vitest, Jest's modern timers) tags the functions it installs with
+ *   `clock`: fake, without further checks;
+ * - a mock (`_isMockFunction`: Jest's legacy timers, but also a `vi.spyOn` / `jest.spyOn` on
+ *   `setTimeout` that calls through) or a `setTimeout` that is not the real-time reference (see
+ *   `timersReplaced`) is confirmed behaviourally, so a spy or wrapper that still runs on real time
+ *   is not reported.
+ *
+ * Limitation: without zone.js, an untagged library installed before this module was imported
+ * cannot be detected (the captured reference is already the fake, so nothing looks replaced).
+ * With zone.js, the original it saved is the reference, so the order does not matter.
+ */
+async function fakeTimersInstalled(): Promise<boolean> {
+  const timeout = globalThis.setTimeout as TimerFn;
+  if (timeout.clock !== undefined) return true;
+  if (timeout._isMockFunction !== true && !timersReplaced()) return false;
+  return !(await zeroTimerFires());
 }
 
 /** Fails fast where waiting on a faked `setTimeout` would hang until the test times out. */
-function assertTimersUsable(helper: string): void {
-  if (config.advanceTimers || !fakeTimersInstalled()) return;
+async function assertTimersUsable(helper: string): Promise<void> {
+  if (config.advanceTimers || !(await fakeTimersInstalled())) return;
   throw new Error(
     `${helper}() cannot wait out the style debounce: fake timers are installed but ` +
       'configureMapTesting({ advanceTimers }) is not set. Call, for example, ' +
@@ -190,7 +262,7 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
  * are installed without `advanceTimers` (waiting on the faked timer would never end).
  */
 export async function loadMap(fixture: ComponentFixture<unknown>, map?: FakeMap): Promise<void> {
-  assertTimersUsable('loadMap');
+  await assertTimersUsable('loadMap');
   const target = map ?? getFakeMap(fixture);
   target.fire('load');
   target.fire('styledata');
@@ -207,7 +279,7 @@ export async function reloadStyle(
   fixture: ComponentFixture<unknown>,
   map?: FakeMap,
 ): Promise<void> {
-  assertTimersUsable('reloadStyle');
+  await assertTimersUsable('reloadStyle');
   const target = map ?? getFakeMap(fixture);
   if (target.hasPendingStyle()) target.finishStyleLoad();
   else target.fire('styledata');

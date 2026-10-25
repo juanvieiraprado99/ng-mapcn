@@ -73,4 +73,29 @@ describe('ng-mapcn/testing (from the package)', () => {
 
     expect(structuralCalls(map!)).toEqual(['addSource:trip', 'addLayer:trip-layer']);
   });
+
+  // The demo is zoneless: the detection cannot lean on zone.js's saved original here.
+  describe('fake-timer detection without zone.js', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    });
+
+    it('throws for an untagged fake-timer library instead of hanging', async () => {
+      const { fixture, ctx } = await render();
+      vi.stubGlobal('setTimeout', () => 0);
+
+      await expect(loadMap(fixture)).rejects.toThrow(/fake timers are installed/);
+      expect(ctx.isLoaded()).toBe(false);
+    });
+
+    it('accepts a spy on setTimeout that calls through', async () => {
+      const { fixture, ctx } = await render();
+      vi.spyOn(globalThis, 'setTimeout');
+
+      await loadMap(fixture);
+
+      expect(ctx.isLoaded()).toBe(true);
+    });
+  });
 });
