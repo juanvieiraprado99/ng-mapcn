@@ -252,7 +252,7 @@ export const nextMilestones: RoadmapMilestone[] = [
     goals: ['Testing', 'Harnesses'],
     deliverables: [
       done('ng-mapcn/testing entry point with the MapLibre fake'),
-      todo('Component harnesses for map, marker and popup'),
+      done('Component harnesses for map, marker and popup'),
       todo('"Testing your maps" docs page'),
     ],
   },
