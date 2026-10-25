@@ -1,9 +1,9 @@
 import { type BaseHarnessFilters, ComponentHarness, HarnessPredicate } from '@angular/cdk/testing';
+import { MAP_TEST_SELECTORS } from 'ng-mapcn/testing';
 
 import { NgMapControlsHarness, type NgMapControlsHarnessFilters } from './map-controls-harness';
 import { NgMapMarkerHarness, type NgMapMarkerHarnessFilters } from './map-marker-harness';
 import { NgMapPopupHarness, type NgMapPopupHarnessFilters } from './map-popup-harness';
-import { HARNESS_SELECTORS } from './selectors';
 
 export type NgMapHarnessFilters = BaseHarnessFilters;
 
@@ -12,9 +12,9 @@ export type NgMapHarnessFilters = BaseHarnessFilters;
  * inside the `<ng-map>` element, so they are found from here rather than from their own tags.
  */
 export class NgMapHarness extends ComponentHarness {
-  static hostSelector = HARNESS_SELECTORS.map;
+  static hostSelector = MAP_TEST_SELECTORS.map;
 
-  private readonly loader = this.locatorForOptional(HARNESS_SELECTORS.loader);
+  private readonly loader = this.locatorForOptional(MAP_TEST_SELECTORS.loader);
 
   /** Gets a `HarnessPredicate` to search for a map that meets the given criteria. */
   static with(options: NgMapHarnessFilters = {}): HarnessPredicate<NgMapHarness> {

@@ -4,8 +4,7 @@ import {
   HarnessPredicate,
   TestKey,
 } from '@angular/cdk/testing';
-
-import { HARNESS_SELECTORS } from './selectors';
+import { MAP_TEST_SELECTORS } from 'ng-mapcn/testing';
 
 /** A control in the marker content: the element that holds the popup state when there is one. */
 const NESTED_CONTROL = 'button, a[href], [role="button"]';
@@ -23,7 +22,7 @@ export interface NgMapMarkerHarnessFilters extends BaseHarnessFilters {
  * whose template is empty.
  */
 export class NgMapMarkerHarness extends ComponentHarness {
-  static hostSelector = HARNESS_SELECTORS.marker;
+  static hostSelector = MAP_TEST_SELECTORS.marker;
 
   /** Gets a `HarnessPredicate` to search for a marker that meets the given criteria. */
   static with(options: NgMapMarkerHarnessFilters = {}): HarnessPredicate<NgMapMarkerHarness> {

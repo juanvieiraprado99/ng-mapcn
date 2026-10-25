@@ -16,6 +16,7 @@ import {
   fireMapEvent,
   getFakeMap,
   loadMap,
+  MAP_TEST_SELECTORS,
   reloadStyle,
   renderMap,
   resetMapTesting,
@@ -25,6 +26,7 @@ import { NgMapHarness, NgMapPopupHarness } from 'ng-mapcn/testing/harness';
 import { fakeRegistry } from 'ng-mapcn/testing/maplibre';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { TestingComponent } from './pages/docs/testing';
 import {
   ANGULAR_JSON_TEST,
   EVENTS_SPEC,
@@ -34,6 +36,7 @@ import {
   JEST_CONFIG,
   JEST_SETUP,
   POPUP_CLICKS_SPEC,
+  SELECTORS_E2E,
   VITEST_CONFIG,
   VITEST_SETUP,
 } from './pages/docs/testing.examples';
@@ -318,6 +321,14 @@ describe('docs: setup and config snippets match the demo', () => {
     expect(Object.keys(documented.options).sort()).toEqual(['runnerConfig', 'setupFiles']);
     expect(angularJson.options.runnerConfig).toBeDefined();
     expect(angularJson.options.setupFiles).toHaveLength(1);
+  });
+
+  it('the selector table and the Playwright snippet match MAP_TEST_SELECTORS', () => {
+    const rows = new TestingComponent().selectors;
+    expect(rows.map((row) => [row.name, row.type])).toEqual(
+      Object.entries(MAP_TEST_SELECTORS).map(([key, selector]) => [key, `'${selector}'`]),
+    );
+    expect(SELECTORS_E2E).toContain("import { MAP_TEST_SELECTORS as S } from 'ng-mapcn/testing';");
   });
 
   it('the Jest snippets map maplibre-gl to the fake', () => {

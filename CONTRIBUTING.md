@@ -109,7 +109,7 @@ ng test ng-mapcn       # watch mode
 
 ## E2E tests
 
-End-to-end tests run the demo app in headless Chromium with real MapLibre and WebGL (software rendered), through [Playwright](https://playwright.dev). They cover map loading, markers and popups, route/arc/GeoJSON layers and hover, cluster expansion, theme switching, synced viewports, the DOM contract of the testing harnesses (`testing-harness.spec.ts`: the selectors in `projects/ng-mapcn/testing/harness/src/selectors.ts` and the marker popup ARIA state), and a smoke test of every page on the production build.
+End-to-end tests run the demo app in headless Chromium with real MapLibre and WebGL (software rendered), through [Playwright](https://playwright.dev). They cover map loading, markers and popups, route/arc/GeoJSON layers and hover, cluster expansion, theme switching, synced viewports, the DOM contract of the testing harnesses (`testing-harness.spec.ts`: the public `MAP_TEST_SELECTORS` from `projects/ng-mapcn/testing/src/selectors.ts`, imported from the installed `ng-mapcn/testing`, and the marker popup ARIA state), and a smoke test of every page on the production build.
 
 ```bash
 npm run e2e:build   # production build (dist/demo) + development build (dist/demo-e2e)

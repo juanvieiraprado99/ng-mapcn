@@ -4,8 +4,7 @@ import {
   HarnessPredicate,
   TestKey,
 } from '@angular/cdk/testing';
-
-import { HARNESS_SELECTORS } from './selectors';
+import { MAP_TEST_SELECTORS } from 'ng-mapcn/testing';
 
 export interface NgMapPopupHarnessFilters extends BaseHarnessFilters {
   /** Matches the popup's text content. */
@@ -18,11 +17,11 @@ export interface NgMapPopupHarnessFilters extends BaseHarnessFilters {
  * found.
  */
 export class NgMapPopupHarness extends ComponentHarness {
-  static hostSelector = HARNESS_SELECTORS.popup;
+  static hostSelector = MAP_TEST_SELECTORS.popup;
 
-  private readonly card = this.locatorFor(HARNESS_SELECTORS.popupCard);
-  private readonly tooltip = this.locatorForOptional(HARNESS_SELECTORS.tooltip);
-  private readonly closeButton = this.locatorForOptional(HARNESS_SELECTORS.popupClose);
+  private readonly card = this.locatorFor(MAP_TEST_SELECTORS.popupCard);
+  private readonly tooltip = this.locatorForOptional(MAP_TEST_SELECTORS.tooltip);
+  private readonly closeButton = this.locatorForOptional(MAP_TEST_SELECTORS.popupClose);
 
   /** Gets a `HarnessPredicate` to search for a popup that meets the given criteria. */
   static with(options: NgMapPopupHarnessFilters = {}): HarnessPredicate<NgMapPopupHarness> {

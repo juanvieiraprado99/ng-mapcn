@@ -261,6 +261,23 @@ describe('popups and map clicks', () => {
   });
 });`;
 
+/** A Playwright spec: it cannot run in the unit tests, which only check its import. */
+export const SELECTORS_E2E = `import { expect, test } from '@playwright/test';
+import { MAP_TEST_SELECTORS as S } from 'ng-mapcn/testing';
+
+test('a marker opens its popup card', async ({ page }) => {
+  await page.goto('/stores');
+  const map = page.locator(S.map);
+  await expect(map.locator(S.loader)).toHaveCount(0);
+
+  await map.locator(S.marker, { hasText: 'Downtown' }).click();
+
+  const card = map.locator(\`\${S.popup} \${S.popupCard}\`);
+  await expect(card).toHaveAttribute('role', 'dialog');
+  await card.locator(S.popupClose).click();
+  await expect(map.locator(S.popup)).toHaveCount(0);
+});`;
+
 export const HARNESS_SPEC = `import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { TestBed } from '@angular/core/testing';
 import { MapMarkerComponent, MarkerContentComponent, MarkerPopupComponent } from 'ng-mapcn';

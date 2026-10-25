@@ -1,11 +1,13 @@
-import { HARNESS_SELECTORS as S } from '../projects/ng-mapcn/testing/harness/src/selectors';
+import { MAP_TEST_SELECTORS as S } from 'ng-mapcn/testing';
+
 import { expect, test } from './fixtures';
 import { gotoAndWaitForMap, mapCall } from './map-helpers';
 
 // The component harnesses (`ng-mapcn/testing/harness`) run in a TestBed against the maplibre-gl
-// fake. They only read the DOM, through the selectors in `selectors.ts` and the marker's ARIA
+// fake. They only read the DOM, through the public `MAP_TEST_SELECTORS` and the marker's ARIA
 // attributes, so these tests check that same contract against real MapLibre: where MapLibre puts
-// markers, popups and controls, and how the marker reports its popup.
+// markers, popups and controls, and how the marker reports its popup. The selectors come from the
+// installed package, as in an app's own e2e suite (`npm run e2e:build` installs the local build).
 
 const MARKERS = '/docs/components/markers';
 /** "Marker Popups": three markers, each with an `ng-marker-popup` with a close button. */

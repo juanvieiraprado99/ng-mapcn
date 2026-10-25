@@ -13,6 +13,7 @@ import {
   JEST_CONFIG,
   JEST_SETUP,
   POPUP_CLICKS_SPEC,
+  SELECTORS_E2E,
   VITEST_CONFIG,
   VITEST_SETUP,
 } from './testing.examples';
@@ -238,6 +239,19 @@ import {
         <app-code-block [code]="installCdk" lang="bash" [showLineNumbers]="false" />
       </app-docs-section>
 
+      <app-docs-section title="DOM selectors for end-to-end tests">
+        <p>
+          The harnesses find everything through <code [class]="code">MAP_TEST_SELECTORS</code>,
+          exported by <code [class]="code">ng-mapcn/testing</code> (not by the harness entry, so it
+          needs no <code [class]="code">&#64;angular/cdk</code>). It is the stable DOM contract of a
+          rendered map, the same with the fake and with the real MapLibre: reuse it in Playwright
+          or Cypress instead of hard-coding the classes. The repository's end-to-end suite checks
+          every entry against the real MapLibre in Chromium.
+        </p>
+        <app-prop-table nameLabel="Key" [rows]="selectors" [showDefault]="false" />
+        <app-code-block [code]="selectorsE2e" filename="e2e/map.spec.ts" />
+      </app-docs-section>
+
       <app-docs-section title="Fake timers">
         <p>
           <code [class]="code">&lt;ng-map&gt;</code> waits 100 ms after
@@ -351,6 +365,7 @@ export class TestingComponent {
   readonly popupClicksSpec = POPUP_CLICKS_SPEC;
   readonly harnessSpec = HARNESS_SPEC;
   readonly installCdk = INSTALL_CDK;
+  readonly selectorsE2e = SELECTORS_E2E;
 
   readonly entryPoints: PropRow[] = [
     {
@@ -362,9 +377,10 @@ export class TestingComponent {
     },
     {
       name: 'ng-mapcn/testing',
-      type: 'renderMap, loadMap, reloadStyle, getFakeMap, structuralCalls, ...',
+      type: 'renderMap, loadMap, reloadStyle, getFakeMap, structuralCalls, MAP_TEST_SELECTORS, ...',
       default: '',
-      description: 'Helpers that render a template with ng-map and drive the fake.',
+      description:
+        'Helpers that render a template with ng-map and drive the fake, and the DOM selectors for any test. No @angular/cdk.',
     },
     {
       name: 'ng-mapcn/testing/harness',
@@ -442,6 +458,44 @@ export class TestingComponent {
       default: '',
       description:
         'Restores the layout getters renderMap patched and clears fakeRegistry. Call it in afterEach.',
+    },
+  ];
+
+  /** Mirrors MAP_TEST_SELECTORS (docs-testing.spec.ts checks they match). */
+  readonly selectors: PropRow[] = [
+    { name: 'map', type: "'ng-map'", default: '', description: 'The ng-map host.' },
+    { name: 'loader', type: "'.ng-map-loader'", default: '', description: 'The loader overlay.' },
+    {
+      name: 'marker',
+      type: "'.maplibregl-marker'",
+      default: '',
+      description: 'A marker element, in .maplibregl-canvas-container.',
+    },
+    {
+      name: 'popup',
+      type: "'.maplibregl-popup'",
+      default: '',
+      description: 'An open popup or tooltip, a direct child of the map container.',
+    },
+    {
+      name: 'popupCard',
+      type: "'.ng-popup-card'",
+      default: '',
+      description: 'The role="dialog" card of ng-marker-popup / ng-map-popup.',
+    },
+    { name: 'tooltip', type: "'.ng-tooltip-pill'", default: '', description: 'The pill of ng-marker-tooltip.' },
+    {
+      name: 'popupClose',
+      type: "'.ng-popup-close'",
+      default: '',
+      description: 'The close button of a popup card (closeButton input).',
+    },
+    { name: 'controls', type: "'.ng-controls'", default: '', description: 'ng-map-controls, in a control corner.' },
+    {
+      name: 'controlGroup',
+      type: "'.ng-control-group'",
+      default: '',
+      description: 'The button group of ng-map-controls.',
     },
   ];
 

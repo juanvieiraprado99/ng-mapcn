@@ -636,6 +636,12 @@
           "type": "(): void",
           "default": "",
           "description": "Restores the HTMLElement offset getters and clears fakeRegistry. Call it in afterEach."
+        },
+        {
+          "name": "MAP_TEST_SELECTORS",
+          "type": "{ map, loader, marker, popup, popupCard, tooltip, popupClose, controls, controlGroup }",
+          "default": "",
+          "description": "The stable DOM contract of a rendered map, as CSS selectors: 'ng-map', '.ng-map-loader', '.maplibregl-marker', '.maplibregl-popup' (an open popup or tooltip), '.ng-popup-card' (the role=dialog card), '.ng-tooltip-pill', '.ng-popup-close', '.ng-controls', '.ng-control-group'. The same with the fake and the real MapLibre (the repository's e2e suite checks it in Chromium), so reuse it in Playwright or Cypress tests. The harnesses are built on it. It lives here, not in ng-mapcn/testing/harness, so it needs no @angular/cdk. A selector changes only in a major release. Type of its keys: MapTestSelector."
         }
       ]
     },
@@ -643,7 +649,7 @@
       "id": "testing-harness",
       "title": "ng-mapcn/testing/harness",
       "entry": "import { ... } from 'ng-mapcn/testing/harness'",
-      "description": "Angular CDK component harnesses for <ng-map>, its markers, popups and controls. They read and drive the DOM only and run in a TestBed on top of the fake; the repository's e2e suite checks the same DOM contract (their selectors and the marker ARIA state) against real MapLibre in Chromium. This is a separate entry point because it imports @angular/cdk/testing, an optional peer dependency of ng-mapcn: install @angular/cdk to use it. Every harness has a static with(filters) predicate. NgMapControlsHarness uses CSS :has(). Button labels are translatable, so NgMapControlsHarness finds its buttons by structure, not by aria-label.",
+      "description": "Angular CDK component harnesses for <ng-map>, its markers, popups and controls. They read and drive the DOM only and run in a TestBed on top of the fake; the repository's e2e suite checks the same DOM contract (MAP_TEST_SELECTORS from ng-mapcn/testing, which they use, and the marker ARIA state) against real MapLibre in Chromium. This is a separate entry point because it imports @angular/cdk/testing, an optional peer dependency of ng-mapcn: install @angular/cdk to use it. Every harness has a static with(filters) predicate. NgMapControlsHarness uses CSS :has(). Button labels are translatable, so NgMapControlsHarness finds its buttons by structure, not by aria-label.",
       "exports": [
         {
           "name": "NgMapHarness",
