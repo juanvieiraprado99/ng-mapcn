@@ -121,6 +121,29 @@ test.describe('keyboard: popups', () => {
   });
 });
 
+test.describe('keyboard: marker popups', () => {
+  test('an ng-marker-popup marker reports its open popup and axe accepts it open', async ({
+    page,
+  }) => {
+    // "Marker Popups": each marker has its own ng-marker-popup.
+    await gotoAndWaitForMap(page, '/docs/components/markers', 3);
+    const map = page.locator('ng-map').nth(3);
+    const marker = map.getByRole('button', { name: 'Louvre' });
+    await expect(marker).toHaveAttribute('aria-expanded', 'false');
+
+    await marker.focus();
+    await page.keyboard.press('Enter');
+    await expect(marker).toHaveAttribute('aria-expanded', 'true');
+    const cardId = await marker.getAttribute('aria-controls');
+    await expect(page.locator(`#${cardId}`)).toContainText('Art museum');
+    expect(await libraryViolations(page)).toEqual([]);
+
+    await page.keyboard.press('Escape');
+    await expect(marker).toHaveAttribute('aria-expanded', 'false');
+    await expect(marker).toBeFocused();
+  });
+});
+
 test.describe('markers', () => {
   test('labelled markers expose their label text', async ({ page }) => {
     await gotoAndWaitForMap(page, '/docs/components/markers', 0);
