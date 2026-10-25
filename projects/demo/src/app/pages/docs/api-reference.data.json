@@ -170,7 +170,7 @@
       "id": "markerpopup",
       "title": "MarkerPopup",
       "selector": "ng-marker-popup",
-      "description": "A popup attached to the marker that opens on click. Must be used inside ng-map-marker. Keyboard: the marker becomes a focusable role=button with aria-haspopup=dialog (unless you set them), Enter/Space opens it, focus moves into the popup, and Escape closes it, stops propagation and returns focus to the marker. Avoid your own <button> inside ng-marker-content (nested interactive content).",
+      "description": "A popup attached to the marker that opens on click. Must be used inside ng-map-marker. Keyboard: the marker becomes a focusable role=button with aria-haspopup=dialog (unless you set them) and aria-expanded (true while its popup is open, whatever opened or closed it); while open, aria-controls names the popup card (.ng-popup-card, which gets a generated id). Enter/Space opens it, focus moves into the popup, and Escape closes it, stops propagation and returns focus to the marker. A marker whose content has its own button gets no aria-expanded. Avoid your own <button> inside ng-marker-content (nested interactive content).",
       "inputs": [
         { "name": "closeButton", "type": "boolean", "default": "false", "description": "Shows a close button in the popup." },
         { "name": "offset", "type": "Offset", "default": "", "description": "Pixel offset from the marker. Reconciled live via setOffset; MapLibre's default when unset." },
@@ -573,31 +573,31 @@
       "id": "testing-helpers",
       "title": "ng-mapcn/testing",
       "entry": "import { ... } from 'ng-mapcn/testing'",
-      "description": "Helpers that render a template with <ng-map> and drive the fake from ng-mapcn/testing/maplibre, which the test setup must install in place of maplibre-gl. Never import it from application code. It needs no @angular/cdk. Stable API: these functions, fakeRegistry, the fake's getters and structuralCalls(). The fake's raw calls strings are not stable: assert through structuralCalls() or the getters. When the toolkit runs from the package, the host that renderMap() creates is OnPush, so change values after rendering through signals passed in hostProps.",
+      "description": "Helpers that render a template with <ng-map> and drive the fake from ng-mapcn/testing/maplibre, which the test setup must install in place of maplibre-gl. Never import it from application code. It needs no @angular/cdk. Stable API: these functions, fakeRegistry, the fake's getters and structuralCalls(). The fake's raw calls strings are not stable: assert through structuralCalls() or the getters. Change host values after rendering through update() or signals passed in hostProps: in zoneless apps (the Angular default; test setups without zone.js) assigning fixture.componentInstance.x directly needs fixture.changeDetectorRef.markForCheck(), as in any zoneless Angular test. Call renderMap() once per test (a second call throws 'TestBed already instantiated'); put several maps in one template.",
       "exports": [
         {
           "name": "renderMap",
           "type": "(template: string, options?: RenderMapOptions): Promise<RenderMapResult>",
           "default": "",
-          "description": "Renders template in a standalone host that imports MapComponent, then runs change detection until the map exists. Options: imports, providers, hostProps (assigned before the first change detection) and size (default 400x300, null for zero). Returns { fixture, map, ctx }. The map is not loaded yet: call loadMap(). Patches the layout getters: call resetMapTesting() in afterEach."
+          "description": "Renders template in a standalone host that imports MapComponent, then runs change detection until the map exists. Options: imports, providers (environment providers such as provideZonelessChangeDetection() too), hostProps (assigned before the first change detection) and size (default 400x300, null for zero). Returns { fixture, map, ctx }. Once per test. The map is not loaded yet: call loadMap(). Patches the layout getters: call resetMapTesting() in afterEach."
         },
         {
           "name": "loadMap",
           "type": "(fixture, map?): Promise<void>",
           "default": "",
-          "description": "Fires load and styledata, waits out the 100 ms style debounce (with configureMapTesting({ advanceTimers }) or a real timer), then runs change detection so layer components add their sources and layers."
+          "description": "Fires load and styledata, waits out the 100 ms style debounce (with configureMapTesting({ advanceTimers }) or a real timer), then runs change detection so layer components add their sources and layers. Throws a clear error when fake timers are installed without advanceTimers, instead of hanging."
         },
         {
           "name": "reloadStyle",
           "type": "(fixture, map?): Promise<void>",
           "default": "",
-          "description": "Simulates the style requested by setStyle (a theme or styles change) arriving: every source and layer is dropped, style.load and styledata fire, then the components re-add everything. Without a pending setStyle it only fires styledata."
+          "description": "Simulates the style requested by setStyle (a theme or styles change) arriving: every source and layer is dropped, style.load and styledata fire, then the components re-add everything. Without a pending setStyle it only fires styledata. Throws like loadMap() on fake timers without advanceTimers."
         },
         {
           "name": "update",
           "type": "(fixture, props): void",
           "default": "",
-          "description": "Assigns host properties and runs change detection."
+          "description": "Assigns host properties, marks the host for check and runs change detection, so it works with and without zone.js."
         },
         {
           "name": "getFakeMap",
@@ -627,7 +627,7 @@
           "name": "configureMapTesting",
           "type": "(options: { advanceTimers?: ((ms: number) => void) | null }): void",
           "default": "",
-          "description": "advanceTimers advances the runner fake clock by ms; loadMap() and reloadStyle() use it to wait out the style debounce. Vitest: (ms) => vi.advanceTimersByTime(ms). Set it only while fake timers are installed and reset it to null afterwards. Without it the helpers wait on a real timer."
+          "description": "advanceTimers advances the runner fake clock by ms; loadMap() and reloadStyle() use it to wait out the style debounce. Vitest: (ms) => vi.advanceTimersByTime(ms). Set it only while fake timers are installed and reset it to null afterwards. Without it the helpers wait on a real timer, and throw if fake timers (Vitest, Jest modern or legacy) are installed."
         },
         {
           "name": "resetMapTesting",
@@ -641,7 +641,7 @@
       "id": "testing-harness",
       "title": "ng-mapcn/testing/harness",
       "entry": "import { ... } from 'ng-mapcn/testing/harness'",
-      "description": "Angular CDK component harnesses for <ng-map>, its markers, popups and controls. They read and drive the DOM only, so they work with the fake and with the real MapLibre in a browser. This is a separate entry point because it imports @angular/cdk/testing, an optional peer dependency of ng-mapcn: install @angular/cdk to use it. Every harness has a static with(filters) predicate. The harnesses use CSS :has(). Button labels are translatable, so NgMapControlsHarness finds its buttons by structure, not by aria-label.",
+      "description": "Angular CDK component harnesses for <ng-map>, its markers, popups and controls. They read and drive the DOM only and run in a TestBed on top of the fake; the repository's e2e suite checks the same DOM contract (their selectors and the marker ARIA state) against real MapLibre in Chromium. This is a separate entry point because it imports @angular/cdk/testing, an optional peer dependency of ng-mapcn: install @angular/cdk to use it. Every harness has a static with(filters) predicate. NgMapControlsHarness uses CSS :has(). Button labels are translatable, so NgMapControlsHarness finds its buttons by structure, not by aria-label.",
       "exports": [
         {
           "name": "NgMapHarness",
@@ -653,7 +653,7 @@
           "name": "NgMapMarkerHarness",
           "type": "host: .maplibregl-marker",
           "default": "",
-          "description": "getText(), getAriaLabel(), click(), hover(), mouseAway(), focus(), pressEnter(), hasPopup(). Filters: { text, label }. hasPopup() is true when a popup card is open on the same map: with several markers it cannot tell whose popup it is, so check the content with NgMapHarness.getPopups()."
+          "description": "getText(), getAriaLabel(), click(), hover(), mouseAway(), focus(), pressEnter(), hasPopup(), isPopupOpen(). Filters: { text, label }. hasPopup() is true when the marker has an ng-marker-popup (aria-haspopup); isPopupOpen() when this marker's own popup is open (aria-expanded), whatever other popups are open. isPopupOpen() throws for a marker whose content has its own button or link (no aria-expanded there): use NgMapHarness.getPopups()."
         },
         {
           "name": "NgMapPopupHarness",

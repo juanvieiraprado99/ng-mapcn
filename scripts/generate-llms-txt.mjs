@@ -280,6 +280,10 @@ Unit-test components that render \`ng-map\` in jsdom, without WebGL. \`maplibre-
 - \`ng add\` does not copy the testing files: copy-paste users depend on the npm package for the fake.
 - \`ng-mapcn/testing/harness\` imports \`@angular/cdk/testing\`, an optional peer: install \`@angular/cdk\` to use it.
 - Stable: \`fakeRegistry\`, the fake's getters and \`structuralCalls()\`. The fake's raw \`calls\` strings are not.
+- Change host values after rendering with \`update(fixture, props)\` (it calls \`markForCheck()\`) or signals in \`hostProps\`: in zoneless apps (the Angular default) a direct \`fixture.componentInstance.x = ...\` needs \`fixture.changeDetectorRef.markForCheck()\`, or the dev-mode check throws NG0100.
+- One \`renderMap()\` per test (a second throws \`TestBed already instantiated\`); render several maps in one template.
+- Fake timers: pair \`vi.useFakeTimers()\` with \`configureMapTesting({ advanceTimers: (ms) => vi.advanceTimersByTime(ms) })\`. Without it \`loadMap()\` / \`reloadStyle()\` throw instead of hanging.
+- \`NgMapMarkerHarness.hasPopup()\` reads \`aria-haspopup\`, \`isPopupOpen()\` reads \`aria-expanded\` (this marker's popup only; throws when the marker content has its own button). The repository's e2e checks the harness selectors and marker ARIA against real MapLibre.
 
 \`\`\`ts
 const { fixture } = await renderMap('<ng-map><ng-map-route id="trip" [coordinates]="c" /></ng-map>', {

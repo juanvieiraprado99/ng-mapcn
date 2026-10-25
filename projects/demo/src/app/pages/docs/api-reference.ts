@@ -115,7 +115,7 @@ interface ApiSection {
             <code [class]="code">{{ entry.entry }}</code>
           </p>
           <p>{{ entry.description }}</p>
-          <app-prop-table nameLabel="Export" [rows]="entry.exports" />
+          <app-prop-table nameLabel="Export" [rows]="entry.exports" [showDefault]="false" />
         </app-docs-section>
       }
     </app-docs-page>

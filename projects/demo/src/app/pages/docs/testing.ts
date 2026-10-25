@@ -37,7 +37,7 @@ import {
           through its module mocking.
         </p>
         <p>Three entry points ship in the <code [class]="code">ng-mapcn</code> package:</p>
-        <app-prop-table nameLabel="Entry point" [rows]="entryPoints" />
+        <app-prop-table nameLabel="Entry point" [rows]="entryPoints" [showDefault]="false" />
         <app-docs-note>
           <strong>Tests only:</strong> never import these entry points from application code. The
           fake would end up in your bundle in place of MapLibre.
@@ -110,15 +110,27 @@ import {
           <code [class]="code">resetMapTesting()</code> in <code [class]="code">afterEach</code>:
           <code [class]="code">renderMap()</code> patches the layout getters jsdom lacks.
         </p>
-        <app-prop-table nameLabel="Function" [rows]="helpers" />
+        <app-prop-table nameLabel="Function" [rows]="helpers" [showDefault]="false" />
         <app-code-block [code]="eventsSpec" filename="route-interactions.spec.ts" />
         <app-docs-note>
-          <strong>Use signals for values you change after rendering.</strong> The host component
-          that <code [class]="code">renderMap()</code> creates is OnPush when the toolkit runs from
-          the published package, so a plain property you reassign (what
-          <code [class]="code">update()</code> does) is not picked up by the next change detection.
-          A signal passed in <code [class]="code">hostProps</code> and read in the template
-          (<code [class]="code">theme()</code>) is.
+          <strong>Change host values through <code [class]="code">update()</code> or signals.</strong>
+          In zoneless apps (the Angular default, and any test setup without zone.js) assigning
+          <code [class]="code">fixture.componentInstance.x = …</code> marks nothing for check, so
+          the next <code [class]="code">detectChanges()</code> skips the host and Angular's
+          dev-mode check throws <code [class]="code">NG0100</code>.
+          <code [class]="code">update()</code> marks the host for you. Otherwise call
+          <code [class]="code">fixture.changeDetectorRef.markForCheck()</code> after the assignment,
+          as in any zoneless Angular test, or pass a signal in
+          <code [class]="code">hostProps</code> and read it in the template
+          (<code [class]="code">theme()</code>).
+        </app-docs-note>
+        <app-docs-note>
+          <strong>One <code [class]="code">renderMap()</code> per test.</strong> It configures
+          <code [class]="code">TestBed</code>, so a second call in the same test throws
+          <code [class]="code">TestBed already instantiated</code>. To test several maps, put them
+          in one template: <code [class]="code">getFakeMap()</code> and the returned
+          <code [class]="code">map</code> are the first one, and
+          <code [class]="code">fakeRegistry.maps</code> holds them all.
         </app-docs-note>
       </app-docs-section>
 
@@ -169,10 +181,20 @@ import {
             [class]="link"
             >Angular CDK component harnesses</a
           >
-          that read and drive the rendered DOM, so specs stay free of selectors. They work with the
-          fake and with the real MapLibre in a browser.
+          that read and drive the rendered DOM, so specs stay free of selectors. They run in a
+          <code [class]="code">TestBed</code> on top of the fake, which renders markers, popups and
+          controls where MapLibre does. The repository's end-to-end suite checks that DOM contract
+          (the selectors the harnesses use and the marker's ARIA state) against the real MapLibre
+          in Chromium.
         </p>
-        <app-prop-table nameLabel="Harness" [rows]="harnesses" />
+        <p>
+          <code [class]="code">NgMapMarkerHarness</code> reads the marker's popup state from its
+          ARIA attributes: <code [class]="code">hasPopup()</code> is true when the marker has an
+          <code [class]="code">ng-marker-popup</code> (<code [class]="code">aria-haspopup</code>),
+          and <code [class]="code">isPopupOpen()</code> when that marker's own popup is open
+          (<code [class]="code">aria-expanded</code>), whatever other popups are open on the map.
+        </p>
+        <app-prop-table nameLabel="Harness" [rows]="harnesses" [showDefault]="false" />
         <app-code-block [code]="harnessSpec" filename="marker-popup.spec.ts" />
         <p>
           The harnesses are a separate entry point on purpose: they import
@@ -188,8 +210,8 @@ import {
           <code [class]="code">&lt;ng-map&gt;</code> waits 100 ms after
           <code [class]="code">styledata</code> before it opens its load gate, and
           <code [class]="code">loadMap()</code> and <code [class]="code">reloadStyle()</code> wait
-          that out. By default they wait on a real timer. With fake timers installed they would wait
-          forever, so tell them how to advance your clock:
+          that out. By default they wait on a real timer, which a fake clock would never fire. With
+          fake timers installed, tell them how to advance your clock:
         </p>
         <app-code-block [code]="fakeTimersSpec" filename="fake-timers.spec.ts" />
         <p>
@@ -197,7 +219,11 @@ import {
           installed (<code [class]="code">vi.advanceTimersByTime</code> throws when they are off),
           and reset it to <code [class]="code">null</code> in
           <code [class]="code">afterEach</code> as above. With Jest, pass
-          <code [class]="code">(ms) =&gt; jest.advanceTimersByTime(ms)</code>.
+          <code [class]="code">(ms) =&gt; jest.advanceTimersByTime(ms)</code>. If fake timers are
+          installed and <code [class]="code">advanceTimers</code> is not set, both helpers throw
+          right away with an error that names <code [class]="code">configureMapTesting</code>,
+          instead of hanging until the test times out. They detect Vitest's and Jest's fake timers
+          (both <code [class]="code">&#64;sinonjs/fake-timers</code>) and Jest's legacy timers.
         </p>
       </app-docs-section>
 
@@ -229,15 +255,23 @@ import {
             helpers and the harnesses.
           </li>
           <li>
-            <strong>Harnesses use CSS <code [class]="code">:has()</code>.</strong> The marker
-            harness's <code [class]="code">hasPopup()</code> and the controls harness rely on it, so
-            they need a DOM implementation that supports it (the jsdom used by the library's own tests does).
+            <strong>The controls harness uses CSS <code [class]="code">:has()</code>.</strong> It
+            finds the compass button by its icon, so it needs a DOM implementation that supports
+            <code [class]="code">:has()</code> (the jsdom used by the library's own tests does).
           </li>
           <li>
-            <strong><code [class]="code">hasPopup()</code> is per map.</strong> MapLibre does not
-            link a popup to its marker, so with several markers it cannot tell whose popup is
-            open. Check the content with
+            <strong>Markers whose content has its own control.</strong> When
+            <code [class]="code">ng-marker-content</code> holds a
+            <code [class]="code">&lt;button&gt;</code> or link, that control is the keyboard
+            target and the marker element has no role, so it gets no
+            <code [class]="code">aria-expanded</code>.
+            <code [class]="code">isPopupOpen()</code> throws for such a marker: check the popup with
             <code [class]="code">NgMapHarness.getPopups()</code> instead.
+          </li>
+          <li>
+            <strong>What the end-to-end suite proves.</strong> It runs the harness selectors and the
+            marker ARIA checks in a browser against the real MapLibre, not the harness classes
+            themselves, which need a <code [class]="code">TestBed</code>.
           </li>
           <li>
             <strong>Controls are found by structure.</strong> Button labels are translatable, so
@@ -289,14 +323,14 @@ export class TestingComponent {
       type: '(template, { imports, providers, hostProps, size }) => Promise<{ fixture, map, ctx }>',
       default: '',
       description:
-        'Renders the template inside a standalone host, with ng-map imported, and runs change detection until the map exists. Size defaults to 400x300 because jsdom has no layout. The map is not loaded yet.',
+        'Renders the template inside a standalone host, with ng-map imported, and runs change detection until the map exists. Size defaults to 400x300 because jsdom has no layout. The map is not loaded yet. Call it once per test.',
     },
     {
       name: 'loadMap',
       type: '(fixture, map?) => Promise<void>',
       default: '',
       description:
-        'Simulates the first style load: fires load and styledata, waits out the 100 ms debounce, then runs change detection so layer components add their sources and layers.',
+        'Simulates the first style load: fires load and styledata, waits out the 100 ms debounce, then runs change detection so layer components add their sources and layers. Throws when fake timers are installed without advanceTimers.',
     },
     {
       name: 'reloadStyle',
@@ -310,7 +344,7 @@ export class TestingComponent {
       type: '(fixture, props) => void',
       default: '',
       description:
-        'Assigns host properties and runs change detection. See the signals note below for values that change after rendering.',
+        'Assigns host properties, marks the host for check and runs change detection, so it works with and without zone.js.',
     },
     {
       name: 'fireMapEvent',
@@ -364,9 +398,10 @@ export class TestingComponent {
     },
     {
       name: 'NgMapMarkerHarness',
-      type: 'getText, getAriaLabel, click, hover, mouseAway, focus, pressEnter, hasPopup',
+      type: 'getText, getAriaLabel, click, hover, mouseAway, focus, pressEnter, hasPopup, isPopupOpen',
       default: '',
-      description: 'A marker. Filter with { text, label }.',
+      description:
+        'A marker. Filter with { text, label }. hasPopup reads aria-haspopup, isPopupOpen reads aria-expanded: the state of this marker only.',
     },
     {
       name: 'NgMapPopupHarness',

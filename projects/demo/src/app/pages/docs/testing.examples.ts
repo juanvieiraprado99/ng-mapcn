@@ -260,10 +260,13 @@ describe('marker popup', () => {
 
     await marker.click();
 
+    // aria-expanded on the marker: this marker's popup, not any popup on the map.
+    expect(await marker.isPopupOpen()).toBe(true);
     const popup = await loader.getHarness(NgMapPopupHarness.with({ text: /Largest city/ }));
     expect(await popup.isTooltip()).toBe(false);
 
     await popup.close();
+    expect(await marker.isPopupOpen()).toBe(false);
     expect(await map.getPopups()).toHaveLength(0);
   });
 });`;
