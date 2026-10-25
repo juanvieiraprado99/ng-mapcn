@@ -244,17 +244,17 @@ export class MarkerPopupsComponent {
         [code]="popupCode"
       >
         <span description>
-          Attach a popup with
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code>.
-          It opens when the marker is clicked and can contain any projected
-          HTML — here with images, ratings, and action buttons. Only one is
-          open at a time; clicking the map closes it.
+          One
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-popup</code>,
+          driven by a signal, shows the selected place. Each marker's content is its own
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;button&gt;</code>,
+          so a click, Enter or Space emits
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">markerClick</code>
+          and selects it. The popup can contain any projected HTML — here with images, ratings,
+          and action buttons. Only one is open at a time; clicking the selected marker again or
+          the map closes it. For a popup attached to each marker, use
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code>
-          also takes <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[closeButton]</code>,
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">offset</code>,
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">anchor</code>,
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maxWidth</code> and
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">closeOnClick</code>.
+          (see Marker Popups below).
         </span>
         <ng-map [center]="[-73.98, 40.74]" [zoom]="11" (mapClick)="selected.set(null)">
           @for (place of richPlaces; track place.name) {
