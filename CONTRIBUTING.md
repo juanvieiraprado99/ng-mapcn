@@ -102,8 +102,8 @@ ng test ng-mapcn       # watch mode
 ### Demo tests
 
 - Demo specs live next to the code under `projects/demo/src/app/`; helpers go in `projects/demo/src/testing/`. Run `npm run install:lib` first: the demo consumes the packed library, and any `npm install` / `npm ci` removes it.
-- The demo reuses the library's MapLibre fake: `projects/demo/src/testing/setup.ts` mocks `maplibre-gl` with `projects/ng-mapcn/src/testing/maplibre-fake.ts`, and stubs the jsdom gaps the pages need (`IntersectionObserver`, `matchMedia`, `scrollIntoView`).
-- `vitest.demo.config.mts` inlines `ng-mapcn`. The packaged library in `node_modules` is otherwise externalized and loads the real CommonJS `maplibre-gl`, which bypasses the mock.
+- The demo consumes the MapLibre fake from the installed package, like an app would: `projects/demo/src/testing/setup.ts` mocks `maplibre-gl` with `ng-mapcn/testing/maplibre` (and calls `configureFakeMapLibre({ spy: vi.fn })`), and stubs the jsdom gaps the pages need (`IntersectionObserver`, `matchMedia`, `scrollIntoView`).
+- `vitest.demo.config.mts` inlines `ng-mapcn` and its `ng-mapcn/testing*` entry points (`/ng-mapcn/`), so the fake stays a single module instance shared by the mock and the helpers (`src/app/testing-toolkit.spec.ts` asserts it). The packaged library in `node_modules` is otherwise externalized and loads the real CommonJS `maplibre-gl`, which bypasses the mock.
 - `renderRoute(url)` renders a URL through the real route table (`app.routes.ts`) and returns the first `<h1>` and every `console.error`. Smoke tests assert the heading, the exact `document.title` and no errors.
 - Restore global state in `afterEach`: `localStorage.clear()`, the `<html>` class, `vi.restoreAllMocks()`, `vi.unstubAllGlobals()` and `TestBed.resetTestingModule()`, and remove any meta/link/script tags a test adds to `document.head`.
 

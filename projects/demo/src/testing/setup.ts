@@ -1,10 +1,10 @@
+import { configureFakeMapLibre, fakeRegistry } from 'ng-mapcn/testing/maplibre';
 import { beforeEach, vi } from 'vitest';
 
-import { configureFakeMapLibre, fakeRegistry } from '../../../ng-mapcn/src/testing/maplibre-fake';
-
-// The demo consumes the packaged library; `vitest.demo.config.mts` inlines `ng-mapcn` so this
-// mock reaches the `maplibre-gl` import inside it.
-vi.mock('maplibre-gl', () => import('../../../ng-mapcn/src/testing/maplibre-fake'));
+// The demo consumes the packaged library, fake included (`ng-mapcn/testing/maplibre`), like any
+// app would. `vitest.demo.config.mts` inlines `ng-mapcn` so this mock reaches the `maplibre-gl`
+// import inside it.
+vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'));
 
 configureFakeMapLibre({ spy: vi.fn });
 
