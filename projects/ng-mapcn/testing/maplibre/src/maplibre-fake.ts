@@ -6,6 +6,12 @@
  * It records every call, lets specs fire events, and is deliberately as strict as MapLibre where it
  * matters for the library invariants (duplicate layers, removing a source that is still in use).
  *
+ * Popups close like MapLibre's: a map `click` (for example `fireMapEvent(map, 'click')`) closes
+ * every open popup created without `closeOnClick: false` (MapLibre's default is `true`;
+ * `<ng-map-popup>` keeps it, `<ng-marker-popup>` defaults to `false`), and `Marker.remove()` closes
+ * the marker's open popup. Both fire the popup's `close` event. A spec that fires map clicks while
+ * a popup must stay open creates it with `closeOnClick: false` (`[closeOnClick]="false"`).
+ *
  * Install it by mocking the module:
  * - Vitest: `vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'))` in a setup file,
  *   plus `configureFakeMapLibre({ spy: vi.fn })` to make the methods spies.
@@ -574,7 +580,9 @@ export class Marker extends Evented {
     this.calls.push('addTo');
     return this;
   }
-  /** Like MapLibre: the element leaves the map and an open popup closes. */
+  /**
+   * Like MapLibre: the element leaves the map and an open popup closes (firing its `close` event).
+   */
   remove(): this {
     this.element.remove();
     this.map = null;
@@ -717,7 +725,10 @@ export class Popup extends Evented {
     return this.open ? this.element : undefined;
   }
   private readonly onMapRemove = () => this.remove();
-  /** Like MapLibre: a map click closes the popup unless `closeOnClick: false`. */
+  /**
+   * Like MapLibre: a map click closes the popup unless it was created with `closeOnClick: false`
+   * (an absent option means `true`, MapLibre's default).
+   */
   private readonly closeOnClick = (): boolean => this.options.closeOnClick !== false;
   private readonly onMapClick = () => this.remove();
   addTo(map: Map): this {

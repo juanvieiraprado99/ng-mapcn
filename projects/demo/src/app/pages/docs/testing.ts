@@ -12,6 +12,7 @@ import {
   INSTALL_CDK,
   JEST_CONFIG,
   JEST_SETUP,
+  POPUP_CLICKS_SPEC,
   VITEST_CONFIG,
   VITEST_SETUP,
 } from './testing.examples';
@@ -171,6 +172,35 @@ import {
         </app-docs-note>
       </app-docs-section>
 
+      <app-docs-section title="Popups and map clicks">
+        <p>
+          The fake closes popups the way MapLibre does, so a spec sees the same behaviour as the
+          browser:
+        </p>
+        <ul>
+          <li>
+            A map <code [class]="code">click</code> (for example
+            <code [class]="code">fireMapEvent(map, 'click')</code>) closes every open popup created
+            without <code [class]="code">closeOnClick: false</code>. MapLibre's default is
+            <code [class]="code">true</code>, which <code [class]="code">ng-map-popup</code> keeps;
+            <code [class]="code">ng-marker-popup</code> defaults to
+            <code [class]="code">false</code>.
+          </li>
+          <li>
+            Removing a marker (<code [class]="code">Marker.remove()</code>, which runs when an
+            <code [class]="code">ng-map-marker</code> is destroyed) closes its open popup.
+          </li>
+        </ul>
+        <p>
+          Both fire the popup's <code [class]="code">close</code> event, so
+          <code [class]="code">popupClose</code> emits and
+          <code [class]="code">ng-map-popup</code>'s <code [class]="code">open</code> turns
+          <code [class]="code">false</code>. To keep a popup open while the spec fires map clicks,
+          bind <code [class]="code">[closeOnClick]="false"</code>:
+        </p>
+        <app-code-block [code]="popupClicksSpec" filename="popup-clicks.spec.ts" />
+      </app-docs-section>
+
       <app-docs-section title="Component harnesses">
         <p>
           <code [class]="code">ng-mapcn/testing/harness</code> exports
@@ -245,6 +275,13 @@ import {
             >) when you need real rendering.
           </li>
           <li>
+            <strong>Popups close like MapLibre's.</strong> A fired map
+            <code [class]="code">click</code> closes popups without
+            <code [class]="code">closeOnClick: false</code>, and removing a marker closes its popup
+            (see Popups and map clicks). A spec that fires map clicks with a popup open must opt out
+            with <code [class]="code">[closeOnClick]="false"</code>.
+          </li>
+          <li>
             <strong>Vitest and Jest only.</strong> Karma and Jasmine cannot mock an ES module, and
             the Jest setup is documented but not tested.
           </li>
@@ -292,6 +329,7 @@ export class TestingComponent {
   readonly firstSpec = FIRST_SPEC;
   readonly eventsSpec = EVENTS_SPEC;
   readonly fakeTimersSpec = FAKE_TIMERS_SPEC;
+  readonly popupClicksSpec = POPUP_CLICKS_SPEC;
   readonly harnessSpec = HARNESS_SPEC;
   readonly installCdk = INSTALL_CDK;
 

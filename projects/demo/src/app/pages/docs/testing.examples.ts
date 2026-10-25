@@ -1,6 +1,6 @@
 /**
- * Code shown on `/docs/testing`. The runnable specs (FIRST_SPEC, EVENTS_SPEC, FAKE_TIMERS_SPEC and
- * HARNESS_SPEC) are executed verbatim by `docs-testing.spec.ts`, which fails when this text and the
+ * Code shown on `/docs/testing`. The runnable specs (FIRST_SPEC, EVENTS_SPEC, FAKE_TIMERS_SPEC,
+ * POPUP_CLICKS_SPEC and HARNESS_SPEC) are executed verbatim by `docs-testing.spec.ts`, which fails when this text and the
  * spec drift apart. The setup and runner configs cannot run inside a spec: the spec only
  * cross-checks their key lines against the demo's real setup.
  */
@@ -224,6 +224,40 @@ describe('with fake timers', () => {
     await loadMap(fixture);
 
     expect(structuralCalls(getFakeMap(fixture))).toEqual(['addSource:trip', 'addLayer:trip-layer']);
+  });
+});`;
+
+export const POPUP_CLICKS_SPEC = `import { TestBed } from '@angular/core/testing';
+import { MapPopupComponent } from 'ng-mapcn';
+import { fireMapEvent, getFakeMap, loadMap, renderMap, resetMapTesting } from 'ng-mapcn/testing';
+import { afterEach, describe, expect, it } from 'vitest';
+
+describe('popups and map clicks', () => {
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    resetMapTesting();
+  });
+
+  it('keeps a popup open on map clicks with closeOnClick off', async () => {
+    const { fixture } = await renderMap(
+      \`<ng-map>
+        <ng-map-popup [longitude]="2" [latitude]="48" [closeOnClick]="false">Pinned</ng-map-popup>
+        <ng-map-popup [longitude]="13" [latitude]="52">Closes on a map click</ng-map-popup>
+      </ng-map>\`,
+      { imports: [MapPopupComponent] },
+    );
+    await loadMap(fixture);
+    const openPopups = () =>
+      Array.from(
+        (fixture.nativeElement as HTMLElement).querySelectorAll('.maplibregl-popup'),
+        (popup) => popup.textContent?.trim(),
+      );
+    expect(openPopups()).toEqual(['Pinned', 'Closes on a map click']);
+
+    // Like MapLibre, the fake closes every popup without closeOnClick: false on a map click.
+    fireMapEvent(getFakeMap(fixture), 'click', { lngLat: { lng: 0, lat: 0 } });
+
+    expect(openPopups()).toEqual(['Pinned']);
   });
 });`;
 

@@ -6,6 +6,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   MapMarkerComponent,
+  MapPopupComponent,
   MapRouteComponent,
   MarkerContentComponent,
   MarkerPopupComponent,
@@ -32,6 +33,7 @@ import {
   HARNESS_SPEC,
   JEST_CONFIG,
   JEST_SETUP,
+  POPUP_CLICKS_SPEC,
   VITEST_CONFIG,
   VITEST_SETUP,
 } from './pages/docs/testing.examples';
@@ -178,6 +180,34 @@ describe('with fake timers', () => {
     expect(structuralCalls(getFakeMap(fixture))).toEqual(['addSource:trip', 'addLayer:trip-layer']);
   });
 });
+describe('popups and map clicks', () => {
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    resetMapTesting();
+  });
+
+  it('keeps a popup open on map clicks with closeOnClick off', async () => {
+    const { fixture } = await renderMap(
+      `<ng-map>
+        <ng-map-popup [longitude]="2" [latitude]="48" [closeOnClick]="false">Pinned</ng-map-popup>
+        <ng-map-popup [longitude]="13" [latitude]="52">Closes on a map click</ng-map-popup>
+      </ng-map>`,
+      { imports: [MapPopupComponent] },
+    );
+    await loadMap(fixture);
+    const openPopups = () =>
+      Array.from(
+        (fixture.nativeElement as HTMLElement).querySelectorAll('.maplibregl-popup'),
+        (popup) => popup.textContent?.trim(),
+      );
+    expect(openPopups()).toEqual(['Pinned', 'Closes on a map click']);
+
+    // Like MapLibre, the fake closes every popup without closeOnClick: false on a map click.
+    fireMapEvent(getFakeMap(fixture), 'click', { lngLat: { lng: 0, lat: 0 } });
+
+    expect(openPopups()).toEqual(['Pinned']);
+  });
+});
 describe('marker popup', () => {
   afterEach(() => {
     TestBed.resetTestingModule();
@@ -245,7 +275,7 @@ function splitSnippet(snippet: string): { imports: string; body: string } {
 }
 
 describe('docs: the documented specs are the specs that run', () => {
-  const runnable = { FIRST_SPEC, EVENTS_SPEC, FAKE_TIMERS_SPEC, HARNESS_SPEC };
+  const runnable = { FIRST_SPEC, EVENTS_SPEC, FAKE_TIMERS_SPEC, POPUP_CLICKS_SPEC, HARNESS_SPEC };
 
   for (const [name, snippet] of Object.entries(runnable)) {
     it(`${name}: the body appears in this file character for character`, () => {

@@ -523,13 +523,13 @@
           "name": "Marker",
           "type": "class",
           "default": "",
-          "description": "Fake of maplibre-gl Marker. Its element is attached to the map container."
+          "description": "Fake of maplibre-gl Marker. Its element is attached to the map container. Like MapLibre, a click or Enter/Space on the element toggles its popup, and remove() closes the open popup (firing its close event)."
         },
         {
           "name": "Popup",
           "type": "class",
           "default": "",
-          "description": "Fake of maplibre-gl Popup. Its element is attached to the map container while open."
+          "description": "Fake of maplibre-gl Popup. Its element is attached to the map container while open. Like MapLibre, a map click (fire('click'), fireMapEvent(map, 'click')) closes it unless it was created with closeOnClick: false (default true; ng-map-popup keeps the default, ng-marker-popup defaults to false). A spec that fires map clicks with a popup open binds [closeOnClick]=\"false\"."
         },
         {
           "name": "Point",

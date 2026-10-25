@@ -426,6 +426,24 @@ describe('maplibre-fake', () => {
       expect(close).toHaveBeenCalledTimes(1);
     });
 
+    it('removing the marker leaves a closed popup closed, without a close event', () => {
+      const { popup, marker, close } = markerWithPopup();
+
+      marker.remove();
+
+      expect(popup.isOpen()).toBe(false);
+      expect(close).not.toHaveBeenCalled();
+    });
+
+    it('closeOnClick: true behaves like the default and a map click closes the popup', () => {
+      const { map } = markerWithPopup();
+      const popup = new Popup({ closeOnClick: true }).addTo(map);
+
+      map.fire('click');
+
+      expect(popup.isOpen()).toBe(false);
+    });
+
     it('clearing the popup removes the click toggle', () => {
       const { popup, marker } = markerWithPopup();
 
