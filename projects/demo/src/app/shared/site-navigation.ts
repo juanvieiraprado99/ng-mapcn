@@ -23,6 +23,7 @@ export const docsNavigation: SiteNavigationGroup[] = [
     items: [
       { title: 'Getting Started', href: '/docs', icon: 'lucideBookOpen' },
       { title: 'Installation', href: '/docs/installation', icon: 'lucideBookOpen' },
+      { title: 'Testing your maps', href: '/docs/testing', icon: 'lucideBookOpen' },
       { title: 'llms.txt', href: '/llms.txt', icon: 'lucideBookOpen', file: true },
       { title: 'API Reference', href: '/docs/api-reference', icon: 'lucideBookOpen' },
       { title: 'Map Styles', href: '/docs/basemaps', icon: 'lucideBookOpen' },

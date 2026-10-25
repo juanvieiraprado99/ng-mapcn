@@ -11,6 +11,7 @@ const PAGES: [url: string, h1: string, title: string][] = [
   ['/', 'Beautiful maps, made simple', SITE_TITLE],
   ['/docs', 'Introduction', 'Introduction to Angular Map Components - ng-mapcn'],
   ['/docs/installation', 'Installation', 'Install Angular Map Components - ng-mapcn'],
+  ['/docs/testing', 'Testing your maps', 'Testing Angular Maps - ng-mapcn'],
   ['/docs/api-reference', 'API Reference', 'Angular Map API Reference - ng-mapcn'],
   ['/docs/basemaps', 'Map Styles', 'Angular Map Styles and Basemaps - ng-mapcn'],
   ['/docs/roadmap', 'Roadmap', 'Angular Map Components Roadmap - ng-mapcn'],

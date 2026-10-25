@@ -42,6 +42,20 @@ export const DOCS_ROUTES: Routes = [
           import('./installation').then((m) => m.InstallationComponent),
       },
       {
+        path: 'testing',
+        title: 'Testing your maps',
+        data: {
+          seo: {
+            title: 'Testing Angular Maps',
+            description:
+              'Unit-test Angular components that render ng-mapcn maps in jsdom without WebGL. Set up the MapLibre fake with Vitest or Jest, drive maps with helpers and CDK component harnesses.',
+            keywords: ['test Angular maps', 'MapLibre mock', 'Angular component harness map'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }],
+          },
+        },
+        loadComponent: () => import('./testing').then((m) => m.TestingComponent),
+      },
+      {
         path: 'api-reference',
         title: 'API Reference',
         data: {
