@@ -10,6 +10,7 @@ Version: 22.0.0-beta.8 · License: MIT · npm: https://www.npmjs.com/package/ng-
 - [Documentation](https://ng-mapcn.vercel.app/docs): introduction, features and supported basemaps.
 - [Installation](https://ng-mapcn.vercel.app/docs/installation): `ng add` (copy-paste) or npm package.
 - [Map Styles](https://ng-mapcn.vercel.app/docs/basemaps): a working example per provider (Carto, OpenFreeMap, OpenStreetMap, MapTiler, Stadia).
+- [Testing your maps](https://ng-mapcn.vercel.app/docs/testing): unit-test components that render `ng-map` without WebGL (MapLibre fake, helpers, CDK harnesses; Vitest first-class).
 - [API Reference](https://ng-mapcn.vercel.app/docs/api-reference): every component with inputs and outputs.
 - [Roadmap](https://ng-mapcn.vercel.app/docs/roadmap): what has shipped and what comes next.
 - [Credits](https://ng-mapcn.vercel.app/credits): mapcn, Zard UI, MapLibre, Carto.
@@ -47,6 +48,8 @@ Docs pages: [Map](https://ng-mapcn.vercel.app/docs/components/map) · [Controls]
 - **MapDraw** (`ng-map-draw`): Draws, selects and edits points, lines and polygons on terra-draw. Lives in the optional ng-mapcn/draw entry point (import { MapDrawComponent } from 'ng-mapcn/draw') and needs the terra-draw and terra-draw-maplibre-gl-adapter peer dependencies. A theme switch (setStyle) stops and restarts terra-draw with the same features and mode. Must be used inside ng-map.
 
 `ng-map` also takes `[fitBounds]="{ padding, maxZoom, duration, animate, bounds? }"` to fit the camera to its children's data (or explicit `bounds`) once loaded and whenever they change; `MapContextService.fitBounds()` is the imperative form.
+
+Testing: `ng-mapcn/testing/maplibre` (MapLibre fake), `ng-mapcn/testing` (renderMap, loadMap, ...) and `ng-mapcn/testing/harness` (CDK harnesses, optional `@angular/cdk` peer). Guide: [Testing your maps](https://ng-mapcn.vercel.app/docs/testing).
 
 Utilities: `MapViewport`, `getViewport`, `buildArcCoordinates`, `mergeHoverPaint`, `blankMapStyle`, `defaultStyles`, `MapStylesConfig`, `provideMapStyles()`, `MAP_DEFAULT_STYLES`, and `MapContextService` (map / isLoaded / resolvedTheme signals and the `hasSource(id)` source registry, the equivalent of mapcn's `useMap()`).
 

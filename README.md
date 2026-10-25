@@ -15,7 +15,7 @@
 
 ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map components for Angular. It is built for Angular apps that need theme-aware maps (markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, symbol labels and icons, raster/vector tile sources, image overlays, 3D buildings and terrain, draw tools) without API keys or a paid tile provider. It is an Angular port of the [mapcn](https://mapcn.dev) API, with MapLibre GL as the rendering engine and the copy-paste ownership model of [shadcn/ui](https://ui.shadcn.com): `ng add ng-mapcn` copies the sources into your project so you own the code.
 
-**[Docs](https://ng-mapcn.vercel.app/docs)** · **[Blocks gallery](https://ng-mapcn.vercel.app/blocks)** · **[Playground](https://ng-mapcn.vercel.app/playground)** · **[Installation](https://ng-mapcn.vercel.app/docs/installation)** · **[API reference](https://ng-mapcn.vercel.app/docs/api-reference)**
+**[Docs](https://ng-mapcn.vercel.app/docs)** · **[Blocks gallery](https://ng-mapcn.vercel.app/blocks)** · **[Playground](https://ng-mapcn.vercel.app/playground)** · **[Installation](https://ng-mapcn.vercel.app/docs/installation)** · **[Testing](https://ng-mapcn.vercel.app/docs/testing)** · **[API reference](https://ng-mapcn.vercel.app/docs/api-reference)**
 
 ## Features
 
@@ -25,6 +25,7 @@ ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map componen
 - **Signals-first**: standalone components, signal inputs/outputs, `effect()`-based reconciliation
 - **Copy-paste distribution**: `ng add ng-mapcn` copies the sources into your project (shadcn-style). Also usable as a regular npm package.
 - **SSR-safe**: nothing touches `window` or MapLibre during server render
+- **Testable**: a MapLibre fake and Angular CDK harnesses (`ng-mapcn/testing`) let you [unit-test maps in jsdom](#testing-your-maps) without WebGL
 - **AI-ready**: an [agent skill](#ai-agent-skill) (`npx skills add juanvieiraprado99/ng-mapcn`) plus [`llms.txt`](https://ng-mapcn.vercel.app/llms.txt) teach coding agents the real API
 
 ## Compatibility
@@ -271,6 +272,51 @@ Notes:
 - **Lazy-load the map.** MapLibre is large: in the demo's production build its chunk is about 1 MB (≈285 KB gzipped), more than the demo's entire initial JavaScript (≈160 KB gzipped), and the first map also fetches the worker files (≈150 KB gzipped, on the worker thread, cached afterwards). Keep `ng-mapcn` out of your initial bundle with a lazy route (`loadComponent`) or `@defer (on viewport) { <ng-map>…</ng-map> }`.
 - **Many points → layers, not markers.** Each `<ng-map-marker>` is a DOM element with its own component; for hundreds of points use `<ng-map-cluster-layer>`, `<ng-map-heatmap>` or `<ng-map-geojson>`, which render on the GPU.
 - **Pass new references to update data.** Layer components push `[data]` / `[coordinates]` to MapLibre only when the reference changes; replace arrays and objects instead of mutating them.
+
+## Testing your maps
+
+Unit-test components that render `<ng-map>` in jsdom, without WebGL. `ng-mapcn` imports `maplibre-gl` statically, so the test runner replaces that module with a fake that ships in the package (`ng-mapcn/testing/maplibre`). It records calls, fires events on demand and renders markers, popups and controls into the map container.
+
+```ts
+// src/testing/setup.ts (Vitest)
+import { configureFakeMapLibre, fakeRegistry } from 'ng-mapcn/testing/maplibre';
+import { beforeEach, vi } from 'vitest';
+
+vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'));
+configureFakeMapLibre({ spy: vi.fn });
+beforeEach(() => fakeRegistry.reset());
+```
+
+```ts
+// vitest.config.mts: process ng-mapcn itself so the mock reaches it
+export default defineConfig({ test: { server: { deps: { inline: [/ng-mapcn/] } } } });
+```
+
+```ts
+import { loadMap, renderMap, getFakeMap, structuralCalls } from 'ng-mapcn/testing';
+
+const { fixture } = await renderMap(
+  '<ng-map><ng-map-route id="trip" [coordinates]="c" /></ng-map>',
+  {
+    imports: [MapRouteComponent],
+    hostProps: {
+      c: [
+        [0, 0],
+        [1, 1],
+      ],
+    },
+  },
+);
+await loadMap(fixture);
+expect(structuralCalls(getFakeMap(fixture))).toEqual(['addSource:trip', 'addLayer:trip-layer']);
+```
+
+- `ng-mapcn/testing`: `renderMap`, `loadMap`, `reloadStyle`, `getFakeMap`, `fireMapEvent`, `structuralCalls` and friends.
+- `ng-mapcn/testing/harness`: Angular CDK component harnesses (`NgMapHarness`, `NgMapMarkerHarness`, `NgMapPopupHarness`, `NgMapControlsHarness`). `@angular/cdk` is an optional peer dependency, only needed for this entry point.
+- Vitest is supported first-class. Jest works by mapping `maplibre-gl` to the fake with `moduleNameMapper`, but ng-mapcn's own tests do not cover it. Karma/Jasmine are not supported (they cannot mock an ES module).
+- `ng add` does not copy the testing files: install the `ng-mapcn` package to use them.
+
+Setup for Vitest and Jest, fake timers, the harnesses and the limitations: [Testing your maps](https://ng-mapcn.vercel.app/docs/testing).
 
 ## For LLMs
 

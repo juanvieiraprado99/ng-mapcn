@@ -1,6 +1,6 @@
 ---
 name: ng-mapcn
-description: Use when building or editing interactive maps in an Angular 22+ app with ng-mapcn (MapLibre GL v6, mapcn port) - adding <ng-map>, markers, popups, tooltips, routes, GeoJSON layers, arcs, clusters, heatmaps, symbol labels and icons, raster/vector tile sources (PMTiles), image overlays, 3D buildings (fill-extrusion), terrain and hillshade, draw tools (points/lines/polygons), map controls, theme-aware basemaps, or installing via `ng add ng-mapcn`.
+description: Use when building or editing interactive maps in an Angular 22+ app with ng-mapcn (MapLibre GL v6, mapcn port) - adding <ng-map>, markers, popups, tooltips, routes, GeoJSON layers, arcs, clusters, heatmaps, symbol labels and icons, raster/vector tile sources (PMTiles), image overlays, 3D buildings (fill-extrusion), terrain and hillshade, draw tools (points/lines/polygons), map controls, theme-aware basemaps, unit-testing components that render maps (MapLibre fake, `ng-mapcn/testing`, component harnesses), or installing via `ng add ng-mapcn`.
 ---
 
 # ng-mapcn
@@ -98,6 +98,7 @@ Full inputs, types and defaults: `references/components.md`.
 - Controlled viewport: bind `[viewport]` and `(viewportChange)` together.
 - Fit to data: `<ng-map [fitBounds]="{ padding: 48, maxZoom: 14 }">` (or `MapContextService.fitBounds()`) instead of imperative `map.fitBounds` + `isLoaded` handling.
 - The global `.maplibregl-popup-*` overrides and `maplibre-gl.css` are required.
+- Testing: `ng-mapcn/testing/maplibre` (fake), `ng-mapcn/testing` (helpers) and `ng-mapcn/testing/harness` (CDK harnesses, optional `@angular/cdk` peer) come from the npm package only (`ng add` does not copy them). Replace `maplibre-gl` with the fake via `vi.mock` and inline `ng-mapcn` in the Vitest config (`server.deps.inline: [/ng-mapcn/]`); Jest uses `moduleNameMapper` (untested); Karma/Jasmine unsupported. See `references/recipes.md` (Testing) and `references/troubleshooting.md`.
 - Tile sources: the source id is the `id` input verbatim; a layer of your own that draws it should wait for `ctx.hasSource(id)` (see `references/recipes.md`). `ng-map-vector-source` adds no layers. PMTiles: the library does not depend on `pmtiles`; install it and call `maplibregl.addProtocol('pmtiles', new Protocol().tile)` once, then use `url="pmtiles://<archive url>"`.
 - 3D: `ng-map-fill-extrusion` creates only a layer and defaults to the Carto basemap (`source="protomaps"`, `sourceLayer="buildings"`, `height` / `min_height`, `minZoom` 14; the earlier `carto` / `building` / `render_height` styles are still detected); for any other source it waits for `map.getSource(source)` and omits `sourceLayer` unless given. Tilt the map with `[options]="{ pitch: 60 }"` (terrain needs `maxPitch` up to 85). `ng-map-terrain` works with no inputs (public Terrarium tiles), is re-applied after theme switches, and only one terrain per map is active.
 - Many points: use `ng-map-cluster-layer`, `ng-map-heatmap`, `ng-map-symbol-layer` (icons and labels) or `ng-map-geojson` (GPU), not hundreds of `ng-map-marker` (one DOM element each).

@@ -748,6 +748,82 @@ export const appConfig: ApplicationConfig = {
 | `MAP_LABELS` | `InjectionToken<Signal<Partial<MapLabels> \| undefined>>` | — | The token itself, if you want to provide it by hand. |
 | `DEFAULT_MAP_LABELS` | `MapLabels` | — | The English defaults. |
 
+## Testing
+
+Unit-test components that render `ng-map` in jsdom, without WebGL. `maplibre-gl` is imported statically, so the test runner replaces the whole module with a fake that records calls, fires events and renders markers, popups and controls into the map container. Guide: https://ng-mapcn.vercel.app/docs/testing
+
+- **Vitest** (first-class): a setup file with `vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'))` and `configureFakeMapLibre({ spy: vi.fn })`, plus `server: { deps: { inline: [/ng-mapcn/] } }` in the Vitest config (without it the real `maplibre-gl` is loaded and the mock has no effect).
+- **Jest**: `moduleNameMapper: { '^maplibre-gl$': 'ng-mapcn/testing/maplibre' }` and `configureFakeMapLibre({ spy: jest.fn })`. Documented, not tested by ng-mapcn.
+- **Karma/Jasmine**: not supported (they cannot mock an ES module).
+- `ng add` does not copy the testing files: copy-paste users depend on the npm package for the fake.
+- `ng-mapcn/testing/harness` imports `@angular/cdk/testing`, an optional peer: install `@angular/cdk` to use it.
+- Stable: `fakeRegistry`, the fake's getters and `structuralCalls()`. The fake's raw `calls` strings are not.
+
+```ts
+const { fixture } = await renderMap('<ng-map><ng-map-route id="trip" [coordinates]="c" /></ng-map>', {
+  imports: [MapRouteComponent],
+  hostProps: { c: [[0, 0], [1, 1]] },
+});
+await loadMap(fixture);
+expect(structuralCalls(getFakeMap(fixture))).toEqual(['addSource:trip', 'addLayer:trip-layer']);
+```
+
+### ng-mapcn/testing/maplibre
+
+`import { ... } from 'ng-mapcn/testing/maplibre'`
+
+Runner-neutral fake of the maplibre-gl module, for unit tests only. It has no imports (it never imports ng-mapcn or a test runner), so it works with any runner that can swap an ES module: Vitest (vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'))) and Jest (moduleNameMapper '^maplibre-gl$'; documented, not tested by ng-mapcn). Karma/Jasmine are not supported. The fake records every call, fires events on demand and attaches markers, popups and controls to the map container DOM. Stable API: fakeRegistry, the getters and the test-only helpers (fire, listenerCount, finishStyleLoad, ...). The raw calls log is for debugging: its strings may change in any release.
+
+**Exports**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `Map` | `class` | — | Fake of maplibre-gl Map. Getters (getLayer, getSource, getCenter, getZoom, getLayerOrder, hasImage, getTerrain, ...), spied methods (jumpTo, setStyle, setData, ...) and test-only helpers: fire(event, payload?, layerId?), listenerCount(event, layerId?), setMoving(value), hasPendingStyle(), finishStyleLoad(), finishStyleLoadWithoutChanges(), failStyleLoad(error?). calls is an unstable debugging log. |
+| `Marker` | `class` | — | Fake of maplibre-gl Marker. Its element is attached to the map container. |
+| `Popup` | `class` | — | Fake of maplibre-gl Popup. Its element is attached to the map container while open. |
+| `Point` | `class` | — | Fake of maplibre-gl Point (x, y, Point.convert()). |
+| `getWorkerUrl / setWorkerUrl` | `(): string / (value: string): void` | — | Fake of the global worker URL. Starts as an empty string, like the real one. |
+| `addProtocol / removeProtocol` | `(name, loadFn): void / (name): void` | — | Fake of the protocol registry. Registered protocols are listed in fakeRegistry.protocols. |
+| `fakeRegistry` | `{ maps, markers, popups, protocols, workerUrl, constructError, deferImageLoads, imageLoads, reset() }` | — | Every map, marker and popup created since the last reset(). Call fakeRegistry.reset() in beforeEach. Stable API. |
+| `FakeMap / FakeMarker / FakePopup` | `type aliases` | — | Types of the fake Map, Marker and Popup instances. |
+| `configureFakeMapLibre` | `(options: { spy?: FakeSpyFactory }): void` | — | Call once in the test setup. spy wraps the fake's spied methods: Vitest passes vi.fn, Jest passes jest.fn. Defaults to the identity, so the fake runs without a runner. Applies to instances created after the call; fakeRegistry.reset() does not undo it. |
+
+### ng-mapcn/testing
+
+`import { ... } from 'ng-mapcn/testing'`
+
+Helpers that render a template with <ng-map> and drive the fake from ng-mapcn/testing/maplibre, which the test setup must install in place of maplibre-gl. Never import it from application code. It needs no @angular/cdk. Stable API: these functions, fakeRegistry, the fake's getters and structuralCalls(). The fake's raw calls strings are not stable: assert through structuralCalls() or the getters. When the toolkit runs from the package, the host that renderMap() creates is OnPush, so change values after rendering through signals passed in hostProps.
+
+**Exports**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `renderMap` | `(template: string, options?: RenderMapOptions): Promise<RenderMapResult>` | — | Renders template in a standalone host that imports MapComponent, then runs change detection until the map exists. Options: imports, providers, hostProps (assigned before the first change detection) and size (default 400x300, null for zero). Returns { fixture, map, ctx }. The map is not loaded yet: call loadMap(). Patches the layout getters: call resetMapTesting() in afterEach. |
+| `loadMap` | `(fixture, map?): Promise<void>` | — | Fires load and styledata, waits out the 100 ms style debounce (with configureMapTesting({ advanceTimers }) or a real timer), then runs change detection so layer components add their sources and layers. |
+| `reloadStyle` | `(fixture, map?): Promise<void>` | — | Simulates the style requested by setStyle (a theme or styles change) arriving: every source and layer is dropped, style.load and styledata fire, then the components re-add everything. Without a pending setStyle it only fires styledata. |
+| `update` | `(fixture, props): void` | — | Assigns host properties and runs change detection. |
+| `getFakeMap` | `(fixture): FakeMap` | — | The fake map of the first <ng-map>. Throws if it has not created its map (zero container size or an error). |
+| `fireMapEvent` | `(map, event, payload?, layerId?): void` | — | Fires a map event, like MapLibre would. With a layer id it reaches handlers registered with map.on(event, layerId, handler). Run change detection afterwards if the handlers update the view. |
+| `structuralCalls` | `(map): string[]` | — | The source and layer operations recorded on the map, in order, as 'addSource:<id>', 'addLayer:<id>', 'removeLayer:<id>' and 'removeSource:<id>'. Stable format. |
+| `setMapSize` | `(size: { width, height } \| null): void` | — | Sets the container size the map sees (jsdom has no layout). renderMap() patches offsetWidth and offsetHeight to read it live, so it can change after rendering. null means zero size. |
+| `configureMapTesting` | `(options: { advanceTimers?: ((ms: number) => void) \| null }): void` | — | advanceTimers advances the runner fake clock by ms; loadMap() and reloadStyle() use it to wait out the style debounce. Vitest: (ms) => vi.advanceTimersByTime(ms). Set it only while fake timers are installed and reset it to null afterwards. Without it the helpers wait on a real timer. |
+| `resetMapTesting` | `(): void` | — | Restores the HTMLElement offset getters and clears fakeRegistry. Call it in afterEach. |
+
+### ng-mapcn/testing/harness
+
+`import { ... } from 'ng-mapcn/testing/harness'`
+
+Angular CDK component harnesses for <ng-map>, its markers, popups and controls. They read and drive the DOM only, so they work with the fake and with the real MapLibre in a browser. This is a separate entry point because it imports @angular/cdk/testing, an optional peer dependency of ng-mapcn: install @angular/cdk to use it. Every harness has a static with(filters) predicate. The harnesses use CSS :has(). Button labels are translatable, so NgMapControlsHarness finds its buttons by structure, not by aria-label.
+
+**Exports**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `NgMapHarness` | `host: ng-map` | — | isLoading() (loader overlay shown), getMarkers(filter?), getPopups(filter?), getControls(filter?). Markers, popups and controls are rendered inside the map container, so they are found from here. |
+| `NgMapMarkerHarness` | `host: .maplibregl-marker` | — | getText(), getAriaLabel(), click(), hover(), mouseAway(), focus(), pressEnter(), hasPopup(). Filters: { text, label }. hasPopup() is true when a popup card is open on the same map: with several markers it cannot tell whose popup it is, so check the content with NgMapHarness.getPopups(). |
+| `NgMapPopupHarness` | `host: .maplibregl-popup` | — | getText(), isTooltip(), hasCloseButton(), close() (throws without a close button), pressEscape() (throws for a tooltip). Filter: { text }. A closed popup is not in the DOM, so it is not found. |
+| `NgMapControlsHarness` | `host: .ng-controls` | — | zoomIn(), zoomOut(), resetNorth(), locate(), isLocating(), toggleFullscreen(), isFullscreen(). Each action throws when its button is hidden (showZoom, showCompass, showLocate, showFullscreen). |
+
 ## Basemaps
 
 Any MapLibre-compatible style works. Set it per map with the `styles` input, or app-wide with `provideMapStyles()`. Precedence: `[styles]` → `[blank]` → `provideMapStyles()` → Carto default.

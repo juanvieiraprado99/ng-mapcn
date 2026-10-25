@@ -153,6 +153,7 @@ Version: ${pkg.version} · License: ${pkg.license ?? 'MIT'} · npm: https://www.
 - [Documentation](${SITE_URL}/docs): introduction, features and supported basemaps.
 - [Installation](${SITE_URL}/docs/installation): \`ng add\` (copy-paste) or npm package.
 - [Map Styles](${SITE_URL}/docs/basemaps): a working example per provider (Carto, OpenFreeMap, OpenStreetMap, MapTiler, Stadia).
+- [Testing your maps](${SITE_URL}/docs/testing): unit-test components that render \`ng-map\` without WebGL (MapLibre fake, helpers, CDK harnesses; Vitest first-class).
 - [API Reference](${SITE_URL}/docs/api-reference): every component with inputs and outputs.
 - [Roadmap](${SITE_URL}/docs/roadmap): what has shipped and what comes next.
 - [Credits](${SITE_URL}/credits): mapcn, Zard UI, MapLibre, Carto.
@@ -166,6 +167,8 @@ Docs pages: ${DOCS_COMPONENT_PAGES.map((p) => `[${p.label}](${SITE_URL}/docs/com
 ${componentList}
 
 \`ng-map\` also takes \`[fitBounds]="{ padding, maxZoom, duration, animate, bounds? }"\` to fit the camera to its children's data (or explicit \`bounds\`) once loaded and whenever they change; \`MapContextService.fitBounds()\` is the imperative form.
+
+Testing: \`ng-mapcn/testing/maplibre\` (MapLibre fake), \`ng-mapcn/testing\` (renderMap, loadMap, ...) and \`ng-mapcn/testing/harness\` (CDK harnesses, optional \`@angular/cdk\` peer). Guide: [Testing your maps](${SITE_URL}/docs/testing).
 
 Utilities: \`MapViewport\`, \`getViewport\`, \`buildArcCoordinates\`, \`mergeHoverPaint\`, \`blankMapStyle\`, \`defaultStyles\`, \`MapStylesConfig\`, \`provideMapStyles()\`, \`MAP_DEFAULT_STYLES\`, and \`MapContextService\` (map / isLoaded / resolvedTheme signals and the \`hasSource(id)\` source registry, the equivalent of mapcn's \`useMap()\`).
 
@@ -210,6 +213,13 @@ const fullSections = api.sections
     if (s.outputs.length) parts.push(`**Outputs**\n\n${propTable(s.outputs)}`);
     return parts.join('\n\n');
   })
+  .join('\n\n');
+
+const testingSections = api.testing
+  .map(
+    (t) =>
+      `### ${t.title}\n\n\`${t.entry}\`\n\n${t.description}\n\n**Exports**\n\n${propTable(t.exports)}`,
+  )
   .join('\n\n');
 
 const llmsFull = `# ng-mapcn — full reference
@@ -259,6 +269,28 @@ ${api.provideLabelsCode}
 \`\`\`
 
 ${propTable(api.provideLabelsRows)}
+
+## Testing
+
+Unit-test components that render \`ng-map\` in jsdom, without WebGL. \`maplibre-gl\` is imported statically, so the test runner replaces the whole module with a fake that records calls, fires events and renders markers, popups and controls into the map container. Guide: ${SITE_URL}/docs/testing
+
+- **Vitest** (first-class): a setup file with \`vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'))\` and \`configureFakeMapLibre({ spy: vi.fn })\`, plus \`server: { deps: { inline: [/ng-mapcn/] } }\` in the Vitest config (without it the real \`maplibre-gl\` is loaded and the mock has no effect).
+- **Jest**: \`moduleNameMapper: { '^maplibre-gl$': 'ng-mapcn/testing/maplibre' }\` and \`configureFakeMapLibre({ spy: jest.fn })\`. Documented, not tested by ng-mapcn.
+- **Karma/Jasmine**: not supported (they cannot mock an ES module).
+- \`ng add\` does not copy the testing files: copy-paste users depend on the npm package for the fake.
+- \`ng-mapcn/testing/harness\` imports \`@angular/cdk/testing\`, an optional peer: install \`@angular/cdk\` to use it.
+- Stable: \`fakeRegistry\`, the fake's getters and \`structuralCalls()\`. The fake's raw \`calls\` strings are not.
+
+\`\`\`ts
+const { fixture } = await renderMap('<ng-map><ng-map-route id="trip" [coordinates]="c" /></ng-map>', {
+  imports: [MapRouteComponent],
+  hostProps: { c: [[0, 0], [1, 1]] },
+});
+await loadMap(fixture);
+expect(structuralCalls(getFakeMap(fixture))).toEqual(['addSource:trip', 'addLayer:trip-layer']);
+\`\`\`
+
+${testingSections}
 
 ${BASEMAPS}
 

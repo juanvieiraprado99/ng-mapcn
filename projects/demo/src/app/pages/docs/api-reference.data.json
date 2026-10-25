@@ -505,5 +505,169 @@
         { "name": "featureDeselect", "type": "string | number", "default": "", "description": "Emits the id of the deselected feature." }
       ]
     }
+  ],
+  "testing": [
+    {
+      "id": "testing-maplibre",
+      "title": "ng-mapcn/testing/maplibre",
+      "entry": "import { ... } from 'ng-mapcn/testing/maplibre'",
+      "description": "Runner-neutral fake of the maplibre-gl module, for unit tests only. It has no imports (it never imports ng-mapcn or a test runner), so it works with any runner that can swap an ES module: Vitest (vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'))) and Jest (moduleNameMapper '^maplibre-gl$'; documented, not tested by ng-mapcn). Karma/Jasmine are not supported. The fake records every call, fires events on demand and attaches markers, popups and controls to the map container DOM. Stable API: fakeRegistry, the getters and the test-only helpers (fire, listenerCount, finishStyleLoad, ...). The raw calls log is for debugging: its strings may change in any release.",
+      "exports": [
+        {
+          "name": "Map",
+          "type": "class",
+          "default": "",
+          "description": "Fake of maplibre-gl Map. Getters (getLayer, getSource, getCenter, getZoom, getLayerOrder, hasImage, getTerrain, ...), spied methods (jumpTo, setStyle, setData, ...) and test-only helpers: fire(event, payload?, layerId?), listenerCount(event, layerId?), setMoving(value), hasPendingStyle(), finishStyleLoad(), finishStyleLoadWithoutChanges(), failStyleLoad(error?). calls is an unstable debugging log."
+        },
+        {
+          "name": "Marker",
+          "type": "class",
+          "default": "",
+          "description": "Fake of maplibre-gl Marker. Its element is attached to the map container."
+        },
+        {
+          "name": "Popup",
+          "type": "class",
+          "default": "",
+          "description": "Fake of maplibre-gl Popup. Its element is attached to the map container while open."
+        },
+        {
+          "name": "Point",
+          "type": "class",
+          "default": "",
+          "description": "Fake of maplibre-gl Point (x, y, Point.convert())."
+        },
+        {
+          "name": "getWorkerUrl / setWorkerUrl",
+          "type": "(): string / (value: string): void",
+          "default": "",
+          "description": "Fake of the global worker URL. Starts as an empty string, like the real one."
+        },
+        {
+          "name": "addProtocol / removeProtocol",
+          "type": "(name, loadFn): void / (name): void",
+          "default": "",
+          "description": "Fake of the protocol registry. Registered protocols are listed in fakeRegistry.protocols."
+        },
+        {
+          "name": "fakeRegistry",
+          "type": "{ maps, markers, popups, protocols, workerUrl, constructError, deferImageLoads, imageLoads, reset() }",
+          "default": "",
+          "description": "Every map, marker and popup created since the last reset(). Call fakeRegistry.reset() in beforeEach. Stable API."
+        },
+        {
+          "name": "FakeMap / FakeMarker / FakePopup",
+          "type": "type aliases",
+          "default": "",
+          "description": "Types of the fake Map, Marker and Popup instances."
+        },
+        {
+          "name": "configureFakeMapLibre",
+          "type": "(options: { spy?: FakeSpyFactory }): void",
+          "default": "",
+          "description": "Call once in the test setup. spy wraps the fake's spied methods: Vitest passes vi.fn, Jest passes jest.fn. Defaults to the identity, so the fake runs without a runner. Applies to instances created after the call; fakeRegistry.reset() does not undo it."
+        }
+      ]
+    },
+    {
+      "id": "testing-helpers",
+      "title": "ng-mapcn/testing",
+      "entry": "import { ... } from 'ng-mapcn/testing'",
+      "description": "Helpers that render a template with <ng-map> and drive the fake from ng-mapcn/testing/maplibre, which the test setup must install in place of maplibre-gl. Never import it from application code. It needs no @angular/cdk. Stable API: these functions, fakeRegistry, the fake's getters and structuralCalls(). The fake's raw calls strings are not stable: assert through structuralCalls() or the getters. When the toolkit runs from the package, the host that renderMap() creates is OnPush, so change values after rendering through signals passed in hostProps.",
+      "exports": [
+        {
+          "name": "renderMap",
+          "type": "(template: string, options?: RenderMapOptions): Promise<RenderMapResult>",
+          "default": "",
+          "description": "Renders template in a standalone host that imports MapComponent, then runs change detection until the map exists. Options: imports, providers, hostProps (assigned before the first change detection) and size (default 400x300, null for zero). Returns { fixture, map, ctx }. The map is not loaded yet: call loadMap(). Patches the layout getters: call resetMapTesting() in afterEach."
+        },
+        {
+          "name": "loadMap",
+          "type": "(fixture, map?): Promise<void>",
+          "default": "",
+          "description": "Fires load and styledata, waits out the 100 ms style debounce (with configureMapTesting({ advanceTimers }) or a real timer), then runs change detection so layer components add their sources and layers."
+        },
+        {
+          "name": "reloadStyle",
+          "type": "(fixture, map?): Promise<void>",
+          "default": "",
+          "description": "Simulates the style requested by setStyle (a theme or styles change) arriving: every source and layer is dropped, style.load and styledata fire, then the components re-add everything. Without a pending setStyle it only fires styledata."
+        },
+        {
+          "name": "update",
+          "type": "(fixture, props): void",
+          "default": "",
+          "description": "Assigns host properties and runs change detection."
+        },
+        {
+          "name": "getFakeMap",
+          "type": "(fixture): FakeMap",
+          "default": "",
+          "description": "The fake map of the first <ng-map>. Throws if it has not created its map (zero container size or an error)."
+        },
+        {
+          "name": "fireMapEvent",
+          "type": "(map, event, payload?, layerId?): void",
+          "default": "",
+          "description": "Fires a map event, like MapLibre would. With a layer id it reaches handlers registered with map.on(event, layerId, handler). Run change detection afterwards if the handlers update the view."
+        },
+        {
+          "name": "structuralCalls",
+          "type": "(map): string[]",
+          "default": "",
+          "description": "The source and layer operations recorded on the map, in order, as 'addSource:<id>', 'addLayer:<id>', 'removeLayer:<id>' and 'removeSource:<id>'. Stable format."
+        },
+        {
+          "name": "setMapSize",
+          "type": "(size: { width, height } | null): void",
+          "default": "",
+          "description": "Sets the container size the map sees (jsdom has no layout). renderMap() patches offsetWidth and offsetHeight to read it live, so it can change after rendering. null means zero size."
+        },
+        {
+          "name": "configureMapTesting",
+          "type": "(options: { advanceTimers?: ((ms: number) => void) | null }): void",
+          "default": "",
+          "description": "advanceTimers advances the runner fake clock by ms; loadMap() and reloadStyle() use it to wait out the style debounce. Vitest: (ms) => vi.advanceTimersByTime(ms). Set it only while fake timers are installed and reset it to null afterwards. Without it the helpers wait on a real timer."
+        },
+        {
+          "name": "resetMapTesting",
+          "type": "(): void",
+          "default": "",
+          "description": "Restores the HTMLElement offset getters and clears fakeRegistry. Call it in afterEach."
+        }
+      ]
+    },
+    {
+      "id": "testing-harness",
+      "title": "ng-mapcn/testing/harness",
+      "entry": "import { ... } from 'ng-mapcn/testing/harness'",
+      "description": "Angular CDK component harnesses for <ng-map>, its markers, popups and controls. They read and drive the DOM only, so they work with the fake and with the real MapLibre in a browser. This is a separate entry point because it imports @angular/cdk/testing, an optional peer dependency of ng-mapcn: install @angular/cdk to use it. Every harness has a static with(filters) predicate. The harnesses use CSS :has(). Button labels are translatable, so NgMapControlsHarness finds its buttons by structure, not by aria-label.",
+      "exports": [
+        {
+          "name": "NgMapHarness",
+          "type": "host: ng-map",
+          "default": "",
+          "description": "isLoading() (loader overlay shown), getMarkers(filter?), getPopups(filter?), getControls(filter?). Markers, popups and controls are rendered inside the map container, so they are found from here."
+        },
+        {
+          "name": "NgMapMarkerHarness",
+          "type": "host: .maplibregl-marker",
+          "default": "",
+          "description": "getText(), getAriaLabel(), click(), hover(), mouseAway(), focus(), pressEnter(), hasPopup(). Filters: { text, label }. hasPopup() is true when a popup card is open on the same map: with several markers it cannot tell whose popup it is, so check the content with NgMapHarness.getPopups()."
+        },
+        {
+          "name": "NgMapPopupHarness",
+          "type": "host: .maplibregl-popup",
+          "default": "",
+          "description": "getText(), isTooltip(), hasCloseButton(), close() (throws without a close button), pressEscape() (throws for a tooltip). Filter: { text }. A closed popup is not in the DOM, so it is not found."
+        },
+        {
+          "name": "NgMapControlsHarness",
+          "type": "host: .ng-controls",
+          "default": "",
+          "description": "zoomIn(), zoomOut(), resetNorth(), locate(), isLocating(), toggleFullscreen(), isFullscreen(). Each action throws when its button is hidden (showZoom, showCompass, showLocate, showFullscreen)."
+        }
+      ]
+    }
   ]
 }

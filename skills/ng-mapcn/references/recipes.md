@@ -2,7 +2,7 @@
 
 Copy-paste examples. Import from `'ng-mapcn'` (or from the folder `ng add` copied into your app). Every map needs a parent with an explicit height. Coordinates are `[longitude, latitude]`.
 
-Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Symbols](#symbols) | [Tile sources](#tile-sources) | [Draw](#draw) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading) | [Fit to data](#fit-to-data) | [3D buildings and terrain](#3d-buildings-and-terrain)
+Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Symbols](#symbols) | [Tile sources](#tile-sources) | [Draw](#draw) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading) | [Fit to data](#fit-to-data) | [3D buildings and terrain](#3d-buildings-and-terrain) | [Testing](#testing)
 
 ## Controls
 
@@ -577,3 +577,77 @@ Keep every `ng-mapcn` import inside a lazily loaded file:
 <div style="height: 400px"></div>
 }
 ```
+
+## Testing
+
+Unit-test components that render `<ng-map>` in jsdom (no WebGL). `ng-mapcn` imports `maplibre-gl` statically, so the runner replaces that module with the fake from `ng-mapcn/testing/maplibre`. Three entry points, all from the npm package (`ng add` does not copy them): `ng-mapcn/testing/maplibre` (the fake), `ng-mapcn/testing` (helpers) and `ng-mapcn/testing/harness` (CDK harnesses, needs the optional `@angular/cdk` peer). Never import them from app code. Vitest is first-class; Jest is documented but untested; Karma/Jasmine are unsupported.
+
+Vitest setup (`src/testing/setup.ts` in `setupFiles`, and a config in `runnerConfig` that inlines `ng-mapcn`):
+
+```ts
+import { configureFakeMapLibre, fakeRegistry } from 'ng-mapcn/testing/maplibre';
+import { beforeEach, vi } from 'vitest';
+
+vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'));
+configureFakeMapLibre({ spy: vi.fn });
+beforeEach(() => fakeRegistry.reset());
+```
+
+```ts
+// vitest.config.mts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: { server: { deps: { inline: [/ng-mapcn/] } } },
+});
+```
+
+Jest: `moduleNameMapper: { '^maplibre-gl$': 'ng-mapcn/testing/maplibre' }` and `configureFakeMapLibre({ spy: jest.fn })` in a `setupFilesAfterEnv` file.
+
+A spec: render, load, assert through the stable API (`structuralCalls`, `fakeRegistry`, the fake's getters; never `map.calls`):
+
+```ts
+import { TestBed } from '@angular/core/testing';
+import { MapMarkerComponent, MapRouteComponent } from 'ng-mapcn';
+import { getFakeMap, loadMap, renderMap, resetMapTesting, structuralCalls } from 'ng-mapcn/testing';
+import { fakeRegistry } from 'ng-mapcn/testing/maplibre';
+import { afterEach, describe, expect, it } from 'vitest';
+
+describe('delivery map', () => {
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    resetMapTesting();
+  });
+
+  it('adds the route once the style has loaded', async () => {
+    const { fixture, ctx } = await renderMap(
+      `<ng-map>
+        <ng-map-marker [longitude]="2" [latitude]="3" />
+        <ng-map-route id="trip" [coordinates]="coordinates" />
+      </ng-map>`,
+      {
+        imports: [MapMarkerComponent, MapRouteComponent],
+        hostProps: {
+          coordinates: [
+            [0, 0],
+            [1, 1],
+          ],
+        },
+      },
+    );
+    const map = getFakeMap(fixture);
+    expect(structuralCalls(map)).toEqual([]); // layers wait for ctx.isLoaded()
+
+    await loadMap(fixture);
+
+    expect(structuralCalls(map)).toEqual(['addSource:trip', 'addLayer:trip-layer']);
+    expect(fakeRegistry.markers[0].getLngLat()).toEqual({ lng: 2, lat: 3 });
+  });
+});
+```
+
+Helpers: `renderMap(template, { imports, providers, hostProps, size })` (returns `{ fixture, map, ctx }`; map not loaded yet), `loadMap(fixture)`, `reloadStyle(fixture)` (a theme/`styles` change: layers are dropped and re-added), `fireMapEvent(map, 'click', payload, layerId?)`, `getFakeMap`, `setMapSize`, `update`, `resetMapTesting` (call in `afterEach`). Pass **signals** in `hostProps` for values you change after rendering (the host is OnPush from the package).
+
+Fake timers: `vi.useFakeTimers()` plus `configureMapTesting({ advanceTimers: (ms) => vi.advanceTimersByTime(ms) })`, and in `afterEach` `configureMapTesting({ advanceTimers: null })` then `vi.useRealTimers()`. Without `advanceTimers`, `loadMap()` waits on a real 100 ms timer.
+
+Harnesses (`npm i -D @angular/cdk`): `TestbedHarnessEnvironment.loader(fixture).getHarness(NgMapHarness)`, then `map.getMarkers({ label })`, `map.getPopups({ text })`, `map.getControls()`; `NgMapMarkerHarness` (`click`, `hover`, `focus`, `pressEnter`, `getText`, `hasPopup`), `NgMapPopupHarness` (`getText`, `isTooltip`, `close`, `pressEscape`), `NgMapControlsHarness` (`zoomIn`, `zoomOut`, `resetNorth`, `toggleFullscreen`). `hasPopup()` cannot tell which marker owns an open popup when there are several: check the content with `getPopups()`. The fake draws nothing, so `queryRenderedFeatures` and pixel hit testing are not available.
