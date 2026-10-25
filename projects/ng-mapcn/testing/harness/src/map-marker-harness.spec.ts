@@ -30,6 +30,14 @@ const TEMPLATE = `
       <ng-marker-content>Store</ng-marker-content>
       <ng-marker-tooltip>Store hours</ng-marker-tooltip>
     </ng-map-marker>
+    <ng-map-marker [longitude]="5" [latitude]="6" ariaLabel="Depot">
+      <ng-marker-content>Depot</ng-marker-content>
+      <ng-marker-popup>Depot details</ng-marker-popup>
+    </ng-map-marker>
+    <ng-map-marker [longitude]="7" [latitude]="8">
+      <ng-marker-content><button type="button">Kiosk</button></ng-marker-content>
+      <ng-marker-popup>Kiosk details</ng-marker-popup>
+    </ng-map-marker>
   </ng-map>
 `;
 
@@ -64,18 +72,44 @@ describe('NgMapMarkerHarness', () => {
     const { map, clicked } = await setup();
     const [office] = await map.getMarkers({ label: 'Office' });
 
-    expect(await office.hasPopup()).toBe(false);
+    expect(await office.hasPopup()).toBe(true);
+    expect(await office.isPopupOpen()).toBe(false);
     await office.click();
 
     expect(clicked).toHaveBeenCalledTimes(1);
-    expect(await office.hasPopup()).toBe(true);
+    expect(await office.isPopupOpen()).toBe(true);
     expect(fakeRegistry.markers[0].getPopup()!.isOpen()).toBe(true);
     const [popup] = await map.getPopups();
     expect(await popup.getText()).toBe('Office details');
 
     await office.click();
-    expect(await office.hasPopup()).toBe(false);
+    expect(await office.isPopupOpen()).toBe(false);
     expect(await map.getPopups()).toHaveLength(0);
+  });
+
+  it('isPopupOpen reads only this marker: another open popup does not count', async () => {
+    const { map } = await setup();
+    const [office] = await map.getMarkers({ label: 'Office' });
+    const [depot] = await map.getMarkers({ label: 'Depot' });
+
+    await depot.click();
+
+    expect(await depot.isPopupOpen()).toBe(true);
+    expect(await office.isPopupOpen()).toBe(false);
+    expect(await map.getPopups({ text: 'Depot details' })).toHaveLength(1);
+
+    await office.click();
+    expect(await office.isPopupOpen()).toBe(true);
+    // Each marker popup is its own MapLibre popup: both stay open.
+    expect(await depot.isPopupOpen()).toBe(true);
+  });
+
+  it('isPopupOpen throws for a marker whose content has its own control', async () => {
+    const { map } = await setup();
+    const [kiosk] = await map.getMarkers({ text: 'Kiosk' });
+
+    expect(await kiosk.hasPopup()).toBe(true);
+    await expect(kiosk.isPopupOpen()).rejects.toThrow(/its content has its own control/);
   });
 
   it('pressEnter on the focused marker toggles the popup and emits markerClick once', async () => {
@@ -86,7 +120,7 @@ describe('NgMapMarkerHarness', () => {
     await office.pressEnter();
 
     expect(clicked).toHaveBeenCalledTimes(1);
-    expect(await office.hasPopup()).toBe(true);
+    expect(await office.isPopupOpen()).toBe(true);
   });
 
   it('hover and focus show the tooltip, mouseAway hides it; a tooltip is not a popup card', async () => {
@@ -98,6 +132,7 @@ describe('NgMapMarkerHarness', () => {
     expect(await tooltip.isTooltip()).toBe(true);
     expect(await tooltip.getText()).toBe('Store hours');
     expect(await store.hasPopup()).toBe(false);
+    expect(await store.isPopupOpen()).toBe(false);
 
     await store.mouseAway();
     expect(await map.getPopups()).toHaveLength(0);

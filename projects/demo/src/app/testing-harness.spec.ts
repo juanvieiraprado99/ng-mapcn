@@ -14,6 +14,10 @@ const TEMPLATE = `
       <ng-marker-content>SP</ng-marker-content>
       <ng-marker-popup [closeButton]="true">Largest city in Brazil</ng-marker-popup>
     </ng-map-marker>
+    <ng-map-marker [longitude]="-43.17" [latitude]="-22.91" ariaLabel="Rio de Janeiro">
+      <ng-marker-content>RJ</ng-marker-content>
+      <ng-marker-popup>Former capital</ng-marker-popup>
+    </ng-map-marker>
   </ng-map>
 `;
 
@@ -44,9 +48,31 @@ describe('ng-mapcn/testing/harness (from the package)', () => {
     const popup = await loader.getHarness(NgMapPopupHarness.with({ text: /Largest city/ }));
     expect(await popup.isTooltip()).toBe(false);
     expect(await marker.hasPopup()).toBe(true);
+    expect(await marker.isPopupOpen()).toBe(true);
 
     await popup.close();
     expect(await map.getPopups()).toHaveLength(0);
-    expect(await marker.hasPopup()).toBe(false);
+    expect(await marker.isPopupOpen()).toBe(false);
+  });
+
+  it('tells which marker has its popup open when several markers have popups', async () => {
+    const { fixture } = await renderMap(TEMPLATE, {
+      imports: [MapMarkerComponent, MarkerContentComponent, MarkerPopupComponent],
+    });
+    await loadMap(fixture);
+    const map = await TestbedHarnessEnvironment.loader(fixture).getHarness(NgMapHarness);
+    const [sp] = await map.getMarkers({ label: 'São Paulo' });
+    const [rj] = await map.getMarkers({ label: 'Rio de Janeiro' });
+
+    await rj.click();
+
+    expect(await rj.isPopupOpen()).toBe(true);
+    expect(await sp.isPopupOpen()).toBe(false);
+    expect(await sp.hasPopup()).toBe(true);
+    const [popup] = await map.getPopups();
+    expect(await popup.getText()).toBe('Former capital');
+
+    await rj.click();
+    expect(await rj.isPopupOpen()).toBe(false);
   });
 });

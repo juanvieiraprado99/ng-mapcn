@@ -5,6 +5,8 @@ import {
   TestKey,
 } from '@angular/cdk/testing';
 
+import { HARNESS_SELECTORS } from './selectors';
+
 export interface NgMapMarkerHarnessFilters extends BaseHarnessFilters {
   /** Matches the marker's text content. */
   text?: string | RegExp;
@@ -18,7 +20,7 @@ export interface NgMapMarkerHarnessFilters extends BaseHarnessFilters {
  * whose template is empty.
  */
 export class NgMapMarkerHarness extends ComponentHarness {
-  static hostSelector = '.maplibregl-marker';
+  static hostSelector = HARNESS_SELECTORS.marker;
 
   /** Gets a `HarnessPredicate` to search for a marker that meets the given criteria. */
   static with(options: NgMapMarkerHarnessFilters = {}): HarnessPredicate<NgMapMarkerHarness> {
@@ -67,14 +69,28 @@ export class NgMapMarkerHarness extends ComponentHarness {
   }
 
   /**
-   * Whether a popup card (`<ng-marker-popup>` or `<ng-map-popup>`, not a tooltip) is open on the
-   * same map as this marker. MapLibre does not link a popup's element to its marker, so with
-   * several markers this cannot tell whose popup is open: check its content with
-   * `NgMapHarness.getPopups()`.
+   * Whether the marker declares a popup (`<ng-marker-popup>`), read from its `aria-haspopup`. A
+   * tooltip (`<ng-marker-tooltip>`) is not a popup.
    */
   async hasPopup(): Promise<boolean> {
-    return (await this.host()).matchesSelector(
-      `.maplibregl-map:has(> .maplibregl-popup .ng-popup-card) ${NgMapMarkerHarness.hostSelector}`,
-    );
+    const value = await (await this.host()).getAttribute('aria-haspopup');
+    return value !== null && value !== 'false';
+  }
+
+  /**
+   * Whether this marker's own popup is open, read from its `aria-expanded` (kept in sync with the
+   * MapLibre popup's open and close events). `false` for a marker without a popup. Throws for a
+   * marker whose content has its own button or link: that control is the keyboard target, so the
+   * marker element has no `aria-expanded`; check `NgMapHarness.getPopups()` instead.
+   */
+  async isPopupOpen(): Promise<boolean> {
+    const expanded = await (await this.host()).getAttribute('aria-expanded');
+    if (expanded === null && (await this.hasPopup())) {
+      throw new Error(
+        'This marker has no aria-expanded: its content has its own control. ' +
+          'Use NgMapHarness.getPopups() to check the popup.',
+      );
+    }
+    return expanded === 'true';
   }
 }

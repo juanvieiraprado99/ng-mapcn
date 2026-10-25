@@ -1,9 +1,12 @@
 import { type BaseHarnessFilters, ComponentHarness, HarnessPredicate } from '@angular/cdk/testing';
 
+import { HARNESS_SELECTORS } from './selectors';
+
 export type NgMapControlsHarnessFilters = BaseHarnessFilters;
 
 /** Excludes the compass, locate and fullscreen buttons, so only a zoom button matches. */
 const ZOOM = ':not([aria-busy]):not([aria-pressed]):not(:has(.ng-control-compass))';
+const GROUP = HARNESS_SELECTORS.controlGroup;
 
 /**
  * Harness for the button group of `<ng-map-controls>`. The buttons are rendered as a MapLibre
@@ -17,17 +20,13 @@ const ZOOM = ':not([aria-busy]):not([aria-pressed]):not(:has(.ng-control-compass
  * `showLocate`, `showFullscreen`).
  */
 export class NgMapControlsHarness extends ComponentHarness {
-  static hostSelector = '.ng-controls';
+  static hostSelector = HARNESS_SELECTORS.controls;
 
-  private readonly zoomInButton = this.locatorFor(`.ng-control-group > button:first-child${ZOOM}`);
-  private readonly zoomOutButton = this.locatorFor(
-    `.ng-control-group > button:nth-child(2)${ZOOM}`,
-  );
-  private readonly compassButton = this.locatorFor(
-    '.ng-control-group > button:has(.ng-control-compass)',
-  );
-  private readonly locateButton = this.locatorFor('.ng-control-group > button[aria-busy]');
-  private readonly fullscreenButton = this.locatorFor('.ng-control-group > button[aria-pressed]');
+  private readonly zoomInButton = this.locatorFor(`${GROUP} > button:first-child${ZOOM}`);
+  private readonly zoomOutButton = this.locatorFor(`${GROUP} > button:nth-child(2)${ZOOM}`);
+  private readonly compassButton = this.locatorFor(`${GROUP} > button:has(.ng-control-compass)`);
+  private readonly locateButton = this.locatorFor(`${GROUP} > button[aria-busy]`);
+  private readonly fullscreenButton = this.locatorFor(`${GROUP} > button[aria-pressed]`);
 
   /** Gets a `HarnessPredicate` to search for a controls group that meets the given criteria. */
   static with(options: NgMapControlsHarnessFilters = {}): HarnessPredicate<NgMapControlsHarness> {
