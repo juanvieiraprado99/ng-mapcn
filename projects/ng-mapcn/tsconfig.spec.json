@@ -8,6 +8,7 @@
     "paths": {
       "ng-mapcn": ["./src/public-api.ts"],
       "ng-mapcn/testing": ["./testing/src/public-api.ts"],
+      "ng-mapcn/testing/harness": ["./testing/harness/src/public-api.ts"],
       "ng-mapcn/testing/maplibre": ["./testing/maplibre/src/public-api.ts"]
     }
   },
