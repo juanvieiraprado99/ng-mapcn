@@ -130,6 +130,20 @@ export const shippedMilestones: RoadmapMilestone[] = [
       done('15 basemap presets, from Carto to satellite and globe'),
     ],
   },
+  {
+    id: 'testing-toolkit',
+    title: 'Testing toolkit',
+    status: 'completed',
+    period: '22.0.0-beta.9 · October 2026',
+    description:
+      'Test apps that use ng-mapcn without WebGL, with the same MapLibre fake the library uses.',
+    goals: ['Testing', 'Harnesses'],
+    deliverables: [
+      done('ng-mapcn/testing entry point with the MapLibre fake'),
+      done('Component harnesses for map, marker and popup'),
+      done('"Testing your maps" docs page'),
+    ],
+  },
 ];
 
 export const nextMilestones: RoadmapMilestone[] = [
@@ -241,19 +255,6 @@ export const nextMilestones: RoadmapMilestone[] = [
       todo('Travel itinerary with day-by-day routes'),
       todo('Weather radar with an animated raster timeline'),
       todo('Sales territories with editable regions'),
-    ],
-  },
-  {
-    id: 'testing-toolkit',
-    title: 'Testing toolkit',
-    status: 'ongoing',
-    description:
-      'Test apps that use ng-mapcn without WebGL, with the same MapLibre fake the library uses.',
-    goals: ['Testing', 'Harnesses'],
-    deliverables: [
-      done('ng-mapcn/testing entry point with the MapLibre fake'),
-      done('Component harnesses for map, marker and popup'),
-      todo('"Testing your maps" docs page'),
     ],
   },
 ];
