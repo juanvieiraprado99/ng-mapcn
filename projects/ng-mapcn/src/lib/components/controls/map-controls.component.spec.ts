@@ -309,7 +309,9 @@ describe('MapControlsComponent', () => {
 
     it('swallows a rejected fullscreen request', async () => {
       const { map } = await render({ showFullscreen: true });
-      map.getContainer().requestFullscreen.mockReturnValueOnce(Promise.reject(new Error('denied')));
+      vi.mocked(map.getContainer().requestFullscreen).mockReturnValueOnce(
+        Promise.reject(new Error('denied')),
+      );
 
       button(map, 'Toggle fullscreen').click();
       await Promise.resolve();

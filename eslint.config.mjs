@@ -83,6 +83,7 @@ export default defineConfig([
     files: [
       '**/*.spec.ts',
       'projects/ng-mapcn/src/testing/**/*.ts',
+      'projects/ng-mapcn/testing/**/*.ts',
       'projects/demo/src/testing/**/*.ts',
     ],
     rules: {

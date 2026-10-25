@@ -1,10 +1,12 @@
 import { beforeEach, vi } from 'vitest';
 
-import { fakeRegistry } from '../../../ng-mapcn/src/testing/maplibre-fake';
+import { configureFakeMapLibre, fakeRegistry } from '../../../ng-mapcn/src/testing/maplibre-fake';
 
 // The demo consumes the packaged library; `vitest.demo.config.mts` inlines `ng-mapcn` so this
 // mock reaches the `maplibre-gl` import inside it.
 vi.mock('maplibre-gl', () => import('../../../ng-mapcn/src/testing/maplibre-fake'));
+
+configureFakeMapLibre({ spy: vi.fn });
 
 class IntersectionObserverStub {
   observe(): void {}

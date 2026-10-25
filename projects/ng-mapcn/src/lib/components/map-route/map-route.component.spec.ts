@@ -202,7 +202,7 @@ describe('MapRouteComponent', () => {
 
     it('updates color, width, opacity and dashArray with setPaintProperty only', async () => {
       const { fixture, map } = await renderLoaded();
-      map.setPaintProperty.mockClear();
+      vi.mocked(map.setPaintProperty).mockClear();
       map.calls.length = 0;
 
       update(fixture, { color: '#00ff00', width: 9, opacity: 0.2, dashArray: [1, 2] });
@@ -257,7 +257,7 @@ describe('MapRouteComponent', () => {
 
     it('clears the dash pattern when dashArray goes back to undefined', async () => {
       const { fixture, map } = await renderLoaded({ dashArray: [2, 4] });
-      map.setPaintProperty.mockClear();
+      vi.mocked(map.setPaintProperty).mockClear();
 
       update(fixture, { dashArray: undefined });
 
@@ -367,7 +367,7 @@ describe('MapRouteComponent', () => {
         activeOpacity: 1,
         activeDashArray: [1, 1],
       });
-      map.setPaintProperty.mockClear();
+      vi.mocked(map.setPaintProperty).mockClear();
       map.calls.length = 0;
 
       update(fixture, { active: true });

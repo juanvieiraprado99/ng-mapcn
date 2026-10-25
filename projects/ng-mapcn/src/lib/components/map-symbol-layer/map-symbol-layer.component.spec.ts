@@ -288,7 +288,7 @@ describe('MapSymbolLayerComponent', () => {
 
     it('updates textSize and allowOverlap through setLayoutProperty only', async () => {
       const { fixture, map } = await renderLoaded({ icon: 'pin' });
-      map.setLayoutProperty.mockClear();
+      vi.mocked(map.setLayoutProperty).mockClear();
       map.calls.length = 0;
 
       update(fixture, { textSize: 20, allowOverlap: true });
@@ -425,7 +425,7 @@ describe('MapSymbolLayerComponent', () => {
       const result = await render();
       const { fixture, map, host } = result;
       vi.spyOn(console, 'error').mockImplementation(() => undefined);
-      map.loadImage.mockRejectedValueOnce(new Error('404'));
+      vi.mocked(map.loadImage).mockRejectedValueOnce(new Error('404'));
       update(fixture, { images: { bad: '/bad.png', ok: '/ok.png' } });
       await settle(fixture);
       loadAndSettle(fixture, map);

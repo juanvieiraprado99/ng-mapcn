@@ -9,7 +9,13 @@
       "ng-mapcn": ["./src/public-api.ts"]
     }
   },
-  "include": ["src/**/*.d.ts", "src/**/*.spec.ts", "src/testing/**/*.ts", "draw/src/**/*.spec.ts"],
+  "include": [
+    "src/**/*.d.ts",
+    "src/**/*.spec.ts",
+    "src/testing/**/*.ts",
+    "draw/src/**/*.spec.ts",
+    "testing/**/*.ts"
+  ],
   "angularCompilerOptions": {
     "extendedDiagnostics": {
       "checks": {

@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   addProtocol,
+  configureFakeMapLibre,
   fakeRegistry,
   Map as FakeMap,
   Marker,
@@ -252,6 +253,53 @@ describe('maplibre-fake', () => {
       expect(fakeRegistry.maps).toHaveLength(0);
       expect(fakeRegistry.markers).toHaveLength(0);
       expect(fakeRegistry.popups).toHaveLength(0);
+    });
+  });
+
+  describe('configureFakeMapLibre', () => {
+    // The shared setup configures `vi.fn`; put it back for the other specs.
+    afterEach(() => configureFakeMapLibre({ spy: vi.fn }));
+
+    it('defaults to plain methods, so no test runner is needed', () => {
+      configureFakeMapLibre({ spy: undefined });
+      const map = createMap();
+
+      expect(vi.isMockFunction(map.jumpTo)).toBe(false);
+      map.jumpTo({ zoom: 4 });
+      expect(map.getZoom()).toBe(4);
+      expect(map.calls).toContain('jumpTo');
+    });
+
+    it('wraps each method implementation with the configured spy factory', () => {
+      const wrapped: unknown[] = [];
+      configureFakeMapLibre({
+        spy: (impl) => {
+          const fn = vi.fn(impl);
+          wrapped.push(fn);
+          return fn;
+        },
+      });
+      const map = createMap();
+
+      expect(vi.isMockFunction(map.jumpTo)).toBe(true);
+      expect(wrapped).toContain(map.setStyle);
+      map.jumpTo({ zoom: 3 });
+      expect(map.jumpTo).toHaveBeenCalledWith({ zoom: 3 });
+      expect(map.getZoom()).toBe(3);
+      map.addSource('s', geojsonSource());
+      expect(vi.isMockFunction(map.getSource('s').setData)).toBe(true);
+    });
+
+    it('passing no key keeps the current factory', () => {
+      configureFakeMapLibre({});
+      expect(vi.isMockFunction(createMap().jumpTo)).toBe(true);
+    });
+
+    it('fakeRegistry.reset() keeps the configuration', () => {
+      configureFakeMapLibre({ spy: vi.fn });
+      fakeRegistry.reset();
+      // The default is the identity, so a reset that restored it would yield a plain method.
+      expect(vi.isMockFunction(createMap().jumpTo)).toBe(true);
     });
   });
 });

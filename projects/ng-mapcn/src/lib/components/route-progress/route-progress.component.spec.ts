@@ -131,7 +131,7 @@ describe('RouteProgressComponent', () => {
 
   it('reconciles paint with setPaintProperty only', async () => {
     const { fixture, map } = await renderLoaded();
-    map.setPaintProperty.mockClear();
+    vi.mocked(map.setPaintProperty).mockClear();
     map.calls.length = 0;
 
     update(fixture, { color: '#ff0000', progressWidth: 7, opacity: 0.5, dashArray: [2, 2] });

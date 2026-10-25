@@ -247,7 +247,7 @@ describe('MapHeatmapComponent', () => {
   describe('reconcile, do not recreate (invariant 2)', () => {
     it('updates paint through setPaintProperty only', async () => {
       const { fixture, map } = await renderLoaded();
-      map.setPaintProperty.mockClear();
+      vi.mocked(map.setPaintProperty).mockClear();
       map.calls.length = 0;
 
       update(fixture, { radius: 12, intensity: 2, opacity: 0.5 });

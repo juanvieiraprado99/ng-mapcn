@@ -84,7 +84,7 @@ const event = (id: string | number | undefined, lng = 5, lat = 6) => ({
   point: { x: 1, y: 2 },
 });
 
-const featureStateCalls = (map: FakeMap) => map.setFeatureState.mock.calls;
+const featureStateCalls = (map: FakeMap) => vi.mocked(map.setFeatureState).mock.calls;
 const layerHandlerCalls = (map: FakeMap) =>
   map.calls.filter((c) => c.startsWith('on:') && c.includes('arc-'));
 
@@ -277,8 +277,8 @@ describe('MapArcComponent', () => {
 
     it('updates paint and layout with setPaintProperty / setLayoutProperty only', async () => {
       const { fixture, map } = await renderLoaded();
-      map.setPaintProperty.mockClear();
-      map.setLayoutProperty.mockClear();
+      vi.mocked(map.setPaintProperty).mockClear();
+      vi.mocked(map.setLayoutProperty).mockClear();
       map.calls.length = 0;
 
       update(fixture, { paint: { 'line-color': '#00ff00' }, layout: { 'line-cap': 'square' } });

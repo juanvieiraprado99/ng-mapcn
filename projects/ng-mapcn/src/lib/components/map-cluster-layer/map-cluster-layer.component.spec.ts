@@ -332,7 +332,7 @@ describe('MapClusterLayerComponent', () => {
   describe('reconcile, do not recreate (invariant 2)', () => {
     it('updates colors, thresholds and pointColor through setPaintProperty only', async () => {
       const { fixture, map, ids } = await renderLoaded();
-      map.setPaintProperty.mockClear();
+      vi.mocked(map.setPaintProperty).mockClear();
       map.calls.length = 0;
 
       update(fixture, {
@@ -368,7 +368,7 @@ describe('MapClusterLayerComponent', () => {
         clusterColors: ['#a', '#b', '#c'],
         clusterThresholds: [5, 6],
       });
-      map.setPaintProperty.mockClear();
+      vi.mocked(map.setPaintProperty).mockClear();
 
       update(fixture, { clusterColors: undefined, clusterThresholds: undefined });
 

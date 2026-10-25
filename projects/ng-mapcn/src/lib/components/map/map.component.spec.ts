@@ -657,7 +657,7 @@ describe('MapComponent', () => {
 
     it('swallows a throwing map.remove()', async () => {
       const { fixture, map, ctx } = await render();
-      map!.remove.mockImplementationOnce(() => {
+      vi.mocked(map!.remove).mockImplementationOnce(() => {
         throw new Error('already removed');
       });
 
