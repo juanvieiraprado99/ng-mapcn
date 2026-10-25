@@ -26,6 +26,7 @@ export const DOCS_COMPONENT_PAGES = [
 export const DOCS_PAGES = [
   '/docs',
   '/docs/installation',
+  '/docs/testing',
   '/docs/api-reference',
   '/docs/basemaps',
   '/docs/roadmap',
@@ -44,6 +45,7 @@ export const EXPECTED_MAPS: Record<string, number> = {
   '/': 6,
   '/docs': 0,
   '/docs/installation': 1,
+  '/docs/testing': 0,
   '/docs/api-reference': 0,
   '/docs/basemaps': 5,
   '/docs/roadmap': 0,
