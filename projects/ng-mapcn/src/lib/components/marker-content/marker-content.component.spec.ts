@@ -97,7 +97,10 @@ describe('MarkerContentComponent', () => {
     update(fixture, { show: true });
 
     expect(el.querySelector('.ng-marker-content .late')?.textContent).toBe('late');
-    expect(fixture.nativeElement.querySelector('.late')).toBeNull();
+    // The marker element is in the fixture (inside the map container): no copy elsewhere.
+    const rendered = fixture.nativeElement.querySelectorAll('.late');
+    expect(rendered).toHaveLength(1);
+    expect(el.contains(rendered[0])).toBe(true);
   });
 
   it('clears the previous children of the marker element and removes the content on teardown', async () => {

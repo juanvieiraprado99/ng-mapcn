@@ -142,9 +142,11 @@ export class Map extends Evented {
   private moving = false;
   private camera = { lng: 0, lat: 0, zoom: 0, bearing: 0, pitch: 0 };
   private readonly canvas = document.createElement('canvas');
-  private readonly container = Object.assign(document.createElement('div'), {
-    requestFullscreen: spy(() => Promise.resolve()),
-  });
+  private readonly container: HTMLElement & { requestFullscreen: () => Promise<void> };
+  /** Like MapLibre's: holds the canvas and the markers. */
+  private readonly canvasContainer = document.createElement('div');
+  /** Like MapLibre's: holds the control corners. */
+  private readonly controlContainer = document.createElement('div');
   removed = false;
   /** MapLibre's global worker URL when this map was constructed. */
   readonly workerUrlAtConstruction = fakeRegistry.workerUrl;
@@ -162,6 +164,19 @@ export class Map extends Evented {
       bearing: options.bearing ?? 0,
       pitch: options.pitch ?? 0,
     };
+    // Like MapLibre: the map renders into `options.container` (a detached element without one), so
+    // markers, popups and controls are in the document, under the element the app gave the map.
+    const container: HTMLElement =
+      options.container instanceof HTMLElement ? options.container : document.createElement('div');
+    this.container = Object.assign(container, {
+      requestFullscreen: spy(() => Promise.resolve()),
+    });
+    this.container.classList.add('maplibregl-map');
+    this.canvasContainer.className = 'maplibregl-canvas-container';
+    this.canvas.className = 'maplibregl-canvas';
+    this.canvasContainer.appendChild(this.canvas);
+    this.controlContainer.className = 'maplibregl-control-container';
+    this.container.append(this.canvasContainer, this.controlContainer);
     fakeRegistry.maps.push(this);
   }
 
@@ -190,6 +205,11 @@ export class Map extends Evented {
 
   getContainer(): HTMLElement & { requestFullscreen: () => Promise<void> } {
     return this.container;
+  }
+
+  /** The element holding the canvas and the markers (`.maplibregl-canvas-container`). */
+  getCanvasContainer(): HTMLElement {
+    return this.canvasContainer;
   }
 
   getCenter(): { lng: number; lat: number } {
@@ -323,6 +343,10 @@ export class Map extends Evented {
     this.removed = true;
     // Like MapLibre: open popups listen to the map's `remove` and close (firing `close`).
     this.fire('remove');
+    // Like MapLibre: what the map added to its container goes away with it.
+    this.canvasContainer.remove();
+    this.controlContainer.remove();
+    this.container.classList.remove('maplibregl-map');
   });
 
   addSource(id: string, source: any): this {
@@ -478,11 +502,11 @@ export class Map extends Evented {
   addControl(control: any, position = 'top-right'): this {
     const element: HTMLElement = control.onAdd(this);
     const className = `maplibregl-ctrl-${position}`;
-    let corner = this.container.querySelector(`.${className}`);
+    let corner = this.controlContainer.querySelector(`.${className}`);
     if (!corner) {
       corner = document.createElement('div');
       corner.className = className;
-      this.container.appendChild(corner);
+      this.controlContainer.appendChild(corner);
     }
     corner.appendChild(element);
     this.controls.push(control);
@@ -522,6 +546,8 @@ export class Marker extends Evented {
   constructor(readonly options: any = {}) {
     super();
     this.element = options.element ?? document.createElement('div');
+    // Like MapLibre, which tags the element when it creates the marker.
+    this.element.classList.add('maplibregl-marker');
     this.offset = toPoint(options.offset);
     this.draggable = options.draggable ?? false;
     this.rotation = options.rotation ?? 0;
@@ -541,23 +567,51 @@ export class Marker extends Evented {
   getLngLat(): { lng: number; lat: number } {
     return this.lngLat;
   }
+  /** Like MapLibre: the element goes into the map's canvas container. */
   addTo(map: Map): this {
     this.map = map;
+    map.getCanvasContainer().appendChild(this.element);
     this.calls.push('addTo');
     return this;
   }
   remove(): this {
+    this.element.remove();
     this.map = null;
     this.calls.push('remove');
     return this;
   }
+  /** Like MapLibre: clicking the element (or Enter/Space on it) toggles the popup. */
+  private readonly onElementClick = () => this.togglePopup();
+  private readonly onElementKeypress = (e: KeyboardEvent) => {
+    const legacy = e.charCode || e.keyCode;
+    const enterOrSpace =
+      e.key === 'Enter' || e.key === ' ' || e.code === 'Enter' || e.code === 'Space';
+    if (enterOrSpace || legacy === 13 || legacy === 32) this.togglePopup();
+  };
   setPopup(popup: Popup | null | undefined): this {
+    if (this.popup) {
+      this.element.removeEventListener('click', this.onElementClick);
+      this.element.removeEventListener('keypress', this.onElementKeypress);
+    }
     this.popup = popup ?? null;
+    if (this.popup) {
+      this.element.addEventListener('click', this.onElementClick);
+      this.element.addEventListener('keypress', this.onElementKeypress);
+    }
     this.calls.push('setPopup');
     return this;
   }
   getPopup(): Popup | null {
     return this.popup;
+  }
+  /** Like MapLibre: closes the open popup, or opens it at the marker on its map. */
+  togglePopup(): this {
+    const popup = this.popup;
+    this.calls.push('togglePopup');
+    if (!popup) return this;
+    if (popup.isOpen()) popup.remove();
+    else if (this.map) popup.setLngLat(this.lngLat).addTo(this.map);
+    return this;
   }
   setOffset(offset: unknown): this {
     this.offset = toPoint(offset);
@@ -626,6 +680,7 @@ export class Popup extends Evented {
   }
   setDOMContent(node: Node): this {
     this.content = node;
+    this.contentElement.replaceChildren(node);
     this.calls.push('setDOMContent');
     return this;
   }
@@ -651,11 +706,23 @@ export class Popup extends Evented {
   isOpen(): boolean {
     return this.open;
   }
+  /** Like MapLibre's `.maplibregl-popup`, added to the map's container while open. */
+  private readonly element = document.createElement('div');
+  /** Like MapLibre's `.maplibregl-popup-content`, which holds the `setDOMContent` node. */
+  private readonly contentElement = document.createElement('div');
+  /** The popup's root element while it is open, like MapLibre's `getElement()`. */
+  getElement(): HTMLElement | undefined {
+    return this.open ? this.element : undefined;
+  }
   private readonly onMapRemove = () => this.remove();
   addTo(map: Map): this {
     this.map = map;
     this.calls.push('addTo');
     map.on('remove', this.onMapRemove);
+    this.element.className = 'maplibregl-popup';
+    this.contentElement.className = 'maplibregl-popup-content';
+    this.element.appendChild(this.contentElement);
+    map.getContainer().appendChild(this.element);
     if (!this.open) {
       this.open = true;
       this.fire('open');
@@ -664,6 +731,7 @@ export class Popup extends Evented {
   }
   remove(): this {
     this.calls.push('remove');
+    this.element.remove();
     this.map?.off('remove', this.onMapRemove);
     this.map = null;
     if (this.open) {
