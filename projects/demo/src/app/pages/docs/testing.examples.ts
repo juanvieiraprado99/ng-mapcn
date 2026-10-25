@@ -24,7 +24,8 @@ export const VITEST_CONFIG = `import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    // Without this, Node loads ng-mapcn from node_modules, which imports the real maplibre-gl.
+    // Without this, Node loads ng-mapcn from node_modules and it
+    // imports the real maplibre-gl, so the mock never applies.
     server: { deps: { inline: [/ng-mapcn/] } },
   },
 });`;
