@@ -52,7 +52,7 @@ export const EXPECTED_MAPS: Record<string, number> = {
   '/docs/components/map': 5,
   '/docs/components/controls': 3,
   '/docs/components/legend': 3,
-  '/docs/components/markers': 3,
+  '/docs/components/markers': 4,
   '/docs/components/popups': 1,
   '/docs/components/routes': 3,
   '/docs/components/arcs': 2,
