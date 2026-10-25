@@ -246,12 +246,12 @@ export const nextMilestones: RoadmapMilestone[] = [
   {
     id: 'testing-toolkit',
     title: 'Testing toolkit',
-    status: 'planned',
+    status: 'ongoing',
     description:
       'Test apps that use ng-mapcn without WebGL, with the same MapLibre fake the library uses.',
     goals: ['Testing', 'Harnesses'],
     deliverables: [
-      todo('ng-mapcn/testing entry point with the MapLibre fake'),
+      done('ng-mapcn/testing entry point with the MapLibre fake'),
       todo('Component harnesses for map, marker and popup'),
       todo('"Testing your maps" docs page'),
     ],
