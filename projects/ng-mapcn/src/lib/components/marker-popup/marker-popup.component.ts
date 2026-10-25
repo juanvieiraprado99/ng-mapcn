@@ -7,6 +7,7 @@ import {
   input,
   NgZone,
   output,
+  type Signal,
   signal,
   type TemplateRef,
   untracked,
@@ -63,8 +64,20 @@ export class MarkerPopupComponent {
   private readonly markerCtx = inject(MarkerContextService);
   private readonly zone = inject(NgZone);
   private readonly tpl = viewChild.required<TemplateRef<unknown>>('tpl');
-  /** Id of the `.ng-popup-card`, which the marker names in `aria-controls` while open. */
-  private readonly cardId = nextId('ng-marker-popup');
+
+  /**
+   * Whether the popup is open, kept in sync with every open and close (marker click, Enter/Space,
+   * close button, Escape, map click, `togglePopup()`). The library writes `aria-expanded` on a
+   * `role="button"` marker itself; when the marker content has its own button, mirror the state
+   * on that button through a template reference:
+   * `<ng-marker-popup #info>` + `[attr.aria-expanded]="info.isOpen()"`.
+   */
+  readonly isOpen: Signal<boolean> = this.markerCtx.popupOpen.asReadonly();
+  /**
+   * Id of the `.ng-popup-card`, which the marker names in `aria-controls` while open. The card is
+   * only in the DOM while open: `[attr.aria-controls]="info.isOpen() ? info.cardId : null"`.
+   */
+  readonly cardId = nextId('ng-marker-popup');
 
   /** Serialized offset last applied to the live popup (creation value or last `setOffset`). */
   private appliedOffset: string | undefined;

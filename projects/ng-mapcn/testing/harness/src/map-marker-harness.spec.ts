@@ -38,6 +38,17 @@ const TEMPLATE = `
       <ng-marker-content><button type="button">Kiosk</button></ng-marker-content>
       <ng-marker-popup>Kiosk details</ng-marker-popup>
     </ng-map-marker>
+    <ng-map-marker [longitude]="9" [latitude]="10">
+      <ng-marker-content>
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          [attr.aria-expanded]="cafe.isOpen()"
+          [attr.aria-controls]="cafe.isOpen() ? cafe.cardId : null"
+        >Cafe</button>
+      </ng-marker-content>
+      <ng-marker-popup #cafe>Cafe details</ng-marker-popup>
+    </ng-map-marker>
   </ng-map>
 `;
 
@@ -110,6 +121,32 @@ describe('NgMapMarkerHarness', () => {
 
     expect(await kiosk.hasPopup()).toBe(true);
     await expect(kiosk.isPopupOpen()).rejects.toThrow(/its content has its own control/);
+  });
+
+  it('isPopupOpen reads the nested button when the app mirrors the popup state on it', async () => {
+    const { fixture, map } = await setup();
+    const [cafe] = await map.getMarkers({ text: 'Cafe' });
+    const button = () =>
+      (fixture.nativeElement as HTMLElement).querySelector('button[aria-haspopup]')!;
+
+    expect(await cafe.hasPopup()).toBe(true);
+    expect(await cafe.isPopupOpen()).toBe(false);
+    expect(button().hasAttribute('aria-controls')).toBe(false);
+
+    await cafe.click();
+    expect(await cafe.isPopupOpen()).toBe(true);
+    const cardId = button().getAttribute('aria-controls');
+    expect(cardId).toMatch(/^ng-marker-popup-\d+$/);
+    const [popup] = await map.getPopups({ text: 'Cafe details' });
+    expect(popup).toBeDefined();
+    expect(document.getElementById(cardId!)?.textContent).toContain('Cafe details');
+    // The library still leaves the marker element without role or aria-expanded.
+    const markerEl = button().closest('.maplibregl-marker')!;
+    expect(markerEl.hasAttribute('role')).toBe(false);
+    expect(markerEl.hasAttribute('aria-expanded')).toBe(false);
+
+    await popup.pressEscape();
+    expect(await cafe.isPopupOpen()).toBe(false);
   });
 
   it('pressEnter on the focused marker toggles the popup and emits markerClick once', async () => {

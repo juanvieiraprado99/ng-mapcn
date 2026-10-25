@@ -223,6 +223,9 @@ import {
           <code [class]="code">ng-marker-popup</code> (<code [class]="code">aria-haspopup</code>),
           and <code [class]="code">isPopupOpen()</code> when that marker's own popup is open
           (<code [class]="code">aria-expanded</code>), whatever other popups are open on the map.
+          When the marker content is its own button, it reads that button's
+          <code [class]="code">aria-expanded</code>, which the app mirrors from the popup (see
+          Limitations).
         </p>
         <app-prop-table nameLabel="Harness" [rows]="harnesses" [showDefault]="false" />
         <app-code-block [code]="harnessSpec" filename="marker-popup.spec.ts" />
@@ -301,9 +304,12 @@ import {
             <code [class]="code">ng-marker-content</code> holds a
             <code [class]="code">&lt;button&gt;</code> or link, that control is the keyboard
             target and the marker element has no role, so it gets no
-            <code [class]="code">aria-expanded</code>.
-            <code [class]="code">isPopupOpen()</code> throws for such a marker: check the popup with
-            <code [class]="code">NgMapHarness.getPopups()</code> instead.
+            <code [class]="code">aria-expanded</code>. Mirror the state on your button
+            (<code [class]="code">&lt;ng-marker-popup #info&gt;</code> plus
+            <code [class]="code">[attr.aria-expanded]="info.isOpen()"</code>) and
+            <code [class]="code">isPopupOpen()</code> reads it from the first button or link in the
+            content. Without it <code [class]="code">isPopupOpen()</code> throws: check the popup
+            with <code [class]="code">NgMapHarness.getPopups()</code> instead.
           </li>
           <li>
             <strong>What the end-to-end suite proves.</strong> It runs the harness selectors and the

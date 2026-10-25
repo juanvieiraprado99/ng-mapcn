@@ -441,6 +441,13 @@ export class MarkerPopupsComponent {
           named by the popup's
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ariaLabel</code>,
           else the marker's, else "Map popup" (<code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">labels.popup</code>).
+          When the marker content is its own
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;button&gt;</code>,
+          that button is the keyboard target and the marker element gets no role, so mirror the
+          state on the button from a template reference:
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;ng-marker-popup #info&gt;</code>
+          plus
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-haspopup="dialog" [attr.aria-expanded]="info.isOpen()" [attr.aria-controls]="info.isOpen() ? info.cardId : null"</code>.
         </span>
         <ng-map [center]="[2.33, 48.858]" [zoom]="12">
           @for (spot of spots; track spot.name) {

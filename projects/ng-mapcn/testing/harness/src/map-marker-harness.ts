@@ -7,6 +7,9 @@ import {
 
 import { HARNESS_SELECTORS } from './selectors';
 
+/** A control in the marker content: the element that holds the popup state when there is one. */
+const NESTED_CONTROL = 'button, a[href], [role="button"]';
+
 export interface NgMapMarkerHarnessFilters extends BaseHarnessFilters {
   /** Matches the marker's text content. */
   text?: string | RegExp;
@@ -79,18 +82,29 @@ export class NgMapMarkerHarness extends ComponentHarness {
 
   /**
    * Whether this marker's own popup is open, read from its `aria-expanded` (kept in sync with the
-   * MapLibre popup's open and close events). `false` for a marker without a popup. Throws for a
-   * marker whose content has its own button or link: that control is the keyboard target, so the
-   * marker element has no `aria-expanded`; check `NgMapHarness.getPopups()` instead.
+   * MapLibre popup's open and close events). `false` for a marker without a popup.
+   *
+   * A marker whose content has its own button or link has no `aria-expanded` (that control is the
+   * keyboard target): then it reads the `aria-expanded` of the first such control, which the app
+   * mirrors from `<ng-marker-popup #info>` with `[attr.aria-expanded]="info.isOpen()"`. Throws when
+   * that control has none either; check `NgMapHarness.getPopups()` instead.
    */
   async isPopupOpen(): Promise<boolean> {
-    const expanded = await (await this.host()).getAttribute('aria-expanded');
+    let expanded = await (await this.host()).getAttribute('aria-expanded');
     if (expanded === null && (await this.hasPopup())) {
-      throw new Error(
-        'This marker has no aria-expanded: its content has its own control. ' +
-          'Use NgMapHarness.getPopups() to check the popup.',
-      );
+      const control = await this.nestedControl();
+      expanded = control ? await control.getAttribute('aria-expanded') : null;
+      if (expanded === null) {
+        throw new Error(
+          'This marker has no aria-expanded: its content has its own control, which does not ' +
+            'mirror the popup state ([attr.aria-expanded]="popup.isOpen()" on <ng-marker-popup ' +
+            '#popup>). Use NgMapHarness.getPopups() to check the popup.',
+        );
+      }
     }
     return expanded === 'true';
   }
+
+  /** The first button or link in the marker content (the keyboard target when there is one). */
+  private readonly nestedControl = this.locatorForOptional(NESTED_CONTROL);
 }

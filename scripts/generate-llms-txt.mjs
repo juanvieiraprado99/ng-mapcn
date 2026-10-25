@@ -284,7 +284,7 @@ Unit-test components that render \`ng-map\` in jsdom, without WebGL. \`maplibre-
 - One \`renderMap()\` per test (a second throws \`TestBed already instantiated\`); render several maps in one template.
 - Fake timers: pair \`vi.useFakeTimers()\` with \`configureMapTesting({ advanceTimers: (ms) => vi.advanceTimersByTime(ms) })\`. Without it \`loadMap()\` / \`reloadStyle()\` throw instead of hanging.
 - Popups close like MapLibre's: a fired map \`click\` closes every popup created without \`closeOnClick: false\` (\`ng-map-popup\` defaults to \`true\`, \`ng-marker-popup\` to \`false\`), and removing a marker closes its popup. Bind \`[closeOnClick]="false"\` to keep a popup open while a spec fires map clicks.
-- \`NgMapMarkerHarness.hasPopup()\` reads \`aria-haspopup\`, \`isPopupOpen()\` reads \`aria-expanded\` (this marker's popup only; throws when the marker content has its own button). The repository's e2e checks the harness selectors and marker ARIA against real MapLibre.
+- \`NgMapMarkerHarness.hasPopup()\` reads \`aria-haspopup\`, \`isPopupOpen()\` reads \`aria-expanded\` (this marker's popup only). When the marker content has its own button, it reads that button's \`aria-expanded\`, which the app mirrors with \`[attr.aria-expanded]="info.isOpen()"\` (\`<ng-marker-popup #info>\`), and throws without it. The repository's e2e checks the harness selectors and marker ARIA against real MapLibre.
 
 \`\`\`ts
 const { fixture } = await renderMap('<ng-map><ng-map-route id="trip" [coordinates]="c" /></ng-map>', {

@@ -89,6 +89,27 @@ describe('MarkerPopupComponent', () => {
     (popup.getContent() as HTMLElement).remove();
   });
 
+  it('exposes isOpen and cardId for content that mirrors the popup state', async () => {
+    const { fixture } = await renderMap(
+      `<ng-map><ng-map-marker [longitude]="1" [latitude]="2">
+        <ng-marker-popup #info><p>x</p></ng-marker-popup>
+        <span class="state">{{ info.isOpen() }} {{ info.cardId }}</span>
+      </ng-map-marker></ng-map>`,
+      { imports: [MapMarkerComponent, MarkerPopupComponent] },
+    );
+    const state = () => (fixture.nativeElement as HTMLElement).querySelector('.state')!.textContent;
+    const card = fakeRegistry.popups[0].getContent() as HTMLElement;
+    expect(state()).toBe(`false ${card.id}`);
+
+    fakeRegistry.markers[0].togglePopup();
+    fixture.detectChanges();
+    expect(state()).toBe(`true ${card.id}`);
+
+    fakeRegistry.markers[0].togglePopup();
+    fixture.detectChanges();
+    expect(state()).toBe(`false ${card.id}`);
+  });
+
   it('marks the marker as a popup button', async () => {
     await render();
     const el = fakeRegistry.markers[0].getElement();

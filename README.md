@@ -312,7 +312,7 @@ expect(structuralCalls(getFakeMap(fixture))).toEqual(['addSource:trip', 'addLaye
 ```
 
 - `ng-mapcn/testing`: `renderMap`, `loadMap`, `reloadStyle`, `getFakeMap`, `fireMapEvent`, `structuralCalls` and friends.
-- `ng-mapcn/testing/harness`: Angular CDK component harnesses (`NgMapHarness`, `NgMapMarkerHarness`, `NgMapPopupHarness`, `NgMapControlsHarness`). `@angular/cdk` is an optional peer dependency, only needed for this entry point. `NgMapMarkerHarness.isPopupOpen()` reads the marker's `aria-expanded`, so it reports that marker's own popup.
+- `ng-mapcn/testing/harness`: Angular CDK component harnesses (`NgMapHarness`, `NgMapMarkerHarness`, `NgMapPopupHarness`, `NgMapControlsHarness`). `@angular/cdk` is an optional peer dependency, only needed for this entry point. `NgMapMarkerHarness.isPopupOpen()` reads the marker's `aria-expanded` (or, when the marker content is its own button, that button's, mirrored from `<ng-marker-popup #info>` with `[attr.aria-expanded]="info.isOpen()"`), so it reports that marker's own popup.
 - Vitest is supported first-class. Jest works by mapping `maplibre-gl` to the fake with `moduleNameMapper`, but ng-mapcn's own tests do not cover it. Karma/Jasmine are not supported (they cannot mock an ES module).
 - `ng add` does not copy the testing files: install the `ng-mapcn` package to use them.
 - Change host values after rendering with `update()` (it marks the host for check, as zoneless apps need) or signals, call `renderMap()` once per test, and pair fake timers with `configureMapTesting({ advanceTimers })` (otherwise `loadMap()` throws).
