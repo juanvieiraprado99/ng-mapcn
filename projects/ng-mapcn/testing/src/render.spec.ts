@@ -1,3 +1,4 @@
+import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MapRouteComponent } from 'ng-mapcn';
 import { fakeRegistry } from 'ng-mapcn/testing/maplibre';
@@ -94,6 +95,30 @@ describe('ng-mapcn/testing', () => {
       ]);
       expect(map!.getLayer('r-layer')).toBeDefined();
     });
+  });
+
+  it('loadMap and reloadStyle throw instead of hanging on fake timers without advanceTimers', async () => {
+    const { fixture, ctx } = await render();
+    vi.useFakeTimers();
+
+    await expect(loadMap(fixture)).rejects.toThrow(/configureMapTesting\(\{ advanceTimers \}\)/);
+    await expect(reloadStyle(fixture)).rejects.toThrow(/^reloadStyle\(\) cannot wait/);
+    // Nothing was fired: the map is left as it was.
+    expect(ctx.isLoaded()).toBe(false);
+  });
+
+  it('update re-renders the host without zone.js (zoneless change detection)', async () => {
+    const { fixture, map } = await renderMap(TEMPLATE, {
+      imports: [MapRouteComponent],
+      hostProps: hostProps(),
+      providers: [provideZonelessChangeDetection()],
+    });
+    await loadMap(fixture);
+
+    // A plain assignment marks nothing dirty without zone.js: update() must mark the host itself.
+    update(fixture, { theme: 'dark' });
+
+    expect(map!.hasPendingStyle()).toBe(true);
   });
 
   it('fireMapEvent reaches the handlers of a layer', async () => {

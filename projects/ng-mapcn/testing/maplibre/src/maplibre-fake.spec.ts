@@ -319,6 +319,27 @@ describe('maplibre-fake', () => {
       expect(popup.getContent()).toBe(content);
     });
 
+    it('addTo on an open popup closes it first and leaves the previous map, like MapLibre', () => {
+      const first = attachedMap();
+      const second = attachedMap();
+      const popup = new Popup().setDOMContent(document.createElement('p')).addTo(first.map);
+      const events: string[] = [];
+      popup.on('open', () => events.push('open'));
+      popup.on('close', () => events.push('close'));
+
+      popup.addTo(second.map);
+
+      expect(events).toEqual(['close', 'open']);
+      expect(first.map.listenerCount('remove')).toBe(0);
+      expect(second.map.listenerCount('remove')).toBe(1);
+      expect(first.container.querySelector('.maplibregl-popup')).toBeNull();
+      expect(second.container.querySelector('.maplibregl-popup')).toBe(popup.getElement());
+
+      // Re-adding to the same map does not stack a second `remove` listener either.
+      popup.addTo(second.map);
+      expect(second.map.listenerCount('remove')).toBe(1);
+    });
+
     it('setDOMContent on an open popup replaces the content in place', () => {
       const { map, container } = attachedMap();
       const popup = new Popup().setDOMContent(document.createElement('p')).addTo(map);

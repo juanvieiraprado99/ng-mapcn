@@ -716,6 +716,8 @@ export class Popup extends Evented {
   }
   private readonly onMapRemove = () => this.remove();
   addTo(map: Map): this {
+    // Like MapLibre: an open popup closes first (leaving its map), then opens on `map`.
+    if (this.map) this.remove();
     this.map = map;
     this.calls.push('addTo');
     map.on('remove', this.onMapRemove);

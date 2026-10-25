@@ -1,4 +1,4 @@
-import { Component, type Provider } from '@angular/core';
+import { Component, type EnvironmentProviders, type Provider } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { MapComponent, MapContextService } from 'ng-mapcn';
 import { type FakeMap, fakeRegistry } from 'ng-mapcn/testing/maplibre';
@@ -29,7 +29,7 @@ export interface MapTestingConfig {
    * Advances the runner's fake clock by `ms`, used by `loadMap()` / `reloadStyle()` to wait out the
    * style debounce. Vitest: `(ms) => vi.advanceTimersByTime(ms)`; Jest:
    * `(ms) => jest.advanceTimersByTime(ms)`. Set it only while fake timers are installed. When it is
-   * not set the helpers wait on a real timer instead.
+   * not set the helpers wait on a real timer instead, and throw if fake timers are installed.
    */
   advanceTimers?: ((ms: number) => void) | null;
 }
@@ -92,7 +92,8 @@ export function resetMapTesting(): void {
 export interface RenderMapOptions {
   /** Standalone components/directives the template uses besides `MapComponent`. */
   imports?: unknown[];
-  providers?: Provider[];
+  /** Test providers, including environment ones such as `provideZonelessChangeDetection()`. */
+  providers?: (Provider | EnvironmentProviders)[];
   /** Assigned onto the host component instance before the first change detection. */
   hostProps?: Record<string, unknown>;
   /** Container size; `null` means zero size. Defaults to 400x300. */
@@ -153,6 +154,25 @@ export function getFakeMap(fixture: ComponentFixture<unknown>): FakeMap {
   return map;
 }
 
+/**
+ * Whether the runner's fake timers replaced `setTimeout`: `@sinonjs/fake-timers` (Vitest, Jest's
+ * modern timers) tags the functions it installs with `clock`, Jest's legacy timers are mocks.
+ */
+function fakeTimersInstalled(): boolean {
+  const timeout = globalThis.setTimeout as unknown as { clock?: unknown; _isMockFunction?: true };
+  return timeout.clock !== undefined || timeout._isMockFunction === true;
+}
+
+/** Fails fast where waiting on a faked `setTimeout` would hang until the test times out. */
+function assertTimersUsable(helper: string): void {
+  if (config.advanceTimers || !fakeTimersInstalled()) return;
+  throw new Error(
+    `${helper}() cannot wait out the style debounce: fake timers are installed but ` +
+      'configureMapTesting({ advanceTimers }) is not set. Call, for example, ' +
+      'configureMapTesting({ advanceTimers: (ms) => vi.advanceTimersByTime(ms) }), or use real timers.',
+  );
+}
+
 async function waitStyleDebounce(): Promise<void> {
   if (config.advanceTimers) config.advanceTimers(STYLE_DEBOUNCE_MS);
   else await new Promise((resolve) => setTimeout(resolve, STYLE_DEBOUNCE_MS + 10));
@@ -166,9 +186,11 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 /**
  * Simulates MapLibre finishing the first style load: fires `load` and `styledata`, waits out the
  * 100 ms style debounce (with `configureMapTesting({ advanceTimers })` or a real timer), then runs
- * change detection so the layer components add their sources and layers.
+ * change detection so the layer components add their sources and layers. Throws when fake timers
+ * are installed without `advanceTimers` (waiting on the faked timer would never end).
  */
 export async function loadMap(fixture: ComponentFixture<unknown>, map?: FakeMap): Promise<void> {
+  assertTimersUsable('loadMap');
   const target = map ?? getFakeMap(fixture);
   target.fire('load');
   target.fire('styledata');
@@ -185,6 +207,7 @@ export async function reloadStyle(
   fixture: ComponentFixture<unknown>,
   map?: FakeMap,
 ): Promise<void> {
+  assertTimersUsable('reloadStyle');
   const target = map ?? getFakeMap(fixture);
   if (target.hasPendingStyle()) target.finishStyleLoad();
   else target.fire('styledata');
@@ -192,12 +215,21 @@ export async function reloadStyle(
   await settle(fixture);
 }
 
-/** Assigns host properties and runs change detection (effects run during it). */
+/**
+ * Assigns host properties and runs change detection (effects run during it). The host is marked
+ * for check first: without zone.js, a plain assignment marks nothing dirty, so `detectChanges()`
+ * would skip the host and its no-changes check would throw NG0100.
+ */
 export function update(
-  fixture: { componentInstance: any; detectChanges(): void },
+  fixture: {
+    componentInstance: any;
+    changeDetectorRef: { markForCheck(): void };
+    detectChanges(): void;
+  },
   props: object,
 ): void {
   Object.assign(fixture.componentInstance, props);
+  fixture.changeDetectorRef.markForCheck();
   fixture.detectChanges();
 }
 
