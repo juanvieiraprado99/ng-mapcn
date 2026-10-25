@@ -98,7 +98,8 @@ interface ApiSection {
 
       <app-docs-section title="provideMapLabels()" anchor="providemaplabels">
         <p>
-          Translates the control buttons, the loader and the popup close button through the
+          Translates the control buttons, the loader, the popup close button and the popup card
+          fallback name through the
           <code [class]="code">MAP_LABELS</code> token. Partial labels merge over the English
           defaults; pass a signal to follow the active locale. A
           <code [class]="code">labels</code> input on <code [class]="code">ng-map</code>,

@@ -23,6 +23,11 @@ export interface MapLabels {
   loading: string;
   /** Accessible name of the popup close button. */
   closePopup: string;
+  /**
+   * Accessible name of a popup card (`role="dialog"`) when neither the popup's nor (for
+   * `ng-marker-popup`) the marker's `ariaLabel` is set.
+   */
+  popup: string;
   /** Accessible name of an interactive marker that shows the default dot and has no `ariaLabel`. */
   marker: string;
   /** Accessible name of the scale bar. */
@@ -46,6 +51,7 @@ export const DEFAULT_MAP_LABELS: Readonly<MapLabels> = {
   fullscreen: 'Toggle fullscreen',
   loading: 'Loading map',
   closePopup: 'Close popup',
+  popup: 'Map popup',
   marker: 'Map marker',
   scale: 'Map scale',
   legend: 'Map legend',

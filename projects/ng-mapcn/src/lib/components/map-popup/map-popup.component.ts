@@ -43,7 +43,15 @@ export class MapPopupComponent {
    * MapLibre's Popup has no setter for it (mapcn parity: `closeOnClick` prop).
    */
   readonly closeOnClick = input(true);
-  /** Label overrides (`closePopup`), merged over `provideMapLabels` and the English defaults. */
+  /**
+   * Accessible name of the card, a non-modal `role="dialog"`, applied as its `aria-label`
+   * (reactive). Falls back to "Map popup" (`labels.popup`).
+   */
+  readonly ariaLabel = input<string>();
+  /**
+   * Label overrides (`closePopup`, `popup`), merged over `provideMapLabels` and the English
+   * defaults.
+   */
   readonly labels = input<Partial<MapLabels>>();
   /** Extra space-separated classes for the rendered `.ng-popup-card` element (reactive; built-in classes are kept). */
   readonly className = input<string>();
@@ -80,6 +88,9 @@ export class MapPopupComponent {
 
       const container = document.createElement('div');
       container.className = 'ng-popup-card';
+      // The same card as ng-marker-popup: a non-modal dialog (no aria-modal) that takes focus on
+      // open and closes with Escape or its close button.
+      container.setAttribute('role', 'dialog');
       const destroyPortal = renderPortal(this.tpl(), this.injector, container);
 
       const popup = new Popup({
@@ -113,6 +124,13 @@ export class MapPopupComponent {
         } catch {}
         destroyPortal();
       });
+    });
+
+    // Accessible name of the dialog card: the popup's own, then the translatable fallback.
+    effect(() => {
+      const el = this.instance()?.container;
+      if (!el) return;
+      el.setAttribute('aria-label', this.ariaLabel() || this.l().popup);
     });
 
     // Reconcile className on the live element (no recreation).

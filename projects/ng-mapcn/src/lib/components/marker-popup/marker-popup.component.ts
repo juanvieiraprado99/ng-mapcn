@@ -44,7 +44,15 @@ export class MarkerPopupComponent {
    * for it (mapcn parity: `closeOnClick` prop).
    */
   readonly closeOnClick = input(false);
-  /** Label overrides (`closePopup`), merged over `provideMapLabels` and the English defaults. */
+  /**
+   * Accessible name of the card, a non-modal `role="dialog"`, applied as its `aria-label`
+   * (reactive). Falls back to the marker's `ariaLabel`, then to "Map popup" (`labels.popup`).
+   */
+  readonly ariaLabel = input<string>();
+  /**
+   * Label overrides (`closePopup`, `popup`), merged over `provideMapLabels` and the English
+   * defaults.
+   */
   readonly labels = input<Partial<MapLabels>>();
   readonly popupClose = output<void>();
   /** Extra space-separated classes for the rendered `.ng-popup-card` element (reactive; built-in classes are kept). */
@@ -70,6 +78,9 @@ export class MarkerPopupComponent {
       const container = document.createElement('div');
       container.className = 'ng-popup-card';
       container.id = this.cardId;
+      // What the marker's aria-haspopup="dialog" announces. Non-modal (no aria-modal): the map
+      // stays usable, focus moves in on open and Escape or the close button dismisses it.
+      container.setAttribute('role', 'dialog');
       const destroyPortal = renderPortal(this.tpl(), this.injector, container);
 
       const offset = untracked(() => this.offset());
@@ -160,6 +171,17 @@ export class MarkerPopupComponent {
       } else if (!showClose && existing) {
         existing.remove();
       }
+    });
+
+    // Accessible name of the dialog card: the popup's own, the marker's, then the translatable
+    // fallback. A string, so it never depends on the projected content.
+    effect(() => {
+      const el = this.instance()?.container;
+      if (!el) return;
+      el.setAttribute(
+        'aria-label',
+        this.ariaLabel() || this.markerCtx.ariaLabel() || this.l().popup,
+      );
     });
 
     // Reconcile className on the live element (no recreation).

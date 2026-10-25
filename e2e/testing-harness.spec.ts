@@ -46,6 +46,10 @@ test.describe('harness DOM contract on real MapLibre', () => {
     await expect(card).toHaveCount(1);
     await expect(card).toHaveAttribute('id', cardId!);
     await expect(card).toContainText('Art museum in a former palace');
+    // What aria-haspopup="dialog" announces: a named, non-modal dialog.
+    await expect(card).toHaveAttribute('role', 'dialog');
+    await expect(card).toHaveAccessibleName('Louvre');
+    await expect(card).not.toHaveAttribute('aria-modal');
 
     // The close button closes it: collapsed again, and aria-controls goes with the card.
     await card.locator(S.popupClose).click();

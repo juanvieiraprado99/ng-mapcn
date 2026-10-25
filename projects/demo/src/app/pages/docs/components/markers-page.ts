@@ -86,6 +86,7 @@ selectPlace(place: RichPlace, event: MouseEvent) {
     <ng-map-popup
       [longitude]="place.lng"
       [latitude]="place.lat"
+      [ariaLabel]="place.name"
       (popupClose)="selected.set(null)"
     >
       <!-- .demo-rich-popup lets the popup card go edge-to-edge (padding: 0) -->
@@ -164,8 +165,9 @@ import {
               <div class="size-4 rounded-full border-2 border-white bg-emerald-500 shadow-lg"></div>
               <ng-marker-label position="top">{{ spot.name }}</ng-marker-label>
             </ng-marker-content>
-            <!-- the marker gets aria-haspopup="dialog" and aria-expanded -->
-            <ng-marker-popup [closeButton]="true">
+            <!-- the marker gets aria-haspopup="dialog" and aria-expanded; the card is a
+                 role="dialog" named by ariaLabel (default: the marker's ariaLabel, then "Map popup") -->
+            <ng-marker-popup [closeButton]="true" [ariaLabel]="spot.name">
               <h3 class="pr-6 font-semibold">{{ spot.name }}</h3>
               <p class="text-muted-foreground text-sm">{{ spot.description }}</p>
             </ng-marker-popup>
@@ -276,6 +278,7 @@ export class MarkerPopupsComponent {
             <ng-map-popup
               [longitude]="place.lng"
               [latitude]="place.lat"
+              [ariaLabel]="place.name"
               (popupClose)="selected.set(null)"
             >
               <div class="demo-rich-popup w-[15.5rem]">
@@ -433,7 +436,11 @@ export class MarkerPopupsComponent {
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-expanded</code>,
           and while the popup is open its
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-controls</code>
-          names the card.
+          names the card. The card is a non-modal
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">role="dialog"</code>
+          named by the popup's
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ariaLabel</code>,
+          else the marker's, else "Map popup" (<code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">labels.popup</code>).
         </span>
         <ng-map [center]="[2.33, 48.858]" [zoom]="12">
           @for (spot of spots; track spot.name) {
@@ -444,7 +451,7 @@ export class MarkerPopupsComponent {
                 ></div>
                 <ng-marker-label position="top">{{ spot.name }}</ng-marker-label>
               </ng-marker-content>
-              <ng-marker-popup [closeButton]="true">
+              <ng-marker-popup [closeButton]="true" [ariaLabel]="spot.name">
                 <h3 class="pr-6 font-semibold">{{ spot.name }}</h3>
                 <p class="text-muted-foreground text-sm">{{ spot.description }}</p>
               </ng-marker-popup>

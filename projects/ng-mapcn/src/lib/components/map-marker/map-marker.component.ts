@@ -88,6 +88,9 @@ export class MapMarkerComponent {
   private readonly ready = positionReady(this.longitude, this.latitude);
 
   constructor() {
+    // `ng-marker-popup` names its card after the marker when it has no `ariaLabel` of its own.
+    this.markerCtx.setAriaLabel(this.ariaLabel);
+
     // Contributes to the map's declarative fit-to-bounds (`<ng-map [fitBounds]>`).
     inject(DestroyRef).onDestroy(
       this.mapCtx.registerBounds(() => {

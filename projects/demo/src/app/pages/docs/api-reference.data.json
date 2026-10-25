@@ -8,7 +8,7 @@
   ],
   "provideLabelsCode": "import { inject } from '@angular/core';\nimport { provideMapLabels } from 'ng-mapcn';\n\nexport const appConfig: ApplicationConfig = {\n  providers: [\n    // Static (partial) labels merge over the English defaults...\n    provideMapLabels({\n      zoomIn: 'Aproximar',\n      zoomOut: 'Afastar',\n      resetNorth: 'Apontar para o norte',\n      locate: 'Minha localização',\n      fullscreen: 'Tela cheia',\n      loading: 'Carregando mapa',\n      closePopup: 'Fechar',\n    }),\n\n    // ...or a signal, so the labels follow the active locale\n    provideMapLabels(() => inject(I18nService).mapLabels),\n  ],\n};\n\n// Per component: <ng-map-controls [labels]=\"{ zoomIn: 'Acercar' }\" />",
   "provideLabelsRows": [
-    { "name": "MapLabels", "type": "{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; marker; scale; legend; showLegend; hideLegend; mapStyle: string }", "default": "", "description": "Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map marker', 'Map scale', 'Map legend', 'Show legend', 'Hide legend', 'Map style'." },
+    { "name": "MapLabels", "type": "{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; popup; marker; scale; legend; showLegend; hideLegend; mapStyle: string }", "default": "", "description": "Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map popup', 'Map marker', 'Map scale', 'Map legend', 'Show legend', 'Hide legend', 'Map style'." },
     { "name": "provideMapLabels(source)", "type": "Partial<MapLabels> | Signal<Partial<MapLabels> | undefined> | (() => Signal<Partial<MapLabels> | undefined>)", "default": "", "description": "Provider for app-wide labels; missing keys fall back to the English defaults. The factory form runs in an injection context, so it can inject() a service holding the signal." },
     { "name": "MAP_LABELS", "type": "InjectionToken<Signal<Partial<MapLabels> | undefined>>", "default": "", "description": "The token itself, if you want to provide it by hand." },
     { "name": "DEFAULT_MAP_LABELS", "type": "MapLabels", "default": "", "description": "The English defaults." }
@@ -170,14 +170,15 @@
       "id": "markerpopup",
       "title": "MarkerPopup",
       "selector": "ng-marker-popup",
-      "description": "A popup attached to the marker that opens on click. Must be used inside ng-map-marker. Keyboard: the marker becomes a focusable role=button with aria-haspopup=dialog (unless you set them) and aria-expanded (true while its popup is open, whatever opened or closed it); while open, aria-controls names the popup card (.ng-popup-card, which gets a generated id). Enter/Space opens it, focus moves into the popup, and Escape closes it, stops propagation and returns focus to the marker. A marker whose content has its own button gets no aria-expanded. Avoid your own <button> inside ng-marker-content (nested interactive content).",
+      "description": "A popup attached to the marker that opens on click. Must be used inside ng-map-marker. Keyboard: the marker becomes a focusable role=button with aria-haspopup=dialog (unless you set them) and aria-expanded (true while its popup is open, whatever opened or closed it); while open, aria-controls names the popup card (.ng-popup-card, which gets a generated id). Enter/Space opens it, focus moves into the popup, and Escape closes it, stops propagation and returns focus to the marker. The card is a non-modal role=dialog (no aria-modal) named by aria-label: the popup's ariaLabel, else the marker's ariaLabel, else 'Map popup' (labels.popup). A marker whose content has its own button gets no aria-expanded. Avoid your own <button> inside ng-marker-content (nested interactive content).",
       "inputs": [
         { "name": "closeButton", "type": "boolean", "default": "false", "description": "Shows a close button in the popup." },
         { "name": "offset", "type": "Offset", "default": "", "description": "Pixel offset from the marker. Reconciled live via setOffset; MapLibre's default when unset." },
         { "name": "anchor", "type": "PositionAnchor", "default": "", "description": "Which side of the marker the popup anchors to. Applied at creation only." },
         { "name": "maxWidth", "type": "string", "default": "'none'", "description": "CSS max-width of the popup container. Reconciled live via setMaxWidth." },
         { "name": "closeOnClick", "type": "boolean", "default": "false", "description": "Closes the popup when the map is clicked. Applied at creation only." },
-        { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (closePopup), merged over provideMapLabels() and the English defaults." },
+        { "name": "ariaLabel", "type": "string", "default": "", "description": "Accessible name of the card, a non-modal role=dialog (aria-label; reactive). Falls back to the marker's ariaLabel, then to 'Map popup' (labels.popup)." },
+        { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (closePopup, popup), merged over provideMapLabels() and the English defaults." },
         { "name": "className", "type": "string", "default": "", "description": "Extra space-separated classes added to the rendered .ng-popup-card element. Reactive; the built-in class is always kept." }
       ],
       "outputs": [
@@ -200,7 +201,7 @@
       "id": "mappopup",
       "title": "MapPopup",
       "selector": "ng-map-popup",
-      "description": "A standalone popup component that can be placed anywhere on the map without a marker. Must be used inside ng-map. Keyboard: focus moves into the popup when it opens, and Escape inside it closes it (stops propagation, so a host dialog stays open).",
+      "description": "A standalone popup component that can be placed anywhere on the map without a marker. Must be used inside ng-map. Keyboard: focus moves into the popup when it opens, and Escape inside it closes it (stops propagation, so a host dialog stays open). The card is a non-modal role=dialog (no aria-modal) named by aria-label: ariaLabel, else 'Map popup' (labels.popup).",
       "inputs": [
         { "name": "longitude", "type": "number", "default": "required", "description": "Longitude coordinate of the popup." },
         { "name": "latitude", "type": "number", "default": "required", "description": "Latitude coordinate of the popup." },
@@ -208,7 +209,8 @@
         { "name": "offset", "type": "Offset", "default": "16", "description": "Pixel offset of the popup." },
         { "name": "maxWidth", "type": "string", "default": "'none'", "description": "CSS max-width of the popup container." },
         { "name": "closeOnClick", "type": "boolean", "default": "true", "description": "Closes the popup when the map is clicked. Applied at creation only. Set false for popups that follow the hover." },
-        { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (closePopup), merged over provideMapLabels() and the English defaults." },
+        { "name": "ariaLabel", "type": "string", "default": "", "description": "Accessible name of the card, a non-modal role=dialog (aria-label; reactive). Falls back to 'Map popup' (labels.popup)." },
+        { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (closePopup, popup), merged over provideMapLabels() and the English defaults." },
         { "name": "className", "type": "string", "default": "", "description": "Extra space-separated classes added to the rendered .ng-popup-card element. Reactive; the built-in class is always kept. Pass ng-popup-passthrough to make the whole popup non-interactive (pointer-events: none), so a hover popup does not capture the cursor and close itself." },
         { "name": "open", "type": "boolean", "default": "true", "description": "Whether the popup is shown. Two-way bindable with [(open)]: closing it writes false, setting true opens it again at the current position." }
       ],

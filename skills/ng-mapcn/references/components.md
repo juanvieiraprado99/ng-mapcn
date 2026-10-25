@@ -182,10 +182,11 @@ Must be placed inside `<ng-map-marker>`.
 | `anchor`       | `PositionAnchor`     | `undefined` | Creation only                                                                                                                  |
 | `maxWidth`     | `string`             | `'none'`    | Live via `setMaxWidth`                                                                                                         |
 | `closeOnClick` | `boolean`            | `false`     | Creation only. `true` closes the popup on a map click                                                                          |
-| `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button                                                                                         |
+| `ariaLabel`    | `string`             | `undefined` | Name of the `role="dialog"` card. Falls back to the marker's `ariaLabel`, then "Map popup" (`labels.popup`)                    |
+| `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button, `popup` fallback name of the card                                                      |
 | `className`    | `string`             | `undefined` | Classes for `.ng-popup-card`                                                                                                   |
 
-Keyboard and a11y: MapLibre makes a marker with a popup focusable (`tabindex=0`, Enter/Space toggles it). The library also sets `role="button"` (through `ng-map-marker`) and `aria-haspopup="dialog"` on the marker element unless the app already set them, plus `aria-expanded` (`true` while the popup is open, kept in sync with every open/close: click, Enter/Space, close button, Escape, map click, `togglePopup()`) and, while open, `aria-controls` pointing at the `.ng-popup-card` (which gets a generated id). A marker whose content has its own button gets no `aria-expanded`. `focusAfterOpen` moves focus into the popup. Escape inside the card closes the popup, calls `stopPropagation()` (a host dialog does not also close) and returns focus to the marker. Give the marker an accessible name through visible text (`ng-marker-label`) or an `aria-label` on your content. A `<button>` inside `ng-marker-content` is fine: the marker element then gets no role and the button is the keyboard target (no `nested-interactive`).
+Keyboard and a11y: MapLibre makes a marker with a popup focusable (`tabindex=0`, Enter/Space toggles it). The library also sets `role="button"` (through `ng-map-marker`) and `aria-haspopup="dialog"` on the marker element unless the app already set them, plus `aria-expanded` (`true` while the popup is open, kept in sync with every open/close: click, Enter/Space, close button, Escape, map click, `togglePopup()`) and, while open, `aria-controls` pointing at the `.ng-popup-card` (which gets a generated id). A marker whose content has its own button gets no `aria-expanded`. `focusAfterOpen` moves focus into the popup. Escape inside the card closes the popup, calls `stopPropagation()` (a host dialog does not also close) and returns focus to the marker. The card (`.ng-popup-card`) is a non-modal `role="dialog"` (no `aria-modal`: the map stays usable) with an `aria-label`: the popup's `ariaLabel`, else the marker's `ariaLabel`, else "Map popup" (`labels.popup`). Give the marker an accessible name through visible text (`ng-marker-label`) or an `aria-label` on your content. A `<button>` inside `ng-marker-content` is fine: the marker element then gets no role and the button is the keyboard target (no `nested-interactive`).
 
 ## ng-map-popup
 
@@ -200,10 +201,11 @@ Class `MapPopupComponent`. Standalone popup at coordinates, opened on creation (
 | `maxWidth`     | `string`             | `'none'`    |                                                                                                                               |
 | `closeOnClick` | `boolean`            | `true`      | Creation only. Set `false` for hover popups                                                                                   |
 | `open`         | `boolean` (`model`)  | `true`      | `[(open)]`: closing writes `false`, `true` reopens the same popup. A closed popup stays closed when only the position changes |
-| `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button                                                                                        |
+| `ariaLabel`    | `string`             | `undefined` | Name of the `role="dialog"` card. Falls back to "Map popup" (`labels.popup`)                                                  |
+| `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button, `popup` fallback name of the card                                                     |
 | `className`    | `string`             | `undefined` | Classes for `.ng-popup-card`. `ng-popup-passthrough` makes the popup ignore the pointer (see below)                           |
 
-Keyboard and a11y: `focusAfterOpen` moves focus into the popup. Escape inside the card closes it (writes `open = false`, emits `popupClose`) and calls `stopPropagation()` so a host dialog does not also close. With `[closeButton]="true"` the X is a button named by the `closePopup` label.
+Keyboard and a11y: the card is a non-modal `role="dialog"` named by `ariaLabel` (default "Map popup", `labels.popup`). `focusAfterOpen` moves focus into the popup. Escape inside the card closes it (writes `open = false`, emits `popupClose`) and calls `stopPropagation()` so a host dialog does not also close. With `[closeButton]="true"` the X is a button named by the `closePopup` label.
 
 Hover popups: set `[closeOnClick]="false"` and `className="ng-popup-passthrough"`. The popup sits next to the hovered point; if it captured the pointer, moving the cursor into it would fire the layer's `mouseleave` and close it. The rule `.maplibregl-popup:has(.ng-popup-passthrough)` (and its `.maplibregl-popup-content`) gets `pointer-events: none`. It ships in the library's `_utilities.scss`, and `ng add` appends it to a plain `styles.css`. It needs `:has()` (Chrome 105, Safari 15.4, Firefox 121).
 
@@ -597,6 +599,7 @@ interface MapLabels {
   fullscreen: string; // 'Toggle fullscreen'
   loading: string; // 'Loading map' (loader aria-label)
   closePopup: string; // 'Close popup'
+  popup: string; // 'Map popup' (name of a popup card without ariaLabel)
   marker: string; // 'Map marker' (name of an interactive marker with no text)
   scale: string; // 'Map scale'
   legend: string; // 'Map legend'

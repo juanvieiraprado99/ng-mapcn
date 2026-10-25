@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { computed, Injectable, type Signal, signal } from '@angular/core';
 import { type Marker } from 'maplibre-gl';
 
 @Injectable()
@@ -6,6 +6,10 @@ export class MarkerContextService {
   private readonly markerSignal = signal<Marker | null>(null);
 
   readonly marker = this.markerSignal.asReadonly();
+
+  private readonly ariaLabelSource = signal<Signal<string | undefined> | null>(null);
+  /** The marker's `ariaLabel` input: `ng-marker-popup` names its card with it as a fallback. */
+  readonly ariaLabel = computed(() => this.ariaLabelSource()?.());
 
   /** Set by `ng-marker-popup`: the marker opens a popup (MapLibre handles Enter/Space itself). */
   readonly hasPopup = signal(false);
@@ -23,6 +27,11 @@ export class MarkerContextService {
 
   setMarker(marker: Marker): void {
     this.markerSignal.set(marker);
+  }
+
+  /** Set by `ng-map-marker`: the source of {@link ariaLabel}. */
+  setAriaLabel(source: Signal<string | undefined>): void {
+    this.ariaLabelSource.set(source);
   }
 
   reset(): void {
