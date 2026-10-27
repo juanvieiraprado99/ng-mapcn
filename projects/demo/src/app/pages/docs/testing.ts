@@ -149,7 +149,8 @@ import {
             >, <code [class]="code">getSource</code>, <code [class]="code">getCenter</code>,
             <code [class]="code">getZoom</code>, <code [class]="code">getLayerOrder</code>,
             <code [class]="code">hasImage</code>, <code [class]="code">getTerrain</code>, ...) and
-            its spies (<code [class]="code">jumpTo</code>, <code [class]="code">setStyle</code>,
+            its spies (<code [class]="code">jumpTo</code>, <code [class]="code">panBy</code>,
+            <code [class]="code">setStyle</code>,
             <code [class]="code">setData</code>, ...) for assertions.
           </li>
           <li>

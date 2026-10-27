@@ -204,6 +204,32 @@ A listbox in a map corner that switches the basemap between the given options. T
 |---|---|---|---|
 | `valueChange` | `string \| undefined` | — | Emits the selected option id (the model output of value). |
 
+### MapMinimap
+
+`ng-map-minimap`
+
+An overview map mounted as a MapLibre control in a corner of the map (stacks with the other controls). A second map follows the main viewport at a lower zoom, draws the main viewport footprint (correct with bearing and pitch) and is always mercator and north-up. Clicking recenters the main map (easeTo), dragging pans it, and arrow keys pan it 100 px while the minimap is focused. It mirrors the main map's effective basemap (theme and style switcher) unless styles or blank is set. Collapsing destroys the minimap instance and frees its WebGL context. Renders nothing on the server. The minimap shows no attribution: a custom styles override's attribution is the app's responsibility. Must be a direct child of ng-map.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `position` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'bottom-left'` | Corner of the map to place the minimap in. |
+| `width` | `number` | `200` | Width of the map area, in pixels. |
+| `height` | `number` | `150` | Height of the map area, in pixels. |
+| `zoomOffset` | `number` | `5` | The minimap zoom is max(main zoom - zoomOffset, 0). |
+| `styles` | `MapStylesConfig` | — | Own basemap, themed by the resolved theme. Wins over blank and over the main map's style. |
+| `blank` | `boolean` | `false` | Uses the blank style; ignored when styles is set. |
+| `collapsed` | `boolean` | `false` | Whether the overview map is collapsed. A model(): supports two-way binding with [(collapsed)]. Collapsing destroys the minimap instance. |
+| `labels` | `Partial<MapLabels>` | — | Label overrides (minimap, showMinimap, hideMinimap), merged over provideMapLabels() and the English defaults. |
+| `className` | `string` | — | Extra space-separated classes added to the rendered .ng-minimap element. Reactive; the built-in class is always kept. |
+
+**Outputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `collapsedChange` | `boolean` | — | Emits when the minimap is collapsed or expanded (the model output of collapsed). |
+
 ### MapMarker
 
 `ng-map-marker`
@@ -720,6 +746,7 @@ Component-scoped service provided by `ng-map` — the Angular equivalent of mapc
 | `map()` | `Signal<Map \| null>` | — | The raw maplibre-gl Map instance, or null before init. |
 | `isLoaded()` | `Signal<boolean>` | — | True when the style is loaded and layers can be added. Gates every source/layer operation; closes during a theme/basemap switch and re-opens once it settles (or fails). |
 | `resolvedTheme()` | `Signal<'light' \| 'dark'>` | — | Theme currently applied to the map. |
+| `currentStyle()` | `Signal<string \| StyleSpecification \| null>` | — | Style the map is currently showing (URL or spec), null before the map exists. ng-map-minimap mirrors it. |
 | `hasSource(id)` | `(id: string) => boolean` | — | Whether a source component (raster, vector, image overlay) currently has a source with this id on the map. Reactive inside effect(); false while a theme switch has removed the style. Wait on it before adding layers that reference source: id. |
 | `sourceIds()` | `Signal<ReadonlySet<string>>` | — | Ids of the sources currently announced by source components. |
 | `registerSource(id)` | `(id: string) => () => void` | — | Announces a source you added yourself so hasSource(id) sees it; returns the release function to call when you remove it. |
@@ -787,7 +814,7 @@ export const appConfig: ApplicationConfig = {
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `MapLabels` | `{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; popup; marker; scale; legend; showLegend; hideLegend; mapStyle; play; pause; playbackProgress; playbackSpeed: string }` | — | Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map popup', 'Map marker', 'Map scale', 'Map legend', 'Show legend', 'Hide legend', 'Map style', 'Play', 'Pause', 'Playback progress', 'Playback speed'. |
+| `MapLabels` | `{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; popup; marker; scale; legend; showLegend; hideLegend; mapStyle; minimap; showMinimap; hideMinimap; play; pause; playbackProgress; playbackSpeed: string }` | — | Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map popup', 'Map marker', 'Map scale', 'Map legend', 'Show legend', 'Hide legend', 'Map style', 'Overview map', 'Show overview map', 'Hide overview map', 'Play', 'Pause', 'Playback progress', 'Playback speed'. |
 | `provideMapLabels(source)` | `Partial<MapLabels> \| Signal<Partial<MapLabels> \| undefined> \| (() => Signal<Partial<MapLabels> \| undefined>)` | — | Provider for app-wide labels; missing keys fall back to the English defaults. The factory form runs in an injection context, so it can inject() a service holding the signal. |
 | `MAP_LABELS` | `InjectionToken<Signal<Partial<MapLabels> \| undefined>>` | — | The token itself, if you want to provide it by hand. |
 | `DEFAULT_MAP_LABELS` | `MapLabels` | — | The English defaults. |

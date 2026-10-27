@@ -14,7 +14,7 @@ import { beforeEach, vi } from 'vitest';
 // Replace maplibre-gl with the fake for every spec.
 vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'));
 
-// Make the fake's methods vi.fn() spies (jumpTo, setStyle, setData, ...).
+// Make the fake's methods vi.fn() spies (jumpTo, panBy, setStyle, setData, ...).
 configureFakeMapLibre({ spy: vi.fn });
 
 beforeEach(() => fakeRegistry.reset());`;

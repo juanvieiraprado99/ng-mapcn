@@ -144,6 +144,23 @@ export const shippedMilestones: RoadmapMilestone[] = [
       done('"Testing your maps" docs page'),
     ],
   },
+  {
+    id: 'new-components',
+    title: 'New components',
+    status: 'completed',
+    period: '22.0.0-beta.10 · October 2026',
+    description:
+      'The building blocks map apps keep rewriting by hand, as composable ng-map children.',
+    goals: ['Components', 'MapLibre'],
+    deliverables: [
+      done('ng-map-legend for choropleth, heatmap and cluster scales'),
+      done('ng-map-scale: metric and imperial scale bar'),
+      done('ng-map-minimap: overview map synced with the main viewport'),
+      done('ng-map-symbol-layer: icons and text labels from sprites or images'),
+      done('ng-map-style-switcher: basemap picker as a control'),
+      done('Animated route playback with play, pause and speed'),
+    ],
+  },
 ];
 
 export const nextMilestones: RoadmapMilestone[] = [
@@ -160,22 +177,6 @@ export const nextMilestones: RoadmapMilestone[] = [
       todo('ng-mapcn MCP server: components, API reference and blocks as tools'),
       todo('Agent skill recipes generated from the playground scenes'),
       todo('Copy page as Markdown and open-in-playground from every docs example'),
-    ],
-  },
-  {
-    id: 'new-components',
-    title: 'New components',
-    status: 'ongoing',
-    description:
-      'The building blocks map apps keep rewriting by hand, as composable ng-map children.',
-    goals: ['Components', 'MapLibre'],
-    deliverables: [
-      done('ng-map-legend for choropleth, heatmap and cluster scales'),
-      done('ng-map-scale: metric and imperial scale bar'),
-      todo('ng-map-minimap: overview map synced with the main viewport'),
-      done('ng-map-symbol-layer: icons and text labels from sprites or images'),
-      done('ng-map-style-switcher: basemap picker as a control'),
-      done('Animated route playback with play, pause and speed'),
     ],
   },
   {

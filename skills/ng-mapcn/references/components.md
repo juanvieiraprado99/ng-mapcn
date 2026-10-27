@@ -2,7 +2,7 @@
 
 All components are standalone, `OnPush`, and use signal inputs/outputs. Everything below is exported from `ng-mapcn` (or from the folder `ng add` copied into your app). Coordinates are `[longitude, latitude]`.
 
-Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-scale](#ng-map-scale) | [ng-map-legend](#ng-map-legend) | [ng-map-style-switcher](#ng-map-style-switcher) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [Route playback](#route-playback) | [ng-route-playback-control](#ng-route-playback-control) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-symbol-layer](#ng-map-symbol-layer) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [ng-map-draw](#ng-map-draw) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
+Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-scale](#ng-map-scale) | [ng-map-legend](#ng-map-legend) | [ng-map-style-switcher](#ng-map-style-switcher) | [ng-map-minimap](#ng-map-minimap) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [Route playback](#route-playback) | [ng-route-playback-control](#ng-route-playback-control) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-symbol-layer](#ng-map-symbol-layer) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [ng-map-draw](#ng-map-draw) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
 
 ## ng-map
 
@@ -39,7 +39,7 @@ The map is created in `afterNextRender` (browser only). If the container has no 
 
 ## ng-map-controls
 
-Class `MapControlsComponent`. Custom button UI, mounted as a MapLibre control: the `.ng-controls` card renders inside `.maplibregl-ctrl-<position>`, so it stacks with `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher` and `ng-route-playback-control` in the same corner. Breaking DOM change: the card no longer sits in a host element with fixed bottom offsets, so style it with `className`, not host-descendant selectors.
+Class `MapControlsComponent`. Custom button UI, mounted as a MapLibre control: the `.ng-controls` card renders inside `.maplibregl-ctrl-<position>`, so it stacks with `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher`, `ng-map-minimap` and `ng-route-playback-control` in the same corner. Breaking DOM change: the card no longer sits in a host element with fixed bottom offsets, so style it with `className`, not host-descendant selectors.
 
 | Input            | Type                                                           | Default          |
 | ---------------- | -------------------------------------------------------------- | ---------------- |
@@ -125,6 +125,30 @@ interface MapStyleOption {
 ```
 
 Keep `MapStyleOption` objects referentially stable (declare the array once as a field or constant). An inline object or array in the template is a new style on every change detection pass and re-runs `setStyle`. `labels.mapStyle` (`'Map style'`) is the button's accessible name: `<labels.mapStyle>: <selected label>`, or just `labels.mapStyle` with nothing selected. The visible text is the selected option's label (`labels.mapStyle` with no selection). `[(value)]` two-way binds the selected id (`valueChange` output). `className` adds classes to the rendered `.ng-style-switcher` element.
+
+## ng-map-minimap
+
+Class `MapMinimapComponent`. Overview map mounted as a MapLibre control, a direct child of `<ng-map>`. A second MapLibre instance follows the main viewport at zoom `max(main - zoomOffset, 0)`, is always mercator and north-up, and draws the main viewport footprint (correct with bearing and pitch). Click recenters the main map (`easeTo`), drag pans it, and arrow keys pan it 100 px while the minimap is focused. Not rendered on the server.
+
+| Input        | Type                                                           | Default         |
+| ------------ | -------------------------------------------------------------- | --------------- |
+| `position`   | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'bottom-left'` |
+| `width`      | `number` (pixels)                                              | `200`           |
+| `height`     | `number` (pixels)                                              | `150`           |
+| `zoomOffset` | `number`                                                       | `5`             |
+| `styles`     | `MapStylesConfig`                                              | `undefined`     |
+| `blank`      | `boolean`                                                      | `false`         |
+| `collapsed`  | `boolean` (model)                                              | `false`         |
+| `labels`     | `Partial<MapLabels>`                                           | `undefined`     |
+| `className`  | `string`                                                       | `undefined`     |
+
+By default it mirrors the main map's effective basemap (theme plus style switcher, via `MapContextService.currentStyle`); `styles` (themed) wins over `blank`, which wins over the mirror. Collapsing destroys the minimap instance, which frees its WebGL context. The minimap shows no attribution: a custom `styles` override's attribution is the app's responsibility. `labels.minimap` (`'Overview map'`) names the map; `showMinimap` / `hideMinimap` name the toggle button. `className` adds classes to the rendered `.ng-minimap` element. Output: `collapsedChange` (the model output of `collapsed`).
+
+```html
+<ng-map [center]="[-74.006, 40.7128]" [zoom]="11">
+  <ng-map-minimap [(collapsed)]="overviewCollapsed" position="bottom-left" />
+</ng-map>
+```
 
 ## ng-map-marker
 
@@ -581,6 +605,7 @@ Also exported: `MapDrawShape`, `MapDrawMode`, `MapDrawGeometry`, `MapDrawPropert
 | `map`                                                                        | `Signal<MapLibreMap \| null>`                                    |                                                                                                                                                                                                                                   |
 | `isLoaded`                                                                   | `Signal<boolean>`                                                | True once the map `load` fired and the style settled (debounced). Closes during `setStyle`; re-opens on the new style, or on the current one when the swap fails or changes nothing                                               |
 | `resolvedTheme`                                                              | `Signal<'light' \| 'dark'>`                                      | Theme currently applied to the map                                                                                                                                                                                                |
+| `currentStyle`                                                               | `Signal<string \| StyleSpecification \| null>`                   | Style the map is showing (URL or spec); `null` before the map exists. `ng-map-minimap` mirrors it                                                                                                                                 |
 | `hasSource(id)` / `sourceIds`                                                | `boolean` (reactive in `effect`) / `Signal<ReadonlySet<string>>` | Source registry: ids announced by `ng-map-raster-source`, `ng-map-vector-source`, `ng-map-image-overlay`, `ng-map-terrain` (its DEM source) while the source is on the map. Wait on it before adding layers that use `source: id` |
 | `registerSource(id)`                                                         | `() => () => void`                                               | Announce a source you added yourself; returns the release function                                                                                                                                                                |
 | `fitBounds(options?)`                                                        | `boolean`                                                        | Fits to `options.bounds` or the children's data; `false` if not loaded or no bounds                                                                                                                                               |
@@ -628,7 +653,7 @@ provideMapLabels(
 ): Provider
 ```
 
-Translates the control buttons, the loader, the popup close button, the scale, legend and style switcher names and the playback control strings (`play`, `pause`, `playbackProgress`, `playbackSpeed`). Same three forms as `provideMapStyles`; a signal relabels every map when the locale changes. Missing keys fall back to `DEFAULT_MAP_LABELS` (English). A `labels` input on `ng-map`, `ng-map-controls`, `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher`, `ng-route-playback-control`, `ng-map-popup` and `ng-marker-popup` wins over the provider. `MAP_LABELS` is the underlying `InjectionToken<Signal<Partial<MapLabels> | undefined>>`; `injectMapLabels(override?)` resolves defaults, then provider, then override, in an injection context.
+Translates the control buttons, the loader, the popup close button, the scale, legend and style switcher and minimap names and the playback control strings (`play`, `pause`, `playbackProgress`, `playbackSpeed`). Same three forms as `provideMapStyles`; a signal relabels every map when the locale changes. Missing keys fall back to `DEFAULT_MAP_LABELS` (English). A `labels` input on `ng-map`, `ng-map-controls`, `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher`, `ng-map-minimap`, `ng-route-playback-control`, `ng-map-popup` and `ng-marker-popup` wins over the provider. `MAP_LABELS` is the underlying `InjectionToken<Signal<Partial<MapLabels> | undefined>>`; `injectMapLabels(override?)` resolves defaults, then provider, then override, in an injection context.
 
 ```ts
 interface MapLabels {
@@ -646,6 +671,9 @@ interface MapLabels {
   showLegend: string; // 'Show legend'
   hideLegend: string; // 'Hide legend'
   mapStyle: string; // 'Map style'
+  minimap: string; // 'Overview map' (name of the minimap)
+  showMinimap: string; // 'Show overview map'
+  hideMinimap: string; // 'Hide overview map'
   play: string; // 'Play' (playback button while paused)
   pause: string; // 'Pause' (playback button while running)
   playbackProgress: string; // 'Playback progress' (scrubber name)
