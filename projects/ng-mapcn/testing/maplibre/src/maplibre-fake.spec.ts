@@ -203,6 +203,29 @@ describe('maplibre-fake', () => {
     expect(map.calls).toContain('jumpTo');
   });
 
+  it('panBy moves the center with the fake projection and fires move', () => {
+    const map = createMap();
+    map.jumpTo({ center: [10, 20] });
+    const onMove = vi.fn();
+    map.on('move', onMove);
+
+    map.panBy([30, 50]);
+    expect(map.getCenter()).toEqual({ lng: 13, lat: 15 });
+    map.panBy({ x: -10, y: -20 }, { duration: 0 });
+    expect(map.getCenter()).toEqual({ lng: 12, lat: 17 });
+
+    expect(onMove).toHaveBeenCalledTimes(2);
+    expect(map.calls.filter((c: string) => c === 'panBy')).toHaveLength(2);
+  });
+
+  it('two maps are tracked independently in fakeRegistry.maps', () => {
+    const a = createMap();
+    const b = createMap();
+    a.jumpTo({ center: [1, 2] });
+    expect(fakeRegistry.maps).toEqual([a, b]);
+    expect(b.getCenter()).not.toEqual(a.getCenter());
+  });
+
   it('fire only calls handlers registered for the given layerId', () => {
     const map = createMap();
     const global = vi.fn();

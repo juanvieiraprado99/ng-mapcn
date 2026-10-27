@@ -244,6 +244,18 @@ export class Map extends Evented {
     this.fire('move');
     return this;
   });
+  /**
+   * Pans by a pixel offset (`[x, y]` or `{ x, y }`) using the fake projection: 1 degree = 10 px,
+   * y grows southwards, so `lng += x / 10` and `lat -= y / 10`. Fires `move` like `jumpTo`.
+   */
+  panBy = spy((offset: [number, number] | { x: number; y: number }, _opts: any = {}) => {
+    this.calls.push('panBy');
+    const [x, y] = Array.isArray(offset) ? offset : [offset.x, offset.y];
+    this.camera.lng += x / 10;
+    this.camera.lat -= y / 10;
+    this.fire('move');
+    return this;
+  });
   flyTo = spy((opts: any = {}) => {
     this.calls.push('flyTo');
     this.applyCamera(opts);
