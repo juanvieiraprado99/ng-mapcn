@@ -29,6 +29,7 @@ export * from './lib/components/marker-label/marker-label.component';
 export * from './lib/components/marker-popup/marker-popup.component';
 export * from './lib/components/marker-tooltip/marker-tooltip.component';
 export * from './lib/components/route-marker/route-marker.component';
+export * from './lib/components/route-playback/route-playback.component';
 export * from './lib/components/route-progress/route-progress.component';
 
 // ── Services ──────────────────────────────────────────────────────────────────

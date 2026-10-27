@@ -32,6 +32,7 @@ import { MarkerLabelComponent } from './components/marker-label/marker-label.com
 import { MarkerPopupComponent } from './components/marker-popup/marker-popup.component';
 import { MarkerTooltipComponent } from './components/marker-tooltip/marker-tooltip.component';
 import { RouteMarkerComponent } from './components/route-marker/route-marker.component';
+import { RoutePlaybackComponent } from './components/route-playback/route-playback.component';
 import { RouteProgressComponent } from './components/route-progress/route-progress.component';
 
 /**
@@ -53,6 +54,7 @@ const TEMPLATE = `
     <ng-map-popup [longitude]="1" [latitude]="2" [closeButton]="true">Popup</ng-map-popup>
     <ng-map-route [coordinates]="route" [progress]="0.5">
       <ng-route-progress />
+      <ng-route-playback [playing]="true" />
       <ng-route-marker at="progress">Car</ng-route-marker>
     </ng-map-route>
     <ng-map-geojson [data]="collection" />
@@ -109,6 +111,7 @@ describe('server-side rendering', () => {
       { id: 'b', label: 'B', styles: { light: 'https://example.com/b.json' } },
     ];
 
+    const raf = vi.spyOn(globalThis, 'requestAnimationFrame');
     const { fixture, ctx } = await renderMap(TEMPLATE, {
       imports: [
         MapControlsComponent,
@@ -125,6 +128,7 @@ describe('server-side rendering', () => {
         MapRouteComponent,
         RouteMarkerComponent,
         RouteProgressComponent,
+        RoutePlaybackComponent,
         MapGeoJSONComponent,
         MapArcComponent,
         MapClusterLayerComponent,
@@ -145,5 +149,6 @@ describe('server-side rendering', () => {
     expect(fakeRegistry.maps).toHaveLength(0);
     expect(fakeRegistry.markers).toHaveLength(0);
     expect(fakeRegistry.popups).toHaveLength(0);
+    expect(raf).not.toHaveBeenCalled();
   });
 });
