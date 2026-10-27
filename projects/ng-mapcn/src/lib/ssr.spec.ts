@@ -16,6 +16,7 @@ import {
   type MapLegendSection,
 } from './components/map-legend/map-legend.component';
 import { MapMarkerComponent } from './components/map-marker/map-marker.component';
+import { MapMinimapComponent } from './components/map-minimap/map-minimap.component';
 import { MapPopupComponent } from './components/map-popup/map-popup.component';
 import { MapRasterSourceComponent } from './components/map-raster-source/map-raster-source.component';
 import { MapRouteComponent } from './components/map-route/map-route.component';
@@ -45,6 +46,7 @@ const TEMPLATE = `
   <ng-map>
     <ng-map-controls [showCompass]="true" [showLocate]="true" [showFullscreen]="true" />
     <ng-map-scale unit="both" />
+    <ng-map-minimap />
     <ng-map-legend title="L" [sections]="legend" [collapsible]="true">Extra</ng-map-legend>
     <ng-map-style-switcher [options]="styleOptions" value="a" />
     <ng-map-marker [longitude]="1" [latitude]="2">
@@ -120,6 +122,7 @@ describe('server-side rendering', () => {
         MapLegendComponent,
         MapStyleSwitcherComponent,
         MapScaleComponent,
+        MapMinimapComponent,
         MapSymbolLayerComponent,
         MapMarkerComponent,
         MarkerContentComponent,

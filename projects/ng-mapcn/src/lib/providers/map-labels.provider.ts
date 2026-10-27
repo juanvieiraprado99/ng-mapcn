@@ -48,6 +48,12 @@ export interface MapLabels {
   playbackProgress: string;
   /** Accessible name of the playback speed selector. */
   playbackSpeed: string;
+  /** Accessible name of the overview map (minimap). */
+  minimap: string;
+  /** Minimap toggle button while the overview map is collapsed. */
+  showMinimap: string;
+  /** Minimap toggle button while the overview map is shown. */
+  hideMinimap: string;
 }
 
 /** English defaults, used for every key that is not overridden. */
@@ -70,6 +76,9 @@ export const DEFAULT_MAP_LABELS: Readonly<MapLabels> = {
   pause: 'Pause',
   playbackProgress: 'Playback progress',
   playbackSpeed: 'Playback speed',
+  minimap: 'Overview map',
+  showMinimap: 'Show overview map',
+  hideMinimap: 'Hide overview map',
 };
 
 /**

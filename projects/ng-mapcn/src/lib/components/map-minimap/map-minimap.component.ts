@@ -1,0 +1,216 @@
+import { isPlatformBrowser } from '@angular/common';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  Injector,
+  input,
+  model,
+  NgZone,
+  PLATFORM_ID,
+  signal,
+  type TemplateRef,
+  untracked,
+  viewChild,
+} from '@angular/core';
+import { Map as MapLibre, type Map as MapLibreMap, type StyleSpecification } from 'maplibre-gl';
+
+import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
+import { MapContextService } from '../../services/map-context.service';
+import { blankMapStyle, defaultStyles, type MapStylesConfig } from '../../styles/map-styles';
+import { classTokens } from '../../utils/class-name';
+import { type MapControlPosition, mountMapControl } from '../../utils/map-control';
+import { nextId } from '../../utils/map-utils';
+
+type MapStyle = string | StyleSpecification;
+
+/**
+ * Overview map: a second MapLibre instance in a corner of `<ng-map>` that follows the main
+ * viewport at a lower zoom. Collapsing it destroys the instance.
+ */
+@Component({
+  selector: 'ng-map-minimap',
+  templateUrl: './map-minimap.component.html',
+  styleUrl: './map-minimap.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'ng-map-minimap-host' },
+})
+export class MapMinimapComponent {
+  readonly position = input<MapControlPosition>('bottom-left');
+  /** Width of the map area, in pixels. */
+  readonly width = input(200);
+  /** Height of the map area, in pixels. */
+  readonly height = input(150);
+  /** The minimap zoom is `max(mainZoom - zoomOffset, 0)`. */
+  readonly zoomOffset = input(5);
+  /** Own basemap (themed variant by the resolved theme). Wins over `blank`. */
+  readonly styles = input<MapStylesConfig>();
+  /** Uses the blank style; ignored when `styles` is set. */
+  readonly blank = input(false);
+  /** Whether the overview map is collapsed. Collapsing destroys the minimap instance. */
+  readonly collapsed = model(false);
+
+  /** Per-component label overrides, merged over `provideMapLabels` and the English defaults. */
+  readonly labels = input<Partial<MapLabels>>();
+  /** Extra space-separated classes for the rendered `.ng-minimap` element (reactive). */
+  readonly className = input<string>();
+
+  private readonly control = viewChild.required<TemplateRef<unknown>>('control');
+  protected readonly id = nextId('ng-minimap');
+  protected readonly rootClass = computed(() =>
+    classTokens(this.className(), ['ng-minimap']).join(' '),
+  );
+
+  // Hierarchical DI: throws when placed outside <ng-map>, like mapcn's useMap()
+  protected readonly l = injectMapLabels(this.labels);
+  private readonly ctx = inject(MapContextService);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly injector = inject(Injector);
+  private readonly zone = inject(NgZone);
+
+  /** The map element inside the mounted card; `null` until the portal view has rendered. */
+  private readonly mapElement = signal<HTMLElement | null>(null);
+  /** The live minimap instance; `null` while collapsed, unmounted or destroyed. */
+  private readonly minimap = signal<MapLibreMap | null>(null);
+  /** Set while the minimap drives the main map, so the main `move` does not echo back. */
+  private syncing = false;
+  private appliedStyle: MapStyle | null = null;
+
+  /** `styles` (themed) > `blank` > the main map's effective style. */
+  private readonly style = computed<MapStyle>(() => {
+    const theme = this.ctx.resolvedTheme();
+    const styles = this.styles();
+    if (styles) return styles[theme] ?? defaultStyles[theme];
+    if (this.blank()) return blankMapStyle;
+    return this.ctx.currentStyle() ?? defaultStyles[theme];
+  });
+
+  constructor() {
+    // Mounted as a MapLibre control, so the corner containers stack it with the other controls.
+    effect((onCleanup) => {
+      const map = this.ctx.map();
+      if (!map || !this.isBrowser) return;
+      const unmount = mountMapControl(map, this.control(), this.injector, this.position());
+      onCleanup(() => {
+        this.mapElement.set(null);
+        unmount();
+      });
+      // The portal renders synchronously, but wait for this render to finish before using it.
+      afterNextRender(
+        () =>
+          this.mapElement.set(
+            map
+              .getContainer()
+              .querySelector<HTMLElement>(`[data-minimap-id="${this.id}"] .ng-minimap-map`),
+          ),
+        { injector: this.injector },
+      );
+    });
+
+    // The instance exists while the main map, the mounted element and an expanded state do.
+    effect((onCleanup) => {
+      const main = this.ctx.map();
+      const container = this.mapElement();
+      if (!main || !container || this.collapsed()) return;
+
+      const { center, zoom, style } = untracked(() => ({
+        center: main.getCenter(),
+        zoom: this.minimapZoom(main),
+        style: this.style(),
+      }));
+      let mini: MapLibreMap;
+      try {
+        mini = this.zone.runOutsideAngular(
+          () =>
+            new MapLibre({
+              container,
+              style,
+              center: [center.lng, center.lat],
+              zoom,
+              interactive: true,
+              attributionControl: false,
+              renderWorldCopies: false,
+              scrollZoom: false,
+              boxZoom: false,
+              dragRotate: false,
+              doubleClickZoom: false,
+              touchZoomRotate: false,
+              keyboard: false,
+              pitchWithRotate: false,
+            }),
+        );
+      } catch (error) {
+        this.ctx.reportError(error);
+        return;
+      }
+      this.appliedStyle = style;
+      this.minimap.set(mini);
+
+      onCleanup(() => {
+        this.minimap.set(null);
+        try {
+          mini.remove();
+        } catch {
+          // already removed
+        }
+      });
+    });
+
+    // Follow changes of the resolved style (theme, style switcher, own `styles`).
+    effect(() => {
+      const mini = this.minimap();
+      const style = this.style();
+      if (!mini || style === this.appliedStyle) return;
+      this.appliedStyle = style;
+      try {
+        mini.setStyle(style, { diff: true });
+      } catch (error) {
+        this.ctx.reportError(error);
+      }
+    });
+
+    // Main -> minimap: bound while the minimap exists, outside the zone.
+    effect((onCleanup) => {
+      const main = this.ctx.map();
+      const mini = this.minimap();
+      if (!main || !mini) return;
+      const onMove = () => {
+        if (this.syncing) return;
+        this.follow(main, mini);
+      };
+      this.zone.runOutsideAngular(() => main.on('move', onMove));
+      onCleanup(() => {
+        try {
+          main.off('move', onMove);
+        } catch {
+          // the main map may already be removed
+        }
+      });
+    });
+
+    // Initial sync once the minimap exists, and again when the offset changes.
+    effect(() => {
+      const main = this.ctx.map();
+      const mini = this.minimap();
+      this.zoomOffset();
+      if (!main || !mini) return;
+      untracked(() => this.follow(main, mini));
+    });
+  }
+
+  protected toggle(): void {
+    this.collapsed.update((value) => !value);
+  }
+
+  private minimapZoom(main: MapLibreMap): number {
+    return Math.max(main.getZoom() - this.zoomOffset(), 0);
+  }
+
+  private follow(main: MapLibreMap, mini: MapLibreMap): void {
+    const center = main.getCenter();
+    mini.jumpTo({ center: [center.lng, center.lat], zoom: this.minimapZoom(main) });
+  }
+}

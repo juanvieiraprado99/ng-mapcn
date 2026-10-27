@@ -15,6 +15,7 @@ export * from './lib/components/map-image-overlay/map-image-overlay.component';
 export * from './lib/components/map-legend/map-legend.component';
 export * from './lib/components/map-marker/map-marker.component';
 export * from './lib/components/map-marker/marker-context.service';
+export * from './lib/components/map-minimap/map-minimap.component';
 export * from './lib/components/map-popup/map-popup.component';
 export * from './lib/components/map-raster-source/map-raster-source.component';
 export * from './lib/components/map-route/map-route.component';
