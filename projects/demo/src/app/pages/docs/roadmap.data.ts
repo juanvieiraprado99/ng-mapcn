@@ -170,11 +170,10 @@ export const nextMilestones: RoadmapMilestone[] = [
     status: 'ongoing',
     description:
       'Make ng-mapcn easy to use for people and for coding agents, with first-class tooling for AI assistants.',
-    goals: ['MCP', 'Agent skill', 'Docs'],
+    goals: ['llms.txt', 'Agent skill', 'Docs'],
     deliverables: [
       done('llms.txt and llms-full.txt for agents'),
       done('ng-mapcn agent skill on skills.sh'),
-      todo('ng-mapcn MCP server: components, API reference and blocks as tools'),
       todo('Agent skill recipes generated from the playground scenes'),
       todo('Copy page as Markdown and open-in-playground from every docs example'),
     ],
