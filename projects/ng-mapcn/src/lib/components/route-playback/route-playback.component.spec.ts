@@ -311,6 +311,31 @@ describe('RoutePlaybackComponent', () => {
       expect(map.jumpTo).not.toHaveBeenCalled();
     });
 
+    it('does not recenter while the map is moving (user eases finish) and resumes after', async () => {
+      const { fixture, map } = await renderLoaded({ playing: true, follow: true });
+      fixture.detectChanges();
+      frames(fixture, 2);
+      (map.jumpTo as any).mockClear();
+      map.setMoving(true);
+      frames(fixture, 3);
+      expect(map.jumpTo).not.toHaveBeenCalled();
+      map.setMoving(false);
+      frames(fixture, 2);
+      expect(map.jumpTo).toHaveBeenCalled();
+    });
+
+    it('turning follow back on resumes a drag-suspended follow and jumps to the head', async () => {
+      const { fixture, map, playback } = await renderLoaded({ follow: true });
+      map.fire('dragstart', { originalEvent: new MouseEvent('mousedown') });
+      update(fixture, { follow: false });
+      fixture.detectChanges();
+      playback.seek(0.5);
+      (map.jumpTo as any).mockClear();
+      update(fixture, { follow: true });
+      fixture.detectChanges();
+      expect(jumps(map).at(-1)![0]['center']).toEqual(pointAlongLine(COORDS, 0.5));
+    });
+
     it('binds dragstart only while follow is true and unbinds on destroy', async () => {
       const { fixture, map } = await renderLoaded();
       expect(map.listenerCount('dragstart')).toBe(0);

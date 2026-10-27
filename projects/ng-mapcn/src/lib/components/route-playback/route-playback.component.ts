@@ -20,7 +20,8 @@ import { RouteContextService } from '../map-route/route-context.service';
 /** A long frame (background tab, breakpoint) advances at most this much, so the marker never jumps. */
 const MAX_FRAME_MS = 100;
 
-function clamp01(value: number): number {
+/** Clamps to 0-1; NaN becomes 0. */
+export function clamp01(value: number): number {
   return Number.isNaN(value) ? 0 : Math.min(1, Math.max(0, value));
 }
 
@@ -63,6 +64,9 @@ export class RoutePlaybackComponent {
     effect((onCleanup) => {
       const map = this.mapCtx.map();
       if (!this.follow() || !map) return;
+      // Turning follow on starts afresh: forget an earlier drag and jump to the head.
+      this.followSuspended = false;
+      this.recenter();
       const onDrag = (event: { originalEvent?: unknown }) => {
         if (event.originalEvent) this.followSuspended = true;
       };
@@ -117,13 +121,16 @@ export class RoutePlaybackComponent {
     untracked(() => {
       const map = this.mapCtx.map();
       if (!this.follow() || this.followSuspended || !map) return;
-      if (this.routeCtx.coordinates().length < 2) return;
+      // jumpTo() stops any ease in flight (user zoom, keyboard pan, control buttons): let it finish first.
+      if (map.isMoving()) return;
+      const coordinates = this.routeCtx.coordinates();
+      if (coordinates.length < 2) return;
       const center = pointAlongLine(
-        this.routeCtx.coordinates(),
+        coordinates,
         clamp01(this.progress()),
         this.routeCtx.cumulative(),
       );
-      if (center) map.jumpTo({ center });
+      map.jumpTo({ center: center! }); // non-null: the route has at least 2 coordinates
     });
   }
 
