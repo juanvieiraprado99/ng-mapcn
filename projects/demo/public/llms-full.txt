@@ -400,11 +400,11 @@ Animates the parent ng-map-route over time. While present it overrides the route
 | Name | Type | Default | Description |
 |---|---|---|---|
 | `playing` | `boolean` | `false` | Whether the animation is running. A model(): supports [(playing)]. |
-| `progress` | `number` | `0` | Covered fraction (0 to 1) of the route. A model(): supports [(progress)]. |
+| `progress` | `number` | `0` | Covered fraction of the route. The value applied to the route (and by seek()) is clamped to 0-1; the model keeps what you write. A model(): supports [(progress)]. |
 | `speed` | `number` | `1` | Playback rate multiplier. A model(): supports [(speed)]. |
 | `duration` | `number` | `10000` | Milliseconds a full pass takes at speed 1. |
 | `loop` | `boolean` | `false` | Wrap to the start instead of stopping at the end. |
-| `follow` | `boolean` | `false` | Center the camera on the playback head every frame. A user drag suspends following until play() or restart(). |
+| `follow` | `boolean` | `false` | Center the camera on the playback head every frame and on seek(). A user drag suspends following until play() or restart() (or follow is turned off and on); it waits while the map is moving. |
 
 **Outputs**
 

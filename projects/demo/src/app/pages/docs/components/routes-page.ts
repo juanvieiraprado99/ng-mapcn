@@ -170,7 +170,8 @@ import {
         [checked]="follow()"
         (change)="follow.set(!follow())"
       />
-      Follow
+      Follow the playback head
+      <span>{{ playing() ? 'Playing' : 'Paused' }}</span>
     </label>
     <div class="h-[420px]">
       <ng-map [center]="[-73.97, 40.782]" [zoom]="12">
@@ -178,7 +179,7 @@ import {
           <ng-route-progress color="#22c55e" />
           <ng-route-marker at="start">
             <ng-marker-content>
-              <div class="size-3.5 rounded-full border-2 border-white bg-slate-500"></div>
+              <div class="size-3.5 rounded-full border-2 border-white bg-slate-500 shadow-lg"></div>
             </ng-marker-content>
           </ng-route-marker>
           <ng-route-marker at="progress">
@@ -390,6 +391,7 @@ interface OsrmResponse {
             (change)="follow.set(!follow())"
           />
           Follow the playback head
+          <span class="text-muted-foreground ml-2">{{ playing() ? 'Playing' : 'Paused' }}</span>
         </label>
         <ng-map [center]="[-73.97, 40.782]" [zoom]="12">
           <ng-map-route [coordinates]="trail" color="#94a3b8" [width]="4">

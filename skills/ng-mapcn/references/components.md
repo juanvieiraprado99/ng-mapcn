@@ -273,16 +273,16 @@ Place them inside `<ng-map-route>`. They read the route through `RouteContextSer
 
 `ng-route-playback` (`RoutePlaybackComponent`) is a route child that animates the route's progress. While it exists it overrides the route's `[progress]` input, so `ng-route-progress` and `ng-route-marker at="progress"` animate. The frame loop (`requestAnimationFrame`, a frame advances at most 100 ms) runs outside the Angular zone and does nothing on the server. Put a template reference on it (`<ng-route-playback #pb />`) to call its methods.
 
-| Input / model | Type      | Default | Notes                                                                                            |
-| ------------- | --------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `playing`     | `boolean` | `false` | `model()`, `[(playing)]`                                                                         |
-| `progress`    | `number`  | `0`     | `model()`, `[(progress)]`; covered fraction, clamped to 0 to 1                                   |
-| `speed`       | `number`  | `1`     | `model()`, `[(speed)]`; multiplier                                                               |
-| `duration`    | `number`  | `10000` | Milliseconds for a full pass at speed 1                                                          |
-| `loop`        | `boolean` | `false` | Wrap to the start instead of stopping                                                            |
-| `follow`      | `boolean` | `false` | Centers the camera on the head each frame; a user drag suspends it until `play()` or `restart()` |
+| Input / model | Type      | Default | Notes                                                                                                                                                                                          |
+| ------------- | --------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `playing`     | `boolean` | `false` | `model()`, `[(playing)]`                                                                                                                                                                       |
+| `progress`    | `number`  | `0`     | `model()`, `[(progress)]`; covered fraction; the value applied to the route and by `seek()` is clamped to 0 to 1, the model keeps what you write                                               |
+| `speed`       | `number`  | `1`     | `model()`, `[(speed)]`; multiplier                                                                                                                                                             |
+| `duration`    | `number`  | `10000` | Milliseconds for a full pass at speed 1                                                                                                                                                        |
+| `loop`        | `boolean` | `false` | Wrap to the start instead of stopping                                                                                                                                                          |
+| `follow`      | `boolean` | `false` | Centers the camera on the head each frame; a user drag suspends it until `play()`, `restart()` or turning `follow` off and on; it also recenters on `seek()` and waits while the map is moving |
 
-Output `ended: void` fires once when playback reaches the end (never with `loop`), inside the Angular zone. Methods: `play()` (restarts from 0 when finished), `pause()`, `toggle()`, `restart()`, `seek(fraction)` (also recenters when `follow`).
+Output `ended: void` fires once when playback reaches the end (never with `loop`), inside the Angular zone. Methods: `play()` (restarts from 0 when finished), `pause()`, `toggle()`, `restart()`, `seek(fraction)` (clamps; also recenters when `follow`).
 
 ```html
 <ng-map>
@@ -628,7 +628,7 @@ provideMapLabels(
 ): Provider
 ```
 
-Translates the control buttons, the loader, the popup close button and the scale, legend and style switcher names. Same three forms as `provideMapStyles`; a signal relabels every map when the locale changes. Missing keys fall back to `DEFAULT_MAP_LABELS` (English). A `labels` input on `ng-map`, `ng-map-controls`, `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher`, `ng-route-playback-control`, `ng-map-popup` and `ng-marker-popup` wins over the provider. `MAP_LABELS` is the underlying `InjectionToken<Signal<Partial<MapLabels> | undefined>>`; `injectMapLabels(override?)` resolves defaults, then provider, then override, in an injection context.
+Translates the control buttons, the loader, the popup close button, the scale, legend and style switcher names and the playback control strings (`play`, `pause`, `playbackProgress`, `playbackSpeed`). Same three forms as `provideMapStyles`; a signal relabels every map when the locale changes. Missing keys fall back to `DEFAULT_MAP_LABELS` (English). A `labels` input on `ng-map`, `ng-map-controls`, `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher`, `ng-route-playback-control`, `ng-map-popup` and `ng-marker-popup` wins over the provider. `MAP_LABELS` is the underlying `InjectionToken<Signal<Partial<MapLabels> | undefined>>`; `injectMapLabels(override?)` resolves defaults, then provider, then override, in an injection context.
 
 ```ts
 interface MapLabels {
