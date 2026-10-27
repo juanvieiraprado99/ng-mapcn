@@ -59,17 +59,47 @@ test.describe('minimap', () => {
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     await expect(toggle).toHaveAttribute('aria-label', 'Show overview map');
     await expect(body).toBeHidden();
-    await expect(map.locator('.ng-minimap-map canvas.maplibregl-canvas:visible')).toHaveCount(0);
+    // Collapsing destroys the overview instance: its canvas is gone, the main one stays.
+    await expect(map.locator('.ng-minimap-map canvas.maplibregl-canvas')).toHaveCount(0);
+    await expect(map.locator('canvas.maplibregl-canvas')).toHaveCount(1);
 
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await expect(body).toBeVisible();
+    await expect(map.locator('.ng-minimap-map canvas.maplibregl-canvas')).toHaveCount(1);
+    await expect(map.locator('canvas.maplibregl-canvas')).toHaveCount(2);
   });
 
-  test('the blank minimap renders and keeps in sync', async ({ page }) => {
-    await gotoAndWaitForMap(page, CONTROLS_URL, MINIMAP_BLANK);
-    const map = page.locator('ng-map').nth(MINIMAP_BLANK);
-    await expect(map.locator('canvas.maplibregl-canvas')).toHaveCount(2);
-    await expect(map.locator('button.ng-minimap-toggle')).toHaveAttribute('aria-expanded', 'true');
-  });
+  for (const [name, index] of [
+    ['default', MINIMAP],
+    ['blank', MINIMAP_BLANK],
+  ] as const) {
+    test(`the ${name} minimap follows the main map: clicking its center keeps the main center`, async ({
+      page,
+    }) => {
+      await gotoAndWaitForMap(page, CONTROLS_URL, index);
+      const map = page.locator('ng-map').nth(index);
+      await expect(map.locator('canvas.maplibregl-canvas')).toHaveCount(2);
+      const start = await center(page, index);
+
+      await mapCall(page, index, (m) => m.jumpTo({ center: [-74, 40.7] }));
+      const box = await map.locator('.ng-minimap-map').boundingBox();
+      expect(box).not.toBeNull();
+
+      // If the minimap had not followed, the click would send the main map back near the start.
+      // Poll the click until the minimap has caught up and a click on its center is a no-op.
+      await expect
+        .poll(
+          async () => {
+            await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
+            const c = await center(page, index);
+            return Math.hypot(c[0] - -74, c[1] - 40.7);
+          },
+          { timeout: 10_000 },
+        )
+        .toBeLessThan(1);
+      const end = await center(page, index);
+      expect(Math.hypot(end[0] - start[0], end[1] - start[1])).toBeGreaterThan(50);
+    });
+  }
 });
