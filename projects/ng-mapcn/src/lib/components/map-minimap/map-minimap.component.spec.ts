@@ -108,6 +108,8 @@ describe('MapMinimapComponent', () => {
         touchZoomRotate: false,
         keyboard: false,
         pitchWithRotate: false,
+        touchPitch: false,
+        maxPitch: 0,
       }),
     );
     expect(q(map, '.ng-minimap').contains(mini.options.container)).toBe(true);
@@ -344,15 +346,16 @@ describe('MapMinimapComponent', () => {
   });
 
   describe('navigation', () => {
-    const drag = (mini: any) => mini.fire('drag', { originalEvent: new MouseEvent('mousemove') });
+    const gesture = (mini: any) =>
+      mini.fire('move', { originalEvent: new MouseEvent('mousemove') });
 
-    it('dragging the minimap pans the main map without echoing back', async () => {
+    it('a minimap gesture (drag or inertia) pans the main map without echoing back', async () => {
       const { map } = await render();
       const mini = fakeRegistry.maps[1];
       mini.jumpTo({ center: [30, 40] });
       (mini.jumpTo as any).mockClear();
       (map.jumpTo as any).mockClear();
-      drag(mini);
+      gesture(mini);
       expect(map.jumpTo).toHaveBeenCalledTimes(1);
       expect(map.jumpTo).toHaveBeenCalledWith({ center: { lng: 30, lat: 40 } });
       expect(map.getCenter()).toEqual({ lng: 30, lat: 40 });
@@ -362,12 +365,35 @@ describe('MapMinimapComponent', () => {
       expect(mini.jumpTo).toHaveBeenCalledTimes(1);
     });
 
-    it('ignores a programmatic drag event (no originalEvent)', async () => {
+    it('ignores a programmatic minimap move (no originalEvent)', async () => {
       const { map } = await render();
       const mini = fakeRegistry.maps[1];
       (map.jumpTo as any).mockClear();
-      mini.fire('drag');
+      mini.fire('move');
       expect(map.jumpTo).not.toHaveBeenCalled();
+    });
+
+    it('does not reset a minimap gesture on a main move; re-syncs on moveend', async () => {
+      const { map } = await render();
+      const mini = fakeRegistry.maps[1];
+      loadMap(mini);
+      mini.setMoving(true);
+      (mini.jumpTo as any).mockClear();
+      map.jumpTo({ center: [12, 13], zoom: 8 });
+      expect(mini.jumpTo).not.toHaveBeenCalled();
+      expect(mini.getSource('ng-minimap-footprint').setData).toHaveBeenCalled();
+
+      mini.setMoving(false);
+      mini.fire('moveend');
+      expect(mini.jumpTo).toHaveBeenCalledWith({ center: [12, 13], zoom: 3 });
+    });
+
+    it('does not jump on moveend when already in sync', async () => {
+      await render();
+      const mini = fakeRegistry.maps[1];
+      (mini.jumpTo as any).mockClear();
+      mini.fire('moveend');
+      expect(mini.jumpTo).not.toHaveBeenCalled();
     });
 
     it('clicking recenters the main map with easeTo', async () => {
@@ -376,26 +402,12 @@ describe('MapMinimapComponent', () => {
       expect(map.easeTo).toHaveBeenCalledWith({ center: [5, 6] });
     });
 
-    it('ignores the click that ends a drag, then clicks work again', async () => {
-      const { map } = await render();
-      const mini = fakeRegistry.maps[1];
-      mini.fire('dragend');
-      mini.fire('click', { lngLat: { lng: 5, lat: 6 } });
-      expect(map.easeTo).not.toHaveBeenCalled();
-      vi.runAllTimers();
-      mini.fire('click', { lngLat: { lng: 7, lat: 8 } });
-      expect(map.easeTo).toHaveBeenCalledWith({ center: [7, 8] });
-    });
-
-    it('drops the pending timer on teardown', async () => {
-      const { fixture } = await render();
-      const mini = fakeRegistry.maps[1];
-      mini.fire('dragend');
-      expect(vi.getTimerCount()).toBeGreaterThan(0);
-      update(fixture, { show: false });
-      await settle(fixture);
-      expect(mini.removed).toBe(true);
-      expect(vi.getTimerCount()).toBe(0);
+    it('takes the minimap canvas out of the tab order and drops its landmark', async () => {
+      await render();
+      const canvas = fakeRegistry.maps[1].getCanvas();
+      expect(canvas.getAttribute('tabindex')).toBe('-1');
+      expect(canvas.hasAttribute('role')).toBe(false);
+      expect(canvas.hasAttribute('aria-label')).toBe(false);
     });
 
     it('arrow keys pan the main map by 100 px', async () => {

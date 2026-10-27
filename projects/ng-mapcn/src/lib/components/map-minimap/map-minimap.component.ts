@@ -96,9 +96,6 @@ export class MapMinimapComponent {
   private readonly minimap = signal<MapLibreMap | null>(null);
   /** Set while the minimap drives the main map, so the main `move` does not echo back. */
   private syncing = false;
-  /** True from a minimap `dragend` until the next macrotask: filters the click ending the drag. */
-  private dragged = false;
-  private draggedTimer: ReturnType<typeof setTimeout> | undefined;
   private appliedStyle: MapStyle | null = null;
 
   /** `styles` (themed) > `blank` > the main map's effective style. */
@@ -162,6 +159,8 @@ export class MapMinimapComponent {
               touchZoomRotate: false,
               keyboard: false,
               pitchWithRotate: false,
+              touchPitch: false,
+              maxPitch: 0,
             }),
         );
       } catch (error) {
@@ -181,8 +180,10 @@ export class MapMinimapComponent {
       const addFootprint = () => this.addFootprint(main, mini);
       mini.on('load', addFootprint);
       mini.on('style.load', addFootprint);
-      // Minimap -> main. remove() drops these listeners with the instance.
-      mini.on('drag', (event) => {
+      // Minimap -> main. `move` covers the drag and the inertia that follows a flick (MapLibre
+      // runs it as an easeTo carrying `originalEvent`, firing no `drag`). The follow's own
+      // `mini.jumpTo` has no originalEvent. remove() drops these listeners with the instance.
+      mini.on('move', (event) => {
         if (!event.originalEvent) return;
         this.syncing = true;
         try {
@@ -191,21 +192,20 @@ export class MapMinimapComponent {
           this.syncing = false;
         }
       });
-      mini.on('dragend', () => {
-        this.dragged = true;
-        clearTimeout(this.draggedTimer);
-        this.draggedTimer = setTimeout(() => (this.dragged = false), 0);
-      });
-      mini.on('click', (event) => {
-        if (this.dragged) return;
-        main.easeTo({ center: [event.lngLat.lng, event.lngLat.lat] });
-      });
+      // Main moves skip the minimap while it is moving (jumpTo would stop its gesture): catch up.
+      mini.on('moveend', () => this.syncIfOff(main, mini));
+      // MapLibre already drops the click that ends a drag (movement >= clickTolerance).
+      mini.on('click', (event) => main.easeTo({ center: [event.lngLat.lng, event.lngLat.lat] }));
+      // Interactive makes the canvas a tab stop and a second "Map" landmark: the labelled
+      // `.ng-minimap-map` div is the only one (keydown still bubbles to it).
+      const canvas = mini.getCanvas();
+      canvas.setAttribute('tabindex', '-1');
+      canvas.removeAttribute('role');
+      canvas.removeAttribute('aria-label');
       this.appliedStyle = style;
       this.minimap.set(mini);
 
       onCleanup(() => {
-        clearTimeout(this.draggedTimer);
-        this.dragged = false;
         this.minimap.set(null);
         try {
           mini.remove();
@@ -228,16 +228,16 @@ export class MapMinimapComponent {
       }
     });
 
-    // Main -> minimap: bound while the minimap exists, outside the zone.
+    // Main -> minimap: bound while the minimap exists.
     effect((onCleanup) => {
       const main = this.ctx.map();
       const mini = this.minimap();
       if (!main || !mini) return;
       const onMove = () => {
-        if (!this.syncing) this.follow(main, mini);
+        if (!this.syncing && !mini.isMoving()) this.follow(main, mini);
         this.updateFootprint(main, mini);
       };
-      this.zone.runOutsideAngular(() => main.on('move', onMove));
+      main.on('move', onMove);
       onCleanup(() => {
         try {
           main.off('move', onMove);
@@ -291,6 +291,25 @@ export class MapMinimapComponent {
   private follow(main: MapLibreMap, mini: MapLibreMap): void {
     const center = main.getCenter();
     mini.jumpTo({ center: [center.lng, center.lat], zoom: this.minimapZoom(main) });
+  }
+
+  /** Re-syncs the minimap when it drifted from the main viewport (a gesture ended meanwhile). */
+  private syncIfOff(main: MapLibreMap, mini: MapLibreMap): void {
+    try {
+      const center = main.getCenter();
+      const at = mini.getCenter();
+      const zoom = this.minimapZoom(main);
+      const eps = 1e-9;
+      if (
+        Math.abs(at.lng - center.lng) > eps ||
+        Math.abs(at.lat - center.lat) > eps ||
+        Math.abs(mini.getZoom() - zoom) > eps
+      ) {
+        mini.jumpTo({ center: [center.lng, center.lat], zoom });
+      }
+    } catch {
+      // the minimap may be mid-removal
+    }
   }
 
   /** Ring of the main viewport (canvas corners, so bearing and pitch are right). */
