@@ -248,4 +248,28 @@ describe('MapMinimapComponent', () => {
     await settle(fixture);
     expect(q(map, '.ng-minimap-map').getAttribute('aria-label')).toBe('Local');
   });
+  it('keeps the minimap in mercator after every style load', async () => {
+    const globe = { version: 8, projection: { type: 'globe' }, sources: {}, layers: [] };
+    const { fixture } = await render({ styles: { light: globe, dark: 'd.json' } });
+    const mini = fakeRegistry.maps[1];
+    mini.fire('style.load');
+    expect(mini.setProjection).toHaveBeenCalledTimes(1);
+    expect(mini.setProjection).toHaveBeenLastCalledWith({ type: 'mercator' });
+
+    update(fixture, { theme: 'dark' });
+    await settle(fixture);
+    update(fixture, { theme: 'light' });
+    await settle(fixture);
+    mini.fire('style.load');
+    expect(mini.setProjection).toHaveBeenCalledTimes(2);
+  });
+
+  it('survives setProjection throwing', async () => {
+    await render();
+    const mini = fakeRegistry.maps[1];
+    (mini.setProjection as any).mockImplementation(() => {
+      throw new Error('removed');
+    });
+    expect(() => mini.fire('style.load')).not.toThrow();
+  });
 });

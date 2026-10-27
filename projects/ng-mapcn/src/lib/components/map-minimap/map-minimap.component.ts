@@ -146,6 +146,15 @@ export class MapMinimapComponent {
         this.ctx.reportError(error);
         return;
       }
+      // A style may declare a globe projection: keep the overview flat on every style load (the
+      // initial one and each mirrored setStyle). remove() drops the minimap's own listeners.
+      mini.on('style.load', () => {
+        try {
+          mini.setProjection({ type: 'mercator' });
+        } catch {
+          // the minimap may be mid-removal
+        }
+      });
       this.appliedStyle = style;
       this.minimap.set(mini);
 
