@@ -14,16 +14,12 @@ import {
 } from '@angular/core';
 
 import { MapContextService } from '../../services/map-context.service';
+import { clamp01 } from '../../utils/clamp';
 import { pointAlongLine } from '../../utils/map-utils';
 import { RouteContextService } from '../map-route/route-context.service';
 
 /** A long frame (background tab, breakpoint) advances at most this much, so the marker never jumps. */
 const MAX_FRAME_MS = 100;
-
-/** Clamps to 0-1; NaN becomes 0. */
-export function clamp01(value: number): number {
-  return Number.isNaN(value) ? 0 : Math.min(1, Math.max(0, value));
-}
 
 /**
  * Animates the parent `<ng-map-route>` progress over time: it drives the route's progress

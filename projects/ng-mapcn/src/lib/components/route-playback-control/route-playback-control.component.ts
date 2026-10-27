@@ -14,9 +14,10 @@ import {
 
 import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MapContextService } from '../../services/map-context.service';
+import { clamp01 } from '../../utils/clamp';
 import { classTokens } from '../../utils/class-name';
 import { type MapControlPosition, mountMapControl } from '../../utils/map-control';
-import { clamp01, type RoutePlaybackComponent } from '../route-playback/route-playback.component';
+import { type RoutePlaybackComponent } from '../route-playback/route-playback.component';
 
 /**
  * Play/pause button, scrubber and speed selector for an `<ng-route-playback>`, mounted as a
