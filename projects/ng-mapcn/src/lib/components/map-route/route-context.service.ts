@@ -1,4 +1,4 @@
-import { computed, Injectable, type Signal } from '@angular/core';
+import { computed, Injectable, type Signal, signal } from '@angular/core';
 
 import { cumulativeLengths } from '../../utils/map-utils';
 
@@ -24,19 +24,32 @@ const EMPTY: RouteSources = {
 /** State `<ng-map-route>` shares with its `<ng-route-progress>` / `<ng-route-marker>` children. */
 @Injectable()
 export class RouteContextService {
-  private sources: RouteSources = EMPTY;
+  private readonly sourcesSignal = signal<RouteSources>(EMPTY);
+  private readonly override = signal<number | undefined>(undefined);
+  private readonly progressSignal = computed(
+    () => this.override() ?? this.sourcesSignal().progress(),
+  );
+
+  private get sources(): RouteSources {
+    return this.sourcesSignal();
+  }
 
   /** Called once by `<ng-map-route>`: children then read the route's own signals directly. */
   connect(sources: RouteSources): void {
-    this.sources = sources;
+    this.sourcesSignal.set(sources);
+  }
+
+  /** Lets a child (`<ng-route-playback>`) drive the progress instead of the route's input; `undefined` clears it. */
+  setProgressOverride(value: number | undefined): void {
+    this.override.set(value);
   }
 
   get coordinates(): Signal<[number, number][]> {
     return this.sources.coordinates;
   }
-  /** Covered fraction (0-1); `undefined` when the route has no progress. */
+  /** Covered fraction (0-1): the child override when set, else the route's `progress` input; `undefined` when neither. */
   get progress(): Signal<number | undefined> {
-    return this.sources.progress;
+    return this.progressSignal;
   }
   get layerId(): Signal<string> {
     return this.sources.layerId;
