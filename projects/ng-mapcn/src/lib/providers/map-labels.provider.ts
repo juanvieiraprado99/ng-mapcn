@@ -40,6 +40,14 @@ export interface MapLabels {
   hideLegend: string;
   /** Accessible name of the style switcher. */
   mapStyle: string;
+  /** Playback button while the route playback is paused. */
+  play: string;
+  /** Playback button while the route playback is running. */
+  pause: string;
+  /** Accessible name of the playback scrubber. */
+  playbackProgress: string;
+  /** Accessible name of the playback speed selector. */
+  playbackSpeed: string;
 }
 
 /** English defaults, used for every key that is not overridden. */
@@ -58,6 +66,10 @@ export const DEFAULT_MAP_LABELS: Readonly<MapLabels> = {
   showLegend: 'Show legend',
   hideLegend: 'Hide legend',
   mapStyle: 'Map style',
+  play: 'Play',
+  pause: 'Pause',
+  playbackProgress: 'Playback progress',
+  playbackSpeed: 'Playback speed',
 };
 
 /**

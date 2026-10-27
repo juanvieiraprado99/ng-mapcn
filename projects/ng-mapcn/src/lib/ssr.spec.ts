@@ -33,6 +33,7 @@ import { MarkerPopupComponent } from './components/marker-popup/marker-popup.com
 import { MarkerTooltipComponent } from './components/marker-tooltip/marker-tooltip.component';
 import { RouteMarkerComponent } from './components/route-marker/route-marker.component';
 import { RoutePlaybackComponent } from './components/route-playback/route-playback.component';
+import { RoutePlaybackControlComponent } from './components/route-playback-control/route-playback-control.component';
 import { RouteProgressComponent } from './components/route-progress/route-progress.component';
 
 /**
@@ -54,9 +55,10 @@ const TEMPLATE = `
     <ng-map-popup [longitude]="1" [latitude]="2" [closeButton]="true">Popup</ng-map-popup>
     <ng-map-route [coordinates]="route" [progress]="0.5">
       <ng-route-progress />
-      <ng-route-playback [playing]="true" />
+      <ng-route-playback #pb [playing]="true" />
       <ng-route-marker at="progress">Car</ng-route-marker>
     </ng-map-route>
+    <ng-route-playback-control [for]="pb" />
     <ng-map-geojson [data]="collection" />
     <ng-map-arc [data]="arcs" />
     <ng-map-cluster-layer [data]="collection" />
@@ -129,6 +131,7 @@ describe('server-side rendering', () => {
         RouteMarkerComponent,
         RouteProgressComponent,
         RoutePlaybackComponent,
+        RoutePlaybackControlComponent,
         MapGeoJSONComponent,
         MapArcComponent,
         MapClusterLayerComponent,
