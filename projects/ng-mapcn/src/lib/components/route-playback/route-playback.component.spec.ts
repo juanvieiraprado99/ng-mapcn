@@ -2,6 +2,7 @@ import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { loadAndSettle, reloadStyle, renderMap, update } from '../../../testing/render';
+import { pointAlongLine } from '../../utils/map-utils';
 import { MapRouteComponent } from '../map-route/map-route.component';
 import { RouteProgressComponent } from '../route-progress/route-progress.component';
 import { RoutePlaybackComponent } from './route-playback.component';
@@ -11,7 +12,7 @@ const TEMPLATE = `
     <ng-map-route id="r1" [coordinates]="coords" [progress]="0.2">
       <ng-route-progress />
       @if (show) {
-        <ng-route-playback [(playing)]="playing" [(progress)]="progress" [duration]="1000" [speed]="speed" [loop]="loop" (ended)="endedCount = endedCount + 1" />
+        <ng-route-playback [(playing)]="playing" [(progress)]="progress" [duration]="1000" [speed]="speed" [loop]="loop" [follow]="follow" (ended)="endedCount = endedCount + 1" />
       }
     </ng-map-route>
   </ng-map>
@@ -31,6 +32,7 @@ type Host = {
   progress: number;
   speed: number;
   loop: boolean;
+  follow: boolean;
   endedCount: number;
 };
 
@@ -42,6 +44,7 @@ async function renderLoaded(hostProps: Partial<Host> = {}) {
     progress: 0,
     speed: 1,
     loop: false,
+    follow: false,
     endedCount: 0,
     ...hostProps,
     playing: false, // started below, once the load settled (its timers would run frames)
@@ -246,5 +249,82 @@ describe('RoutePlaybackComponent', () => {
     frames(fixture, 5);
     expect(host.progress).toBeGreaterThan(before);
     expect(covered(map)).toBeCloseTo(host.progress, 2);
+  });
+
+  describe('follow', () => {
+    const jumps = (map: any) => map.jumpTo.mock.calls as [Record<string, unknown>][];
+
+    it('centers the map on the head each frame', async () => {
+      const { fixture, map, host } = await renderLoaded({ playing: true, follow: true });
+      fixture.detectChanges();
+      frames(fixture, 5);
+      const last = jumps(map).at(-1)![0];
+      expect(Object.keys(last)).toEqual(['center']);
+      expect(last['center']).toEqual(pointAlongLine(COORDS, host.progress));
+    });
+
+    it('never moves the camera when off', async () => {
+      const { fixture, map } = await renderLoaded({ playing: true });
+      fixture.detectChanges();
+      frames(fixture, 5);
+      expect(map.jumpTo).not.toHaveBeenCalled();
+    });
+
+    it('recenters on seek() while paused', async () => {
+      const { map, playback } = await renderLoaded({ follow: true });
+      playback.seek(0.5);
+      expect(jumps(map).at(-1)![0]['center']).toEqual(pointAlongLine(COORDS, 0.5));
+    });
+
+    it('a user drag suspends following until play()', async () => {
+      const { fixture, map, playback } = await renderLoaded({ playing: true, follow: true });
+      fixture.detectChanges();
+      frames(fixture, 3);
+      map.fire('dragstart', { originalEvent: new MouseEvent('mousedown') });
+      (map.jumpTo as any).mockClear();
+      frames(fixture, 3);
+      expect(map.jumpTo).not.toHaveBeenCalled();
+      playback.pause();
+      playback.play();
+      fixture.detectChanges();
+      frames(fixture, 3);
+      expect(map.jumpTo).toHaveBeenCalled();
+    });
+
+    it('a programmatic dragstart (no originalEvent) does not suspend', async () => {
+      const { fixture, map } = await renderLoaded({ playing: true, follow: true });
+      fixture.detectChanges();
+      map.fire('dragstart', {});
+      (map.jumpTo as any).mockClear();
+      frames(fixture, 3);
+      expect(map.jumpTo).toHaveBeenCalled();
+    });
+
+    it('skips follow on a route with fewer than 2 coordinates', async () => {
+      const { fixture, map } = await renderLoaded({
+        playing: true,
+        follow: true,
+        coords: [[1, 1]],
+      });
+      fixture.detectChanges();
+      frames(fixture, 3);
+      expect(map.jumpTo).not.toHaveBeenCalled();
+    });
+
+    it('binds dragstart only while follow is true and unbinds on destroy', async () => {
+      const { fixture, map } = await renderLoaded();
+      expect(map.listenerCount('dragstart')).toBe(0);
+      update(fixture, { follow: true });
+      fixture.detectChanges();
+      expect(map.listenerCount('dragstart')).toBe(1);
+      update(fixture, { follow: false });
+      fixture.detectChanges();
+      expect(map.listenerCount('dragstart')).toBe(0);
+      update(fixture, { follow: true });
+      fixture.detectChanges();
+      update(fixture, { show: false });
+      fixture.detectChanges();
+      expect(map.listenerCount('dragstart')).toBe(0);
+    });
   });
 });

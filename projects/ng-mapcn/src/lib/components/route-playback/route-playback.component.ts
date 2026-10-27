@@ -13,6 +13,8 @@ import {
   untracked,
 } from '@angular/core';
 
+import { MapContextService } from '../../services/map-context.service';
+import { pointAlongLine } from '../../utils/map-utils';
 import { RouteContextService } from '../map-route/route-context.service';
 
 /** A long frame (background tab, breakpoint) advances at most this much, so the marker never jumps. */
@@ -49,12 +51,24 @@ export class RoutePlaybackComponent {
   readonly ended = output<void>();
 
   private readonly routeCtx = inject(RouteContextService);
+  private readonly mapCtx = inject(MapContextService);
+  private followSuspended = false;
   private readonly zone = inject(NgZone);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   constructor() {
     effect(() => this.routeCtx.setProgressOverride(clamp01(this.progress())));
     inject(DestroyRef).onDestroy(() => this.routeCtx.setProgressOverride(undefined));
+
+    effect((onCleanup) => {
+      const map = this.mapCtx.map();
+      if (!this.follow() || !map) return;
+      const onDrag = (event: { originalEvent?: unknown }) => {
+        if (event.originalEvent) this.followSuspended = true;
+      };
+      this.zone.runOutsideAngular(() => map.on('dragstart', onDrag));
+      onCleanup(() => map.off('dragstart', onDrag));
+    });
 
     effect((onCleanup) => {
       if (!this.isBrowser || !this.playing()) return;
@@ -73,6 +87,7 @@ export class RoutePlaybackComponent {
   }
 
   play(): void {
+    this.followSuspended = false;
     if (clamp01(this.progress()) >= 1) this.progress.set(0);
     this.playing.set(true);
   }
@@ -87,12 +102,29 @@ export class RoutePlaybackComponent {
   }
 
   restart(): void {
+    this.followSuspended = false;
     this.progress.set(0);
     this.playing.set(true);
   }
 
   seek(progress: number): void {
     this.progress.set(clamp01(progress));
+    this.recenter();
+  }
+
+  /** Moves the camera to the head (center only) unless following is off, suspended by a drag, or impossible. */
+  private recenter(): void {
+    untracked(() => {
+      const map = this.mapCtx.map();
+      if (!this.follow() || this.followSuspended || !map) return;
+      if (this.routeCtx.coordinates().length < 2) return;
+      const center = pointAlongLine(
+        this.routeCtx.coordinates(),
+        clamp01(this.progress()),
+        this.routeCtx.cumulative(),
+      );
+      if (center) map.jumpTo({ center });
+    });
   }
 
   /** Advances by `dt` ms; returns whether the animation keeps running. */
@@ -104,13 +136,16 @@ export class RoutePlaybackComponent {
       const next = clamp01(this.progress()) + (dt * speed) / duration;
       if (next < 1) {
         this.progress.set(next);
+        this.recenter();
         return true;
       }
       if (this.loop()) {
         this.progress.set(next % 1);
+        this.recenter();
         return true;
       }
       this.progress.set(1);
+      this.recenter();
       this.playing.set(false);
       this.zone.run(() => this.ended.emit());
       return false;
