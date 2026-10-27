@@ -1,5 +1,9 @@
 import { computed, Injectable, type Signal, signal } from '@angular/core';
-import { type LngLatBoundsLike, type Map as MapLibreMap } from 'maplibre-gl';
+import {
+  type LngLatBoundsLike,
+  type Map as MapLibreMap,
+  type StyleSpecification,
+} from 'maplibre-gl';
 
 import { type MapStylesConfig } from '../styles/map-styles';
 import {
@@ -32,6 +36,10 @@ export class MapContextService {
    * precedence and applies it through its own `setStyle` path, so the load gate closes and reopens.
    */
   readonly styleOverride = this.styleOverrideSignal.asReadonly();
+
+  private readonly currentStyleSignal = signal<string | StyleSpecification | null>(null);
+  /** Style the map is currently showing (URL or spec), `null` before the map exists. Set by `<ng-map>`. */
+  readonly currentStyle = this.currentStyleSignal.asReadonly();
 
   private readonly sourceCounts = new Map<string, number>();
   private readonly sourceIdsSignal = signal<ReadonlySet<string>>(new Set());
@@ -69,6 +77,10 @@ export class MapContextService {
   /** Sets (or clears, with `undefined`) the runtime basemap override. Applied by `<ng-map>`. */
   setStyleOverride(config: MapStylesConfig | undefined): void {
     this.styleOverrideSignal.set(config);
+  }
+
+  setCurrentStyle(style: string | StyleSpecification): void {
+    this.currentStyleSignal.set(style);
   }
 
   setLoadedFlag(value: boolean): void {
@@ -210,6 +222,7 @@ export class MapContextService {
     this.loadedFlagSignal.set(false);
     this.styleLoadedFlagSignal.set(false);
     this.styleOverrideSignal.set(undefined);
+    this.currentStyleSignal.set(null);
     this.sourceCounts.clear();
     this.sourceIdsSignal.set(new Set());
     this.imageRefs.clear();

@@ -326,6 +326,7 @@ export class MapComponent {
         return m;
       });
       this.currentStyle = initialStyle;
+      this.ctx.setCurrentStyle(initialStyle);
 
       this.mapInstance.set(map);
       this.ctx.setMap(map);
@@ -385,6 +386,7 @@ export class MapComponent {
     const style = this.getMapStyle(theme);
     if (style === this.currentStyle) return;
     this.currentStyle = style;
+    this.ctx.setCurrentStyle(style);
     this.clearStyleTimeout();
     this.stylePending = true;
     this.ctx.setStyleLoadedFlag(false);

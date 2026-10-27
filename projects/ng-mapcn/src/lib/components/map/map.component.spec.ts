@@ -401,6 +401,27 @@ describe('MapComponent', () => {
       expect(map!.setStyle).toHaveBeenCalledWith('b.json', expect.objectContaining({ diff: true }));
     });
 
+    describe('currentStyle on the context', () => {
+      it('publishes the initial style on the context', async () => {
+        const { ctx } = await render();
+        expect(ctx.currentStyle()).toBe(defaultStyles.light);
+      });
+
+      it('publishes the new style after a theme switch', async () => {
+        const { fixture, ctx } = await render();
+        update(fixture, { theme: 'dark' });
+        expect(ctx.currentStyle()).toBe(defaultStyles.dark);
+      });
+
+      it('publishes a style switcher override', async () => {
+        const { fixture, map, ctx } = await render();
+        loadMap(map!);
+        ctx.setStyleOverride({ light: 'x.json' });
+        fixture.detectChanges();
+        expect(ctx.currentStyle()).toBe('x.json');
+      });
+    });
+
     describe('style override', () => {
       it('an override wins over [styles]', async () => {
         const { fixture, map, ctx } = await render({ styles: { light: 'a.json' } });
