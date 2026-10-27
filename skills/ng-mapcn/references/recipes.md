@@ -180,7 +180,7 @@ Progress, a marker that follows it, and an active (selected) state:
 </ng-map-route>
 ```
 
-Import `RouteProgressComponent`, `RouteMarkerComponent` and `MarkerContentComponent` too. `progress` (0 to 1) is measured along the cumulative distance. Without a `ng-route-progress` child nothing is drawn for it, but `ng-route-marker at="progress"` still follows it.
+Import `RouteProgressComponent`, `RouteMarkerComponent` and `MarkerContentComponent` too. `progress` (0 to 1) is measured along the cumulative distance. Without a `ng-route-progress` child nothing is drawn for it, but `ng-route-marker at="progress"` still follows it. To animate it over time, add `<ng-route-playback #pb />` inside the route and `<ng-route-playback-control [for]="pb" />` as a child of `ng-map` (see components.md, Route playback).
 
 ## GeoJSON with hover
 

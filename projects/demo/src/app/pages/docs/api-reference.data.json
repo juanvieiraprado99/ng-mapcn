@@ -8,7 +8,7 @@
   ],
   "provideLabelsCode": "import { inject } from '@angular/core';\nimport { provideMapLabels } from 'ng-mapcn';\n\nexport const appConfig: ApplicationConfig = {\n  providers: [\n    // Static (partial) labels merge over the English defaults...\n    provideMapLabels({\n      zoomIn: 'Aproximar',\n      zoomOut: 'Afastar',\n      resetNorth: 'Apontar para o norte',\n      locate: 'Minha localização',\n      fullscreen: 'Tela cheia',\n      loading: 'Carregando mapa',\n      closePopup: 'Fechar',\n    }),\n\n    // ...or a signal, so the labels follow the active locale\n    provideMapLabels(() => inject(I18nService).mapLabels),\n  ],\n};\n\n// Per component: <ng-map-controls [labels]=\"{ zoomIn: 'Acercar' }\" />",
   "provideLabelsRows": [
-    { "name": "MapLabels", "type": "{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; popup; marker; scale; legend; showLegend; hideLegend; mapStyle: string }", "default": "", "description": "Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map popup', 'Map marker', 'Map scale', 'Map legend', 'Show legend', 'Hide legend', 'Map style'." },
+    { "name": "MapLabels", "type": "{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; popup; marker; scale; legend; showLegend; hideLegend; mapStyle; play; pause; playbackProgress; playbackSpeed: string }", "default": "", "description": "Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map popup', 'Map marker', 'Map scale', 'Map legend', 'Show legend', 'Hide legend', 'Map style', 'Play', 'Pause', 'Playback progress', 'Playback speed'." },
     { "name": "provideMapLabels(source)", "type": "Partial<MapLabels> | Signal<Partial<MapLabels> | undefined> | (() => Signal<Partial<MapLabels> | undefined>)", "default": "", "description": "Provider for app-wide labels; missing keys fall back to the English defaults. The factory form runs in an injection context, so it can inject() a service holding the signal." },
     { "name": "MAP_LABELS", "type": "InjectionToken<Signal<Partial<MapLabels> | undefined>>", "default": "", "description": "The token itself, if you want to provide it by hand." },
     { "name": "DEFAULT_MAP_LABELS", "type": "MapLabels", "default": "", "description": "The English defaults." }
@@ -266,6 +266,40 @@
       "description": "A marker placed along the parent ng-map-route. Project ng-marker-content (and label, popup, tooltip) into it. Created once and moved as progress or coordinates change.",
       "inputs": [
         { "name": "at", "type": "'start' | 'end' | 'progress' | number", "default": "'start'", "description": "Position on the route: its start, end, the current progress, or a fraction between 0 and 1 of the total distance." }
+      ],
+      "outputs": []
+    },
+    {
+      "id": "routeplayback",
+      "title": "RoutePlayback",
+      "selector": "ng-route-playback",
+      "description": "Animates the parent ng-map-route over time. While present it overrides the route's progress input, so ng-route-progress and ng-route-marker at=\"progress\" follow along. Control it through the playing/progress/speed bindings or the play(), pause(), toggle(), restart() and seek() methods on a template reference. The frame loop runs outside the Angular zone. Use inside ng-map-route.",
+      "inputs": [
+        { "name": "playing", "type": "boolean", "default": "false", "description": "Whether the animation is running. A model(): supports [(playing)]." },
+        { "name": "progress", "type": "number", "default": "0", "description": "Covered fraction (0 to 1) of the route. A model(): supports [(progress)]." },
+        { "name": "speed", "type": "number", "default": "1", "description": "Playback rate multiplier. A model(): supports [(speed)]." },
+        { "name": "duration", "type": "number", "default": "10000", "description": "Milliseconds a full pass takes at speed 1." },
+        { "name": "loop", "type": "boolean", "default": "false", "description": "Wrap to the start instead of stopping at the end." },
+        { "name": "follow", "type": "boolean", "default": "false", "description": "Center the camera on the playback head every frame. A user drag suspends following until play() or restart()." }
+      ],
+      "outputs": [
+        { "name": "ended", "type": "void", "default": "", "description": "Emits once when playback reaches the end (never when loop is on). Emitted inside the Angular zone." },
+        { "name": "playingChange", "type": "boolean", "default": "", "description": "Emits the new playing state (the [(playing)] binding)." },
+        { "name": "progressChange", "type": "number", "default": "", "description": "Emits the new progress (the [(progress)] binding)." },
+        { "name": "speedChange", "type": "number", "default": "", "description": "Emits the new speed (the [(speed)] binding)." }
+      ]
+    },
+    {
+      "id": "routeplaybackcontrol",
+      "title": "RoutePlaybackControl",
+      "selector": "ng-route-playback-control",
+      "description": "Play/pause button, progress scrubber and speed selector for an ng-route-playback, mounted as a MapLibre control so it stacks with the other corner controls. Place it as a direct child of ng-map (not inside the route) and point for at the playback template reference.",
+      "inputs": [
+        { "name": "for", "type": "RoutePlaybackComponent", "default": "required", "description": "The playback to drive, e.g. #pb on ng-route-playback." },
+        { "name": "position", "type": "'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'", "default": "'bottom-left'", "description": "Corner of the map to place the control in." },
+        { "name": "speeds", "type": "number[]", "default": "[0.5, 1, 2, 4]", "description": "Speeds offered by the selector; the current speed is added when missing." },
+        { "name": "labels", "type": "Partial<MapLabels>", "default": "", "description": "Label overrides (play, pause, playbackProgress, playbackSpeed), merged over provideMapLabels() and the English defaults." },
+        { "name": "className", "type": "string", "default": "", "description": "Extra space-separated classes added to the rendered .ng-playback element. Reactive; the built-in class is always kept." }
       ],
       "outputs": []
     },

@@ -175,7 +175,7 @@ export const nextMilestones: RoadmapMilestone[] = [
       todo('ng-map-minimap: overview map synced with the main viewport'),
       done('ng-map-symbol-layer: icons and text labels from sprites or images'),
       done('ng-map-style-switcher: basemap picker as a control'),
-      todo('Animated route playback with play, pause and speed'),
+      done('Animated route playback with play, pause and speed'),
     ],
   },
   {

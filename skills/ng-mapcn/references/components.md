@@ -2,7 +2,7 @@
 
 All components are standalone, `OnPush`, and use signal inputs/outputs. Everything below is exported from `ng-mapcn` (or from the folder `ng add` copied into your app). Coordinates are `[longitude, latitude]`.
 
-Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-scale](#ng-map-scale) | [ng-map-legend](#ng-map-legend) | [ng-map-style-switcher](#ng-map-style-switcher) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-symbol-layer](#ng-map-symbol-layer) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [ng-map-draw](#ng-map-draw) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
+Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-scale](#ng-map-scale) | [ng-map-legend](#ng-map-legend) | [ng-map-style-switcher](#ng-map-style-switcher) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [Route playback](#route-playback) | [ng-route-playback-control](#ng-route-playback-control) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-symbol-layer](#ng-map-symbol-layer) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [ng-map-draw](#ng-map-draw) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
 
 ## ng-map
 
@@ -39,7 +39,7 @@ The map is created in `afterNextRender` (browser only). If the container has no 
 
 ## ng-map-controls
 
-Class `MapControlsComponent`. Custom button UI, mounted as a MapLibre control: the `.ng-controls` card renders inside `.maplibregl-ctrl-<position>`, so it stacks with `ng-map-scale`, `ng-map-legend` and `ng-map-style-switcher` in the same corner. Breaking DOM change: the card no longer sits in a host element with fixed bottom offsets, so style it with `className`, not host-descendant selectors.
+Class `MapControlsComponent`. Custom button UI, mounted as a MapLibre control: the `.ng-controls` card renders inside `.maplibregl-ctrl-<position>`, so it stacks with `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher` and `ng-route-playback-control` in the same corner. Breaking DOM change: the card no longer sits in a host element with fixed bottom offsets, so style it with `className`, not host-descendant selectors.
 
 | Input            | Type                                                           | Default          |
 | ---------------- | -------------------------------------------------------------- | ---------------- |
@@ -268,6 +268,46 @@ Place them inside `<ng-map-route>`. They read the route through `RouteContextSer
   <ng-route-marker at="progress"><ng-marker-content>🚚</ng-marker-content></ng-route-marker>
 </ng-map-route>
 ```
+
+### Route playback
+
+`ng-route-playback` (`RoutePlaybackComponent`) is a route child that animates the route's progress. While it exists it overrides the route's `[progress]` input, so `ng-route-progress` and `ng-route-marker at="progress"` animate. The frame loop (`requestAnimationFrame`, a frame advances at most 100 ms) runs outside the Angular zone and does nothing on the server. Put a template reference on it (`<ng-route-playback #pb />`) to call its methods.
+
+| Input / model | Type      | Default | Notes                                                                                            |
+| ------------- | --------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `playing`     | `boolean` | `false` | `model()`, `[(playing)]`                                                                         |
+| `progress`    | `number`  | `0`     | `model()`, `[(progress)]`; covered fraction, clamped to 0 to 1                                   |
+| `speed`       | `number`  | `1`     | `model()`, `[(speed)]`; multiplier                                                               |
+| `duration`    | `number`  | `10000` | Milliseconds for a full pass at speed 1                                                          |
+| `loop`        | `boolean` | `false` | Wrap to the start instead of stopping                                                            |
+| `follow`      | `boolean` | `false` | Centers the camera on the head each frame; a user drag suspends it until `play()` or `restart()` |
+
+Output `ended: void` fires once when playback reaches the end (never with `loop`), inside the Angular zone. Methods: `play()` (restarts from 0 when finished), `pause()`, `toggle()`, `restart()`, `seek(fraction)` (also recenters when `follow`).
+
+```html
+<ng-map>
+  <ng-map-route [coordinates]="coords">
+    <ng-route-progress />
+    <ng-route-marker at="progress"><ng-marker-content>🚚</ng-marker-content></ng-route-marker>
+    <ng-route-playback #pb [duration]="12000" [follow]="true" (ended)="done.set(true)" />
+  </ng-map-route>
+  <ng-route-playback-control [for]="pb" position="bottom-left" />
+</ng-map>
+```
+
+## ng-route-playback-control
+
+Class `RoutePlaybackControlComponent`. Play/pause button, progress scrubber and speed selector for a playback, mounted as a MapLibre control (stacks with the other corner controls). Place it as a direct child of `ng-map`, not inside the route. Not rendered on the server.
+
+| Input       | Type                                                           | Default          |
+| ----------- | -------------------------------------------------------------- | ---------------- |
+| `for`       | `RoutePlaybackComponent` (required)                            |                  |
+| `position`  | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'bottom-left'`  |
+| `speeds`    | `number[]`                                                     | `[0.5, 1, 2, 4]` |
+| `labels`    | `Partial<MapLabels>`                                           | `undefined`      |
+| `className` | `string`                                                       | `undefined`      |
+
+`speeds` always includes the current speed. `labels.play` / `labels.pause` name the button, `labels.playbackProgress` the scrubber and `labels.playbackSpeed` the selector (`'Play'`, `'Pause'`, `'Playback progress'`, `'Playback speed'`). `className` adds classes to the rendered `.ng-playback` element. No outputs.
 
 ## ng-map-geojson
 
@@ -588,7 +628,7 @@ provideMapLabels(
 ): Provider
 ```
 
-Translates the control buttons, the loader, the popup close button and the scale, legend and style switcher names. Same three forms as `provideMapStyles`; a signal relabels every map when the locale changes. Missing keys fall back to `DEFAULT_MAP_LABELS` (English). A `labels` input on `ng-map`, `ng-map-controls`, `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher`, `ng-map-popup` and `ng-marker-popup` wins over the provider. `MAP_LABELS` is the underlying `InjectionToken<Signal<Partial<MapLabels> | undefined>>`; `injectMapLabels(override?)` resolves defaults, then provider, then override, in an injection context.
+Translates the control buttons, the loader, the popup close button and the scale, legend and style switcher names. Same three forms as `provideMapStyles`; a signal relabels every map when the locale changes. Missing keys fall back to `DEFAULT_MAP_LABELS` (English). A `labels` input on `ng-map`, `ng-map-controls`, `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher`, `ng-route-playback-control`, `ng-map-popup` and `ng-marker-popup` wins over the provider. `MAP_LABELS` is the underlying `InjectionToken<Signal<Partial<MapLabels> | undefined>>`; `injectMapLabels(override?)` resolves defaults, then provider, then override, in an injection context.
 
 ```ts
 interface MapLabels {
@@ -606,6 +646,10 @@ interface MapLabels {
   showLegend: string; // 'Show legend'
   hideLegend: string; // 'Hide legend'
   mapStyle: string; // 'Map style'
+  play: string; // 'Play' (playback button while paused)
+  pause: string; // 'Pause' (playback button while running)
+  playbackProgress: string; // 'Playback progress' (scrubber name)
+  playbackSpeed: string; // 'Playback speed' (speed selector name)
 }
 ```
 

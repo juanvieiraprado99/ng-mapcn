@@ -389,6 +389,48 @@ A marker placed along the parent ng-map-route. Project ng-marker-content (and la
 |---|---|---|---|
 | `at` | `'start' \| 'end' \| 'progress' \| number` | `'start'` | Position on the route: its start, end, the current progress, or a fraction between 0 and 1 of the total distance. |
 
+### RoutePlayback
+
+`ng-route-playback`
+
+Animates the parent ng-map-route over time. While present it overrides the route's progress input, so ng-route-progress and ng-route-marker at="progress" follow along. Control it through the playing/progress/speed bindings or the play(), pause(), toggle(), restart() and seek() methods on a template reference. The frame loop runs outside the Angular zone. Use inside ng-map-route.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `playing` | `boolean` | `false` | Whether the animation is running. A model(): supports [(playing)]. |
+| `progress` | `number` | `0` | Covered fraction (0 to 1) of the route. A model(): supports [(progress)]. |
+| `speed` | `number` | `1` | Playback rate multiplier. A model(): supports [(speed)]. |
+| `duration` | `number` | `10000` | Milliseconds a full pass takes at speed 1. |
+| `loop` | `boolean` | `false` | Wrap to the start instead of stopping at the end. |
+| `follow` | `boolean` | `false` | Center the camera on the playback head every frame. A user drag suspends following until play() or restart(). |
+
+**Outputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `ended` | `void` | — | Emits once when playback reaches the end (never when loop is on). Emitted inside the Angular zone. |
+| `playingChange` | `boolean` | — | Emits the new playing state (the [(playing)] binding). |
+| `progressChange` | `number` | — | Emits the new progress (the [(progress)] binding). |
+| `speedChange` | `number` | — | Emits the new speed (the [(speed)] binding). |
+
+### RoutePlaybackControl
+
+`ng-route-playback-control`
+
+Play/pause button, progress scrubber and speed selector for an ng-route-playback, mounted as a MapLibre control so it stacks with the other corner controls. Place it as a direct child of ng-map (not inside the route) and point for at the playback template reference.
+
+**Inputs**
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `for` | `RoutePlaybackComponent` | `required` | The playback to drive, e.g. #pb on ng-route-playback. |
+| `position` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'bottom-left'` | Corner of the map to place the control in. |
+| `speeds` | `number[]` | `[0.5, 1, 2, 4]` | Speeds offered by the selector; the current speed is added when missing. |
+| `labels` | `Partial<MapLabels>` | — | Label overrides (play, pause, playbackProgress, playbackSpeed), merged over provideMapLabels() and the English defaults. |
+| `className` | `string` | — | Extra space-separated classes added to the rendered .ng-playback element. Reactive; the built-in class is always kept. |
+
 ### MapArc
 
 `ng-map-arc`
@@ -745,7 +787,7 @@ export const appConfig: ApplicationConfig = {
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `MapLabels` | `{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; popup; marker; scale; legend; showLegend; hideLegend; mapStyle: string }` | — | Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map popup', 'Map marker', 'Map scale', 'Map legend', 'Show legend', 'Hide legend', 'Map style'. |
+| `MapLabels` | `{ zoomIn; zoomOut; resetNorth; locate; fullscreen; loading; closePopup; popup; marker; scale; legend; showLegend; hideLegend; mapStyle; play; pause; playbackProgress; playbackSpeed: string }` | — | Every user-facing and aria string the library renders. Defaults are English: 'Zoom in', 'Zoom out', 'Reset north', 'My location', 'Toggle fullscreen', 'Loading map', 'Close popup', 'Map popup', 'Map marker', 'Map scale', 'Map legend', 'Show legend', 'Hide legend', 'Map style', 'Play', 'Pause', 'Playback progress', 'Playback speed'. |
 | `provideMapLabels(source)` | `Partial<MapLabels> \| Signal<Partial<MapLabels> \| undefined> \| (() => Signal<Partial<MapLabels> \| undefined>)` | — | Provider for app-wide labels; missing keys fall back to the English defaults. The factory form runs in an injection context, so it can inject() a service holding the signal. |
 | `MAP_LABELS` | `InjectionToken<Signal<Partial<MapLabels> \| undefined>>` | — | The token itself, if you want to provide it by hand. |
 | `DEFAULT_MAP_LABELS` | `MapLabels` | — | The English defaults. |
