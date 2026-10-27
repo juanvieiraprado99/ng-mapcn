@@ -342,4 +342,81 @@ describe('MapMinimapComponent', () => {
       expect(mini.getLayer('ng-minimap-footprint-line').paint['line-color']).toBe('#60a5fa');
     });
   });
+
+  describe('navigation', () => {
+    const drag = (mini: any) => mini.fire('drag', { originalEvent: new MouseEvent('mousemove') });
+
+    it('dragging the minimap pans the main map without echoing back', async () => {
+      const { map } = await render();
+      const mini = fakeRegistry.maps[1];
+      mini.jumpTo({ center: [30, 40] });
+      (mini.jumpTo as any).mockClear();
+      (map.jumpTo as any).mockClear();
+      drag(mini);
+      expect(map.jumpTo).toHaveBeenCalledTimes(1);
+      expect(map.jumpTo).toHaveBeenCalledWith({ center: { lng: 30, lat: 40 } });
+      expect(map.getCenter()).toEqual({ lng: 30, lat: 40 });
+      expect(mini.jumpTo).not.toHaveBeenCalled();
+      // a later main move syncs again
+      map.jumpTo({ center: [1, 1], zoom: 8 });
+      expect(mini.jumpTo).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores a programmatic drag event (no originalEvent)', async () => {
+      const { map } = await render();
+      const mini = fakeRegistry.maps[1];
+      (map.jumpTo as any).mockClear();
+      mini.fire('drag');
+      expect(map.jumpTo).not.toHaveBeenCalled();
+    });
+
+    it('clicking recenters the main map with easeTo', async () => {
+      const { map } = await render();
+      fakeRegistry.maps[1].fire('click', { lngLat: { lng: 5, lat: 6 } });
+      expect(map.easeTo).toHaveBeenCalledWith({ center: [5, 6] });
+    });
+
+    it('ignores the click that ends a drag, then clicks work again', async () => {
+      const { map } = await render();
+      const mini = fakeRegistry.maps[1];
+      mini.fire('dragend');
+      mini.fire('click', { lngLat: { lng: 5, lat: 6 } });
+      expect(map.easeTo).not.toHaveBeenCalled();
+      vi.runAllTimers();
+      mini.fire('click', { lngLat: { lng: 7, lat: 8 } });
+      expect(map.easeTo).toHaveBeenCalledWith({ center: [7, 8] });
+    });
+
+    it('drops the pending timer on teardown', async () => {
+      const { fixture } = await render();
+      const mini = fakeRegistry.maps[1];
+      mini.fire('dragend');
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
+      update(fixture, { show: false });
+      await settle(fixture);
+      expect(mini.removed).toBe(true);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('arrow keys pan the main map by 100 px', async () => {
+      const { map } = await render();
+      const el = q(map, '.ng-minimap-map');
+      const press = (key: string) => {
+        const e = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+        el.dispatchEvent(e);
+        return e;
+      };
+      expect(press('ArrowRight').defaultPrevented).toBe(true);
+      expect(map.panBy).toHaveBeenLastCalledWith([100, 0]);
+      press('ArrowLeft');
+      expect(map.panBy).toHaveBeenLastCalledWith([-100, 0]);
+      press('ArrowUp');
+      expect(map.panBy).toHaveBeenLastCalledWith([0, -100]);
+      press('ArrowDown');
+      expect(map.panBy).toHaveBeenLastCalledWith([0, 100]);
+      expect(map.panBy).toHaveBeenCalledTimes(4);
+      expect(press('a').defaultPrevented).toBe(false);
+      expect(map.panBy).toHaveBeenCalledTimes(4);
+    });
+  });
 });

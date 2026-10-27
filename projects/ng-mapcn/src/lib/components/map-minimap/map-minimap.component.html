@@ -13,6 +13,7 @@
       [style.width.px]="width()"
       [style.height.px]="height()"
       [hidden]="collapsed()"
+      (keydown)="onKeydown($event)"
     ></div>
     <button
       type="button"

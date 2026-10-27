@@ -37,6 +37,13 @@ type MapStyle = string | StyleSpecification;
 const FOOTPRINT_SOURCE = 'ng-minimap-footprint';
 const FOOTPRINT_FILL = 'ng-minimap-footprint-fill';
 const FOOTPRINT_LINE = 'ng-minimap-footprint-line';
+const KEY_PAN = 100;
+const KEY_OFFSETS: Record<string, [number, number]> = {
+  ArrowRight: [KEY_PAN, 0],
+  ArrowLeft: [-KEY_PAN, 0],
+  ArrowUp: [0, -KEY_PAN],
+  ArrowDown: [0, KEY_PAN],
+};
 const footprintColor = (theme: 'light' | 'dark') => (theme === 'dark' ? '#60a5fa' : '#3b82f6');
 
 /**
@@ -89,6 +96,9 @@ export class MapMinimapComponent {
   private readonly minimap = signal<MapLibreMap | null>(null);
   /** Set while the minimap drives the main map, so the main `move` does not echo back. */
   private syncing = false;
+  /** True from a minimap `dragend` until the next macrotask: filters the click ending the drag. */
+  private dragged = false;
+  private draggedTimer: ReturnType<typeof setTimeout> | undefined;
   private appliedStyle: MapStyle | null = null;
 
   /** `styles` (themed) > `blank` > the main map's effective style. */
@@ -171,10 +181,31 @@ export class MapMinimapComponent {
       const addFootprint = () => this.addFootprint(main, mini);
       mini.on('load', addFootprint);
       mini.on('style.load', addFootprint);
+      // Minimap -> main. remove() drops these listeners with the instance.
+      mini.on('drag', (event) => {
+        if (!event.originalEvent) return;
+        this.syncing = true;
+        try {
+          main.jumpTo({ center: mini.getCenter() });
+        } finally {
+          this.syncing = false;
+        }
+      });
+      mini.on('dragend', () => {
+        this.dragged = true;
+        clearTimeout(this.draggedTimer);
+        this.draggedTimer = setTimeout(() => (this.dragged = false), 0);
+      });
+      mini.on('click', (event) => {
+        if (this.dragged) return;
+        main.easeTo({ center: [event.lngLat.lng, event.lngLat.lat] });
+      });
       this.appliedStyle = style;
       this.minimap.set(mini);
 
       onCleanup(() => {
+        clearTimeout(this.draggedTimer);
+        this.dragged = false;
         this.minimap.set(null);
         try {
           mini.remove();
@@ -243,6 +274,14 @@ export class MapMinimapComponent {
 
   protected toggle(): void {
     this.collapsed.update((value) => !value);
+  }
+
+  protected onKeydown(event: KeyboardEvent): void {
+    const offset = KEY_OFFSETS[event.key];
+    const main = this.ctx.map();
+    if (!offset || !main) return;
+    event.preventDefault();
+    main.panBy(offset);
   }
 
   private minimapZoom(main: MapLibreMap): number {
