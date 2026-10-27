@@ -16,7 +16,7 @@ import { injectMapLabels, type MapLabels } from '../../providers/map-labels.prov
 import { MapContextService } from '../../services/map-context.service';
 import { classTokens } from '../../utils/class-name';
 import { type MapControlPosition, mountMapControl } from '../../utils/map-control';
-import { type RoutePlaybackComponent } from '../route-playback/route-playback.component';
+import { clamp01, type RoutePlaybackComponent } from '../route-playback/route-playback.component';
 
 /**
  * Play/pause button, scrubber and speed selector for an `<ng-route-playback>`, mounted as a
@@ -46,7 +46,8 @@ export class RoutePlaybackControlComponent {
   protected readonly rootClass = computed(() =>
     classTokens(this.className(), ['ng-playback']).join(' '),
   );
-  protected readonly percent = computed(() => Math.round(this.for().progress() * 100));
+  protected readonly progress = computed(() => clamp01(this.for().progress()));
+  protected readonly percent = computed(() => Math.round(this.progress() * 100));
   protected readonly speedOptions = computed(() => {
     const speeds = this.speeds();
     const current = this.for().speed();

@@ -1,3 +1,4 @@
+import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -90,12 +91,12 @@ describe('RoutePlaybackControlComponent', () => {
     const { map, fixture, a } = await render();
     const button = q<HTMLButtonElement>(map, '.ng-playback-toggle');
     expect(button.getAttribute('aria-label')).toBe('Play');
-    expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(button.hasAttribute('aria-pressed')).toBe(false);
 
     button.click();
     fixture.detectChanges();
     expect(a.playing()).toBe(true);
-    expect(button.getAttribute('aria-pressed')).toBe('true');
+    expect(button.hasAttribute('aria-pressed')).toBe(false);
     expect(button.getAttribute('aria-label')).toBe('Pause');
 
     button.click();
@@ -113,6 +114,28 @@ describe('RoutePlaybackControlComponent', () => {
     expect(a.progress()).toBeCloseTo(0.4);
     expect(range.getAttribute('aria-valuetext')).toBe('40%');
     expect(range.getAttribute('aria-label')).toBe('Playback progress');
+  });
+
+  it('the scrubber steps by 1%', async () => {
+    const { map } = await render();
+    expect(q<HTMLInputElement>(map, '.ng-playback-range').step).toBe('0.01');
+  });
+
+  it('clamps the readout of an out-of-range or NaN progress', async () => {
+    const { map, fixture, a } = await render();
+    const range = q<HTMLInputElement>(map, '.ng-playback-range');
+    // the control view hangs off ApplicationRef, so tick it for every change
+    const tick = () => {
+      fixture.detectChanges();
+      TestBed.inject(ApplicationRef).tick();
+    };
+    a.progress.set(1.5);
+    tick();
+    expect(range.getAttribute('aria-valuetext')).toBe('100%');
+    expect(Number(range.value)).toBe(1);
+    a.progress.set(NaN);
+    tick();
+    expect(range.getAttribute('aria-valuetext')).toBe('0%');
   });
 
   it('the select sets the speed', async () => {

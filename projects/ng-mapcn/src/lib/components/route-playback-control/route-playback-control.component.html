@@ -4,7 +4,6 @@
       type="button"
       class="ng-playback-toggle"
       [attr.aria-label]="for().playing() ? l().pause : l().play"
-      [attr.aria-pressed]="for().playing()"
       (click)="for().toggle()"
     >
       @if (for().playing()) {
@@ -25,8 +24,8 @@
       class="ng-playback-range"
       min="0"
       max="1"
-      step="0.001"
-      [value]="for().progress()"
+      step="0.01"
+      [value]="progress()"
       [attr.aria-label]="l().playbackProgress"
       [attr.aria-valuetext]="percent() + '%'"
       (input)="onSeek($event)"
