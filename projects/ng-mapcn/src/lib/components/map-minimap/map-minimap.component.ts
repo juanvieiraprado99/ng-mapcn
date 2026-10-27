@@ -16,16 +16,28 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { Map as MapLibre, type Map as MapLibreMap, type StyleSpecification } from 'maplibre-gl';
+import { type Feature, type Polygon } from 'geojson';
+import {
+  type GeoJSONSource,
+  Map as MapLibre,
+  type Map as MapLibreMap,
+  type StyleSpecification,
+} from 'maplibre-gl';
 
 import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { MapContextService } from '../../services/map-context.service';
 import { blankMapStyle, defaultStyles, type MapStylesConfig } from '../../styles/map-styles';
 import { classTokens } from '../../utils/class-name';
+import { addMapLayers } from '../../utils/layers';
 import { type MapControlPosition, mountMapControl } from '../../utils/map-control';
 import { nextId } from '../../utils/map-utils';
 
 type MapStyle = string | StyleSpecification;
+
+const FOOTPRINT_SOURCE = 'ng-minimap-footprint';
+const FOOTPRINT_FILL = 'ng-minimap-footprint-fill';
+const FOOTPRINT_LINE = 'ng-minimap-footprint-line';
+const footprintColor = (theme: 'light' | 'dark') => (theme === 'dark' ? '#60a5fa' : '#3b82f6');
 
 /**
  * Overview map: a second MapLibre instance in a corner of `<ng-map>` that follows the main
@@ -155,6 +167,10 @@ export class MapMinimapComponent {
           // the minimap may be mid-removal
         }
       });
+      // The style swap drops custom layers: draw the footprint on load and after every style load.
+      const addFootprint = () => this.addFootprint(main, mini);
+      mini.on('load', addFootprint);
+      mini.on('style.load', addFootprint);
       this.appliedStyle = style;
       this.minimap.set(mini);
 
@@ -187,8 +203,8 @@ export class MapMinimapComponent {
       const mini = this.minimap();
       if (!main || !mini) return;
       const onMove = () => {
-        if (this.syncing) return;
-        this.follow(main, mini);
+        if (!this.syncing) this.follow(main, mini);
+        this.updateFootprint(main, mini);
       };
       this.zone.runOutsideAngular(() => main.on('move', onMove));
       onCleanup(() => {
@@ -198,6 +214,21 @@ export class MapMinimapComponent {
           // the main map may already be removed
         }
       });
+    });
+
+    // Footprint color follows the resolved theme.
+    effect(() => {
+      const mini = this.minimap();
+      const color = footprintColor(this.ctx.resolvedTheme());
+      if (!mini) return;
+      try {
+        if (mini.getLayer(FOOTPRINT_FILL))
+          mini.setPaintProperty(FOOTPRINT_FILL, 'fill-color', color);
+        if (mini.getLayer(FOOTPRINT_LINE))
+          mini.setPaintProperty(FOOTPRINT_LINE, 'line-color', color);
+      } catch {
+        // the minimap may be mid-removal
+      }
     });
 
     // Initial sync once the minimap exists, and again when the offset changes.
@@ -221,5 +252,63 @@ export class MapMinimapComponent {
   private follow(main: MapLibreMap, mini: MapLibreMap): void {
     const center = main.getCenter();
     mini.jumpTo({ center: [center.lng, center.lat], zoom: this.minimapZoom(main) });
+  }
+
+  /** Ring of the main viewport (canvas corners, so bearing and pitch are right). */
+  private footprint(main: MapLibreMap): Feature<Polygon> {
+    const canvas = main.getCanvas();
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    const corner = (x: number, y: number): [number, number] => {
+      const p = main.unproject([x, y]);
+      return [p.lng, p.lat];
+    };
+    const tl = corner(0, 0);
+    return {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[tl, corner(w, 0), corner(w, h), corner(0, h), tl]],
+      },
+    };
+  }
+
+  private addFootprint(main: MapLibreMap, mini: MapLibreMap): void {
+    try {
+      if (mini.getSource(FOOTPRINT_SOURCE)) return;
+      const color = untracked(() => footprintColor(this.ctx.resolvedTheme()));
+      addMapLayers(
+        mini,
+        (b) => {
+          b.addSource(FOOTPRINT_SOURCE, { type: 'geojson', data: this.footprint(main) });
+          b.addLayer({
+            id: FOOTPRINT_FILL,
+            type: 'fill',
+            source: FOOTPRINT_SOURCE,
+            paint: { 'fill-color': color, 'fill-opacity': 0.15 },
+          });
+          b.addLayer({
+            id: FOOTPRINT_LINE,
+            type: 'line',
+            source: FOOTPRINT_SOURCE,
+            paint: { 'line-color': color, 'line-width': 1.5 },
+          });
+        },
+        (error) => this.ctx.reportError(error),
+      );
+    } catch {
+      // the minimap may be mid-removal
+    }
+  }
+
+  private updateFootprint(main: MapLibreMap, mini: MapLibreMap): void {
+    try {
+      (mini.getSource(FOOTPRINT_SOURCE) as GeoJSONSource | undefined)?.setData(
+        this.footprint(main),
+      );
+    } catch {
+      // the minimap may be mid-removal
+    }
   }
 }

@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { fakeRegistry } from 'ng-mapcn/testing/maplibre';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadMap, renderMap, update } from '../../../testing/render';
+import { loadMap, reloadStyle, renderMap, update } from '../../../testing/render';
 import { provideMapLabels } from '../../providers/map-labels.provider';
 import { blankMapStyle, defaultStyles } from '../../styles/map-styles';
 import { MapMinimapComponent } from './map-minimap.component';
@@ -271,5 +271,75 @@ describe('MapMinimapComponent', () => {
       throw new Error('removed');
     });
     expect(() => mini.fire('style.load')).not.toThrow();
+  });
+
+  describe('footprint', () => {
+    // the fake projection yields -0 for the top row (lat = -y / 10)
+    const ring = (w: number, h: number) => [
+      [0, -0],
+      [w / 10, -0],
+      [w / 10, -h / 10],
+      [0, -h / 10],
+      [0, -0],
+    ];
+    const sized = (main: any, w: number, h: number) => {
+      Object.defineProperty(main.getCanvas(), 'clientWidth', { value: w, configurable: true });
+      Object.defineProperty(main.getCanvas(), 'clientHeight', { value: h, configurable: true });
+    };
+
+    it('adds the footprint source and layers on load', async () => {
+      await render();
+      const mini = fakeRegistry.maps[1];
+      loadMap(mini);
+      expect(mini.getSource('ng-minimap-footprint')).toBeDefined();
+      expect(mini.getLayer('ng-minimap-footprint-fill').paint).toEqual({
+        'fill-color': '#3b82f6',
+        'fill-opacity': 0.15,
+      });
+      expect(mini.getLayer('ng-minimap-footprint-line').paint).toEqual({
+        'line-color': '#3b82f6',
+        'line-width': 1.5,
+      });
+    });
+
+    it('updates the footprint on main move, even while syncing', async () => {
+      const { map } = await render();
+      const mini = fakeRegistry.maps[1];
+      loadMap(mini);
+      sized(map, 200, 100);
+      map.jumpTo({ center: [1, 1], zoom: 8 });
+      const source = mini.getSource('ng-minimap-footprint');
+      expect(source.setData).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          geometry: { type: 'Polygon', coordinates: [ring(200, 100)] },
+        }),
+      );
+    });
+
+    it('re-adds the footprint after the minimap style reloads', async () => {
+      const { fixture } = await render();
+      const mini = fakeRegistry.maps[1];
+      loadMap(mini);
+      mini.setStyle('x.json');
+      reloadStyle(fixture, mini);
+      expect(mini.getSource('ng-minimap-footprint')).toBeDefined();
+      expect(mini.getLayerOrder()).toEqual([
+        'ng-minimap-footprint-fill',
+        'ng-minimap-footprint-line',
+      ]);
+    });
+
+    it('uses the dark color in dark theme', async () => {
+      const { fixture } = await render();
+      const mini = fakeRegistry.maps[1];
+      loadMap(mini);
+      update(fixture, { theme: 'dark' });
+      await settle(fixture);
+      expect(mini.getLayer('ng-minimap-footprint-fill').paint['fill-color']).toBe('#60a5fa');
+      expect(mini.getLayer('ng-minimap-footprint-line').paint['line-color']).toBe('#60a5fa');
+      mini.setStyle('x.json');
+      reloadStyle(fixture, mini);
+      expect(mini.getLayer('ng-minimap-footprint-line').paint['line-color']).toBe('#60a5fa');
+    });
   });
 });
