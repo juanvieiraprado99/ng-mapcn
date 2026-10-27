@@ -208,7 +208,7 @@ A listbox in a map corner that switches the basemap between the given options. T
 
 `ng-map-minimap`
 
-An overview map mounted as a MapLibre control in a corner of the map (stacks with the other controls). A second map follows the main viewport at a lower zoom, draws the main viewport footprint (correct with bearing and pitch) and is always mercator and north-up. Clicking recenters the main map (easeTo), dragging pans it, and arrow keys pan it 100 px while the minimap is focused. It mirrors the main map's effective basemap (theme and style switcher) unless styles or blank is set. Collapsing destroys the minimap instance and frees its WebGL context. Renders nothing on the server. The minimap shows no attribution: a custom styles override's attribution is the app's responsibility. Must be a direct child of ng-map.
+An overview map mounted as a MapLibre control in a corner of the map (stacks with the other controls). A second map follows the main viewport at a lower zoom, draws the main viewport footprint (correct with bearing and pitch) and is always mercator and north-up. Clicking recenters the main map (easeTo), dragging pans it, and arrow keys pan it 100 px while the minimap is focused. It mirrors the main map's effective basemap (theme and style switcher) unless styles or blank is set. Collapsing destroys the minimap instance and frees its WebGL context. Renders nothing on the server. The minimap shows no attribution: a custom styles override's attribution is the app's responsibility. Must be used inside ng-map.
 
 **Inputs**
 
@@ -746,7 +746,7 @@ Component-scoped service provided by `ng-map` — the Angular equivalent of mapc
 | `map()` | `Signal<Map \| null>` | — | The raw maplibre-gl Map instance, or null before init. |
 | `isLoaded()` | `Signal<boolean>` | — | True when the style is loaded and layers can be added. Gates every source/layer operation; closes during a theme/basemap switch and re-opens once it settles (or fails). |
 | `resolvedTheme()` | `Signal<'light' \| 'dark'>` | — | Theme currently applied to the map. |
-| `currentStyle()` | `Signal<string \| StyleSpecification \| null>` | — | Style the map is currently showing (URL or spec), null before the map exists. ng-map-minimap mirrors it. |
+| `currentStyle()` | `Signal<string \| StyleSpecification \| null>` | — | Style last requested or applied by ng-map (URL or spec), null before the map exists. It is set before the swap finishes and kept when the change is a no-op diff or the fetch fails. ng-map-minimap mirrors it. |
 | `hasSource(id)` | `(id: string) => boolean` | — | Whether a source component (raster, vector, image overlay) currently has a source with this id on the map. Reactive inside effect(); false while a theme switch has removed the style. Wait on it before adding layers that reference source: id. |
 | `sourceIds()` | `Signal<ReadonlySet<string>>` | — | Ids of the sources currently announced by source components. |
 | `registerSource(id)` | `(id: string) => () => void` | — | Announces a source you added yourself so hasSource(id) sees it; returns the release function to call when you remove it. |

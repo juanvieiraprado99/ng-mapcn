@@ -38,7 +38,10 @@ export class MapContextService {
   readonly styleOverride = this.styleOverrideSignal.asReadonly();
 
   private readonly currentStyleSignal = signal<string | StyleSpecification | null>(null);
-  /** Style the map is currently showing (URL or spec), `null` before the map exists. Set by `<ng-map>`. */
+  /**
+   * Style last requested or applied by `<ng-map>` (URL or spec), `null` before the map exists. It
+   * is set before the swap finishes and kept when the change is a no-op diff or the fetch fails.
+   */
   readonly currentStyle = this.currentStyleSignal.asReadonly();
 
   private readonly sourceCounts = new Map<string, number>();
