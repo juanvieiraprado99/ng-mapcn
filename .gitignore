@@ -57,3 +57,6 @@ projects/ng-mapcn/schematics/map/draw-files/
 # Local agent tooling (skills installed with `npx skills`)
 .claude/
 .agents/
+
+# Graphify code graph (generated)
+/graphify-out/
