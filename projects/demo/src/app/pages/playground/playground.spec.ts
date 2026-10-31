@@ -1,11 +1,16 @@
 import { TestBed } from '@angular/core/testing';
-import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { renderRoute } from '../../../testing/render-route';
+import { highlight } from '../../shared/highlighter';
 import { createLayer, decodeScene, encodeScene } from './playground-scene';
 import { initialMapState } from './style-presets';
 
 describe('playground page', () => {
+  // The code panel lazy-loads Shiki; load it up front so a pending import can't outlive the
+  // file and fail the run with an EnvironmentTeardownError.
+  beforeAll(() => highlight('', 'bash'), 30_000);
+
   afterEach(() => {
     vi.restoreAllMocks();
     TestBed.resetTestingModule();

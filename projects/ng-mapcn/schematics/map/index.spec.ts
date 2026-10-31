@@ -43,6 +43,11 @@ describe('map schematic', () => {
     expect(tree.files.filter((f) => f.endsWith('.spec.ts'))).toEqual([]);
     expect(tree.files.filter((f) => /\/testing\//.test(f))).toEqual([]);
     expect(tree.files.filter((f) => f.includes('maplibre-fake'))).toEqual([]);
+    // The `ng-mapcn/testing` and `ng-mapcn/testing/maplibre` entry points are npm-only.
+    const code = tree.files.filter((f) => f.endsWith('.ts')).map((f) => tree.readContent(f));
+    expect(code.some((c) => c.includes('ng-mapcn/testing'))).toBe(false);
+    expect(code.some((c) => c.includes('configureFakeMapLibre'))).toBe(false);
+    expect(code.some((c) => c.includes('resetMapTesting'))).toBe(false);
   });
 
   describe('draw (opt-in)', () => {
@@ -77,10 +82,11 @@ describe('map schematic', () => {
       expect(tree.readContent(`${DEFAULT_PATH}/draw/index.ts`)).toContain("'./map-draw.component'");
     });
 
-    it('ships no spec files with the draw sources', async () => {
+    it('ships no spec files or test helpers with the draw sources', async () => {
       const tree = await runDraw();
 
       expect(tree.files.filter((f) => f.endsWith('.spec.ts'))).toEqual([]);
+      expect(tree.files.filter((f) => /\/testing\//.test(f))).toEqual([]);
     });
 
     it('follows a custom path', async () => {

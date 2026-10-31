@@ -7,6 +7,7 @@ import { renderMap, update } from '../../../testing/render';
 import { trackZoneRun } from '../../../testing/zone';
 import { MarkerContentComponent } from '../marker-content/marker-content.component';
 import { MarkerPopupComponent } from '../marker-popup/marker-popup.component';
+import { MarkerTooltipComponent } from '../marker-tooltip/marker-tooltip.component';
 import { MapMarkerComponent } from './map-marker.component';
 
 const TEMPLATE = `
@@ -296,7 +297,12 @@ describe('MapMarkerComponent', () => {
         ...hostProps,
       };
       const result = await renderMap(template, {
-        imports: [MapMarkerComponent, MarkerContentComponent, MarkerPopupComponent],
+        imports: [
+          MapMarkerComponent,
+          MarkerContentComponent,
+          MarkerPopupComponent,
+          MarkerTooltipComponent,
+        ],
         hostProps: host,
       });
       return { ...result, host, el: fakeRegistry.markers[0].getElement() };
@@ -429,6 +435,111 @@ describe('MapMarkerComponent', () => {
       expect(el.hasAttribute('role')).toBe(false);
       expect(el.hasAttribute('aria-label')).toBe(false);
       expect(el.hasAttribute('tabindex')).toBe(false);
+    });
+
+    describe('popup state', () => {
+      const POPUP = `<ng-map><ng-map-marker [longitude]="1" [latitude]="2" ariaLabel="Office">
+        <ng-marker-content />
+        @if (show) {
+          <ng-marker-popup [closeButton]="true" [closeOnClick]="true">Details</ng-marker-popup>
+        }
+      </ng-map-marker></ng-map>`;
+      const card = () => fakeRegistry.popups[0].getContent() as HTMLElement;
+
+      it('announces a dialog popup, collapsed, with no aria-controls while closed', async () => {
+        const { el } = await renderA11y(POPUP, { show: true });
+
+        expect(el.getAttribute('role')).toBe('button');
+        expect(el.getAttribute('aria-haspopup')).toBe('dialog');
+        expect(el.getAttribute('aria-expanded')).toBe('false');
+        expect(el.hasAttribute('aria-controls')).toBe(false);
+        expect(card().id).toMatch(/^ng-marker-popup-\d+$/);
+      });
+
+      it('follows clicks and Enter/Space keypresses, pointing aria-controls at the card', async () => {
+        const { el, fixture } = await renderA11y(POPUP, { show: true });
+
+        el.click();
+        fixture.detectChanges();
+        expect(el.getAttribute('aria-expanded')).toBe('true');
+        expect(el.getAttribute('aria-controls')).toBe(card().id);
+        expect(card().isConnected).toBe(true);
+
+        el.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter' }));
+        fixture.detectChanges();
+        expect(el.getAttribute('aria-expanded')).toBe('false');
+        expect(el.hasAttribute('aria-controls')).toBe(false);
+
+        el.dispatchEvent(new KeyboardEvent('keypress', { key: ' ' }));
+        fixture.detectChanges();
+        expect(el.getAttribute('aria-expanded')).toBe('true');
+      });
+
+      it('collapses when the close button, Escape or a map click closes the popup', async () => {
+        const { el, fixture } = await renderA11y(POPUP, { show: true });
+        const marker = fakeRegistry.markers[0];
+        const expanded = () => {
+          fixture.detectChanges();
+          return el.getAttribute('aria-expanded');
+        };
+
+        marker.togglePopup();
+        expect(expanded()).toBe('true');
+        card().querySelector<HTMLButtonElement>('.ng-popup-close')!.click();
+        expect(expanded()).toBe('false');
+
+        marker.togglePopup();
+        expect(expanded()).toBe('true');
+        card().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(expanded()).toBe('false');
+
+        marker.togglePopup();
+        expect(expanded()).toBe('true');
+        fakeRegistry.maps[0].fire('click');
+        expect(expanded()).toBe('false');
+        expect(el.hasAttribute('aria-controls')).toBe(false);
+      });
+
+      it('drops the popup state when the popup goes away', async () => {
+        const { el, fixture } = await renderA11y(POPUP, { show: true });
+        fakeRegistry.markers[0].togglePopup();
+        fixture.detectChanges();
+
+        update(fixture, { show: false });
+
+        for (const name of ['aria-haspopup', 'aria-expanded', 'aria-controls']) {
+          expect(el.hasAttribute(name)).toBe(false);
+        }
+      });
+
+      it('sets no popup state on markers without a popup or with a tooltip only', async () => {
+        const { el } = await renderA11y(
+          `<ng-map>
+            <ng-map-marker [longitude]="1" [latitude]="2" (markerClick)="click($event)"><ng-marker-content /></ng-map-marker>
+            <ng-map-marker [longitude]="3" [latitude]="4"><ng-marker-content /><ng-marker-tooltip>Tip</ng-marker-tooltip></ng-map-marker>
+          </ng-map>`,
+        );
+        const tooltipOnly = fakeRegistry.markers[1].getElement();
+
+        for (const marker of [el, tooltipOnly]) {
+          expect(marker.hasAttribute('aria-haspopup')).toBe(false);
+          expect(marker.hasAttribute('aria-expanded')).toBe(false);
+          expect(marker.hasAttribute('aria-controls')).toBe(false);
+        }
+      });
+
+      it('leaves aria-expanded off a marker whose content has its own control', async () => {
+        const { el, fixture } = await renderA11y(
+          `<ng-map><ng-map-marker [longitude]="1" [latitude]="2"><ng-marker-content><button type="button">Open</button></ng-marker-content><ng-marker-popup>Hi</ng-marker-popup></ng-map-marker></ng-map>`,
+        );
+        fakeRegistry.markers[0].togglePopup();
+        fixture.detectChanges();
+
+        // No role on the marker element, where aria-expanded is not allowed (axe aria-allowed-attr).
+        expect(el.hasAttribute('role')).toBe(false);
+        expect(el.hasAttribute('aria-expanded')).toBe(false);
+        expect(el.hasAttribute('aria-controls')).toBe(false);
+      });
     });
 
     it('clamps latitude and wraps longitude of keyboard drags', async () => {

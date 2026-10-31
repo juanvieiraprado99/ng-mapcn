@@ -97,7 +97,7 @@ const mouseEvent = (id: number | string, lng = 5, lat = 6) => ({
   point: { x: 10, y: 20 },
 });
 
-const featureStateCalls = (map: FakeMap) => map.setFeatureState.mock.calls;
+const featureStateCalls = (map: FakeMap) => vi.mocked(map.setFeatureState).mock.calls;
 
 describe('MapGeoJSONComponent', () => {
   beforeEach(() => {
@@ -224,7 +224,7 @@ describe('MapGeoJSONComponent', () => {
   describe('reconcile, do not recreate (invariant 2)', () => {
     it('updates paint through setPaintProperty without structural changes', async () => {
       const { fixture, map } = await renderLoaded();
-      map.setPaintProperty.mockClear();
+      vi.mocked(map.setPaintProperty).mockClear();
       map.calls.length = 0;
 
       update(fixture, {

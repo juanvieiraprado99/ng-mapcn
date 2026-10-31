@@ -1,7 +1,8 @@
 /**
- * Generates `projects/demo/public/data/parcels.pmtiles`: a tiny PMTiles v3 archive holding ONE
- * vector tile (z10, over Manhattan) with a 5x5 grid of "parcels". It backs the PMTiles example of
- * the docs page and block, and stands in for a real archive in the offline e2e suite.
+ * Generates `e2e/fixtures/firenze.pmtiles`: a tiny PMTiles v3 archive holding ONE vector tile
+ * (z10, over central Florence) with a 5x5 grid of squares in a `buildings` layer. The PMTiles
+ * example of the docs page and block reads a real Protomaps extract of Florence over the network;
+ * the offline e2e suite serves this file in its place, with the same layer name and feature ids.
  *
  * It is written by hand (header + directory + MVT protobuf) on purpose: no tile tooling, so the
  * file can be regenerated anywhere with `node scripts/generate-pmtiles-fixture.mjs`.
@@ -15,20 +16,17 @@ import { zxyToTileId } from 'pmtiles';
 const OUT = join(
   dirname(fileURLToPath(import.meta.url)),
   '..',
-  'projects',
-  'demo',
-  'public',
-  'data',
-  'parcels.pmtiles',
+  'e2e',
+  'fixtures',
+  'firenze.pmtiles',
 );
 
 const Z = 10;
-const CENTER = [-74.006, 40.7128];
+const CENTER = [11.2543, 43.7672];
 const KINDS = ['residential', 'commercial', 'park'];
 const EXTENT = 4096;
 const CELL = 140;
 const SIZE = 120;
-const ORIGIN = 1700;
 
 // ── protobuf helpers ────────────────────────────────────────────────────────
 const varint = (value) => {
@@ -57,12 +55,20 @@ const lat2y = (lat) => {
 const TILE_X = lon2x(CENTER[0]);
 const TILE_Y = lat2y(CENTER[1]);
 
-// Geographic center of the 5x5 grid (tile coordinates ORIGIN..ORIGIN + 5 * CELL), for the header.
-const GRID_MID = ORIGIN + (5 * CELL - (CELL - SIZE)) / 2;
+// Tile coordinates of CENTER: the 5x5 grid is laid out around it, so the map view of the example
+// (centered on the real archive) shows the middle of the grid.
+const mercatorY = (lat) => (1 - Math.asinh(Math.tan((lat * Math.PI) / 180)) / Math.PI) / 2;
+const CENTER_X = (((CENTER[0] + 180) / 360) * 2 ** Z - TILE_X) * EXTENT;
+const CENTER_Y = (mercatorY(CENTER[1]) * 2 ** Z - TILE_Y) * EXTENT;
+const GRID_HALF = (5 * CELL - (CELL - SIZE)) / 2;
+const ORIGIN_X = Math.round(CENTER_X - GRID_HALF);
+const ORIGIN_Y = Math.round(CENTER_Y - GRID_HALF);
+
+// Geographic center of the grid, for the header.
 const tileLon = (px) => ((TILE_X + px / EXTENT) / 2 ** Z) * 360 - 180;
 const tileLat = (py) =>
   (Math.atan(Math.sinh(Math.PI * (1 - (2 * (TILE_Y + py / EXTENT)) / 2 ** Z))) * 180) / Math.PI;
-const GRID_CENTER = [tileLon(GRID_MID), tileLat(GRID_MID)];
+const GRID_CENTER = [tileLon(ORIGIN_X + GRID_HALF), tileLat(ORIGIN_Y + GRID_HALF)];
 
 const keys = ['parcel', 'kind'];
 const values = [
@@ -74,8 +80,8 @@ const features = [];
 for (let row = 0; row < 5; row++) {
   for (let col = 0; col < 5; col++) {
     const index = row * 5 + col;
-    const x = ORIGIN + col * CELL;
-    const y = ORIGIN + row * CELL;
+    const x = ORIGIN_X + col * CELL;
+    const y = ORIGIN_Y + row * CELL;
     // MoveTo(1) + LineTo(3) + ClosePath, clockwise in tile coordinates.
     const geometry = [
       9,
@@ -103,7 +109,7 @@ for (let row = 0; row < 5; row++) {
 
 const layer = [
   ...uint(15, 2),
-  ...string(1, 'parcels'),
+  ...string(1, 'buildings'),
   ...features.flat(),
   ...keys.flatMap((key) => string(3, key)),
   ...values.flatMap((value) => lengthDelimited(4, value)),
@@ -122,10 +128,10 @@ const directory = Buffer.from([
 ]);
 const metadata = Buffer.from(
   JSON.stringify({
-    name: 'ng-mapcn parcels fixture',
+    name: 'ng-mapcn buildings fixture',
     attribution: 'ng-mapcn demo data',
     vector_layers: [
-      { id: 'parcels', fields: { parcel: 'Number', kind: 'String' }, minzoom: Z, maxzoom: Z },
+      { id: 'buildings', fields: { parcel: 'Number', kind: 'String' }, minzoom: Z, maxzoom: Z },
     ],
   }),
 );

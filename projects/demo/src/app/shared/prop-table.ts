@@ -29,7 +29,9 @@ export interface PropRow {
           <tr z-table-row>
             <th z-table-head class="h-10 text-xs font-medium">{{ nameLabel() }}</th>
             <th z-table-head class="h-10 text-xs font-medium">Type</th>
-            <th z-table-head class="h-10 text-xs font-medium">Default</th>
+            @if (showDefault()) {
+              <th z-table-head class="h-10 text-xs font-medium">Default</th>
+            }
             <th z-table-head class="h-10 text-xs font-medium">Description</th>
           </tr>
         </thead>
@@ -42,11 +44,13 @@ export interface PropRow {
               <td z-table-cell class="py-3 align-top whitespace-normal">
                 <code [class]="code + ' text-foreground/70 text-xs'">{{ row.type }}</code>
               </td>
-              <td z-table-cell class="py-3 align-top">
-                <code [class]="code + ' text-foreground/70 text-xs whitespace-normal'">{{
-                  row.default || '—'
-                }}</code>
-              </td>
+              @if (showDefault()) {
+                <td z-table-cell class="py-3 align-top">
+                  <code [class]="code + ' text-foreground/70 text-xs whitespace-normal'">{{
+                    row.default || '—'
+                  }}</code>
+                </td>
+              }
               <td
                 z-table-cell
                 class="text-foreground/70 min-w-[180px] py-3 text-sm leading-relaxed whitespace-normal"
@@ -65,6 +69,8 @@ export class PropTableComponent {
   readonly title = input<string>();
   /** Header of the first column ("Prop", "Input", "Output", ...). */
   readonly nameLabel = input('Prop');
+  /** Shows the Default column; turn it off for rows that have no defaults (functions, exports). */
+  readonly showDefault = input(true);
 
   /** mapcn `DocsCode` chip. */
   protected readonly code = 'bg-muted relative rounded-md px-1.5 py-0.5 font-mono';

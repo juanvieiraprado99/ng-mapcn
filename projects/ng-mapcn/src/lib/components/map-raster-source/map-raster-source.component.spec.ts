@@ -210,7 +210,7 @@ describe('MapRasterSourceComponent', () => {
   describe('reconcile, do not recreate (invariant 2)', () => {
     it('updates opacity, paint and visibility without structural calls', async () => {
       const { fixture, map } = await renderLoaded();
-      map.setPaintProperty.mockClear();
+      vi.mocked(map.setPaintProperty).mockClear();
       map.calls.length = 0;
 
       update(fixture, { opacity: 0.3, visible: false, paint: { 'raster-hue-rotate': 90 } });

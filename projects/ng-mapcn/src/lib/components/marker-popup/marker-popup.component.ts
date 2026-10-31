@@ -7,6 +7,7 @@ import {
   input,
   NgZone,
   output,
+  type Signal,
   signal,
   type TemplateRef,
   untracked,
@@ -16,6 +17,7 @@ import { type Offset, Popup, type PositionAnchor } from 'maplibre-gl';
 
 import { injectMapLabels, type MapLabels } from '../../providers/map-labels.provider';
 import { applyClassName } from '../../utils/class-name';
+import { nextId } from '../../utils/map-utils';
 import { closePopupOnEscape, createPopupCloseButton } from '../../utils/popup-close-button';
 import { renderPortal } from '../../utils/portal';
 import { MarkerContextService } from '../map-marker/marker-context.service';
@@ -43,7 +45,15 @@ export class MarkerPopupComponent {
    * for it (mapcn parity: `closeOnClick` prop).
    */
   readonly closeOnClick = input(false);
-  /** Label overrides (`closePopup`), merged over `provideMapLabels` and the English defaults. */
+  /**
+   * Accessible name of the card, a non-modal `role="dialog"`, applied as its `aria-label`
+   * (reactive). Falls back to the marker's `ariaLabel`, then to "Map popup" (`labels.popup`).
+   */
+  readonly ariaLabel = input<string>();
+  /**
+   * Label overrides (`closePopup`, `popup`), merged over `provideMapLabels` and the English
+   * defaults.
+   */
   readonly labels = input<Partial<MapLabels>>();
   readonly popupClose = output<void>();
   /** Extra space-separated classes for the rendered `.ng-popup-card` element (reactive; built-in classes are kept). */
@@ -54,6 +64,20 @@ export class MarkerPopupComponent {
   private readonly markerCtx = inject(MarkerContextService);
   private readonly zone = inject(NgZone);
   private readonly tpl = viewChild.required<TemplateRef<unknown>>('tpl');
+
+  /**
+   * Whether the popup is open, kept in sync with every open and close (marker click, Enter/Space,
+   * close button, Escape, map click, `togglePopup()`). The library writes `aria-expanded` on a
+   * `role="button"` marker itself; when the marker content has its own button, mirror the state
+   * on that button through a template reference:
+   * `<ng-marker-popup #info>` + `[attr.aria-expanded]="info.isOpen()"`.
+   */
+  readonly isOpen: Signal<boolean> = this.markerCtx.popupOpen.asReadonly();
+  /**
+   * Id of the `.ng-popup-card`, which the marker names in `aria-controls` while open. The card is
+   * only in the DOM while open: `[attr.aria-controls]="info.isOpen() ? info.cardId : null"`.
+   */
+  readonly cardId = nextId('ng-marker-popup');
 
   /** Serialized offset last applied to the live popup (creation value or last `setOffset`). */
   private appliedOffset: string | undefined;
@@ -66,6 +90,10 @@ export class MarkerPopupComponent {
 
       const container = document.createElement('div');
       container.className = 'ng-popup-card';
+      container.id = this.cardId;
+      // What the marker's aria-haspopup="dialog" announces. Non-modal (no aria-modal): the map
+      // stays usable, focus moves in on open and Escape or the close button dismisses it.
+      container.setAttribute('role', 'dialog');
       const destroyPortal = renderPortal(this.tpl(), this.injector, container);
 
       const offset = untracked(() => this.offset());
@@ -87,12 +115,20 @@ export class MarkerPopupComponent {
       // 'close' fires from the map's event system (outside the zone) — re-enter
       const onClose = () => this.zone.run(() => this.popupClose.emit());
       popup.on('close', onClose);
+      // Every way the popup opens or closes (marker click, Enter/Space, close button, Escape, map
+      // click, `togglePopup()`) goes through these events: the marker's `aria-expanded` reads it.
+      const syncOpen = () => this.markerCtx.popupOpen.set(popup.isOpen());
+      popup.on('open', syncOpen);
+      popup.on('close', syncOpen);
       marker.setPopup(popup);
       // MapLibre makes the marker element focusable (tabindex) once it has a popup; the marker
-      // component gives it `role="button"` (it reads `hasPopup`), announce the popup here unless
-      // the app chose aria-haspopup itself.
+      // component gives it `role="button"` and `aria-expanded` (it reads `hasPopup` and
+      // `popupOpen`), announce the popup here unless the app chose aria-haspopup itself. `dialog`:
+      // the card takes focus when it opens and Escape or its close button dismisses it.
       const el = marker.getElement();
       this.markerCtx.hasPopup.set(true);
+      this.markerCtx.popupCardId.set(this.cardId);
+      this.markerCtx.popupOpen.set(popup.isOpen());
       const setHaspopup = !el.hasAttribute('aria-haspopup');
       if (setHaspopup) el.setAttribute('aria-haspopup', 'dialog');
       this.appliedOffset = offset === undefined ? undefined : JSON.stringify(offset);
@@ -102,8 +138,12 @@ export class MarkerPopupComponent {
         this.instance.set(null);
         // Detach first: a teardown is not a user close, and the outputs are being destroyed.
         popup.off('close', onClose);
+        popup.off('open', syncOpen);
+        popup.off('close', syncOpen);
         marker.setPopup(null);
         this.markerCtx.hasPopup.set(false);
+        this.markerCtx.popupOpen.set(false);
+        this.markerCtx.popupCardId.set(null);
         if (setHaspopup) el.removeAttribute('aria-haspopup');
         popup.remove();
         destroyPortal();
@@ -144,6 +184,17 @@ export class MarkerPopupComponent {
       } else if (!showClose && existing) {
         existing.remove();
       }
+    });
+
+    // Accessible name of the dialog card: the popup's own, the marker's, then the translatable
+    // fallback. A string, so it never depends on the projected content.
+    effect(() => {
+      const el = this.instance()?.container;
+      if (!el) return;
+      el.setAttribute(
+        'aria-label',
+        this.ariaLabel() || this.markerCtx.ariaLabel() || this.l().popup,
+      );
     });
 
     // Reconcile className on the live element (no recreation).

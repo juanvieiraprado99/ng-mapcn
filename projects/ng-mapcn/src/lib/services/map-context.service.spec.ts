@@ -1,6 +1,6 @@
 import { effect } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Map as FakeMap } from '../../testing/maplibre-fake';
 import { MapContextService } from './map-context.service';
@@ -59,6 +59,14 @@ describe('MapContextService', () => {
     expect(ctx.isLoaded()).toBe(false);
   });
 
+  it('stores the style override and reset clears it', () => {
+    expect(ctx.styleOverride()).toBeUndefined();
+    ctx.setStyleOverride({ light: 'a.json' });
+    expect(ctx.styleOverride()).toEqual({ light: 'a.json' });
+    ctx.reset();
+    expect(ctx.styleOverride()).toBeUndefined();
+  });
+
   describe('source registry', () => {
     it('hasSource tracks registered ids reactively', () => {
       const seen: boolean[] = [];
@@ -101,6 +109,85 @@ describe('MapContextService', () => {
       ctx.registerSource('a');
       ctx.reset();
       expect(ctx.hasSource('a')).toBe(false);
+    });
+  });
+
+  describe('image references', () => {
+    const pixels = { width: 1, height: 1, data: new Uint8Array(4) };
+    const options = { sdf: false, pixelRatio: 1 };
+    let map: FakeMap;
+
+    beforeEach(() => {
+      map = new FakeMap();
+      ctx.setMap(map as any);
+    });
+
+    afterEach(() => vi.restoreAllMocks());
+
+    it('adds the image on the first acquire and removes it on the last release', () => {
+      const first = ctx.acquireImage('pin', pixels, options);
+      const second = ctx.acquireImage('pin', { ...pixels }, { sdf: true, pixelRatio: 2 });
+      expect(map.calls).toEqual(['addImage:pin']);
+      // The first one to add the id provides the pixels.
+      expect((map.getImage('pin') as { data: unknown }).data).toBe(pixels);
+
+      first();
+      first();
+      expect(map.hasImage('pin')).toBe(true);
+      second();
+      expect(map.hasImage('pin')).toBe(false);
+    });
+
+    it('never removes an image the style already had', () => {
+      map.addImage('pin', pixels);
+      const release = ctx.acquireImage('pin', { ...pixels }, options);
+      release();
+
+      expect(map.calls).toEqual(['addImage:pin']);
+      expect(map.hasImage('pin')).toBe(true);
+    });
+
+    it('does not remove an image that replaced the added one', () => {
+      const release = ctx.acquireImage('pin', pixels, options);
+      map.removeImage('pin');
+      map.addImage('pin', { ...pixels });
+      release();
+
+      expect(map.hasImage('pin')).toBe(true);
+    });
+
+    it('re-adds an image the style dropped while it was held', () => {
+      const first = ctx.acquireImage('pin', pixels, options);
+      map.setStyle({});
+      map.finishStyleLoad();
+      const second = ctx.acquireImage('pin', pixels, options);
+      expect(map.hasImage('pin')).toBe(true);
+
+      first();
+      expect(map.hasImage('pin')).toBe(true);
+      second();
+      expect(map.hasImage('pin')).toBe(false);
+    });
+
+    it('reports a failed add and releases harmlessly', () => {
+      const errors: Error[] = [];
+      ctx.setErrorHandler((e) => errors.push(e));
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      vi.spyOn(map, 'addImage').mockImplementation(() => {
+        throw new Error('bad image');
+      });
+
+      const release = ctx.acquireImage('pin', pixels, options);
+      expect(errors.map((e) => e.message)).toEqual(['bad image']);
+      expect(() => release()).not.toThrow();
+    });
+
+    it('reset forgets the references without touching the map', () => {
+      const release = ctx.acquireImage('pin', pixels, options);
+      ctx.reset();
+      release();
+
+      expect(map.calls).toEqual(['addImage:pin']);
     });
   });
 });

@@ -36,7 +36,7 @@ export class MapRouteComponent {
   readonly interactive = input(true);
   /** Id of an existing layer to insert the route (and its progress line) below. Applied at creation only. */
   readonly beforeId = input<string>();
-  /** Covered fraction of the route (0-1), drawn by a child `<ng-route-progress>`. */
+  /** Covered fraction of the route (0-1), drawn by a child `<ng-route-progress>`. Ignored while a `<ng-route-playback>` child exists. */
   readonly progress = input<number>();
   /** Highlights the route: the `active*` inputs override the base paint while true. */
   readonly active = input(false);

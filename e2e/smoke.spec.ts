@@ -12,7 +12,11 @@ async function expectMapReady(map: Locator, name: string): Promise<void> {
   await expect(map.locator('.ng-map-loader'), `${name} finishes loading`).toHaveCount(0, {
     timeout: 30_000,
   });
-  await expect(map.locator('canvas.maplibregl-canvas'), `${name} has a canvas`).toHaveCount(1);
+  // The minimap renders its own MapLibre canvas inside the host map; count only the host's.
+  await expect(
+    map.locator('canvas.maplibregl-canvas:not(.ng-minimap canvas)'),
+    `${name} has a canvas`,
+  ).toHaveCount(1);
 }
 
 /**

@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { ApplicationRef, Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderMap, update } from '../../../testing/render';
+import { trackZoneRun } from '../../../testing/zone';
 import { MapControlsComponent } from './map-controls.component';
 
 const TEMPLATE = `
@@ -40,8 +41,9 @@ async function render(hostProps: Record<string, unknown> = {}) {
   return { ...result, map: result.map!, host };
 }
 
-const button = (fixture: { nativeElement: HTMLElement }, title: string) =>
-  fixture.nativeElement.querySelector<HTMLButtonElement>(`button[title="${title}"]`)!;
+// The card lives in MapLibre's corner container, not in the fixture's DOM.
+const button = (map: { getContainer(): HTMLElement }, title: string) =>
+  map.getContainer().querySelector<HTMLButtonElement>(`button[title="${title}"]`)!;
 
 function stubGeolocation(getCurrentPosition: ReturnType<typeof vi.fn>) {
   Object.defineProperty(navigator, 'geolocation', {
@@ -68,65 +70,91 @@ describe('MapControlsComponent', () => {
 
   describe('layout', () => {
     it('defaults to the bottom-right position with only the zoom buttons', async () => {
-      const { fixture } = await render();
-      const root: HTMLElement = fixture.nativeElement.querySelector('.ng-controls');
+      const { map } = await render();
+      const root: HTMLElement = map.getContainer().querySelector('.ng-controls')!;
 
       expect(root.classList).toContain('ng-controls');
       expect(root.classList).toContain('ng-controls--bottom-right');
-      expect(button(fixture, 'Zoom in')).not.toBeNull();
-      expect(button(fixture, 'Zoom out')).not.toBeNull();
-      expect(button(fixture, 'Reset north')).toBeNull();
-      expect(button(fixture, 'My location')).toBeNull();
-      expect(button(fixture, 'Toggle fullscreen')).toBeNull();
+      expect(button(map, 'Zoom in')).not.toBeNull();
+      expect(button(map, 'Zoom out')).not.toBeNull();
+      expect(button(map, 'Reset north')).toBeNull();
+      expect(button(map, 'My location')).toBeNull();
+      expect(button(map, 'Toggle fullscreen')).toBeNull();
+    });
+
+    it('mounts in the corner of its position', async () => {
+      const { map } = await render();
+
+      expect(
+        map.getContainer().querySelector('.maplibregl-ctrl-bottom-right .ng-controls'),
+      ).not.toBeNull();
+    });
+
+    it('moves when position changes', async () => {
+      const { fixture, map } = await render();
+      update(fixture, { position: 'top-left' });
+      await fixture.whenStable();
+      const container = map.getContainer();
+
+      expect(container.querySelector('.maplibregl-ctrl-top-left .ng-controls')).not.toBeNull();
+      expect(container.querySelector('.maplibregl-ctrl-bottom-right .ng-controls')).toBeNull();
+    });
+
+    it('removes the control on destroy', async () => {
+      const { fixture, map } = await render();
+      update(fixture, { show: false });
+      await fixture.whenStable();
+
+      expect(map.getContainer().querySelector('.ng-controls')).toBeNull();
     });
 
     it.each(['top-left', 'top-right', 'bottom-left', 'bottom-right'])(
       'applies the %s position class',
       async (position) => {
-        const { fixture } = await render({ position });
-        const root: HTMLElement = fixture.nativeElement.querySelector('.ng-controls');
+        const { map } = await render({ position });
+        const root: HTMLElement = map.getContainer().querySelector('.ng-controls')!;
         expect(root.classList).toContain(`ng-controls--${position}`);
       },
     );
 
     it('renders every optional button when enabled and hides zoom when disabled', async () => {
-      const { fixture } = await render({
+      const { map } = await render({
         showZoom: false,
         showCompass: true,
         showLocate: true,
         showFullscreen: true,
       });
 
-      expect(button(fixture, 'Zoom in')).toBeNull();
-      expect(button(fixture, 'Reset north')).not.toBeNull();
-      expect(button(fixture, 'My location')).not.toBeNull();
-      expect(button(fixture, 'Toggle fullscreen')).not.toBeNull();
+      expect(button(map, 'Zoom in')).toBeNull();
+      expect(button(map, 'Reset north')).not.toBeNull();
+      expect(button(map, 'My location')).not.toBeNull();
+      expect(button(map, 'Toggle fullscreen')).not.toBeNull();
     });
   });
 
   describe('zoom and compass', () => {
     it('zooms in and out by one level with a 300 ms animation', async () => {
-      const { fixture, map } = await render();
+      const { map } = await render();
       const start = map.getZoom();
 
-      button(fixture, 'Zoom in').click();
+      button(map, 'Zoom in').click();
       expect(map.zoomTo).toHaveBeenLastCalledWith(start + 1, { duration: 300 });
 
-      button(fixture, 'Zoom out').click();
+      button(map, 'Zoom out').click();
       expect(map.zoomTo).toHaveBeenLastCalledWith(start, { duration: 300 });
     });
 
     it('resets north and pitch from the compass button', async () => {
-      const { fixture, map } = await render({ showCompass: true });
+      const { map } = await render({ showCompass: true });
 
-      button(fixture, 'Reset north').click();
+      button(map, 'Reset north').click();
 
       expect(map.resetNorthPitch).toHaveBeenCalledWith({ duration: 300 });
     });
 
     it('syncs the compass transform from bearing and pitch on rotate and pitch events', async () => {
-      const { fixture, map } = await render({ showCompass: true });
-      const svg = button(fixture, 'Reset north').querySelector('svg')!;
+      const { map } = await render({ showCompass: true });
+      const svg = button(map, 'Reset north').querySelector('svg')!;
       expect(map.listenerCount('rotate')).toBe(1);
       expect(map.listenerCount('pitch')).toBe(1);
 
@@ -139,15 +167,43 @@ describe('MapControlsComponent', () => {
       expect(svg.style.transform).toBe('rotateX(5deg) rotateZ(10deg)');
     });
 
+    it('writes the compass transform without entering the zone or ticking per event', async () => {
+      const { map } = await render({ showCompass: true });
+      const zone = trackZoneRun();
+      const tick = vi.spyOn(TestBed.inject(ApplicationRef), 'tick');
+      const svg = button(map, 'Reset north').querySelector('svg')!;
+
+      map.jumpTo({ bearing: 20, pitch: 10 });
+      map.fire('rotate');
+      map.fire('pitch');
+
+      expect(svg.style.transform).toBe('rotateX(10deg) rotateZ(-20deg)');
+      expect(zone.runs).toBe(0);
+      expect(tick).not.toHaveBeenCalled();
+    });
+
     it('syncs the compass immediately when it is enabled on a rotated map', async () => {
       const { fixture, map } = await render();
       map.jumpTo({ bearing: 45, pitch: 10 });
 
       update(fixture, { showCompass: true });
+      await fixture.whenStable();
 
-      const svg = button(fixture, 'Reset north').querySelector('svg')!;
+      const svg = button(map, 'Reset north').querySelector('svg')!;
       expect(svg.style.transform).toBe('rotateX(10deg) rotateZ(-45deg)');
       expect(map.listenerCount('rotate')).toBe(1);
+    });
+
+    it('resyncs the compass after a position change re-creates the view', async () => {
+      const { fixture, map } = await render({ showCompass: true });
+      map.jumpTo({ bearing: 30, pitch: 40 });
+      map.fire('rotate');
+
+      update(fixture, { position: 'top-left' });
+      await fixture.whenStable();
+
+      const svg = button(map, 'Reset north').querySelector('svg')!;
+      expect(svg.style.transform).toBe('rotateX(40deg) rotateZ(-30deg)');
     });
 
     it('registers no compass handlers when the compass is hidden', async () => {
@@ -173,28 +229,28 @@ describe('MapControlsComponent', () => {
       stubGeolocation(getCurrentPosition);
       const { fixture, map, host } = await render({ showLocate: true });
 
-      button(fixture, 'My location').click();
+      button(map, 'My location').click();
       fixture.detectChanges();
 
       expect(getCurrentPosition).toHaveBeenCalledTimes(1);
-      expect(button(fixture, 'My location').disabled).toBe(true);
+      expect(button(map, 'My location').disabled).toBe(true);
 
       getCurrentPosition.mock.calls[0][0]({ coords: { longitude: 5, latitude: 6 } });
       fixture.detectChanges();
 
       expect(map.flyTo).toHaveBeenCalledWith({ center: [5, 6], zoom: 14, duration: 1500 });
       expect(host['locateChange']).toHaveBeenCalledWith({ longitude: 5, latitude: 6 });
-      expect(button(fixture, 'My location').disabled).toBe(false);
+      expect(button(map, 'My location').disabled).toBe(false);
     });
 
     it('ignores a second click while a request is in flight', async () => {
       const getCurrentPosition = vi.fn();
       stubGeolocation(getCurrentPosition);
-      const { fixture } = await render({ showLocate: true });
+      const { fixture, map } = await render({ showLocate: true });
 
-      button(fixture, 'My location').click();
+      button(map, 'My location').click();
       fixture.detectChanges();
-      button(fixture, 'My location').click();
+      button(map, 'My location').click();
 
       expect(getCurrentPosition).toHaveBeenCalledTimes(1);
     });
@@ -202,10 +258,10 @@ describe('MapControlsComponent', () => {
     it('emits locateError when the browser has no geolocation', async () => {
       const { fixture, map, host } = await render({ showLocate: true });
 
-      expect(() => button(fixture, 'My location').click()).not.toThrow();
+      expect(() => button(map, 'My location').click()).not.toThrow();
       fixture.detectChanges();
 
-      expect(button(fixture, 'My location').disabled).toBe(false);
+      expect(button(map, 'My location').disabled).toBe(false);
       expect(map.flyTo).not.toHaveBeenCalled();
       expect(host['locateError']).toHaveBeenCalledTimes(1);
       expect(host['locateError'].mock.calls[0][0]).toBeInstanceOf(Error);
@@ -215,7 +271,7 @@ describe('MapControlsComponent', () => {
       const getCurrentPosition = vi.fn();
       stubGeolocation(getCurrentPosition);
       const { fixture, map, host } = await render({ showLocate: true });
-      button(fixture, 'My location').click();
+      button(map, 'My location').click();
 
       update(fixture, { show: false });
       getCurrentPosition.mock.calls[0][0]({ coords: { longitude: 5, latitude: 6 } });
@@ -229,13 +285,13 @@ describe('MapControlsComponent', () => {
       stubGeolocation(getCurrentPosition);
       const { fixture, map, host } = await render({ showLocate: true });
 
-      button(fixture, 'My location').click();
+      button(map, 'My location').click();
       fixture.detectChanges();
       const error = { code: 1, message: 'denied' };
       getCurrentPosition.mock.calls[0][1](error);
       fixture.detectChanges();
 
-      expect(button(fixture, 'My location').disabled).toBe(false);
+      expect(button(map, 'My location').disabled).toBe(false);
       expect(host['locateError']).toHaveBeenCalledWith(error);
       expect(map.flyTo).not.toHaveBeenCalled();
       expect(host['locateChange']).not.toHaveBeenCalled();
@@ -244,18 +300,20 @@ describe('MapControlsComponent', () => {
 
   describe('fullscreen', () => {
     it('requests fullscreen on the map container', async () => {
-      const { fixture, map } = await render({ showFullscreen: true });
+      const { map } = await render({ showFullscreen: true });
 
-      button(fixture, 'Toggle fullscreen').click();
+      button(map, 'Toggle fullscreen').click();
 
       expect(map.getContainer().requestFullscreen).toHaveBeenCalledTimes(1);
     });
 
     it('swallows a rejected fullscreen request', async () => {
-      const { fixture, map } = await render({ showFullscreen: true });
-      map.getContainer().requestFullscreen.mockReturnValueOnce(Promise.reject(new Error('denied')));
+      const { map } = await render({ showFullscreen: true });
+      vi.mocked(map.getContainer().requestFullscreen).mockReturnValueOnce(
+        Promise.reject(new Error('denied')),
+      );
 
-      button(fixture, 'Toggle fullscreen').click();
+      button(map, 'Toggle fullscreen').click();
       await Promise.resolve();
 
       expect(map.getContainer().requestFullscreen).toHaveBeenCalledTimes(1);
@@ -267,13 +325,13 @@ describe('MapControlsComponent', () => {
         configurable: true,
         value: exitFullscreen,
       });
-      const { fixture, map } = await render({ showFullscreen: true });
+      const { map } = await render({ showFullscreen: true });
       Object.defineProperty(document, 'fullscreenElement', {
         configurable: true,
         value: map.getContainer(),
       });
 
-      button(fixture, 'Toggle fullscreen').click();
+      button(map, 'Toggle fullscreen').click();
 
       expect(exitFullscreen).toHaveBeenCalledTimes(1);
       expect(map.getContainer().requestFullscreen).not.toHaveBeenCalled();
@@ -281,7 +339,7 @@ describe('MapControlsComponent', () => {
 
     it('swaps the icon and aria-pressed on fullscreenchange', async () => {
       const { fixture, map } = await render({ showFullscreen: true });
-      const btn = () => button(fixture, 'Toggle fullscreen');
+      const btn = () => button(map, 'Toggle fullscreen');
       const before = btn().querySelector('path')!.getAttribute('d');
       expect(btn().getAttribute('aria-pressed')).toBe('false');
 
@@ -297,7 +355,7 @@ describe('MapControlsComponent', () => {
     });
 
     it('ignores another element going fullscreen', async () => {
-      const { fixture } = await render({ showFullscreen: true });
+      const { fixture, map } = await render({ showFullscreen: true });
 
       Object.defineProperty(document, 'fullscreenElement', {
         configurable: true,
@@ -306,7 +364,7 @@ describe('MapControlsComponent', () => {
       document.dispatchEvent(new Event('fullscreenchange'));
       fixture.detectChanges();
 
-      expect(button(fixture, 'Toggle fullscreen').getAttribute('aria-pressed')).toBe('false');
+      expect(button(map, 'Toggle fullscreen').getAttribute('aria-pressed')).toBe('false');
     });
 
     it('removes the fullscreenchange listener on destroy', async () => {
@@ -324,14 +382,12 @@ describe('MapControlsComponent', () => {
 
   describe('accessibility', () => {
     it('gives every button an aria-label', async () => {
-      const { fixture } = await render({
+      const { map } = await render({
         showCompass: true,
         showLocate: true,
         showFullscreen: true,
       });
-      const buttons = [
-        ...fixture.nativeElement.querySelectorAll('.ng-control-btn'),
-      ] as HTMLElement[];
+      const buttons = [...map.getContainer().querySelectorAll('.ng-control-btn')] as HTMLElement[];
 
       expect(buttons).toHaveLength(5);
       for (const b of buttons) expect(b.getAttribute('aria-label')).toBe(b.getAttribute('title'));
@@ -359,7 +415,7 @@ describe('MapControlsComponent', () => {
 
   describe('className', () => {
     it('applies the initial classes and keeps the built-in class', async () => {
-      const { fixture } = await renderMap(
+      const { fixture, map } = await renderMap(
         `<ng-map><ng-map-controls position="top-left" [className]="cls" /></ng-map>`,
         {
           imports: [MapControlsComponent],
@@ -367,14 +423,14 @@ describe('MapControlsComponent', () => {
         },
       );
       await fixture.whenStable();
-      const el = fixture.nativeElement.querySelector('.ng-controls') as HTMLElement;
+      const el = map!.getContainer().querySelector('.ng-controls') as HTMLElement;
       expect(el.classList).toContain('ng-controls');
       expect(el.classList).toContain('w-64');
       expect(el.classList).toContain('p-0');
     });
 
     it('swaps classes when the input changes, without dropping the built-in class', async () => {
-      const { fixture } = await renderMap(
+      const { fixture, map } = await renderMap(
         `<ng-map><ng-map-controls position="top-left" [className]="cls" /></ng-map>`,
         {
           imports: [MapControlsComponent],
@@ -382,10 +438,10 @@ describe('MapControlsComponent', () => {
         },
       );
       await fixture.whenStable();
-      const before = fixture.nativeElement.querySelector('.ng-controls') as HTMLElement;
+      const before = map!.getContainer().querySelector('.ng-controls') as HTMLElement;
       update(fixture, { cls: 'b c ng-controls' });
       await fixture.whenStable();
-      const el = fixture.nativeElement.querySelector('.ng-controls') as HTMLElement;
+      const el = map!.getContainer().querySelector('.ng-controls') as HTMLElement;
       expect(el).toBe(before);
       expect(el.classList).not.toContain('a');
       expect(el.classList).toContain('b');

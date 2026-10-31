@@ -2,7 +2,7 @@
 
 All components are standalone, `OnPush`, and use signal inputs/outputs. Everything below is exported from `ng-mapcn` (or from the folder `ng add` copied into your app). Coordinates are `[longitude, latitude]`.
 
-Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [ng-map-draw](#ng-map-draw) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
+Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-scale](#ng-map-scale) | [ng-map-legend](#ng-map-legend) | [ng-map-style-switcher](#ng-map-style-switcher) | [ng-map-minimap](#ng-map-minimap) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [Route playback](#route-playback) | [ng-route-playback-control](#ng-route-playback-control) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-symbol-layer](#ng-map-symbol-layer) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [ng-map-draw](#ng-map-draw) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
 
 ## ng-map
 
@@ -33,13 +33,13 @@ Method: `getMap(): MapLibreMap | null` (escape hatch to the raw map).
 
 Fit to bounds: `<ng-map [fitBounds]="{ padding: 48, maxZoom: 14 }">` fits the camera to the union of the bounds of the children (markers, `ng-map-geojson`/`-cluster-layer`/`-heatmap` object data, routes, arcs; URL `data` is not fetched, so it contributes nothing) once the map is loaded, and again only when those bounds really change. The first fit never animates; later ones animate unless `animate: false`; `maxZoom` defaults to 16. `bounds` (any `LngLatBoundsLike`) fits explicit bounds instead. The fit is not guarded against a controlled `[viewport]`: `viewportChange` reports the new camera, and the viewport sync is idempotent. Arc bounds follow the unwrapped curve (an antimeridian arc spans e.g. 170 to 190); other antimeridian-crossing data is not handled. A draggable marker bound to signals refits continuously while dragged: pass explicit `bounds` or leave `fitBounds` off for that case.
 
-Basemap precedence: `styles` input, then `blank`, then `provideMapStyles()`, then Carto default. Changing these inputs at runtime re-applies the style.
+Basemap precedence: a selected `ng-map-style-switcher` option, then `styles` input, then `blank`, then `provideMapStyles()`, then Carto default. Changing these inputs at runtime re-applies the style.
 
 The map is created in `afterNextRender` (browser only). If the container has no size yet, initialization waits for a resize.
 
 ## ng-map-controls
 
-Class `MapControlsComponent`. Custom button UI (not a MapLibre `IControl`).
+Class `MapControlsComponent`. Custom button UI, mounted as a MapLibre control: the `.ng-controls` card renders inside `.maplibregl-ctrl-<position>`, so it stacks with `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher`, `ng-map-minimap` and `ng-route-playback-control` in the same corner. Breaking DOM change: the card no longer sits in a host element with fixed bottom offsets, so style it with `className`, not host-descendant selectors.
 
 | Input            | Type                                                           | Default          |
 | ---------------- | -------------------------------------------------------------- | ---------------- |
@@ -57,6 +57,98 @@ Class `MapControlsComponent`. Custom button UI (not a MapLibre `IControl`).
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `locateChange` | `{ longitude: number; latitude: number }` (after a successful geolocation; the map flies there at zoom 14)                                                                                                                   |
 | `locateError`  | `GeolocationPositionError \| Error`: the geolocation error (permission denied, timeout, position unavailable), or an `Error` when the browser has no `navigator.geolocation` (insecure context). Never emitted on the server |
+
+## ng-map-scale
+
+Class `MapScaleComponent`. Scale bar mounted as a MapLibre control. It follows `move`/zoom, picks a 1/2/5 round length that fits `maxWidth`, and formats the value with `Intl.NumberFormat` for the app `LOCALE_ID`. Not rendered on the server.
+
+| Input       | Type                                                           | Default         |
+| ----------- | -------------------------------------------------------------- | --------------- |
+| `unit`      | `'metric' \| 'imperial' \| 'both'`                             | `'metric'`      |
+| `maxWidth`  | `number` (longest bar, in pixels)                              | `100`           |
+| `position`  | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'bottom-left'` |
+| `labels`    | `Partial<MapLabels>`                                           | `undefined`     |
+| `className` | `string`                                                       | `undefined`     |
+
+`labels.scale` (default `'Map scale'`) names the bar; the aria-label also carries the current reading. `className` adds classes to the rendered `.ng-scale` element. No outputs.
+
+## ng-map-legend
+
+Class `MapLegendComponent`. Legend card mounted as a MapLibre control; projected content renders below the sections.
+
+| Input         | Type                                                           | Default      |
+| ------------- | -------------------------------------------------------------- | ------------ |
+| `sections`    | `MapLegendSection[]`                                           | `[]`         |
+| `title`       | `string`                                                       | `undefined`  |
+| `position`    | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'top-left'` |
+| `collapsible` | `boolean`                                                      | `false`      |
+| `collapsed`   | `boolean` (model)                                              | `false`      |
+| `labels`      | `Partial<MapLabels>`                                           | `undefined`  |
+| `className`   | `string`                                                       | `undefined`  |
+
+```ts
+interface MapLegendCategory {
+  color: string;
+  label: string;
+  shape?: 'circle' | 'square' | 'line'; // default 'circle'
+}
+type MapLegendSection =
+  | { type: 'categories'; title?: string; entries: MapLegendCategory[] }
+  | {
+      type: 'gradient';
+      title?: string;
+      stops: { color: string; value: number | string }[];
+      format?: (value: number | string) => string;
+    };
+```
+
+Gradients always label the first and last stop; middle stops are labelled only when they fit without overlapping (`format` applies to every label). `title` is the heading and the accessible name; `collapsible` adds a header toggle whose accessible name is the visible heading followed by `labels.showLegend` / `labels.hideLegend` (`'Show legend'` / `'Hide legend'`), e.g. `'Places, Hide legend'`, and `labels.legend` (`'Map legend'`) names the region when there is no `title`. `[(collapsed)]` two-way binds the state (`collapsedChange` output). `className` adds classes to the rendered `.ng-legend` element.
+
+## ng-map-style-switcher
+
+Class `MapStyleSwitcherComponent`. A listbox button mounted as a MapLibre control (keyboard: Arrow keys, Home, End, Enter/Space, Escape, Tab). The selected option's `styles` override `provideMapStyles()` and the map's `[styles]` / `[blank]` for that map (through `MapContextService.setStyleOverride`; the map re-applies the style, so layer components re-add themselves). With no `value` the map keeps its own style, and the override is removed when the switcher is destroyed.
+
+| Input       | Type                                                           | Default       |
+| ----------- | -------------------------------------------------------------- | ------------- |
+| `options`   | `MapStyleOption[]` (required)                                  | none          |
+| `value`     | `string \| undefined` (model)                                  | `undefined`   |
+| `position`  | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'top-right'` |
+| `labels`    | `Partial<MapLabels>`                                           | `undefined`   |
+| `className` | `string`                                                       | `undefined`   |
+
+```ts
+interface MapStyleOption {
+  id: string;
+  label: string;
+  styles: MapStylesConfig; // per-theme basemap, like ng-map's [styles]
+}
+```
+
+Keep `MapStyleOption` objects referentially stable (declare the array once as a field or constant). An inline object or array in the template is a new style on every change detection pass and re-runs `setStyle`. `labels.mapStyle` (`'Map style'`) is the button's accessible name: `<labels.mapStyle>: <selected label>`, or just `labels.mapStyle` with nothing selected. The visible text is the selected option's label (`labels.mapStyle` with no selection). `[(value)]` two-way binds the selected id (`valueChange` output). `className` adds classes to the rendered `.ng-style-switcher` element.
+
+## ng-map-minimap
+
+Class `MapMinimapComponent`. Overview map mounted as a MapLibre control, used inside `<ng-map>`. A second MapLibre instance follows the main viewport at zoom `max(main - zoomOffset, 0)`, is always mercator and north-up, and draws the main viewport footprint (correct with bearing and pitch). Click recenters the main map (`easeTo`), drag pans it, and arrow keys pan it 100 px while the minimap is focused. Not rendered on the server.
+
+| Input        | Type                                                           | Default         |
+| ------------ | -------------------------------------------------------------- | --------------- |
+| `position`   | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'bottom-left'` |
+| `width`      | `number` (pixels)                                              | `200`           |
+| `height`     | `number` (pixels)                                              | `150`           |
+| `zoomOffset` | `number`                                                       | `5`             |
+| `styles`     | `MapStylesConfig`                                              | `undefined`     |
+| `blank`      | `boolean`                                                      | `false`         |
+| `collapsed`  | `boolean` (model)                                              | `false`         |
+| `labels`     | `Partial<MapLabels>`                                           | `undefined`     |
+| `className`  | `string`                                                       | `undefined`     |
+
+By default it mirrors the main map's effective basemap (theme plus style switcher, via `MapContextService.currentStyle`); `styles` (themed) wins over `blank`, which wins over the mirror. Collapsing destroys the minimap instance, which frees its WebGL context. The minimap shows no attribution: a custom `styles` override's attribution is the app's responsibility. `labels.minimap` (`'Overview map'`) names the map; `showMinimap` / `hideMinimap` name the toggle button. `className` adds classes to the rendered `.ng-minimap` element. Output: `collapsedChange` (the model output of `collapsed`).
+
+```html
+<ng-map [center]="[-74.006, 40.7128]" [zoom]="11">
+  <ng-map-minimap [(collapsed)]="overviewCollapsed" position="bottom-left" />
+</ng-map>
+```
 
 ## ng-map-marker
 
@@ -114,10 +206,11 @@ Must be placed inside `<ng-map-marker>`.
 | `anchor`       | `PositionAnchor`     | `undefined` | Creation only                                                                                                                  |
 | `maxWidth`     | `string`             | `'none'`    | Live via `setMaxWidth`                                                                                                         |
 | `closeOnClick` | `boolean`            | `false`     | Creation only. `true` closes the popup on a map click                                                                          |
-| `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button                                                                                         |
+| `ariaLabel`    | `string`             | `undefined` | Name of the `role="dialog"` card. Falls back to the marker's `ariaLabel`, then "Map popup" (`labels.popup`)                    |
+| `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button, `popup` fallback name of the card                                                      |
 | `className`    | `string`             | `undefined` | Classes for `.ng-popup-card`                                                                                                   |
 
-Keyboard and a11y: MapLibre makes a marker with a popup focusable (`tabindex=0`, Enter/Space toggles it). The library also sets `role="button"` (through `ng-map-marker`) and `aria-haspopup="dialog"` on the marker element unless the app already set them. `focusAfterOpen` moves focus into the popup. Escape inside the card closes the popup, calls `stopPropagation()` (a host dialog does not also close) and returns focus to the marker. Give the marker an accessible name through visible text (`ng-marker-label`) or an `aria-label` on your content. A `<button>` inside `ng-marker-content` is fine: the marker element then gets no role and the button is the keyboard target (no `nested-interactive`).
+Keyboard and a11y: MapLibre makes a marker with a popup focusable (`tabindex=0`, Enter/Space toggles it). The library also sets `role="button"` (through `ng-map-marker`) and `aria-haspopup="dialog"` on the marker element unless the app already set them, plus `aria-expanded` (`true` while the popup is open, kept in sync with every open/close: click, Enter/Space, close button, Escape, map click, `togglePopup()`) and, while open, `aria-controls` pointing at the `.ng-popup-card` (which gets a generated id). A marker whose content has its own button gets no `aria-expanded`. `focusAfterOpen` moves focus into the popup. Escape inside the card closes the popup, calls `stopPropagation()` (a host dialog does not also close) and returns focus to the marker. The card (`.ng-popup-card`) is a non-modal `role="dialog"` (no `aria-modal`: the map stays usable) with an `aria-label`: the popup's `ariaLabel`, else the marker's `ariaLabel`, else "Map popup" (`labels.popup`). Give the marker an accessible name through visible text (`ng-marker-label`) or an `aria-label` on your content. A `<button>` inside `ng-marker-content` is fine: the marker element then gets no role and the button is the keyboard target (no `nested-interactive`), so the library sets no `aria-expanded`. Mirror the popup state on your button through a template reference: `<ng-marker-popup #info>` exposes `isOpen` (a `Signal<boolean>`, in sync with every open and close) and `cardId` (the card's id), so bind `aria-haspopup="dialog" [attr.aria-expanded]="info.isOpen()" [attr.aria-controls]="info.isOpen() ? info.cardId : null"`. `NgMapMarkerHarness.isPopupOpen()` then reads that button.
 
 ## ng-map-popup
 
@@ -132,10 +225,11 @@ Class `MapPopupComponent`. Standalone popup at coordinates, opened on creation (
 | `maxWidth`     | `string`             | `'none'`    |                                                                                                                               |
 | `closeOnClick` | `boolean`            | `true`      | Creation only. Set `false` for hover popups                                                                                   |
 | `open`         | `boolean` (`model`)  | `true`      | `[(open)]`: closing writes `false`, `true` reopens the same popup. A closed popup stays closed when only the position changes |
-| `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button                                                                                        |
+| `ariaLabel`    | `string`             | `undefined` | Name of the `role="dialog"` card. Falls back to "Map popup" (`labels.popup`)                                                  |
+| `labels`       | `Partial<MapLabels>` | `undefined` | `closePopup` label of the close button, `popup` fallback name of the card                                                     |
 | `className`    | `string`             | `undefined` | Classes for `.ng-popup-card`. `ng-popup-passthrough` makes the popup ignore the pointer (see below)                           |
 
-Keyboard and a11y: `focusAfterOpen` moves focus into the popup. Escape inside the card closes it (writes `open = false`, emits `popupClose`) and calls `stopPropagation()` so a host dialog does not also close. With `[closeButton]="true"` the X is a button named by the `closePopup` label.
+Keyboard and a11y: the card is a non-modal `role="dialog"` named by `ariaLabel` (default "Map popup", `labels.popup`). `focusAfterOpen` moves focus into the popup. Escape inside the card closes it (writes `open = false`, emits `popupClose`) and calls `stopPropagation()` so a host dialog does not also close. With `[closeButton]="true"` the X is a button named by the `closePopup` label.
 
 Hover popups: set `[closeOnClick]="false"` and `className="ng-popup-passthrough"`. The popup sits next to the hovered point; if it captured the pointer, moving the cursor into it would fire the layer's `mouseleave` and close it. The rule `.maplibregl-popup:has(.ng-popup-passthrough)` (and its `.maplibregl-popup-content`) gets `pointer-events: none`. It ships in the library's `_utilities.scss`, and `ng add` appends it to a plain `styles.css`. It needs `:has()` (Chrome 105, Safari 15.4, Firefox 121).
 
@@ -198,6 +292,46 @@ Place them inside `<ng-map-route>`. They read the route through `RouteContextSer
   <ng-route-marker at="progress"><ng-marker-content>🚚</ng-marker-content></ng-route-marker>
 </ng-map-route>
 ```
+
+### Route playback
+
+`ng-route-playback` (`RoutePlaybackComponent`) is a route child that animates the route's progress. While it exists it overrides the route's `[progress]` input, so `ng-route-progress` and `ng-route-marker at="progress"` animate. The frame loop (`requestAnimationFrame`, a frame advances at most 100 ms) runs outside the Angular zone and does nothing on the server. Put a template reference on it (`<ng-route-playback #pb />`) to call its methods.
+
+| Input / model | Type      | Default | Notes                                                                                                                                                                                          |
+| ------------- | --------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `playing`     | `boolean` | `false` | `model()`, `[(playing)]`                                                                                                                                                                       |
+| `progress`    | `number`  | `0`     | `model()`, `[(progress)]`; covered fraction; the value applied to the route and by `seek()` is clamped to 0 to 1, the model keeps what you write                                               |
+| `speed`       | `number`  | `1`     | `model()`, `[(speed)]`; multiplier                                                                                                                                                             |
+| `duration`    | `number`  | `10000` | Milliseconds for a full pass at speed 1                                                                                                                                                        |
+| `loop`        | `boolean` | `false` | Wrap to the start instead of stopping                                                                                                                                                          |
+| `follow`      | `boolean` | `false` | Centers the camera on the head each frame; a user drag suspends it until `play()`, `restart()` or turning `follow` off and on; it also recenters on `seek()` and waits while the map is moving |
+
+Output `ended: void` fires once when playback reaches the end (never with `loop`), inside the Angular zone. Methods: `play()` (restarts from 0 when finished), `pause()`, `toggle()`, `restart()`, `seek(fraction)` (clamps; also recenters when `follow`).
+
+```html
+<ng-map>
+  <ng-map-route [coordinates]="coords">
+    <ng-route-progress />
+    <ng-route-marker at="progress"><ng-marker-content>🚚</ng-marker-content></ng-route-marker>
+    <ng-route-playback #pb [duration]="12000" [follow]="true" (ended)="done.set(true)" />
+  </ng-map-route>
+  <ng-route-playback-control [for]="pb" position="bottom-left" />
+</ng-map>
+```
+
+## ng-route-playback-control
+
+Class `RoutePlaybackControlComponent`. Play/pause button, progress scrubber and speed selector for a playback, mounted as a MapLibre control (stacks with the other corner controls). Place it as a direct child of `ng-map`, not inside the route. Not rendered on the server.
+
+| Input       | Type                                                           | Default          |
+| ----------- | -------------------------------------------------------------- | ---------------- |
+| `for`       | `RoutePlaybackComponent` (required)                            |                  |
+| `position`  | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | `'bottom-left'`  |
+| `speeds`    | `number[]`                                                     | `[0.5, 1, 2, 4]` |
+| `labels`    | `Partial<MapLabels>`                                           | `undefined`      |
+| `className` | `string`                                                       | `undefined`      |
+
+`speeds` always includes the current speed. `labels.play` / `labels.pause` name the button, `labels.playbackProgress` the scrubber and `labels.playbackSpeed` the selector (`'Play'`, `'Pause'`, `'Playback progress'`, `'Playback speed'`). `className` adds classes to the rendered `.ng-playback` element. No outputs.
 
 ## ng-map-geojson
 
@@ -291,6 +425,44 @@ Ids derive from `id` (auto `ng-heatmap-N`): source `heatmap-source-<id>`, layer 
 | `paint`          | `HeatmapLayerSpecification['paint']`                            | `undefined`           | Escape hatch, merged last over every input above                                                                                                                             |
 
 No outputs. Also exported: `heatmapColorExpression(stops, theme?)`, `defaultHeatmapGradients`, `MapHeatmapData`, `HeatmapGradient`.
+
+## ng-map-symbol-layer
+
+Class `MapSymbolLayerComponent<P = Record<string, unknown>>`. A GeoJSON point source rendered as one MapLibre `symbol` layer: icons, text labels or both, with collision detection. `P` is inferred from `data`.
+
+Ids derive from `id` (auto `ng-symbol-N`): source `symbol-source-<id>`, layer `symbol-layer-<id>`.
+
+| Input           | Type                                                                         | Default                             | Notes                                                                                                                                                                                                                                      |
+| --------------- | ---------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `data`          | `string \| Feature<Point, P \| null> \| FeatureCollection<Point, P \| null>` | required                            | String is a URL; new data goes through `setData`                                                                                                                                                                                           |
+| `id`            | `string`                                                                     | auto (`ng-symbol-N`)                | Changing it re-creates the source and layer                                                                                                                                                                                                |
+| `beforeId`      | `string`                                                                     | `undefined`                         | Layer to insert before; creation only                                                                                                                                                                                                      |
+| `images`        | `Record<string, MapSymbolImage>`                                             | `{}`                                | Registered by id for `icon`. `MapSymbolImage` = URL \| `{ url, sdf?, pixelRatio? }` \| `{ data, sdf?, pixelRatio? }`. PNG, WebP or JPEG (not SVG). Ids are shared per map (see below). SDF and non-SDF images cannot be mixed in one layer |
+| `icon`          | `string \| expression`                                                       | `undefined`                         | Image id or expression such as `['get', 'kind']`                                                                                                                                                                                           |
+| `iconSize`      | `number \| expression`                                                       | `1`                                 |                                                                                                                                                                                                                                            |
+| `iconColor`     | `string \| expression`                                                       | `undefined`                         | Only recolors SDF images (`{ url, sdf: true }`). SDF and non-SDF images cannot be mixed in one layer; use one layer per kind                                                                                                               |
+| `textField`     | `string \| expression`                                                       | `undefined`                         | `'{name}'` template or expression. Needs style `glyphs`; on `blank` all text options are ignored with one console warning                                                                                                                  |
+| `textFont`      | `string[]`                                                                   | the basemap's font                  | Glyph servers only serve their own fonts                                                                                                                                                                                                   |
+| `textSize`      | `number \| expression`                                                       | `12`                                |                                                                                                                                                                                                                                            |
+| `textColor`     | `string \| expression`                                                       | theme (`#171717`/`#fafafa`)         |                                                                                                                                                                                                                                            |
+| `textHaloColor` | `string \| expression`                                                       | theme (`#ffffff`/`#0a0a0a`)         |                                                                                                                                                                                                                                            |
+| `textHaloWidth` | `number \| expression`                                                       | `1`                                 |                                                                                                                                                                                                                                            |
+| `textAnchor`    | `SymbolLayerSpecification['layout']['text-anchor']`                          | `'top'` with icon, else `'center'`  |                                                                                                                                                                                                                                            |
+| `textOffset`    | `[number, number]`                                                           | `[0, 0.8]` with icon, else `[0, 0]` | Ems                                                                                                                                                                                                                                        |
+| `allowOverlap`  | `boolean`                                                                    | `false`                             | Sets both `icon-allow-overlap` and `text-allow-overlap`                                                                                                                                                                                    |
+| `minZoom`       | `number`                                                                     | `0`                                 | Reconciled with `setLayerZoomRange`                                                                                                                                                                                                        |
+| `maxZoom`       | `number`                                                                     | `24`                                |                                                                                                                                                                                                                                            |
+| `filter`        | `FilterSpecification`                                                        | `undefined`                         | Reconciled with `setFilter`                                                                                                                                                                                                                |
+| `layout`        | `SymbolLayerSpecification['layout']`                                         | `undefined`                         | Escape hatch, merged last                                                                                                                                                                                                                  |
+| `paint`         | `SymbolLayerSpecification['paint']`                                          | `undefined`                         | Escape hatch, merged last                                                                                                                                                                                                                  |
+| `interactive`   | `boolean`                                                                    | `false`                             | Binds click and hover to the layer (pointer cursor on hover)                                                                                                                                                                               |
+
+| Output         | Payload                                                                           |
+| -------------- | --------------------------------------------------------------------------------- |
+| `featureClick` | `MapGeoJSONEvent<P>` = `{ feature, longitude, latitude, originalEvent }`          |
+| `featureHover` | `MapGeoJSONEvent<P> \| null` (again on moving to another symbol, `null` on leave) |
+
+Images belong to the style: URLs are decoded once (cached per URL) and re-added after a theme switch; a failed image is reported through `mapError` and skipped, the layer is still created. Changing `images` adds, swaps or removes images without re-creating the layer. Image ids are shared per map: layers that register the same id use one image (the first layer to add it provides the pixels, so give different images different ids), and it is removed only when the last layer using it goes away; an id that already exists in the style (sprite, app image) is used as is and never removed. SDF and non-SDF images cannot be mixed in one layer (MapLibre renders a layer's icons as one or the other): use one layer per kind. Inline data without feature ids gets ids from the feature index (`generateId`, decided at creation; data with ids keeps them), so hover tells features apart. Also exported: `MapSymbolData`, `MapSymbolImage`, `MapSymbolImageData`.
 
 ## ng-map-raster-source
 
@@ -433,10 +605,12 @@ Also exported: `MapDrawShape`, `MapDrawMode`, `MapDrawGeometry`, `MapDrawPropert
 | `map`                                                                        | `Signal<MapLibreMap \| null>`                                    |                                                                                                                                                                                                                                   |
 | `isLoaded`                                                                   | `Signal<boolean>`                                                | True once the map `load` fired and the style settled (debounced). Closes during `setStyle`; re-opens on the new style, or on the current one when the swap fails or changes nothing                                               |
 | `resolvedTheme`                                                              | `Signal<'light' \| 'dark'>`                                      | Theme currently applied to the map                                                                                                                                                                                                |
+| `currentStyle`                                                               | `Signal<string \| StyleSpecification \| null>`                   | Style last requested or applied by `<ng-map>` (URL or spec); `null` before the map exists. Set before the swap finishes, kept when the change is a no-op diff or the fetch fails. `ng-map-minimap` mirrors it                     |
 | `hasSource(id)` / `sourceIds`                                                | `boolean` (reactive in `effect`) / `Signal<ReadonlySet<string>>` | Source registry: ids announced by `ng-map-raster-source`, `ng-map-vector-source`, `ng-map-image-overlay`, `ng-map-terrain` (its DEM source) while the source is on the map. Wait on it before adding layers that use `source: id` |
 | `registerSource(id)`                                                         | `() => () => void`                                               | Announce a source you added yourself; returns the release function                                                                                                                                                                |
 | `fitBounds(options?)`                                                        | `boolean`                                                        | Fits to `options.bounds` or the children's data; `false` if not loaded or no bounds                                                                                                                                               |
 | `dataBounds`                                                                 | `Signal<[w, s, e, n] \| null>`                                   | Union of the bounds registered by children                                                                                                                                                                                        |
+| `acquireImage(id, data, options)`                                            | `() => void`                                                     | Takes a reference to a style image, adding it if the style has none under that id; returns the release function (removes it with the last reference, only if it is still the one added). Used by `ng-map-symbol-layer`            |
 | `registerBounds(getter)`                                                     | `() => void`                                                     | Adds a bounds source (reactive getter); returns the unregister function. Custom layer components use it                                                                                                                           |
 | `setMap`, `setResolvedTheme`, `setLoadedFlag`, `setStyleLoadedFlag`, `reset` | methods                                                          | Used internally by `ng-map`                                                                                                                                                                                                       |
 
@@ -479,7 +653,7 @@ provideMapLabels(
 ): Provider
 ```
 
-Translates the control buttons, the loader and the popup close button. Same three forms as `provideMapStyles`; a signal relabels every map when the locale changes. Missing keys fall back to `DEFAULT_MAP_LABELS` (English). A `labels` input on `ng-map`, `ng-map-controls`, `ng-map-popup` and `ng-marker-popup` wins over the provider. `MAP_LABELS` is the underlying `InjectionToken<Signal<Partial<MapLabels> | undefined>>`; `injectMapLabels(override?)` resolves defaults, then provider, then override, in an injection context.
+Translates the control buttons, the loader, the popup close button, the scale, legend and style switcher and minimap names and the playback control strings (`play`, `pause`, `playbackProgress`, `playbackSpeed`). Same three forms as `provideMapStyles`; a signal relabels every map when the locale changes. Missing keys fall back to `DEFAULT_MAP_LABELS` (English). A `labels` input on `ng-map`, `ng-map-controls`, `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher`, `ng-map-minimap`, `ng-route-playback-control`, `ng-map-popup` and `ng-marker-popup` wins over the provider. `MAP_LABELS` is the underlying `InjectionToken<Signal<Partial<MapLabels> | undefined>>`; `injectMapLabels(override?)` resolves defaults, then provider, then override, in an injection context.
 
 ```ts
 interface MapLabels {
@@ -490,7 +664,20 @@ interface MapLabels {
   fullscreen: string; // 'Toggle fullscreen'
   loading: string; // 'Loading map' (loader aria-label)
   closePopup: string; // 'Close popup'
+  popup: string; // 'Map popup' (name of a popup card without ariaLabel)
   marker: string; // 'Map marker' (name of an interactive marker with no text)
+  scale: string; // 'Map scale'
+  legend: string; // 'Map legend'
+  showLegend: string; // 'Show legend'
+  hideLegend: string; // 'Hide legend'
+  mapStyle: string; // 'Map style'
+  minimap: string; // 'Overview map' (name of the minimap)
+  showMinimap: string; // 'Show overview map'
+  hideMinimap: string; // 'Hide overview map'
+  play: string; // 'Play' (playback button while paused)
+  pause: string; // 'Pause' (playback button while running)
+  playbackProgress: string; // 'Playback progress' (scrubber name)
+  playbackSpeed: string; // 'Playback speed' (speed selector name)
 }
 ```
 
@@ -523,6 +710,17 @@ interface MapGeoJSONEvent<P = Record<string, unknown>> {
   latitude: number;
   originalEvent: MapMouseEvent;
 }
+
+type MapControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+interface ScaleReading {
+  value: number;
+  unit: 'meter' | 'kilometer' | 'foot' | 'mile';
+  width: number; // bar length in pixels
+}
+
+computeScale(metersPerPixel: number, maxWidth: number, system: 'metric' | 'imperial'): ScaleReading;
+// largest round 1/2/5 length that fits maxWidth pixels; km above 1000 m, miles above 5280 ft
 
 nextId(prefix: string): string; // 'prefix-N', unique per page
 getViewport(map: MapLibreMap): MapViewport;

@@ -1,0 +1,43 @@
+<ng-template #control>
+  <div class="ng-playback" [class]="rootClass()">
+    <button
+      type="button"
+      class="ng-playback-toggle"
+      [attr.aria-label]="for().playing() ? l().pause : l().play"
+      (click)="for().toggle()"
+    >
+      @if (for().playing()) {
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+          <rect x="6" y="5" width="4" height="14" rx="1" />
+          <rect x="14" y="5" width="4" height="14" rx="1" />
+        </svg>
+      } @else {
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+          <path
+            d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"
+          />
+        </svg>
+      }
+    </button>
+    <input
+      type="range"
+      class="ng-playback-range"
+      min="0"
+      max="1"
+      step="0.01"
+      [value]="progress()"
+      [attr.aria-label]="l().playbackProgress"
+      [attr.aria-valuetext]="percent() + '%'"
+      (input)="onSeek($event)"
+    />
+    <select
+      class="ng-playback-speed"
+      [attr.aria-label]="l().playbackSpeed"
+      (change)="onSpeed($event)"
+    >
+      @for (s of speedOptions(); track s) {
+        <option [value]="s" [selected]="s === for().speed()">{{ s }}×</option>
+      }
+    </select>
+  </div>
+</ng-template>

@@ -1,6 +1,11 @@
 import { computed, Injectable, type Signal, signal } from '@angular/core';
-import { type LngLatBoundsLike, type Map as MapLibreMap } from 'maplibre-gl';
+import {
+  type LngLatBoundsLike,
+  type Map as MapLibreMap,
+  type StyleSpecification,
+} from 'maplibre-gl';
 
+import { type MapStylesConfig } from '../styles/map-styles';
 import {
   type BoundsGetter,
   type BoundsTuple,
@@ -25,6 +30,20 @@ export class MapContextService {
   /** Theme currently applied to the map (mapcn context `resolvedTheme`). */
   readonly resolvedTheme = this.resolvedThemeSignal.asReadonly();
 
+  private readonly styleOverrideSignal = signal<MapStylesConfig | undefined>(undefined);
+  /**
+   * Basemap chosen at runtime by a child (the style switcher). `<ng-map>` gives it the top
+   * precedence and applies it through its own `setStyle` path, so the load gate closes and reopens.
+   */
+  readonly styleOverride = this.styleOverrideSignal.asReadonly();
+
+  private readonly currentStyleSignal = signal<string | StyleSpecification | null>(null);
+  /**
+   * Style last requested or applied by `<ng-map>` (URL or spec), `null` before the map exists. It
+   * is set before the swap finishes and kept when the change is a no-op diff or the fetch fails.
+   */
+  readonly currentStyle = this.currentStyleSignal.asReadonly();
+
   private readonly sourceCounts = new Map<string, number>();
   private readonly sourceIdsSignal = signal<ReadonlySet<string>>(new Set());
   /** Ids of the sources currently added to the map by source components. */
@@ -42,6 +61,12 @@ export class MapContextService {
     { equal: sameBounds },
   );
 
+  /**
+   * Style images taken with `acquireImage`, by id: how many users hold each, and the image object
+   * this service added (`map.getImage`), or `null` when the style already had one under that id.
+   */
+  private readonly imageRefs = new Map<string, { count: number; added: unknown }>();
+
   private errorHandler: ((error: Error) => void) | null = null;
 
   setMap(map: MapLibreMap): void {
@@ -50,6 +75,15 @@ export class MapContextService {
 
   setResolvedTheme(theme: 'light' | 'dark'): void {
     this.resolvedThemeSignal.set(theme);
+  }
+
+  /** Sets (or clears, with `undefined`) the runtime basemap override. Applied by `<ng-map>`. */
+  setStyleOverride(config: MapStylesConfig | undefined): void {
+    this.styleOverrideSignal.set(config);
+  }
+
+  setCurrentStyle(style: string | StyleSpecification): void {
+    this.currentStyleSignal.set(style);
   }
 
   setLoadedFlag(value: boolean): void {
@@ -82,6 +116,53 @@ export class MapContextService {
   /** Whether a source with this id is currently registered. Reactive when read in an effect. */
   hasSource(id: string): boolean {
     return this.sourceIdsSignal().has(id);
+  }
+
+  /**
+   * Takes a reference to the style image `id`, adding it with `data` / `options` when the style has
+   * no image under that id (layer components sharing an id share one image: the first one to add it
+   * provides the pixels). Needs a loaded map. Returns the release function: the image is removed
+   * when its last reference is released, and only if it is still the one added here (an image the
+   * style or the app already had is never removed). A style reload drops the images; every user
+   * releases while the gate is closed and acquires again once it re-opens, so they are re-added.
+   */
+  acquireImage(
+    id: string,
+    data: Parameters<MapLibreMap['addImage']>[1],
+    options: { sdf: boolean; pixelRatio: number },
+  ): () => void {
+    const map = this.mapSignal();
+    if (!map) return () => undefined;
+    const ref = this.imageRefs.get(id) ?? { count: 0, added: null };
+    const current = map.getImage(id);
+    if (!current) {
+      // Missing: never added, or dropped by a style reload while it was still held.
+      try {
+        map.addImage(id, data, options);
+        ref.added = map.getImage(id) ?? null;
+      } catch (error) {
+        this.reportError(error);
+      }
+    } else if (current !== ref.added) {
+      ref.added = null;
+    }
+    ref.count++;
+    this.imageRefs.set(id, ref);
+
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      // The map was destroyed meanwhile (`reset` cleared the references).
+      if (this.imageRefs.get(id) !== ref) return;
+      if (--ref.count > 0) return;
+      this.imageRefs.delete(id);
+      try {
+        if (ref.added && map.getImage(id) === ref.added) map.removeImage(id);
+      } catch {
+        // style may be mid-reload
+      }
+    };
   }
 
   /**
@@ -143,8 +224,11 @@ export class MapContextService {
     this.mapSignal.set(null);
     this.loadedFlagSignal.set(false);
     this.styleLoadedFlagSignal.set(false);
+    this.styleOverrideSignal.set(undefined);
+    this.currentStyleSignal.set(null);
     this.sourceCounts.clear();
     this.sourceIdsSignal.set(new Set());
+    this.imageRefs.clear();
   }
 }
 

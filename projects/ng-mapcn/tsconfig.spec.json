@@ -6,10 +6,19 @@
     "outDir": "../../out-tsc/spec",
     "types": ["vitest/globals"],
     "paths": {
-      "ng-mapcn": ["./src/public-api.ts"]
+      "ng-mapcn": ["./src/public-api.ts"],
+      "ng-mapcn/testing": ["./testing/src/public-api.ts"],
+      "ng-mapcn/testing/harness": ["./testing/harness/src/public-api.ts"],
+      "ng-mapcn/testing/maplibre": ["./testing/maplibre/src/public-api.ts"]
     }
   },
-  "include": ["src/**/*.d.ts", "src/**/*.spec.ts", "src/testing/**/*.ts", "draw/src/**/*.spec.ts"],
+  "include": [
+    "src/**/*.d.ts",
+    "src/**/*.spec.ts",
+    "src/testing/**/*.ts",
+    "draw/src/**/*.spec.ts",
+    "testing/**/*.ts"
+  ],
   "angularCompilerOptions": {
     "extendedDiagnostics": {
       "checks": {

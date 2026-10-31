@@ -23,8 +23,37 @@ export interface MapLabels {
   loading: string;
   /** Accessible name of the popup close button. */
   closePopup: string;
+  /**
+   * Accessible name of a popup card (`role="dialog"`) when neither the popup's nor (for
+   * `ng-marker-popup`) the marker's `ariaLabel` is set.
+   */
+  popup: string;
   /** Accessible name of an interactive marker that shows the default dot and has no `ariaLabel`. */
   marker: string;
+  /** Accessible name of the scale bar. */
+  scale: string;
+  /** Accessible name of the legend. */
+  legend: string;
+  /** Legend toggle button while the legend is hidden. */
+  showLegend: string;
+  /** Legend toggle button while the legend is shown. */
+  hideLegend: string;
+  /** Accessible name of the style switcher. */
+  mapStyle: string;
+  /** Playback button while the route playback is paused. */
+  play: string;
+  /** Playback button while the route playback is running. */
+  pause: string;
+  /** Accessible name of the playback scrubber. */
+  playbackProgress: string;
+  /** Accessible name of the playback speed selector. */
+  playbackSpeed: string;
+  /** Accessible name of the overview map (minimap). */
+  minimap: string;
+  /** Minimap toggle button while the overview map is collapsed. */
+  showMinimap: string;
+  /** Minimap toggle button while the overview map is shown. */
+  hideMinimap: string;
 }
 
 /** English defaults, used for every key that is not overridden. */
@@ -36,7 +65,20 @@ export const DEFAULT_MAP_LABELS: Readonly<MapLabels> = {
   fullscreen: 'Toggle fullscreen',
   loading: 'Loading map',
   closePopup: 'Close popup',
+  popup: 'Map popup',
   marker: 'Map marker',
+  scale: 'Map scale',
+  legend: 'Map legend',
+  showLegend: 'Show legend',
+  hideLegend: 'Hide legend',
+  mapStyle: 'Map style',
+  play: 'Play',
+  pause: 'Pause',
+  playbackProgress: 'Playback progress',
+  playbackSpeed: 'Playback speed',
+  minimap: 'Overview map',
+  showMinimap: 'Show overview map',
+  hideMinimap: 'Hide overview map',
 };
 
 /**

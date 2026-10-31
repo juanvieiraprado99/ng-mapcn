@@ -62,8 +62,8 @@ async function update(fixture: any, props: object) {
   await settle(fixture);
 }
 
-const lastFit = (map: { fitBounds: ReturnType<typeof vi.fn> }) =>
-  map.fitBounds.mock.calls.at(-1) as [number[], Record<string, unknown>];
+const lastFit = (map: { fitBounds: (...args: any[]) => unknown }) =>
+  vi.mocked(map.fitBounds).mock.calls.at(-1) as [number[], Record<string, unknown>];
 
 describe('ng-map [fitBounds]', () => {
   beforeEach(() => vi.useFakeTimers());
@@ -220,7 +220,7 @@ describe('ng-map [fitBounds]', () => {
       return { ...r, host: r.fixture.componentInstance };
     })();
     await loadAndSettle(fixture, map);
-    map.jumpTo.mockClear();
+    vi.mocked(map.jumpTo).mockClear();
 
     // The consumer follows viewportChange, as a controlled viewport does.
     const emitted = host.viewportChange.mock.calls.map((c: unknown[]) => c[0]);

@@ -33,7 +33,9 @@ npm run test:coverage   # library with v8 coverage (coverage/ng-mapcn)
 
 # End-to-end tests (Playwright + headless Chromium, offline fixtures)
 npm run e2e:build       # prod build (dist/demo) + dev build (dist/demo-e2e)
-npm run e2e             # dev project (interaction specs) + prod project (smoke)
+npm run e2e:build:dev   # dev build only, against the installed ng-mapcn (run npm run install:lib after lib changes)
+npm run e2e             # dev project (interaction specs) + prod project (smoke); 4 workers locally
+npm run e2e:dev         # dev project only (no prod build needed); add a spec path to run one file
 npm run e2e:ui          # Playwright UI mode
 # Pages for smoke/SSR/axe specs live in e2e/routes.ts; a new component adds its docs page + map count there
 # and its tag to projects/ng-mapcn/src/lib/ssr.spec.ts (see CONTRIBUTING.md > E2E tests)
@@ -115,3 +117,15 @@ PRs are **squash merged**: the PR title becomes the commit on `main`, so it must
 - `feat(marker): add support for custom SVG icons`
 - `fix(popup): ensure readable text in dark mode`
 - `chore: bump ng-mapcn to version 21.0.0-beta.6`
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+
+- When graphify-out/graph.json exists, run `graphify query "<question>"` before your first grep, search or source-file read for a codebase question, and put this rule in every subagent prompt that explores code. Read raw files only for lines the graph or an earlier read already located. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+- A committed graphify-out/graph.json is rewritten whole on every build, so a large diff to it in a pull request is expected. Do not flag it as churn or suggest skipping the graph rebuild or its hooks.

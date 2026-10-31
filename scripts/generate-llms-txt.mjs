@@ -94,7 +94,7 @@ Without a \`theme\` input, the map watches the \`dark\`/\`light\` class on \`doc
 const FEATURES = `## Key Features
 
 - **MapLibre GL JS v6** under the hood — no API keys required (Carto basemaps)
-- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, tile sources, image overlays, 3D buildings and terrain are children of \`<ng-map>\`
+- **Composable** — markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, symbol labels, tile sources, image overlays, 3D buildings and terrain are children of \`<ng-map>\`
 - **Signals-first** — standalone components, \`input()\`/\`output()\`, \`effect()\`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
 - **SSR-safe** — the map is created in \`afterNextRender\`; nothing touches \`document\` on the server
@@ -124,6 +124,7 @@ const componentList = api.sections
 const DOCS_COMPONENT_PAGES = [
   { label: 'Map', slug: 'map' },
   { label: 'Controls', slug: 'controls' },
+  { label: 'Legend', slug: 'legend' },
   { label: 'Markers', slug: 'markers' },
   { label: 'Popups', slug: 'popups' },
   { label: 'Routes', slug: 'routes' },
@@ -131,6 +132,7 @@ const DOCS_COMPONENT_PAGES = [
   { label: 'GeoJSON', slug: 'geojson' },
   { label: 'Clusters', slug: 'clusters' },
   { label: 'Heatmap', slug: 'heatmap' },
+  { label: 'Symbols', slug: 'symbols' },
   { label: 'Tile Sources', slug: 'tile-sources' },
   { label: '3D Buildings & Terrain', slug: '3d' },
   { label: 'Draw', slug: 'draw' },
@@ -151,7 +153,9 @@ Version: ${pkg.version} · License: ${pkg.license ?? 'MIT'} · npm: https://www.
 - [Documentation](${SITE_URL}/docs): introduction, features and supported basemaps.
 - [Installation](${SITE_URL}/docs/installation): \`ng add\` (copy-paste) or npm package.
 - [Map Styles](${SITE_URL}/docs/basemaps): a working example per provider (Carto, OpenFreeMap, OpenStreetMap, MapTiler, Stadia).
+- [Testing your maps](${SITE_URL}/docs/testing): unit-test components that render \`ng-map\` without WebGL (MapLibre fake, helpers, CDK harnesses; Vitest first-class).
 - [API Reference](${SITE_URL}/docs/api-reference): every component with inputs and outputs.
+- [Roadmap](${SITE_URL}/docs/roadmap): what has shipped and what comes next.
 - [Credits](${SITE_URL}/credits): mapcn, Zard UI, MapLibre, Carto.
 - [Repository](${REPO_URL}): source, issues, releases.
 - [llms-full.txt](${SITE_URL}/llms-full.txt): the complete API in one file, for agents.
@@ -163,6 +167,8 @@ Docs pages: ${DOCS_COMPONENT_PAGES.map((p) => `[${p.label}](${SITE_URL}/docs/com
 ${componentList}
 
 \`ng-map\` also takes \`[fitBounds]="{ padding, maxZoom, duration, animate, bounds? }"\` to fit the camera to its children's data (or explicit \`bounds\`) once loaded and whenever they change; \`MapContextService.fitBounds()\` is the imperative form.
+
+Testing: \`ng-mapcn/testing/maplibre\` (MapLibre fake), \`ng-mapcn/testing\` (renderMap, loadMap, ...) and \`ng-mapcn/testing/harness\` (CDK harnesses, optional \`@angular/cdk\` peer). Guide: [Testing your maps](${SITE_URL}/docs/testing).
 
 Utilities: \`MapViewport\`, \`getViewport\`, \`buildArcCoordinates\`, \`mergeHoverPaint\`, \`blankMapStyle\`, \`defaultStyles\`, \`MapStylesConfig\`, \`provideMapStyles()\`, \`MAP_DEFAULT_STYLES\`, and \`MapContextService\` (map / isLoaded / resolvedTheme signals and the \`hasSource(id)\` source registry, the equivalent of mapcn's \`useMap()\`).
 
@@ -209,6 +215,13 @@ const fullSections = api.sections
   })
   .join('\n\n');
 
+const testingSections = api.testing
+  .map(
+    (t) =>
+      `### ${t.title}\n\n\`${t.entry}\`\n\n${t.description}\n\n**Exports**\n\n${propTable(t.exports)}`,
+  )
+  .join('\n\n');
+
 const llmsFull = `# ng-mapcn — full reference
 
 ${INTRO}
@@ -249,13 +262,41 @@ ${propTable(api.provideStylesRows)}
 
 ## provideMapLabels()
 
-Translates the control buttons, the loader and the popup close button through the \`MAP_LABELS\` token. Partial labels merge over the English defaults; pass a signal to follow the active locale. A \`labels\` input on \`ng-map\`, \`ng-map-controls\` and \`ng-map-popup\` overrides it per component.
+Translates the control buttons, the loader, the popup close button and the popup card fallback name through the \`MAP_LABELS\` token. Partial labels merge over the English defaults; pass a signal to follow the active locale. A \`labels\` input on \`ng-map\`, \`ng-map-controls\` and \`ng-map-popup\` overrides it per component.
 
 \`\`\`ts
 ${api.provideLabelsCode}
 \`\`\`
 
 ${propTable(api.provideLabelsRows)}
+
+## Testing
+
+Unit-test components that render \`ng-map\` in jsdom, without WebGL. \`maplibre-gl\` is imported statically, so the test runner replaces the whole module with a fake that records calls, fires events and renders markers, popups and controls into the map container. Guide: ${SITE_URL}/docs/testing
+
+- **Vitest** (first-class): a setup file with \`vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'))\` and \`configureFakeMapLibre({ spy: vi.fn })\`, plus \`server: { deps: { inline: [/ng-mapcn/] } }\` in the Vitest config (without it the real \`maplibre-gl\` is loaded and the mock has no effect).
+- **Jest**: \`moduleNameMapper: { '^maplibre-gl$': 'ng-mapcn/testing/maplibre' }\` and \`configureFakeMapLibre({ spy: jest.fn })\`. Documented, not tested by ng-mapcn.
+- **Karma/Jasmine**: not supported (they cannot mock an ES module).
+- \`ng add\` does not copy the testing files: copy-paste users depend on the npm package for the fake.
+- \`ng-mapcn/testing/harness\` imports \`@angular/cdk/testing\`, an optional peer: install \`@angular/cdk\` to use it.
+- Stable: \`fakeRegistry\`, the fake's getters and \`structuralCalls()\`. The fake's raw \`calls\` strings are not.
+- Change host values after rendering with \`update(fixture, props)\` (it calls \`markForCheck()\`) or signals in \`hostProps\`: in zoneless apps (the Angular default) a direct \`fixture.componentInstance.x = ...\` needs \`fixture.changeDetectorRef.markForCheck()\`, or the dev-mode check throws NG0100.
+- One \`renderMap()\` per test (a second throws \`TestBed already instantiated\`); render several maps in one template.
+- Fake timers: pair \`vi.useFakeTimers()\` with \`configureMapTesting({ advanceTimers: (ms) => vi.advanceTimersByTime(ms) })\`. Without it \`loadMap()\` / \`reloadStyle()\` throw instead of hanging, with any fake-timer library (sinon by its tag, others because \`setTimeout\` changed since \`ng-mapcn/testing\` was imported, confirmed with a 0 ms probe; zone.js patching and spies that call through do not count).
+- Popups close like MapLibre's: a fired map \`click\` closes every popup created without \`closeOnClick: false\` (\`ng-map-popup\` defaults to \`true\`, \`ng-marker-popup\` to \`false\`), and removing a marker closes its popup. Bind \`[closeOnClick]="false"\` to keep a popup open while a spec fires map clicks.
+- \`NgMapMarkerHarness.hasPopup()\` reads \`aria-haspopup\`, \`isPopupOpen()\` reads \`aria-expanded\` (this marker's popup only). When the marker content has its own button, it reads that button's \`aria-expanded\`, which the app mirrors with \`[attr.aria-expanded]="info.isOpen()"\` (\`<ng-marker-popup #info>\`), and throws without it. The repository's e2e checks the harness selectors and marker ARIA against real MapLibre.
+- \`MAP_TEST_SELECTORS\` (from \`ng-mapcn/testing\`, no \`@angular/cdk\`) is the stable DOM contract the harnesses use: \`map\`, \`loader\`, \`marker\`, \`popup\`, \`popupCard\`, \`tooltip\`, \`popupClose\`, \`controls\`, \`controlGroup\`. It holds for the fake and the real MapLibre: reuse it in Playwright or Cypress specs.
+
+\`\`\`ts
+const { fixture } = await renderMap('<ng-map><ng-map-route id="trip" [coordinates]="c" /></ng-map>', {
+  imports: [MapRouteComponent],
+  hostProps: { c: [[0, 0], [1, 1]] },
+});
+await loadMap(fixture);
+expect(structuralCalls(getFakeMap(fixture))).toEqual(['addSource:trip', 'addLayer:trip-layer']);
+\`\`\`
+
+${testingSections}
 
 ${BASEMAPS}
 

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fakeRegistry } from '../../../testing/maplibre-fake';
 import { renderMap, update } from '../../../testing/render';
+import { provideMapLabels } from '../../providers/map-labels.provider';
 import { MapMarkerComponent } from '../map-marker/map-marker.component';
 import { MarkerPopupComponent } from './marker-popup.component';
 
@@ -86,6 +87,27 @@ describe('MarkerPopupComponent', () => {
     expect(document.activeElement).toBe(markerEl);
     markerEl.remove();
     (popup.getContent() as HTMLElement).remove();
+  });
+
+  it('exposes isOpen and cardId for content that mirrors the popup state', async () => {
+    const { fixture } = await renderMap(
+      `<ng-map><ng-map-marker [longitude]="1" [latitude]="2">
+        <ng-marker-popup #info><p>x</p></ng-marker-popup>
+        <span class="state">{{ info.isOpen() }} {{ info.cardId }}</span>
+      </ng-map-marker></ng-map>`,
+      { imports: [MapMarkerComponent, MarkerPopupComponent] },
+    );
+    const state = () => (fixture.nativeElement as HTMLElement).querySelector('.state')!.textContent;
+    const card = fakeRegistry.popups[0].getContent() as HTMLElement;
+    expect(state()).toBe(`false ${card.id}`);
+
+    fakeRegistry.markers[0].togglePopup();
+    fixture.detectChanges();
+    expect(state()).toBe(`true ${card.id}`);
+
+    fakeRegistry.markers[0].togglePopup();
+    fixture.detectChanges();
+    expect(state()).toBe(`false ${card.id}`);
   });
 
   it('marks the marker as a popup button', async () => {
@@ -254,6 +276,48 @@ describe('MarkerPopupComponent', () => {
       fakeRegistry.popups[0].addTo(fakeRegistry.maps[0]);
       fakeRegistry.popups[0].remove();
       expect(popupClose).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('dialog card', () => {
+    const T = `<ng-map><ng-map-marker [longitude]="1" [latitude]="2" [ariaLabel]="markerLabel">
+      <ng-marker-popup [ariaLabel]="popupLabel"><p>x</p></ng-marker-popup>
+    </ng-map-marker></ng-map>`;
+    const go = (props: Record<string, unknown> = {}) =>
+      renderMap(T, {
+        imports: [MapMarkerComponent, MarkerPopupComponent],
+        hostProps: { markerLabel: undefined, popupLabel: undefined, ...props },
+      });
+    const card = () => fakeRegistry.popups[0].getContent() as HTMLElement;
+
+    it('is a non-modal dialog named "Map popup" by default', async () => {
+      await go();
+
+      expect(card().getAttribute('role')).toBe('dialog');
+      expect(card().getAttribute('aria-label')).toBe('Map popup');
+      expect(card().hasAttribute('aria-modal')).toBe(false);
+    });
+
+    it("falls back to the marker's ariaLabel, and the popup's own ariaLabel wins", async () => {
+      const { fixture } = await go({ markerLabel: 'Louvre' });
+      expect(card().getAttribute('aria-label')).toBe('Louvre');
+
+      update(fixture, { popupLabel: 'Louvre opening hours' });
+      expect(card().getAttribute('aria-label')).toBe('Louvre opening hours');
+
+      update(fixture, { popupLabel: undefined, markerLabel: undefined });
+      expect(card().getAttribute('aria-label')).toBe('Map popup');
+      expect(fakeRegistry.popups).toHaveLength(1);
+    });
+
+    it('translates the fallback through provideMapLabels (labels.popup)', async () => {
+      await renderMap(T, {
+        imports: [MapMarkerComponent, MarkerPopupComponent],
+        hostProps: { markerLabel: undefined, popupLabel: undefined },
+        providers: [provideMapLabels({ popup: 'Detalhes' })],
+      });
+
+      expect(card().getAttribute('aria-label')).toBe('Detalhes');
     });
   });
 

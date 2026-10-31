@@ -36,7 +36,7 @@ export async function waitForMap(page: Page, mapIndex = 0): Promise<void> {
   // Centered, so the sticky site header never covers the map or its markers.
   await map.evaluate((el) => el.scrollIntoView({ block: 'center' }));
   await expect(map.locator('.ng-map-loader')).toHaveCount(0, { timeout: 30_000 });
-  await expect(map.locator('canvas.maplibregl-canvas')).toBeVisible();
+  await expect(map.locator('canvas.maplibregl-canvas').first()).toBeVisible();
 }
 
 export async function gotoAndWaitForMap(page: Page, url: string, mapIndex = 0): Promise<void> {

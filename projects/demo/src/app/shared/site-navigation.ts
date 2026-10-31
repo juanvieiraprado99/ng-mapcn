@@ -23,9 +23,11 @@ export const docsNavigation: SiteNavigationGroup[] = [
     items: [
       { title: 'Getting Started', href: '/docs', icon: 'lucideBookOpen' },
       { title: 'Installation', href: '/docs/installation', icon: 'lucideBookOpen' },
+      { title: 'Testing your maps', href: '/docs/testing', icon: 'lucideBookOpen' },
       { title: 'llms.txt', href: '/llms.txt', icon: 'lucideBookOpen', file: true },
       { title: 'API Reference', href: '/docs/api-reference', icon: 'lucideBookOpen' },
       { title: 'Map Styles', href: '/docs/basemaps', icon: 'lucideBookOpen' },
+      { title: 'Roadmap', href: '/docs/roadmap', icon: 'lucideBookOpen' },
     ],
   },
   {
@@ -33,6 +35,7 @@ export const docsNavigation: SiteNavigationGroup[] = [
     items: [
       { title: 'Map', href: '/docs/components/map', icon: 'lucideLayers2' },
       { title: 'Controls', href: '/docs/components/controls', icon: 'lucideLayers2' },
+      { title: 'Legend', href: '/docs/components/legend', icon: 'lucideLayers2' },
       { title: 'Markers', href: '/docs/components/markers', icon: 'lucideLayers2' },
       { title: 'Popups', href: '/docs/components/popups', icon: 'lucideLayers2' },
       { title: 'Routes', href: '/docs/components/routes', icon: 'lucideLayers2' },
@@ -40,6 +43,7 @@ export const docsNavigation: SiteNavigationGroup[] = [
       { title: 'GeoJSON', href: '/docs/components/geojson', icon: 'lucideLayers2' },
       { title: 'Clusters', href: '/docs/components/clusters', icon: 'lucideLayers2' },
       { title: 'Heatmap', href: '/docs/components/heatmap', icon: 'lucideLayers2' },
+      { title: 'Symbols', href: '/docs/components/symbols', icon: 'lucideLayers2' },
       { title: 'Tile Sources', href: '/docs/components/tile-sources', icon: 'lucideLayers2' },
       { title: '3D Buildings & Terrain', href: '/docs/components/3d', icon: 'lucideLayers2' },
       { title: 'Draw', href: '/docs/components/draw', icon: 'lucideLayers2' },

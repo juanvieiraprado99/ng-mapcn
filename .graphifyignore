@@ -1,0 +1,14 @@
+# Build outputs and reports
+dist/
+coverage/
+playwright-report/
+test-results/
+.angular/
+node_modules/
+
+# Generated mirror of src/lib (would duplicate every node)
+projects/ng-mapcn/schematics/map/files/
+
+# Docs site output and lockfile noise
+docs/
+package-lock.json

@@ -105,6 +105,22 @@ describe('MapPopupComponent', () => {
       expect(content().className).toBe('ng-popup-card');
       expect(content().querySelector('.body')?.textContent).toBe('Popup body');
     });
+
+    it('makes the card a non-modal dialog named by ariaLabel, else "Map popup"', async () => {
+      const { fixture } = await renderMap(
+        `<ng-map><ng-map-popup [longitude]="1" [latitude]="2" [ariaLabel]="name" [labels]="labels">x</ng-map-popup></ng-map>`,
+        { imports: [MapPopupComponent], hostProps: { name: undefined, labels: undefined } },
+      );
+
+      expect(content().getAttribute('role')).toBe('dialog');
+      expect(content().hasAttribute('aria-modal')).toBe(false);
+      expect(content().getAttribute('aria-label')).toBe('Map popup');
+
+      update(fixture, { name: 'Grand Central Terminal' });
+      expect(content().getAttribute('aria-label')).toBe('Grand Central Terminal');
+      update(fixture, { name: undefined, labels: { popup: 'Detalhes' } });
+      expect(content().getAttribute('aria-label')).toBe('Detalhes');
+    });
   });
 
   describe('content projection before the map is ready', () => {

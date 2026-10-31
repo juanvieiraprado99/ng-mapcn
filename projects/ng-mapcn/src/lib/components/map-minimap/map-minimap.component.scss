@@ -1,0 +1,63 @@
+// Positioning is MapLibre's: the card is mounted in its `.maplibregl-ctrl-<position>` container.
+
+.ng-minimap {
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--background, #fff);
+  color: var(--foreground, #1a1a1a);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-md, 6px);
+  box-shadow:
+    0 1px 3px 0 rgb(0 0 0 / 0.1),
+    0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.ng-minimap-map {
+  display: block;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
+  }
+}
+
+.ng-minimap-toggle {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: var(--background, #fff);
+  color: inherit;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+  }
+}
+
+.ng-minimap--collapsed .ng-minimap-toggle {
+  position: static;
+  border: none;
+}
+
+.ng-minimap-chevron {
+  transition: transform 150ms;
+
+  &--collapsed {
+    transform: rotate(180deg);
+  }
+}

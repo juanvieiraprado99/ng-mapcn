@@ -12,6 +12,8 @@ import {
   MarkerContentComponent,
   MarkerLabelComponent,
   RouteMarkerComponent,
+  RoutePlaybackComponent,
+  RoutePlaybackControlComponent,
   RouteProgressComponent,
 } from 'ng-mapcn';
 
@@ -138,6 +140,77 @@ export class RouteProgressExampleComponent {
   ];
 }`;
 
+const PLAYBACK_CODE = `import { Component, signal } from '@angular/core';
+import {
+  MapComponent,
+  MapRouteComponent,
+  MarkerContentComponent,
+  RouteMarkerComponent,
+  RoutePlaybackComponent,
+  RoutePlaybackControlComponent,
+  RouteProgressComponent,
+} from 'ng-mapcn';
+
+@Component({
+  selector: 'app-route-playback',
+  standalone: true,
+  imports: [
+    MapComponent,
+    MapRouteComponent,
+    RouteProgressComponent,
+    RouteMarkerComponent,
+    RoutePlaybackComponent,
+    RoutePlaybackControlComponent,
+    MarkerContentComponent,
+  ],
+  template: \`
+    <label>
+      <input
+        type="checkbox"
+        [checked]="follow()"
+        (change)="follow.set(!follow())"
+      />
+      Follow the playback head
+      <span>{{ playing() ? 'Playing' : 'Paused' }}</span>
+    </label>
+    <div class="h-[420px]">
+      <ng-map [center]="[-73.97, 40.782]" [zoom]="12">
+        <ng-map-route [coordinates]="coordinates" color="#94a3b8" [width]="4">
+          <ng-route-progress color="#22c55e" />
+          <ng-route-marker at="start">
+            <ng-marker-content>
+              <div class="size-3.5 rounded-full border-2 border-white bg-slate-500 shadow-lg"></div>
+            </ng-marker-content>
+          </ng-route-marker>
+          <ng-route-marker at="progress">
+            <ng-marker-content>
+              <div class="size-4 rounded-full border-2 border-white bg-emerald-500 shadow-lg"></div>
+            </ng-marker-content>
+          </ng-route-marker>
+          <ng-route-playback
+            #pb
+            [(playing)]="playing"
+            [duration]="12000"
+            [follow]="follow()"
+            [loop]="true"
+          />
+        </ng-map-route>
+        <ng-route-playback-control [for]="pb" />
+      </ng-map>
+    </div>
+  \`,
+})
+export class RoutePlaybackExampleComponent {
+  readonly playing = signal(false);
+  readonly follow = signal(false);
+  readonly coordinates: [number, number][] = [
+    [-73.9585, 40.8004],
+    [-73.9718, 40.7821],
+    [-73.9819, 40.7679],
+    // ...
+  ];
+}`;
+
 // Central Park cycling loop (same data as the landing page card)
 const TRAIL: [number, number][] = [
   [-73.95846730810143, 40.80035246904919],
@@ -172,6 +245,8 @@ interface OsrmResponse {
     MarkerLabelComponent,
     RouteProgressComponent,
     RouteMarkerComponent,
+    RoutePlaybackComponent,
+    RoutePlaybackControlComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -292,6 +367,60 @@ interface OsrmResponse {
           </ng-map-route>
         </ng-map>
       </app-example-section>
+
+      <app-example-section
+        title="Route Playback"
+        sectionId="route-playback"
+        [code]="playbackCode"
+      >
+        <span description>
+          Add an
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-playback</code>
+          child to animate the route progress, with
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">loop</code>
+          and
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">follow</code>
+          for the camera.
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-playback-control</code>
+          adds play, scrub and speed controls to the map.
+        </span>
+        <label after-description class="mb-3 flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            [checked]="follow()"
+            (change)="follow.set(!follow())"
+          />
+          Follow the playback head
+          <span class="text-muted-foreground ml-2">{{ playing() ? 'Playing' : 'Paused' }}</span>
+        </label>
+        <ng-map [center]="[-73.97, 40.782]" [zoom]="12">
+          <ng-map-route [coordinates]="trail" color="#94a3b8" [width]="4">
+            <ng-route-progress color="#22c55e" />
+            <ng-route-marker at="start">
+              <ng-marker-content>
+                <div
+                  class="size-3.5 rounded-full border-2 border-white bg-slate-500 shadow-lg"
+                ></div>
+              </ng-marker-content>
+            </ng-route-marker>
+            <ng-route-marker at="progress">
+              <ng-marker-content>
+                <div
+                  class="size-4 rounded-full border-2 border-white bg-emerald-500 shadow-lg"
+                ></div>
+              </ng-marker-content>
+            </ng-route-marker>
+            <ng-route-playback
+              #pb
+              [(playing)]="playing"
+              [duration]="12000"
+              [follow]="follow()"
+              [loop]="true"
+            />
+          </ng-map-route>
+          <ng-route-playback-control [for]="pb" />
+        </ng-map>
+      </app-example-section>
     </app-docs-page>
   `,
 })
@@ -300,6 +429,9 @@ export class RoutesPageComponent {
   readonly osrmCode = OSRM_CODE;
   readonly trail = TRAIL;
   readonly progressCode = PROGRESS_CODE;
+  readonly playbackCode = PLAYBACK_CODE;
+  readonly playing = signal(false);
+  readonly follow = signal(false);
   readonly progress = signal(0.4);
 
   onProgress(event: Event): void {

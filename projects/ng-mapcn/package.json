@@ -30,6 +30,7 @@
     "npm": ">=9.0.0"
   },
   "peerDependencies": {
+    "@angular/cdk": "^22.0.0",
     "@angular/common": "^22.0.0",
     "@angular/core": "^22.0.0",
     "maplibre-gl": "^6.11.2",
@@ -38,6 +39,9 @@
     "terra-draw-maplibre-gl-adapter": "^1.5.0"
   },
   "peerDependenciesMeta": {
+    "@angular/cdk": {
+      "optional": true
+    },
     "terra-draw": {
       "optional": true
     },

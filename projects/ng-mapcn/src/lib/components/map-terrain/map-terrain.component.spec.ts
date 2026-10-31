@@ -163,7 +163,7 @@ describe('MapTerrainComponent', () => {
     it('re-applies only on change and never re-creates the source', async () => {
       const { fixture, map } = await renderLoaded({ exaggeration: 1.5 });
       map.calls.length = 0;
-      map.setTerrain.mockClear();
+      vi.mocked(map.setTerrain).mockClear();
 
       update(fixture, { exaggeration: 3 });
       update(fixture, { exaggeration: 3 });
@@ -193,7 +193,7 @@ describe('MapTerrainComponent', () => {
       const { fixture, map } = await renderLoaded();
       map.addSource('other-dem', { type: 'raster-dem', tiles: ['x'] } as never);
       map.setTerrain({ source: 'other-dem', exaggeration: 1 });
-      map.setTerrain.mockClear();
+      vi.mocked(map.setTerrain).mockClear();
 
       update(fixture, { exaggeration: 4 });
 
@@ -264,7 +264,7 @@ describe('MapTerrainComponent', () => {
 
     it('toggles on and off without touching the terrain', async () => {
       const { fixture, map } = await renderLoaded();
-      map.setTerrain.mockClear();
+      vi.mocked(map.setTerrain).mockClear();
       map.calls.length = 0;
 
       update(fixture, { hillshade: true });
@@ -439,7 +439,7 @@ describe('MapTerrainComponent', () => {
       const { fixture, map } = await renderLoaded();
       map.addSource('other-dem', { type: 'raster-dem', tiles: ['x'] } as never);
       map.setTerrain({ source: 'other-dem' });
-      map.setTerrain.mockClear();
+      vi.mocked(map.setTerrain).mockClear();
 
       update(fixture, { show: false });
 
@@ -484,7 +484,7 @@ describe('MapTerrainComponent', () => {
 
     it('removes its source again when enabling the terrain fails', async () => {
       const { fixture, map, host } = await render();
-      map.setTerrain.mockImplementationOnce(() => {
+      vi.mocked(map.setTerrain).mockImplementationOnce(() => {
         throw new Error('terrain refused');
       });
       vi.spyOn(console, 'error').mockImplementation(() => {});

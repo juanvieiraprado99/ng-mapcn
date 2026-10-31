@@ -13,18 +13,19 @@
   <a href="https://bundlephobia.com/package/ng-mapcn"><img src="https://img.shields.io/bundlephobia/minzip/ng-mapcn" alt="bundle size" /></a>
 </p>
 
-ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map components for Angular. It is built for Angular apps that need theme-aware maps (markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, raster/vector tile sources, image overlays, 3D buildings and terrain, draw tools) without API keys or a paid tile provider. It is an Angular port of the [mapcn](https://mapcn.dev) API, with MapLibre GL as the rendering engine and the copy-paste ownership model of [shadcn/ui](https://ui.shadcn.com): `ng add ng-mapcn` copies the sources into your project so you own the code.
+ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map components for Angular. It is built for Angular apps that need theme-aware maps (markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, symbol labels and icons, raster/vector tile sources, image overlays, 3D buildings and terrain, draw tools) without API keys or a paid tile provider. It is an Angular port of the [mapcn](https://mapcn.dev) API, with MapLibre GL as the rendering engine and the copy-paste ownership model of [shadcn/ui](https://ui.shadcn.com): `ng add ng-mapcn` copies the sources into your project so you own the code.
 
-**[Docs](https://ng-mapcn.vercel.app/docs)** · **[Blocks gallery](https://ng-mapcn.vercel.app/blocks)** · **[Playground](https://ng-mapcn.vercel.app/playground)** · **[Installation](https://ng-mapcn.vercel.app/docs/installation)** · **[API reference](https://ng-mapcn.vercel.app/docs/api-reference)**
+**[Docs](https://ng-mapcn.vercel.app/docs)** · **[Blocks gallery](https://ng-mapcn.vercel.app/blocks)** · **[Playground](https://ng-mapcn.vercel.app/playground)** · **[Installation](https://ng-mapcn.vercel.app/docs/installation)** · **[Testing](https://ng-mapcn.vercel.app/docs/testing)** · **[API reference](https://ng-mapcn.vercel.app/docs/api-reference)**
 
 ## Features
 
 - **MapLibre GL JS v6** under the hood, no API keys required (Carto basemaps)
 - **Theme-aware**: follows the `dark`/`light` class or `data-theme` attribute on `<html>` (or `prefers-color-scheme`) and swaps the basemap at runtime
-- **Composable**: declare markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, tile sources (raster, vector, PMTiles), image overlays, 3D buildings and terrain as children of `<ng-map>`
+- **Composable**: declare markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, symbol labels and icons, tile sources (raster, vector, PMTiles), image overlays, 3D buildings and terrain as children of `<ng-map>`
 - **Signals-first**: standalone components, signal inputs/outputs, `effect()`-based reconciliation
 - **Copy-paste distribution**: `ng add ng-mapcn` copies the sources into your project (shadcn-style). Also usable as a regular npm package.
 - **SSR-safe**: nothing touches `window` or MapLibre during server render
+- **Testable**: a MapLibre fake and Angular CDK harnesses (`ng-mapcn/testing`) let you [unit-test maps in jsdom](#testing-your-maps) without WebGL
 - **AI-ready**: an [agent skill](#ai-agent-skill) (`npx skills add juanvieiraprado99/ng-mapcn`) plus [`llms.txt`](https://ng-mapcn.vercel.app/llms.txt) teach coding agents the real API
 
 ## Compatibility
@@ -142,29 +143,35 @@ import { MapComponent, MapMarkerComponent, MarkerPopupComponent } from 'ng-mapcn
 export class AppMap {}
 ```
 
-The map fills its parent, so give the parent an explicit height. More building blocks (controls, routes, GeoJSON, arcs, clusters, heatmaps, 3D) are listed below and in the [blocks gallery](https://ng-mapcn.vercel.app/blocks).
+The map fills its parent, so give the parent an explicit height. More building blocks (controls, routes, GeoJSON, arcs, clusters, heatmaps, symbols, 3D) are listed below and in the [blocks gallery](https://ng-mapcn.vercel.app/blocks).
 
 ## Components
 
-| Component                                                   | Description                                                                                                                                                                                                                                                                                        |
-| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ng-map`                                                    | Map host. Inputs: `center`, `zoom`, `theme` (`light`/`dark`/`auto`), `styles` (per-theme basemap), `blank` (tile-less dataviz style), `projection`, `viewport` (controlled mode), `loading`, `options` (raw MapLibre `MapOptions`). Outputs: `viewportChange`, `mapReady`, `mapClick`, `mapError`. |
-| `ng-map-controls`                                           | Zoom / compass / locate / fullscreen buttons (custom UI, not MapLibre `IControl`).                                                                                                                                                                                                                 |
-| `ng-map-marker`                                             | Declarative marker. `longitude`, `latitude`, `draggable`, `offset`, `rotation`, `anchor`, alignments, `ariaLabel`; click/hover/drag outputs. Keyboard: Enter/Space click, arrow keys drag.                                                                                                         |
-| `ng-marker-content`                                         | Projects custom HTML into the marker element (empty = default dot).                                                                                                                                                                                                                                |
-| `ng-marker-popup` / `ng-marker-tooltip` / `ng-marker-label` | Popup on click, tooltip on hover or focus, CSS label above/below the marker.                                                                                                                                                                                                                       |
-| `ng-map-popup`                                              | Standalone popup at a lng/lat (no marker).                                                                                                                                                                                                                                                         |
-| `ng-map-route`                                              | LineString layer with color/width/opacity/dashArray and click output.                                                                                                                                                                                                                              |
-| `ng-map-geojson`                                            | Fill + outline layers from GeoJSON data or URL. Declarative hover via `promoteId` + `fillHoverPaint` (feature-state).                                                                                                                                                                              |
-| `ng-map-arc`                                                | Curved arcs between points (flight paths). Invisible hit layer for comfortable hover/click; `hoverPaint` via feature-state.                                                                                                                                                                        |
-| `ng-map-cluster-layer`                                      | Clustered points with count labels, threshold-based colors/sizes and expansion-zoom on click.                                                                                                                                                                                                      |
-| `ng-map-heatmap`                                            | Point-density heatmap layer with a theme-aware gradient, `weightProperty`/`weightRange`, zoom-dependent `radius`/`intensity`/`opacity` expressions and `maxZoom`.                                                                                                                                  |
-| `ng-map-raster-source`                                      | Raster tile source (XYZ/TMS/WMS) plus its raster layer: `tiles`/`url`, `tileSize`, `opacity`, `visible`, `beforeId`.                                                                                                                                                                               |
-| `ng-map-vector-source`                                      | Vector tile source (MVT, TileJSON, `pmtiles://`), source only; draw it with layers that wait for it via `MapContextService.hasSource(id)`.                                                                                                                                                         |
-| `ng-map-image-overlay`                                      | Image pinned to four corner coordinates, with `opacity`, `visible` and `beforeId`; `url` and `coordinates` update in place.                                                                                                                                                                        |
-| `ng-map-fill-extrusion`                                     | 3D extrusion of polygons (3D buildings): defaults to the Carto basemap buildings (`protomaps` / `buildings`, `height`), or any source by id; `color`, `opacity`, `minZoom`, `filter`, `beforeId`.                                                                                                  |
-| `ng-map-terrain`                                            | 3D terrain from a `raster-dem` source (public Terrarium tiles by default) with `exaggeration` and an optional `hillshade`; re-applied after a theme switch.                                                                                                                                        |
-| `ng-map-draw`                                               | Draw, select and edit points, lines and polygons (terra-draw). Optional `ng-mapcn/draw` entry point: two-way GeoJSON `features`, `mode`, `drawEnd`/`featureEdit`/`featureSelect`, theme-aware, restarts across theme switches. Needs `terra-draw` and `terra-draw-maplibre-gl-adapter`.            |
+| Component                                                   | Description                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ng-map`                                                    | Map host. Inputs: `center`, `zoom`, `theme` (`light`/`dark`/`auto`), `styles` (per-theme basemap), `blank` (tile-less dataviz style), `projection`, `viewport` (controlled mode), `loading`, `options` (raw MapLibre `MapOptions`). Outputs: `viewportChange`, `mapReady`, `mapClick`, `mapError`.                                          |
+| `ng-map-controls`                                           | Zoom / compass / locate / fullscreen buttons. Rendered inside MapLibre's corner containers, so it stacks with the scale, legend, minimap and style switcher. Breaking change: the fixed bottom offsets are gone; style the card with `className`, not host-descendant selectors.                                                            |
+| `ng-map-scale`                                              | Scale bar as a MapLibre control. `unit` (`metric`/`imperial`/`both`), `maxWidth`, `position`.                                                                                                                                                                                                                                               |
+| `ng-map-minimap`                                            | Overview map as a MapLibre control (default `bottom-left`). Follows the main viewport at `zoomOffset` (5) levels lower, draws the viewport footprint, and click, drag or arrow keys navigate the main map. Mirrors the main basemap unless `styles`/`blank` is set. `width`, `height`, `[(collapsed)]`; collapsing frees its WebGL context. |
+| `ng-map-legend`                                             | Legend card: category swatches and colour gradients from `sections`. `title`, `collapsible`, `[(collapsed)]`, `position`; content projects below.                                                                                                                                                                                           |
+| `ng-map-style-switcher`                                     | Basemap listbox. `options`, `[(value)]`, `position`; the selected option overrides `provideMapStyles()` and `[styles]` for that map.                                                                                                                                                                                                        |
+| `ng-map-marker`                                             | Declarative marker. `longitude`, `latitude`, `draggable`, `offset`, `rotation`, `anchor`, alignments, `ariaLabel`; click/hover/drag outputs. Keyboard: Enter/Space click, arrow keys drag.                                                                                                                                                  |
+| `ng-marker-content`                                         | Projects custom HTML into the marker element (empty = default dot).                                                                                                                                                                                                                                                                         |
+| `ng-marker-popup` / `ng-marker-tooltip` / `ng-marker-label` | Popup on click (a named, non-modal `role="dialog"` card; the marker gets `aria-haspopup="dialog"`, `aria-expanded` and, while open, `aria-controls`), tooltip on hover or focus, CSS label above/below the marker.                                                                                                                          |
+| `ng-map-popup`                                              | Standalone popup at a lng/lat (no marker), a named, non-modal `role="dialog"` card.                                                                                                                                                                                                                                                         |
+| `ng-map-route`                                              | LineString layer with color/width/opacity/dashArray and click output.                                                                                                                                                                                                                                                                       |
+| `ng-route-playback` / `ng-route-playback-control`           | Animates the route progress (overrides `[progress]`): `[(playing)]`, `[(progress)]`, `[(speed)]`, `duration`, `loop`, `follow`, `ended`; `play()`/`pause()`/`toggle()`/`restart()`/`seek()`. The control (child of `ng-map`, `[for]="pb"`) adds play/pause, a scrubber and a speed selector as a corner control.                            |
+| `ng-map-geojson`                                            | Fill + outline layers from GeoJSON data or URL. Declarative hover via `promoteId` + `fillHoverPaint` (feature-state).                                                                                                                                                                                                                       |
+| `ng-map-arc`                                                | Curved arcs between points (flight paths). Invisible hit layer for comfortable hover/click; `hoverPaint` via feature-state.                                                                                                                                                                                                                 |
+| `ng-map-cluster-layer`                                      | Clustered points with count labels, threshold-based colors/sizes and expansion-zoom on click.                                                                                                                                                                                                                                               |
+| `ng-map-heatmap`                                            | Point-density heatmap layer with a theme-aware gradient, `weightProperty`/`weightRange`, zoom-dependent `radius`/`intensity`/`opacity` expressions and `maxZoom`.                                                                                                                                                                           |
+| `ng-map-symbol-layer`                                       | Icons and text labels for GeoJSON points: `images` registered by id, data-driven `icon`, `textField`, collision-aware, `allowOverlap`, `filter`, `featureClick`/`featureHover`.                                                                                                                                                             |
+| `ng-map-raster-source`                                      | Raster tile source (XYZ/TMS/WMS) plus its raster layer: `tiles`/`url`, `tileSize`, `opacity`, `visible`, `beforeId`.                                                                                                                                                                                                                        |
+| `ng-map-vector-source`                                      | Vector tile source (MVT, TileJSON, `pmtiles://`), source only; draw it with layers that wait for it via `MapContextService.hasSource(id)`.                                                                                                                                                                                                  |
+| `ng-map-image-overlay`                                      | Image pinned to four corner coordinates, with `opacity`, `visible` and `beforeId`; `url` and `coordinates` update in place.                                                                                                                                                                                                                 |
+| `ng-map-fill-extrusion`                                     | 3D extrusion of polygons (3D buildings): defaults to the Carto basemap buildings (`protomaps` / `buildings`, `height`), or any source by id; `color`, `opacity`, `minZoom`, `filter`, `beforeId`.                                                                                                                                           |
+| `ng-map-terrain`                                            | 3D terrain from a `raster-dem` source (public Terrarium tiles by default) with `exaggeration` and an optional `hillshade`; re-applied after a theme switch.                                                                                                                                                                                 |
+| `ng-map-draw`                                               | Draw, select and edit points, lines and polygons (terra-draw). Optional `ng-mapcn/draw` entry point: two-way GeoJSON `features`, `mode`, `drawEnd`/`featureEdit`/`featureSelect`, theme-aware, restarts across theme switches. Needs `terra-draw` and `terra-draw-maplibre-gl-adapter`.                                                     |
 
 `ng-map` also takes `[fitBounds]="{ padding, maxZoom, duration, animate, bounds? }"` to fit the camera to its children's data (or explicit `bounds`) once loaded and whenever they change; `MapContextService.fitBounds()` is the imperative form.
 
@@ -193,11 +200,11 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-Precedence: `[styles]` → `[blank]` → `provideMapStyles()` → Carto default.
+Precedence: `ng-map-style-switcher` selection → `[styles]` → `[blank]` → `provideMapStyles()` → Carto default.
 
 ### Labels and translations
 
-Control tooltips, the loader and the popup close button are English by default. Override them app-wide with `provideMapLabels()` (static value, signal or factory; missing keys keep the English default), or per component with the `labels` input on `ng-map`, `ng-map-controls` and `ng-map-popup`:
+Control tooltips, the loader and the popup close button are English by default. Override them app-wide with `provideMapLabels()` (static value, signal or factory; missing keys keep the English default), or per component with the `labels` input on `ng-map`, `ng-map-controls`, `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher`, `ng-map-minimap`, `ng-route-playback-control`, `ng-map-marker`, `ng-map-popup` and `ng-marker-popup`:
 
 ```ts
 import { provideMapLabels } from 'ng-mapcn';
@@ -211,7 +218,7 @@ provideMapLabels({
 // follow the active locale: provideMapLabels(() => inject(I18nService).mapLabels)
 ```
 
-Keys: `zoomIn`, `zoomOut`, `resetNorth`, `locate`, `fullscreen`, `loading`, `closePopup`, `marker`.
+Keys: `zoomIn`, `zoomOut`, `resetNorth`, `locate`, `fullscreen`, `loading`, `closePopup`, `popup`, `marker`, `scale`, `legend`, `showLegend`, `hideLegend`, `mapStyle`, `minimap`, `showMinimap`, `hideMinimap`.
 
 | Provider        | Style URL                                                                                                                                                                                         | API key                |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
@@ -267,6 +274,52 @@ Notes:
 - **Lazy-load the map.** MapLibre is large: in the demo's production build its chunk is about 1 MB (≈285 KB gzipped), more than the demo's entire initial JavaScript (≈160 KB gzipped), and the first map also fetches the worker files (≈150 KB gzipped, on the worker thread, cached afterwards). Keep `ng-mapcn` out of your initial bundle with a lazy route (`loadComponent`) or `@defer (on viewport) { <ng-map>…</ng-map> }`.
 - **Many points → layers, not markers.** Each `<ng-map-marker>` is a DOM element with its own component; for hundreds of points use `<ng-map-cluster-layer>`, `<ng-map-heatmap>` or `<ng-map-geojson>`, which render on the GPU.
 - **Pass new references to update data.** Layer components push `[data]` / `[coordinates]` to MapLibre only when the reference changes; replace arrays and objects instead of mutating them.
+
+## Testing your maps
+
+Unit-test components that render `<ng-map>` in jsdom, without WebGL. `ng-mapcn` imports `maplibre-gl` statically, so the test runner replaces that module with a fake that ships in the package (`ng-mapcn/testing/maplibre`). It records calls, fires events on demand and renders markers, popups and controls into the map container.
+
+```ts
+// src/testing/setup.ts (Vitest)
+import { configureFakeMapLibre, fakeRegistry } from 'ng-mapcn/testing/maplibre';
+import { beforeEach, vi } from 'vitest';
+
+vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'));
+configureFakeMapLibre({ spy: vi.fn });
+beforeEach(() => fakeRegistry.reset());
+```
+
+```ts
+// vitest.config.mts: process ng-mapcn itself so the mock reaches it
+export default defineConfig({ test: { server: { deps: { inline: [/ng-mapcn/] } } } });
+```
+
+```ts
+import { loadMap, renderMap, getFakeMap, structuralCalls } from 'ng-mapcn/testing';
+
+const { fixture } = await renderMap(
+  '<ng-map><ng-map-route id="trip" [coordinates]="c" /></ng-map>',
+  {
+    imports: [MapRouteComponent],
+    hostProps: {
+      c: [
+        [0, 0],
+        [1, 1],
+      ],
+    },
+  },
+);
+await loadMap(fixture);
+expect(structuralCalls(getFakeMap(fixture))).toEqual(['addSource:trip', 'addLayer:trip-layer']);
+```
+
+- `ng-mapcn/testing`: `renderMap`, `loadMap`, `reloadStyle`, `getFakeMap`, `fireMapEvent`, `structuralCalls` and friends, plus `MAP_TEST_SELECTORS`, the stable DOM selectors of a rendered map for your own Playwright or Cypress tests.
+- `ng-mapcn/testing/harness`: Angular CDK component harnesses (`NgMapHarness`, `NgMapMarkerHarness`, `NgMapPopupHarness`, `NgMapControlsHarness`). `@angular/cdk` is an optional peer dependency, only needed for this entry point. `NgMapMarkerHarness.isPopupOpen()` reads the marker's `aria-expanded` (or, when the marker content is its own button, that button's, mirrored from `<ng-marker-popup #info>` with `[attr.aria-expanded]="info.isOpen()"`), so it reports that marker's own popup.
+- Vitest is supported first-class. Jest works by mapping `maplibre-gl` to the fake with `moduleNameMapper`, but ng-mapcn's own tests do not cover it. Karma/Jasmine are not supported (they cannot mock an ES module).
+- `ng add` does not copy the testing files: install the `ng-mapcn` package to use them.
+- Change host values after rendering with `update()` (it marks the host for check, as zoneless apps need) or signals, call `renderMap()` once per test, and pair fake timers with `configureMapTesting({ advanceTimers })` (otherwise `loadMap()` throws).
+
+Setup for Vitest and Jest, fake timers, the harnesses and the limitations: [Testing your maps](https://ng-mapcn.vercel.app/docs/testing).
 
 ## For LLMs
 

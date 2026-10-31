@@ -6,6 +6,7 @@ import {
   MapPopupComponent,
   MarkerContentComponent,
   MarkerLabelComponent,
+  MarkerPopupComponent,
   MarkerTooltipComponent,
 } from 'ng-mapcn';
 
@@ -85,6 +86,7 @@ selectPlace(place: RichPlace, event: MouseEvent) {
     <ng-map-popup
       [longitude]="place.lng"
       [latitude]="place.lat"
+      [ariaLabel]="place.name"
       (popupClose)="selected.set(null)"
     >
       <!-- .demo-rich-popup lets the popup card go edge-to-edge (padding: 0) -->
@@ -135,6 +137,54 @@ export class DraggableMarkerComponent {
   readonly clicks = signal(0);
 }`;
 
+const MARKER_POPUP_CODE = `import { Component } from '@angular/core';
+import {
+  MapComponent,
+  MapMarkerComponent,
+  MarkerContentComponent,
+  MarkerLabelComponent,
+  MarkerPopupComponent,
+} from 'ng-mapcn';
+
+@Component({
+  selector: 'app-marker-popups',
+  standalone: true,
+  imports: [
+    MapComponent,
+    MapMarkerComponent,
+    MarkerContentComponent,
+    MarkerLabelComponent,
+    MarkerPopupComponent,
+  ],
+  template: \`
+    <div class="h-[420px]">
+      <ng-map [center]="[2.33, 48.858]" [zoom]="12">
+        @for (spot of spots; track spot.name) {
+          <ng-map-marker [longitude]="spot.lng" [latitude]="spot.lat">
+            <ng-marker-content>
+              <div class="size-4 rounded-full border-2 border-white bg-emerald-500 shadow-lg"></div>
+              <ng-marker-label position="top">{{ spot.name }}</ng-marker-label>
+            </ng-marker-content>
+            <!-- the marker gets aria-haspopup="dialog" and aria-expanded; the card is a
+                 role="dialog" named by ariaLabel (default: the marker's ariaLabel, then "Map popup") -->
+            <ng-marker-popup [closeButton]="true" [ariaLabel]="spot.name">
+              <h3 class="pr-6 font-semibold">{{ spot.name }}</h3>
+              <p class="text-muted-foreground text-sm">{{ spot.description }}</p>
+            </ng-marker-popup>
+          </ng-map-marker>
+        }
+      </ng-map>
+    </div>
+  \`,
+})
+export class MarkerPopupsComponent {
+  readonly spots = [
+    { name: 'Louvre', lng: 2.3376, lat: 48.8606, description: 'Art museum in a former palace' },
+    { name: 'Eiffel Tower', lng: 2.2945, lat: 48.8584, description: 'Wrought-iron tower, 330 m' },
+    { name: 'Notre-Dame', lng: 2.3499, lat: 48.853, description: 'Gothic cathedral on the Île de la Cité' },
+  ];
+}`;
+
 @Component({
   selector: 'app-markers-page',
   standalone: true,
@@ -146,6 +196,7 @@ export class DraggableMarkerComponent {
     MapPopupComponent,
     MarkerContentComponent,
     MarkerLabelComponent,
+    MarkerPopupComponent,
     MarkerTooltipComponent,
     DecimalPipe,
     ZardButtonComponent,
@@ -193,17 +244,17 @@ export class DraggableMarkerComponent {
         [code]="popupCode"
       >
         <span description>
-          Attach a popup with
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code>.
-          It opens when the marker is clicked and can contain any projected
-          HTML — here with images, ratings, and action buttons. Only one is
-          open at a time; clicking the map closes it.
+          One
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-popup</code>,
+          driven by a signal, shows the selected place. Each marker's content is its own
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;button&gt;</code>,
+          so a click, Enter or Space emits
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">markerClick</code>
+          and selects it. The popup can contain any projected HTML — here with images, ratings,
+          and action buttons. Only one is open at a time; clicking the selected marker again or
+          the map closes it. For a popup attached to each marker, use
           <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code>
-          also takes <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[closeButton]</code>,
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">offset</code>,
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">anchor</code>,
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maxWidth</code> and
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">closeOnClick</code>.
+          (see Marker Popups below).
         </span>
         <ng-map [center]="[-73.98, 40.74]" [zoom]="11" (mapClick)="selected.set(null)">
           @for (place of richPlaces; track place.name) {
@@ -227,6 +278,7 @@ export class DraggableMarkerComponent {
             <ng-map-popup
               [longitude]="place.lng"
               [latitude]="place.lat"
+              [ariaLabel]="place.name"
               (popupClose)="selected.set(null)"
             >
               <div class="demo-rich-popup w-[15.5rem]">
@@ -368,6 +420,52 @@ export class DraggableMarkerComponent {
           </ng-map>
         </div>
       </app-example-section>
+
+      <app-example-section
+        title="Marker Popups"
+        sectionId="marker-popups"
+        [code]="markerPopupCode"
+      >
+        <span description>
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code>
+          attaches a popup to its marker: a click, Enter or Space toggles it, and the close button,
+          <kbd class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">Esc</kbd> or another click
+          closes it. Each marker has its own popup. The marker is a button with
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-haspopup="dialog"</code>
+          and
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-expanded</code>,
+          and while the popup is open its
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-controls</code>
+          names the card. The card is a non-modal
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">role="dialog"</code>
+          named by the popup's
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ariaLabel</code>,
+          else the marker's, else "Map popup" (<code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">labels.popup</code>).
+          When the marker content is its own
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;button&gt;</code>,
+          that button is the keyboard target and the marker element gets no role, so mirror the
+          state on the button from a template reference:
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;ng-marker-popup #info&gt;</code>
+          plus
+          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-haspopup="dialog" [attr.aria-expanded]="info.isOpen()" [attr.aria-controls]="info.isOpen() ? info.cardId : null"</code>.
+        </span>
+        <ng-map [center]="[2.33, 48.858]" [zoom]="12">
+          @for (spot of spots; track spot.name) {
+            <ng-map-marker [longitude]="spot.lng" [latitude]="spot.lat">
+              <ng-marker-content>
+                <div
+                  class="size-4 rounded-full border-2 border-white bg-emerald-500 shadow-lg"
+                ></div>
+                <ng-marker-label position="top">{{ spot.name }}</ng-marker-label>
+              </ng-marker-content>
+              <ng-marker-popup [closeButton]="true" [ariaLabel]="spot.name">
+                <h3 class="pr-6 font-semibold">{{ spot.name }}</h3>
+                <p class="text-muted-foreground text-sm">{{ spot.description }}</p>
+              </ng-marker-popup>
+            </ng-map-marker>
+          }
+        </ng-map>
+      </app-example-section>
     </app-docs-page>
   `,
 })
@@ -375,6 +473,7 @@ export class MarkersPageComponent {
   readonly basicCode = BASIC_CODE;
   readonly popupCode = POPUP_CODE;
   readonly draggableCode = DRAGGABLE_CODE;
+  readonly markerPopupCode = MARKER_POPUP_CODE;
 
   readonly places = [
     { name: 'Shibuya', lng: 139.7016, lat: 35.658, description: 'Famous crossing & shopping' },
@@ -433,6 +532,17 @@ export class MarkersPageComponent {
 
   readonly position = signal({ lng: -3.7038, lat: 40.4168 });
   readonly clicks = signal(0);
+
+  readonly spots = [
+    { name: 'Louvre', lng: 2.3376, lat: 48.8606, description: 'Art museum in a former palace' },
+    { name: 'Eiffel Tower', lng: 2.2945, lat: 48.8584, description: 'Wrought-iron tower, 330 m' },
+    {
+      name: 'Notre-Dame',
+      lng: 2.3499,
+      lat: 48.853,
+      description: 'Gothic cathedral on the Île de la Cité',
+    },
+  ];
 }
 
 interface RichPlace {

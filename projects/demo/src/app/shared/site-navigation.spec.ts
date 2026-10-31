@@ -88,7 +88,8 @@ describe('site navigation', () => {
 
   it('prev/next links skip file entries and stop at the ends', () => {
     expect(docsNeighbours('/docs').prev).toBeUndefined();
-    expect(docsNeighbours('/docs/installation').next?.href).toBe('/docs/api-reference');
+    expect(docsNeighbours('/docs/installation').next?.href).toBe('/docs/testing');
+    expect(docsNeighbours('/docs/testing').next?.href).toBe('/docs/api-reference');
     expect(docsNeighbours('/docs/components/advanced').next).toBeUndefined();
     expect(docsNeighbours('/llms.txt')).toEqual({});
   });

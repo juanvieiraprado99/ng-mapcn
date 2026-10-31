@@ -1,0 +1,42 @@
+<ng-template #control>
+  <div
+    class="ng-minimap"
+    [class]="rootClass()"
+    [class.ng-minimap--collapsed]="collapsed()"
+    [attr.data-minimap-id]="id"
+  >
+    <div
+      class="ng-minimap-map"
+      tabindex="0"
+      role="application"
+      [attr.aria-label]="l().minimap"
+      [style.width.px]="width()"
+      [style.height.px]="height()"
+      [hidden]="collapsed()"
+      (keydown)="onKeydown($event)"
+    ></div>
+    <button
+      type="button"
+      class="ng-minimap-toggle"
+      [attr.aria-expanded]="!collapsed()"
+      [attr.aria-label]="collapsed() ? l().showMinimap : l().hideMinimap"
+      (click)="toggle()"
+    >
+      <svg
+        class="ng-minimap-chevron"
+        [class.ng-minimap-chevron--collapsed]="collapsed()"
+        viewBox="0 0 24 24"
+        width="14"
+        height="14"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </button>
+  </div>
+</ng-template>

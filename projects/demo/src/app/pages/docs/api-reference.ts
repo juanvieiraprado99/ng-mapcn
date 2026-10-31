@@ -7,6 +7,14 @@ import { type PropRow, PropTableComponent } from '../../shared/prop-table';
 // to build /llms.txt and /llms-full.txt.
 import apiData from './api-reference.data.json';
 
+interface TestingEntry {
+  id: string;
+  title: string;
+  entry: string;
+  description: string;
+  exports: PropRow[];
+}
+
 interface ApiSection {
   id: string;
   title: string;
@@ -90,7 +98,8 @@ interface ApiSection {
 
       <app-docs-section title="provideMapLabels()" anchor="providemaplabels">
         <p>
-          Translates the control buttons, the loader and the popup close button through the
+          Translates the control buttons, the loader, the popup close button and the popup card
+          fallback name through the
           <code [class]="code">MAP_LABELS</code> token. Partial labels merge over the English
           defaults; pass a signal to follow the active locale. A
           <code [class]="code">labels</code> input on <code [class]="code">ng-map</code>,
@@ -100,6 +109,16 @@ interface ApiSection {
         <app-code-block [code]="provideLabelsCode" />
         <app-prop-table nameLabel="Argument" [rows]="provideLabelsRows" />
       </app-docs-section>
+
+      @for (entry of testing; track entry.id) {
+        <app-docs-section [title]="entry.title" [anchor]="entry.id">
+          <p>
+            <code [class]="code">{{ entry.entry }}</code>
+          </p>
+          <p>{{ entry.description }}</p>
+          <app-prop-table nameLabel="Export" [rows]="entry.exports" [showDefault]="false" />
+        </app-docs-section>
+      }
     </app-docs-page>
   `,
 })
@@ -112,6 +131,8 @@ export class ApiReferenceComponent {
   readonly provideStylesRows: PropRow[] = apiData.provideStylesRows;
   readonly contextRows: PropRow[] = apiData.contextRows;
   readonly sections: ApiSection[] = apiData.sections;
+  /** Testing toolkit entry points: not components, so they list exports instead of inputs. */
+  readonly testing: TestingEntry[] = apiData.testing;
 
   /** mapcn `DocsLink` / `DocsCode`. */
   protected readonly link = 'text-foreground font-medium underline underline-offset-4';

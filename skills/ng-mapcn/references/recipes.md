@@ -2,7 +2,7 @@
 
 Copy-paste examples. Import from `'ng-mapcn'` (or from the folder `ng add` copied into your app). Every map needs a parent with an explicit height. Coordinates are `[longitude, latitude]`.
 
-Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Tile sources](#tile-sources) | [Draw](#draw) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading) | [Fit to data](#fit-to-data) | [3D buildings and terrain](#3d-buildings-and-terrain)
+Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Symbols](#symbols) | [Tile sources](#tile-sources) | [Draw](#draw) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading) | [Fit to data](#fit-to-data) | [3D buildings and terrain](#3d-buildings-and-terrain) | [Testing](#testing)
 
 ## Controls
 
@@ -180,7 +180,7 @@ Progress, a marker that follows it, and an active (selected) state:
 </ng-map-route>
 ```
 
-Import `RouteProgressComponent`, `RouteMarkerComponent` and `MarkerContentComponent` too. `progress` (0 to 1) is measured along the cumulative distance. Without a `ng-route-progress` child nothing is drawn for it, but `ng-route-marker at="progress"` still follows it.
+Import `RouteProgressComponent`, `RouteMarkerComponent` and `MarkerContentComponent` too. `progress` (0 to 1) is measured along the cumulative distance. Without a `ng-route-progress` child nothing is drawn for it, but `ng-route-marker at="progress"` still follows it. To animate it over time, add `<ng-route-playback #pb />` inside the route and `<ng-route-playback-control [for]="pb" />` as a child of `ng-map` (see components.md, Route playback).
 
 ## GeoJSON with hover
 
@@ -286,6 +286,29 @@ Extra datum properties (here `color`) are available to paint expressions through
 `data` also accepts a `GeoJSON.FeatureCollection<GeoJSON.Point, P>`. Without `gradient` the ramp follows the map theme (`defaultHeatmapGradients`); a custom `[gradient]="[[0, 'rgba(0,0,0,0)'], [1, '#ef4444']]"` is kept across theme switches. `radius`, `intensity` and `opacity` accept zoom expressions such as `['interpolate', ['linear'], ['zoom'], 0, 8, 6, 34]`. `maxZoom` stops rendering from that zoom, so a custom circle layer placed after the heatmap in the template can take over when zoomed in. Ids: `heatmap-source-<id>`, `heatmap-layer-<id>`.
 
 Gotchas: set `weightRange` to the real `[min, max]` of `weightProperty`, otherwise raw values (e.g. a magnitude of 0-7) saturate the layer. `radius`, `intensity`, `opacity`, `gradient`, `minZoom`/`maxZoom` and `data` update the existing layer in place, so binding them to signals is cheap. The component has no outputs and a heatmap is not hit-testable (`queryRenderedFeatures` returns nothing), so use a circle layer or markers for interaction.
+
+## Symbols
+
+```html
+<ng-map [center]="[11.25, 43.77]" [zoom]="5">
+  <ng-map-symbol-layer
+    id="places"
+    [data]="places"
+    [images]="icons"
+    [icon]="['get', 'kind']"
+    textField="{name}"
+    [interactive]="true"
+    (featureClick)="selected.set($event.feature.properties?.name ?? null)"
+  />
+</ng-map>
+```
+
+```ts
+// Local or same-origin PNG/WebP/JPEG (CORS applies to remote URLs; SVG cannot be decoded).
+icons = { city: '/icons/city.png', park: { url: '/icons/park.png', pixelRatio: 2 } };
+```
+
+`icon` is an image id or an expression, so `['get', 'kind']` picks the image per feature. Text-only labels need no `images`: just `textField="{name}"`. Labels need the style glyphs, so on `[blank]` they are skipped with one console warning (icons still render). `allowOverlap`, `textSize`, `filter` and `data` update the existing layer in place; `images` changes add, swap or remove images without re-creating it. Pass `{ url, sdf: true }` and `iconColor` to recolor a monochrome icon; SDF and non-SDF images cannot be mixed in one layer, so put SDF icons in a layer of their own. Layers may share `images`: an id is added once per map and stays until the last layer using it is gone.
 
 ## Tile sources
 
@@ -554,3 +577,79 @@ Keep every `ng-mapcn` import inside a lazily loaded file:
 <div style="height: 400px"></div>
 }
 ```
+
+## Testing
+
+Unit-test components that render `<ng-map>` in jsdom (no WebGL). `ng-mapcn` imports `maplibre-gl` statically, so the runner replaces that module with the fake from `ng-mapcn/testing/maplibre`. Three entry points, all from the npm package (`ng add` does not copy them): `ng-mapcn/testing/maplibre` (the fake), `ng-mapcn/testing` (helpers) and `ng-mapcn/testing/harness` (CDK harnesses, needs the optional `@angular/cdk` peer). Never import them from app code. Vitest is first-class; Jest is documented but untested; Karma/Jasmine are unsupported.
+
+Vitest setup (`src/testing/setup.ts` in `setupFiles`, and a config in `runnerConfig` that inlines `ng-mapcn`):
+
+```ts
+import { configureFakeMapLibre, fakeRegistry } from 'ng-mapcn/testing/maplibre';
+import { beforeEach, vi } from 'vitest';
+
+vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'));
+configureFakeMapLibre({ spy: vi.fn });
+beforeEach(() => fakeRegistry.reset());
+```
+
+```ts
+// vitest.config.mts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: { server: { deps: { inline: [/ng-mapcn/] } } },
+});
+```
+
+Jest: `moduleNameMapper: { '^maplibre-gl$': 'ng-mapcn/testing/maplibre' }` and `configureFakeMapLibre({ spy: jest.fn })` in a `setupFilesAfterEnv` file.
+
+A spec: render, load, assert through the stable API (`structuralCalls`, `fakeRegistry`, the fake's getters; never `map.calls`):
+
+```ts
+import { TestBed } from '@angular/core/testing';
+import { MapMarkerComponent, MapRouteComponent } from 'ng-mapcn';
+import { getFakeMap, loadMap, renderMap, resetMapTesting, structuralCalls } from 'ng-mapcn/testing';
+import { fakeRegistry } from 'ng-mapcn/testing/maplibre';
+import { afterEach, describe, expect, it } from 'vitest';
+
+describe('delivery map', () => {
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    resetMapTesting();
+  });
+
+  it('adds the route once the style has loaded', async () => {
+    const { fixture, ctx } = await renderMap(
+      `<ng-map>
+        <ng-map-marker [longitude]="2" [latitude]="3" />
+        <ng-map-route id="trip" [coordinates]="coordinates" />
+      </ng-map>`,
+      {
+        imports: [MapMarkerComponent, MapRouteComponent],
+        hostProps: {
+          coordinates: [
+            [0, 0],
+            [1, 1],
+          ],
+        },
+      },
+    );
+    const map = getFakeMap(fixture);
+    expect(structuralCalls(map)).toEqual([]); // layers wait for ctx.isLoaded()
+
+    await loadMap(fixture);
+
+    expect(structuralCalls(map)).toEqual(['addSource:trip', 'addLayer:trip-layer']);
+    expect(fakeRegistry.markers[0].getLngLat()).toEqual({ lng: 2, lat: 3 });
+  });
+});
+```
+
+Helpers: `renderMap(template, { imports, providers, hostProps, size })` (returns `{ fixture, map, ctx }`; map not loaded yet), `loadMap(fixture)`, `reloadStyle(fixture)` (a theme/`styles` change: layers are dropped and re-added), `fireMapEvent(map, 'click', payload, layerId?)`, `getFakeMap`, `setMapSize`, `update`, `resetMapTesting` (call in `afterEach`). Change values after rendering with `update(fixture, props)` (it marks the host for check) or signals in `hostProps`: in zoneless apps (the Angular default) a direct `fixture.componentInstance.x = ...` needs `fixture.changeDetectorRef.markForCheck()`. One `renderMap()` per test (a second throws `TestBed already instantiated`): put several maps in one template.
+
+Fake timers: `vi.useFakeTimers()` plus `configureMapTesting({ advanceTimers: (ms) => vi.advanceTimersByTime(ms) })`, and in `afterEach` `configureMapTesting({ advanceTimers: null })` then `vi.useRealTimers()`. Without `advanceTimers`, `loadMap()` waits on a real 100 ms timer; with fake timers on and no `advanceTimers` it throws a clear error instead of hanging. Any fake-timer library is detected (`@sinonjs/fake-timers` by its tag, others because `setTimeout` changed since `ng-mapcn/testing` was imported; zone.js patching does not count), and a spy that calls through is not mistaken for one. Without zone.js, install an untagged library after the import.
+
+Popups close like MapLibre's: a fired map `click` (`fireMapEvent(map, 'click')`) closes every open popup created without `closeOnClick: false` (MapLibre's default is `true`, which `ng-map-popup` keeps; `ng-marker-popup` defaults to `false`), and removing a marker closes its popup. Both fire `close`, so `popupClose` emits. To keep a popup open while a spec fires map clicks, bind `[closeOnClick]="false"`.
+
+Harnesses (`npm i -D @angular/cdk`): `TestbedHarnessEnvironment.loader(fixture).getHarness(NgMapHarness)`, then `map.getMarkers({ label })`, `map.getPopups({ text })`, `map.getControls()`; `NgMapMarkerHarness` (`click`, `hover`, `focus`, `pressEnter`, `getText`, `hasPopup`, `isPopupOpen`), `NgMapPopupHarness` (`getText`, `isTooltip`, `close`, `pressEscape`), `NgMapControlsHarness` (`zoomIn`, `zoomOut`, `resetNorth`, `toggleFullscreen`). `hasPopup()` reads the marker's `aria-haspopup` (it has an `ng-marker-popup`), `isPopupOpen()` its `aria-expanded` (this marker's popup only); when the marker content has its own button (no `aria-expanded` on the marker), `isPopupOpen()` reads that button's `aria-expanded`, which the app mirrors with `<ng-marker-popup #info>` and `[attr.aria-expanded]="info.isOpen()"`; without it, it throws, so use `getPopups()`. The harnesses find elements through `MAP_TEST_SELECTORS` (exported by `ng-mapcn/testing`, no `@angular/cdk` needed): the stable DOM contract (`map`, `loader`, `marker`, `popup`, `popupCard`, `tooltip`, `popupClose`, `controls`, `controlGroup`), the same with the fake and the real MapLibre, so reuse it in Playwright/Cypress specs (`import { MAP_TEST_SELECTORS as S } from 'ng-mapcn/testing'`, then `page.locator(S.marker)`). The e2e suite checks those selectors and marker ARIA against real MapLibre. The fake draws nothing, so `queryRenderedFeatures` and pixel hit testing are not available.

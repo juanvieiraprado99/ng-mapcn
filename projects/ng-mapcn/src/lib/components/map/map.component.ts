@@ -139,6 +139,7 @@ export class MapComponent {
       const resolved = this.resolvedTheme();
       // Track the style-affecting inputs so runtime changes re-apply the
       // basemap (mapcn parity — React re-renders on prop change).
+      this.ctx.styleOverride();
       this.styles();
       this.blank();
       this.appStyles?.();
@@ -325,6 +326,7 @@ export class MapComponent {
         return m;
       });
       this.currentStyle = initialStyle;
+      this.ctx.setCurrentStyle(initialStyle);
 
       this.mapInstance.set(map);
       this.ctx.setMap(map);
@@ -354,8 +356,16 @@ export class MapComponent {
     });
   }
 
-  /** Precedence: `styles` input > `blank` > app-wide default > Carto default. */
+  /**
+   * Precedence: runtime override > `styles` input > `blank` > app-wide default > Carto default.
+   * Only the override falls back to its other variant when the themed one is missing.
+   */
   private getMapStyle(theme: 'light' | 'dark'): string | StyleSpecification {
+    const o = this.ctx.styleOverride();
+    if (o) {
+      const themed = theme === 'dark' ? (o.dark ?? o.light) : (o.light ?? o.dark);
+      if (themed) return themed;
+    }
     const s = this.styles();
     if (s) {
       const themed = theme === 'dark' ? s.dark : s.light;
@@ -376,6 +386,7 @@ export class MapComponent {
     const style = this.getMapStyle(theme);
     if (style === this.currentStyle) return;
     this.currentStyle = style;
+    this.ctx.setCurrentStyle(style);
     this.clearStyleTimeout();
     this.stylePending = true;
     this.ctx.setStyleLoadedFlag(false);

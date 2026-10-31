@@ -42,6 +42,20 @@ export const DOCS_ROUTES: Routes = [
           import('./installation').then((m) => m.InstallationComponent),
       },
       {
+        path: 'testing',
+        title: 'Testing your maps',
+        data: {
+          seo: {
+            title: 'Testing Angular Maps',
+            description:
+              'Unit-test Angular components that render ng-mapcn maps in jsdom without WebGL. Set up the MapLibre fake with Vitest or Jest, drive maps with helpers and CDK component harnesses.',
+            keywords: ['test Angular maps', 'MapLibre mock', 'Angular component harness map'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }],
+          },
+        },
+        loadComponent: () => import('./testing').then((m) => m.TestingComponent),
+      },
+      {
         path: 'api-reference',
         title: 'API Reference',
         data: {
@@ -72,6 +86,20 @@ export const DOCS_ROUTES: Routes = [
           import('./components/basemaps-page').then((m) => m.BasemapsPageComponent),
       },
       {
+        path: 'roadmap',
+        title: 'Roadmap',
+        data: {
+          seo: {
+            title: 'Angular Map Components Roadmap',
+            description:
+              'The ng-mapcn roadmap: what has shipped in the 22.x betas and what comes next, from new map components, search and routing to Angular forms integration and AI tooling.',
+            keywords: ['ng-mapcn roadmap', 'Angular map library roadmap', 'mapcn Angular'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }],
+          },
+        },
+        loadComponent: () => import('./roadmap').then((m) => m.RoadmapComponent),
+      },
+      {
         path: 'components/map',
         title: 'Map',
         data: {
@@ -100,6 +128,21 @@ export const DOCS_ROUTES: Routes = [
         },
         loadComponent: () =>
           import('./components/controls-page').then((m) => m.ControlsPageComponent),
+      },
+      {
+        path: 'components/legend',
+        title: 'Legend',
+        data: {
+          seo: {
+            title: 'Angular Map Legend Component',
+            description:
+              'Add a map legend to an Angular map with ng-map-legend: category swatches, colour gradients and custom projected content, collapsible and themeable.',
+            keywords: ['map legend Angular', 'Angular map gradient legend', 'MapLibre legend component'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () =>
+          import('./components/legend-page').then((m) => m.LegendPageComponent),
       },
       {
         path: 'components/markers',
@@ -205,6 +248,21 @@ export const DOCS_ROUTES: Routes = [
         },
         loadComponent: () =>
           import('./components/heatmap-page').then((m) => m.HeatmapPageComponent),
+      },
+      {
+        path: 'components/symbols',
+        title: 'Symbols',
+        data: {
+          seo: {
+            title: 'Angular Map Symbol Layer',
+            description:
+              'Draw text labels and icons for GeoJSON points on an Angular map with ng-map-symbol-layer: images by id, data-driven icons, collision-aware labels and live options powered by MapLibre GL.',
+            keywords: ['symbol layer Angular', 'map labels MapLibre', 'custom map icons'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () =>
+          import('./components/symbols-page').then((m) => m.SymbolsPageComponent),
       },
       {
         path: 'components/tile-sources',

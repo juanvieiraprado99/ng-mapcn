@@ -23,25 +23,24 @@ export function registerPmtilesProtocol(): void {
   addProtocol('pmtiles', new Protocol().tile);
 }
 
-const KIND_COLORS = { residential: '#3b82f6', commercial: '#f59e0b', park: '#22c55e' } as const;
-
 /**
- * Draws the layers of a vector source, waiting for it through `MapContextService.hasSource()`:
- * `<ng-map-vector-source>` only adds the source. A theme switch (`setStyle`) removes the source
- * and the layers; the source component re-adds its source and this effect re-adds the layers.
- * Hover highlights a parcel with feature-state, which needs the source's `promoteId`.
+ * Draws the buildings layer of a vector source, waiting for it through
+ * `MapContextService.hasSource()`: `<ng-map-vector-source>` only adds the source. A theme switch
+ * (`setStyle`) removes the source and the layers; the source component re-adds its source and this
+ * effect re-adds the layers. Hover highlights a building with feature-state, using the feature
+ * ids that the tiles already carry (the OpenStreetMap ids), so no `promoteId` is needed.
  */
 @Component({
-  selector: 'app-parcels-layer',
+  selector: 'app-buildings-layer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '',
 })
-export class ParcelsLayerComponent {
+export class BuildingsLayerComponent {
   /** Id of the `ng-map-vector-source` to draw. */
   readonly source = input.required<string>();
   /** Name of the layer inside the vector tiles. */
-  readonly sourceLayer = input('parcels');
+  readonly sourceLayer = input('buildings');
 
   private readonly ctx = inject(MapContextService);
 
@@ -60,17 +59,7 @@ export class ParcelsLayerComponent {
         source,
         'source-layer': sourceLayer,
         paint: {
-          'fill-color': [
-            'match',
-            ['get', 'kind'],
-            'residential',
-            KIND_COLORS.residential,
-            'commercial',
-            KIND_COLORS.commercial,
-            'park',
-            KIND_COLORS.park,
-            '#94a3b8',
-          ],
+          'fill-color': '#3b82f6',
           'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.9, 0.55],
         },
       });
@@ -119,36 +108,34 @@ export class ParcelsLayerComponent {
 @Component({
   selector: 'app-pmtiles-block',
   standalone: true,
-  imports: [MapComponent, MapVectorSourceComponent, ParcelsLayerComponent],
+  imports: [MapComponent, MapVectorSourceComponent, BuildingsLayerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bg-card relative h-screen">
-      <ng-map [center]="[-74.0046, 40.5811]" [zoom]="11.6">
+      <ng-map [center]="[11.2543, 43.7672]" [zoom]="15.5">
         <!-- A PMTiles archive served as a static file: no tile server, just HTTP range requests. -->
-        <ng-map-vector-source id="parcels" [url]="archiveUrl" promoteId="parcel" />
-        <app-parcels-layer source="parcels" />
+        <ng-map-vector-source id="florence" [url]="archiveUrl" />
+        <app-buildings-layer source="florence" />
       </ng-map>
 
       <div
         class="bg-card/90 absolute top-4 left-4 z-10 rounded-lg border px-3 py-2.5 backdrop-blur-sm"
       >
-        <p class="text-foreground text-sm font-medium">Parcels from a PMTiles archive</p>
-        <ul class="text-muted-foreground mt-2 space-y-1 text-xs">
-          @for (kind of kinds; track kind.name) {
-            <li class="flex items-center gap-2">
-              <span class="size-2.5 rounded-sm" [style.background-color]="kind.color"></span>
-              {{ kind.name }}
-            </li>
-          }
-        </ul>
+        <p class="text-foreground text-sm font-medium">Buildings of Florence</p>
+        <p class="text-muted-foreground mt-1 text-xs">
+          Read from a PMTiles archive. Hover a building.
+        </p>
       </div>
     </div>
   `,
 })
 export class PmtilesBlockComponent {
-  /** `pmtiles://` + the archive URL. The protocol is registered in the browser only. */
-  protected readonly archiveUrl = 'pmtiles:///data/parcels.pmtiles';
-  protected readonly kinds = Object.entries(KIND_COLORS).map(([name, color]) => ({ name, color }));
+  /**
+   * `pmtiles://` + the archive URL: a Protomaps extract of central Florence (OpenStreetMap data,
+   * ODbL). The protocol is registered in the browser only.
+   */
+  protected readonly archiveUrl =
+    'pmtiles://https://pmtiles.io/protomaps%28vector%29ODbL_firenze.pmtiles';
 
   constructor() {
     afterNextRender(() => registerPmtilesProtocol());
