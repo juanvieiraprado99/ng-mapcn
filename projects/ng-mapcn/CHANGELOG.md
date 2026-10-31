@@ -1,5 +1,65 @@
 # Changelog
 
+## [22.0.0-beta.9](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.8...v22.0.0-beta.9) (2026-10-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* **controls:** render ng-map-controls in MapLibre's corner containers
+* **controls:** the .ng-controls card now renders inside MapLibre's .maplibregl-ctrl-<position> container instead of the ng-map-controls host, and the fixed bottom offsets are gone. Style it with className instead of host-descendant selectors.
+
+### Features
+
+* **controls:** mount overlays as MapLibre controls ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **controls:** render ng-map-controls in MapLibre's corner containers ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **legend:** add ng-map-legend ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **legend:** label middle gradient stops ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **map:** expose the effective style on the map context ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **map:** style override with top precedence ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **marker:** expose aria-expanded and aria-controls ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **marker:** let apps mirror the popup state on a nested button ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **minimap:** add ng-map-minimap ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **minimap:** draw the main viewport footprint ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **minimap:** navigate the main map from the minimap ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **popup:** give the popup card a dialog role and accessible name ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **route:** add ng-route-playback ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **route:** add ng-route-playback-control ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **route:** follow the playback head with the camera ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **route:** let children override the route progress ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **scale:** add ng-map-scale ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **scale:** add scale bar math ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **style-switcher:** add ng-map-style-switcher ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **symbol-layer:** add ng-map-symbol-layer ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **testing:** add ng-mapcn/testing and ng-mapcn/testing/maplibre entry points ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **testing:** add NgMap harnesses ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **testing:** add panBy to the MapLibre fake ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **testing:** attach fake markers, popups and controls to the map container ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **testing:** export the DOM selectors as MAP_TEST_SELECTORS ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **testing:** read the marker popup state from aria-expanded ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+
+
+### Bug Fixes
+
+* **controls:** resync the compass after a position change ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **legend:** hide gradient labels that would overlap ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **legend:** include the title in the toggle's accessible name ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **legend:** re-fit gradient labels after fonts load ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **minimap:** keep the maps in sync through inertia, yield to gestures, and drop the extra tab stop ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **minimap:** keep the minimap in mercator ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **route:** drop aria-pressed, clamp the readout and step by 1% in the playback control ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **route:** let user camera gestures finish and resume follow when re-enabled ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **style-switcher:** announce the selected style ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **style-switcher:** keep the open list above neighbouring controls ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **symbol-layer:** share image ids safely between layers and fix hover without ids ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **testing:** detect any fake-timer library in loadMap ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **testing:** make update() work in zoneless apps ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+
+
+### Performance Improvements
+
+* **controls:** sync the compass without change detection ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+* **scale:** schedule frames outside the zone ([6e0e23b](https://github.com/juanvieiraprado99/ng-mapcn/commit/6e0e23b81e122a5034fa32b043831fe9d6a16d49))
+
 ## [22.0.0-beta.8](https://github.com/juanvieiraprado99/ng-mapcn/compare/v22.0.0-beta.7...v22.0.0-beta.8) (2026-10-23)
 
 
