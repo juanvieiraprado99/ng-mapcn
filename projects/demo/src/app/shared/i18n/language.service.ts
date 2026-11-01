@@ -32,6 +32,8 @@ export class LanguageService {
   private readonly current = signal<Lang>('en');
 
   readonly lang = this.current.asReadonly();
+  /** Shorthand for templates: `@if (i18n.isPt()) { pt-BR } @else { English }`. */
+  readonly isPt = computed(() => this.current() === 'pt-BR');
   /** Strings of the current language: `i18n.messages().header.homeLabel`. */
   readonly messages = computed(() => MESSAGES[this.current()]);
 

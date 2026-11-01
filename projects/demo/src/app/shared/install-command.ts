@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCheck, lucideCopy } from '@ng-icons/lucide';
 
 import { ZardButtonComponent } from '@/shared/components/button';
+import { LanguageService } from '@/shared/i18n/language.service';
 
 const PACKAGE_MANAGERS = [
   { manager: 'pnpm', exec: 'pnpm', add: 'pnpm add' },
@@ -49,7 +50,9 @@ const PACKAGE_MANAGERS = [
           zSize="icon-sm"
           type="button"
           class="text-muted-foreground"
-          [attr.aria-label]="copied() ? 'Copied' : 'Copy command'"
+          [attr.aria-label]="
+            copied() ? i18n.messages().docs.copied : i18n.messages().docs.copyCommand
+          "
           (click)="copy()"
         >
           <ng-icon [name]="copied() ? 'lucideCheck' : 'lucideCopy'" size="16" />
@@ -60,6 +63,8 @@ const PACKAGE_MANAGERS = [
   `,
 })
 export class InstallCommandComponent {
+  protected readonly i18n = inject(LanguageService);
+
   /** Package passed to `ng add`. */
   readonly name = input('ng-mapcn');
   /** Extra `ng add` arguments, e.g. `--draw`. */

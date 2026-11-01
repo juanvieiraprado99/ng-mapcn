@@ -15,7 +15,7 @@ import type { CodeLang } from './highlighter';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block', '[attr.lang]': 'null' },
   template: `
-    <app-docs-section [title]="title()" [anchor]="sectionId()">
+    <app-docs-section [title]="title()" [titlePt]="titlePt()" [anchor]="sectionId()">
       <p><ng-content select="[description]" /></p>
       <ng-content select="[after-description]" />
       <app-component-preview [code]="code()" [lang]="lang()" [height]="height()">
@@ -26,6 +26,7 @@ import type { CodeLang } from './highlighter';
 })
 export class ExampleSectionComponent {
   readonly title = input.required<string>();
+  readonly titlePt = input<string>();
   readonly sectionId = input.required<string>();
   readonly code = input('');
   /** Defaults to a guess based on the snippet (see `detectLang`). */

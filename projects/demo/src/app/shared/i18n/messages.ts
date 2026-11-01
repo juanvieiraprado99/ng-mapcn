@@ -51,6 +51,14 @@ const en = {
   },
   docs: {
     onThisPage: 'On This Page',
+    linkTo: 'Link to ',
+    viewCode: 'View Code',
+    copied: 'Copied',
+    copyCode: 'Copy code',
+    copyCommand: 'Copy command',
+    type: 'Type',
+    default: 'Default',
+    description: 'Description',
   },
   footer: {
     tagline:
@@ -144,6 +152,14 @@ const ptBR: Messages = {
   },
   docs: {
     onThisPage: 'Nesta página',
+    linkTo: 'Link para ',
+    viewCode: 'Ver código',
+    copied: 'Copiado',
+    copyCode: 'Copiar código',
+    copyCommand: 'Copiar comando',
+    type: 'Tipo',
+    default: 'Padrão',
+    description: 'Descrição',
   },
   footer: {
     tagline:

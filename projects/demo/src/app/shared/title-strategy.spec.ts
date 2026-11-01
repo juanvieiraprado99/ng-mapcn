@@ -4,6 +4,7 @@ import { provideRouter, RouterOutlet, type Routes, TitleStrategy } from '@angula
 import { RouterTestingHarness } from '@angular/router/testing';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { LanguageService } from './i18n/language.service';
 import { SITE_TITLE } from './seo/site';
 import { SiteTitleStrategy } from './title-strategy';
 
@@ -11,7 +12,11 @@ import { SiteTitleStrategy } from './title-strategy';
 class StubComponent {}
 
 const routes: Routes = [
-  { path: '', component: StubComponent, data: { seo: { home: true, description: 'home' } } },
+  {
+    path: '',
+    component: StubComponent,
+    data: { seo: { home: true, description: 'home', pt: { title: 'Título da home' } } },
+  },
   {
     path: 'docs',
     component: StubComponent,
@@ -22,7 +27,13 @@ const routes: Routes = [
         path: 'child',
         component: StubComponent,
         title: 'Child',
-        data: { seo: { description: 'child seo', title: 'Child SEO title' } },
+        data: {
+          seo: {
+            description: 'child seo',
+            title: 'Child SEO title',
+            pt: { title: 'Título SEO filho', description: 'seo filho' },
+          },
+        },
       },
       { path: 'plain', component: StubComponent, title: 'Plain' },
     ],
@@ -47,6 +58,7 @@ describe('SiteTitleStrategy', () => {
       .querySelectorAll('meta, link[rel="canonical"], script[data-seo]')
       .forEach((n) => n.remove());
     document.title = '';
+    localStorage.clear();
     TestBed.resetTestingModule();
   });
 
@@ -79,6 +91,38 @@ describe('SiteTitleStrategy', () => {
     await navigate('/untitled');
 
     expect(document.title).toBe(SITE_TITLE);
+  });
+
+  it('switches to the pt-BR title and description, and back', async () => {
+    await navigate('/docs/child');
+    const i18n = TestBed.inject(LanguageService);
+
+    i18n.setLanguage('pt-BR');
+    TestBed.tick();
+    expect(document.title).toBe('Título SEO filho - ng-mapcn');
+    expect(description()).toBe('seo filho');
+
+    i18n.setLanguage('en');
+    TestBed.tick();
+    expect(document.title).toBe('Child SEO title - ng-mapcn');
+    expect(description()).toBe('child seo');
+  });
+
+  it('keeps the English texts in pt-BR when a route has no pt block', async () => {
+    await navigate('/docs/plain');
+    TestBed.inject(LanguageService).setLanguage('pt-BR');
+    TestBed.tick();
+
+    expect(document.title).toBe('Plain - ng-mapcn');
+    expect(description()).toBe('parent seo');
+  });
+
+  it('uses the pt-BR site title on the home route', async () => {
+    await navigate('/');
+    TestBed.inject(LanguageService).setLanguage('pt-BR');
+    TestBed.tick();
+
+    expect(document.title).toBe('Título da home');
   });
 
   it('ignores the query string and fragment in the canonical URL', async () => {
