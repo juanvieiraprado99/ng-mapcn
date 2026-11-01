@@ -13,6 +13,9 @@ export interface BlockMeta {
   name: string;
   title: string;
   description: string;
+  /** pt-BR texts for the gallery; the /view page titles stay English. */
+  titlePt: string;
+  descriptionPt: string;
   /** Height of the preview iframe and of the code viewer. */
   iframeHeight: string;
   /** zard/ui components used by the block (installed with zard-cli). */
@@ -30,6 +33,9 @@ export const BLOCKS: BlockMeta[] = [
     title: 'Analytics Map',
     description:
       'Real-time analytics overview with a world map, breakdown cards, and device stats.',
+    titlePt: 'Mapa de analytics',
+    descriptionPt:
+      'Visão geral de analytics em tempo real, com mapa-múndi, cards de detalhamento e estatísticas por dispositivo.',
     iframeHeight: '940px',
     zard: ['card', 'chart'],
     files: [
@@ -44,6 +50,9 @@ export const BLOCKS: BlockMeta[] = [
     title: 'Choropleth',
     description:
       'World choropleth map shading countries by a metric, with a hover tooltip and legend.',
+    titlePt: 'Coroplético',
+    descriptionPt:
+      'Mapa-múndi coroplético que colore os países por uma métrica, com tooltip no hover e legenda.',
     iframeHeight: '720px',
     zard: [],
     files: [
@@ -56,6 +65,8 @@ export const BLOCKS: BlockMeta[] = [
     name: 'analytics-card',
     title: 'Analytics Card',
     description: 'Compact analytics card with a headline metric over a world map.',
+    titlePt: 'Card de analytics',
+    descriptionPt: 'Card compacto de analytics com uma métrica principal sobre um mapa-múndi.',
     iframeHeight: '600px',
     zard: ['card', 'badge'],
     files: [{ path: 'analytics-card/analytics-card.ts' }, { path: 'analytics-card/data.ts' }],
@@ -64,6 +75,9 @@ export const BLOCKS: BlockMeta[] = [
     name: 'delivery-tracker',
     title: 'Delivery Tracker',
     description: 'Live order tracking with route progress, courier position, and order details.',
+    titlePt: 'Rastreio de entrega',
+    descriptionPt:
+      'Acompanhamento de pedido ao vivo, com progresso da rota, posição do entregador e detalhes do pedido.',
     iframeHeight: '720px',
     zard: ['card', 'badge', 'button'],
     files: [
@@ -77,6 +91,9 @@ export const BLOCKS: BlockMeta[] = [
     title: 'Uptime Monitor',
     description:
       'Status-page style map of edge network locations with live health, latency, and uptime.',
+    titlePt: 'Monitor de uptime',
+    descriptionPt:
+      'Mapa no estilo página de status com as localizações da rede de borda, saúde ao vivo, latência e uptime.',
     iframeHeight: '720px',
     zard: [],
     files: [
@@ -91,6 +108,9 @@ export const BLOCKS: BlockMeta[] = [
     title: 'Heatmap',
     description:
       'Globe-projected heatmap visualizing earthquake density with zoom-dependent styling.',
+    titlePt: 'Mapa de calor',
+    descriptionPt:
+      'Mapa de calor em projeção de globo mostrando a densidade de terremotos, com estilo dependente do zoom.',
     iframeHeight: '800px',
     zard: [],
     files: [{ path: 'heatmap/heatmap.ts' }],
@@ -100,6 +120,9 @@ export const BLOCKS: BlockMeta[] = [
     title: 'PMTiles Parcels',
     description:
       'Vector tiles from a single PMTiles archive: a source component, a layer that waits for it, and hover highlighting.',
+    titlePt: 'Lotes em PMTiles',
+    descriptionPt:
+      'Tiles vetoriais de um único arquivo PMTiles: um componente de source, uma camada que espera por ele e destaque no hover.',
     iframeHeight: '720px',
     zard: [],
     files: [{ path: 'pmtiles/pmtiles.ts' }],
@@ -109,6 +132,9 @@ export const BLOCKS: BlockMeta[] = [
     title: '3D City',
     description:
       '3D buildings colored by height, with optional terrain and hillshade, on the Carto basemap.',
+    titlePt: 'Cidade 3D',
+    descriptionPt:
+      'Prédios 3D coloridos pela altura, com terreno e sombreamento de relevo opcionais, sobre o basemap Carto.',
     iframeHeight: '720px',
     zard: [],
     files: [{ path: 'city-3d/city-3d.ts' }],
@@ -118,6 +144,9 @@ export const BLOCKS: BlockMeta[] = [
     title: 'Draw',
     description:
       'Draw and edit points, lines and polygons with a toolbar and a live readout of the shapes.',
+    titlePt: 'Desenho',
+    descriptionPt:
+      'Desenhe e edite pontos, linhas e polígonos com uma barra de ferramentas e uma leitura ao vivo das formas.',
     iframeHeight: '720px',
     zard: [],
     files: [{ path: 'draw/draw.ts' }],
@@ -126,6 +155,8 @@ export const BLOCKS: BlockMeta[] = [
     name: 'logistics-network',
     title: 'Logistics Network',
     description: 'Domestic logistics map with a sidebar of stats.',
+    titlePt: 'Rede logística',
+    descriptionPt: 'Mapa de logística doméstica com uma barra lateral de estatísticas.',
     iframeHeight: '800px',
     zard: ['sidebar', 'separator'],
     files: [
@@ -139,6 +170,8 @@ export const BLOCKS: BlockMeta[] = [
     name: 'store-locator',
     title: 'Store Locator',
     description: 'Searchable store list synced with map markers.',
+    titlePt: 'Localizador de lojas',
+    descriptionPt: 'Lista de lojas pesquisável, sincronizada com os marcadores do mapa.',
     iframeHeight: '800px',
     zard: ['input', 'sidebar'],
     files: [

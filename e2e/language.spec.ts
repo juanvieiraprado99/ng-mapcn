@@ -63,4 +63,19 @@ test.describe('language', () => {
     await expect(page.locator('app-docs-page h1')).toHaveText('Markers');
     await expect(page).toHaveTitle('Angular Map Markers - ng-mapcn');
   });
+
+  test('blocks, playground and credits follow the language', async ({ page }) => {
+    await page.goto('/credits');
+    await page.locator('app-language-toggle button').click();
+    await expect(page.locator('app-page-header-heading')).toHaveText('Créditos');
+
+    // The pick is saved, so the next pages open in pt-BR.
+    await page.goto('/blocks');
+    await expect(page.locator('app-block-display h2').first()).toHaveText('Mapa de analytics');
+    await expect(page.getByRole('tab', { name: 'Código' }).first()).toBeVisible();
+
+    await page.goto('/playground');
+    await expect(page.getByRole('heading', { name: 'Galeria de estilos' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Adicionar Marcador' })).toBeVisible();
+  });
 });

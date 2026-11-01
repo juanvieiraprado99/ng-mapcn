@@ -8,6 +8,7 @@ import { type BlockMeta, zardDocsUrl, zardInstallCommand } from '@/blocks/regist
 import { CodeBlockComponent } from '@/shared/code-block';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSeparatorComponent } from '@/shared/components/separator';
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { BlockCodeViewerComponent } from './block-code-viewer';
 
@@ -37,11 +38,15 @@ const TAB_TRIGGER =
   },
   template: `
     <div>
-      <h2 class="text-lg font-semibold tracking-tight">{{ block().title }}</h2>
-      <p class="text-muted-foreground mt-0.5 text-sm">{{ block().description }}</p>
+      <h2 class="text-lg font-semibold tracking-tight">
+        {{ pt() ? block().titlePt : block().title }}
+      </h2>
+      <p class="text-muted-foreground mt-0.5 text-sm">
+        {{ pt() ? block().descriptionPt : block().description }}
+      </p>
       <p class="text-muted-foreground mt-2 flex flex-wrap items-center gap-1.5 text-xs">
         @if (block().zard.length) {
-          <span>UI from zard/ui:</span>
+          <span>{{ pt() ? 'UI do zard/ui:' : 'UI from zard/ui:' }}</span>
           @for (component of block().zard; track component) {
             <a
               [href]="docsUrl(component)"
@@ -52,7 +57,11 @@ const TAB_TRIGGER =
             >
           }
         } @else {
-          <span>No zard/ui components - built with ng-mapcn and Tailwind only.</span>
+          <span>{{
+            pt()
+              ? 'Sem componentes do zard/ui - feito só com ng-mapcn e Tailwind.'
+              : 'No zard/ui components - built with ng-mapcn and Tailwind only.'
+          }}</span>
         }
       </p>
     </div>
@@ -84,7 +93,9 @@ const TAB_TRIGGER =
             zSize="sm"
             type="button"
             class="font-mono text-xs"
-            [attr.aria-label]="'Copy install command: ' + command()"
+            [attr.aria-label]="
+              (pt() ? 'Copiar comando de instalação: ' : 'Copy install command: ') + command()
+            "
             (click)="copyCommand()"
           >
             <ng-icon [name]="copied() ? 'lucideCheck' : 'lucideTerminal'" size="16" />
@@ -98,7 +109,7 @@ const TAB_TRIGGER =
             [href]="viewUrl()"
             target="_blank"
             rel="noopener"
-            aria-label="Open in new tab"
+            [attr.aria-label]="pt() ? 'Abrir em nova aba' : 'Open in new tab'"
           >
             <ng-icon name="lucideMaximize" size="16" />
           </a>
@@ -127,7 +138,11 @@ const TAB_TRIGGER =
       @if (usage(); as snippet) {
         <div class="mt-3" [hidden]="active() !== 'usage'">
           <p class="text-muted-foreground mb-2 text-sm">
-            After copying the files into your app, render the block like this.
+            {{
+              pt()
+                ? 'Depois de copiar os arquivos para o seu app, renderize o block assim.'
+                : 'After copying the files into your app, render the block like this.'
+            }}
           </p>
           <app-code-block [code]="snippet" lang="angular-ts" filename="page.component.ts" />
         </div>
@@ -136,13 +151,15 @@ const TAB_TRIGGER =
   `,
 })
 export class BlockDisplayComponent {
+  protected readonly i18n = inject(LanguageService);
+  protected readonly pt = this.i18n.isPt;
   readonly block = input.required<BlockMeta>();
 
   protected readonly trigger = TAB_TRIGGER;
   protected readonly tabs = computed<{ id: Tab; label: string }[]>(() => [
-    { id: 'preview', label: 'Preview' },
-    { id: 'code', label: 'Code' },
-    ...(this.usage() ? [{ id: 'usage' as const, label: 'Usage' }] : []),
+    { id: 'preview', label: this.pt() ? 'Prévia' : 'Preview' },
+    { id: 'code', label: this.pt() ? 'Código' : 'Code' },
+    ...(this.usage() ? [{ id: 'usage' as const, label: this.pt() ? 'Uso' : 'Usage' }] : []),
   ]);
   protected readonly active = signal<Tab>('preview');
   protected readonly codeOpened = signal(false);

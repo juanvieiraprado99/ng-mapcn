@@ -26,9 +26,11 @@ import { FooterComponent } from '@/layout/footer';
 import { BasemapService } from '@/shared/basemap.service';
 import { CodeBlockComponent } from '@/shared/code-block';
 import { ZardButtonComponent } from '@/shared/components/button';
+import { LanguageService } from '@/shared/i18n/language.service';
 import { PageHeaderImports } from '@/shared/page-header';
 
 import apiData from '../docs/api-reference.data.json';
+import { playgroundText, PlaygroundTextPipe } from './playground.pt';
 import {
   BLOCK_ICON_SET,
   blockIcon,
@@ -143,6 +145,7 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
     PlaygroundMarkerComponent,
     PlaygroundPaletteComponent,
     PlaygroundPopupComponent,
+    PlaygroundTextPipe,
     ZardButtonComponent,
   ],
   viewProviders: [
@@ -163,9 +166,15 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
     <app-page-header align="left" size="sm">
       <app-page-header-heading>Playground</app-page-header-heading>
       <app-page-header-description>
-        Build a map from blocks: drag components onto the layer stack, tune each one and watch the
-        real map update. The code below always matches the whole scene, ready to paste into your
-        app.
+        @if (pt()) {
+          Monte um mapa a partir de blocks: arraste componentes para a pilha de camadas, ajuste cada
+          um e veja o mapa real se atualizar. O código abaixo sempre corresponde à cena inteira,
+          pronto para colar no seu app.
+        } @else {
+          Build a map from blocks: drag components onto the layer stack, tune each one and watch the
+          real map update. The code below always matches the whole scene, ready to paste into your
+          app.
+        }
       </app-page-header-description>
     </app-page-header>
 
@@ -174,7 +183,7 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
         id="builder"
         class="grid scroll-mt-20 gap-6 lg:grid-cols-[16rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_18rem]"
       >
-        <aside class="space-y-6" aria-label="Scene">
+        <aside class="space-y-6" [attr.aria-label]="pt() ? 'Cena' : 'Scene'">
           <div>
             <h2 class="mb-3 text-sm font-semibold tracking-tight">Blocks</h2>
             <app-playground-palette
@@ -185,7 +194,10 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
           </div>
           <div>
             <h2 class="mb-3 text-sm font-semibold tracking-tight">
-              Layers <span class="text-muted-foreground font-normal">(top first)</span>
+              {{ pt() ? 'Camadas' : 'Layers' }}
+              <span class="text-muted-foreground font-normal">{{
+                pt() ? '(de cima para baixo)' : '(top first)'
+              }}</span>
             </h2>
             <app-playground-layers
               [layers]="layers()"
@@ -201,20 +213,34 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
         </aside>
 
         <div class="min-w-0 space-y-4">
-          <div class="flex flex-wrap items-center gap-2" role="toolbar" aria-label="Scene actions">
+          <div
+            class="flex flex-wrap items-center gap-2"
+            role="toolbar"
+            [attr.aria-label]="pt() ? 'Ações da cena' : 'Scene actions'"
+          >
             <button z-button zType="outline" zSize="sm" type="button" (click)="copyLink()">
               <ng-icon [name]="linkCopied() ? 'lucideCheck' : 'lucideLink'" size="14" />
-              {{ linkCopied() ? 'Link copied' : 'Copy link' }}
+              {{
+                linkCopied()
+                  ? pt()
+                    ? 'Link copiado'
+                    : 'Link copied'
+                  : pt()
+                    ? 'Copiar link'
+                    : 'Copy link'
+              }}
             </button>
             <button z-button zType="ghost" zSize="sm" type="button" (click)="clear()">
               <ng-icon name="lucideEraser" size="14" />
-              Clear
+              {{ pt() ? 'Limpar' : 'Clear' }}
             </button>
             <button z-button zType="ghost" zSize="sm" type="button" (click)="reset()">
               <ng-icon name="lucideRotateCcw" size="14" />
-              Reset
+              {{ pt() ? 'Restaurar' : 'Reset' }}
             </button>
-            <span class="sr-only" aria-live="polite">{{ linkCopied() ? 'Link copied' : '' }}</span>
+            <span class="sr-only" aria-live="polite">{{
+              linkCopied() ? (pt() ? 'Link copiado' : 'Link copied') : ''
+            }}</span>
           </div>
 
           @if (needsCarto(); as label) {
@@ -222,8 +248,13 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
               role="status"
               class="bg-muted text-muted-foreground rounded-md border px-3 py-2 text-sm"
             >
-              {{ label }} need building vector tiles: pick {{ buildingPresets }} in the Basemap
-              control.
+              @if (pt()) {
+                {{ label }} precisam de tiles vetoriais com prédios: escolha
+                {{ buildingPresets() }} no controle Basemap.
+              } @else {
+                {{ label }} need building vector tiles: pick {{ buildingPresets() }} in the Basemap
+                control.
+              }
             </p>
           }
           <div class="bg-card relative h-[520px] overflow-hidden rounded-xl border shadow-sm">
@@ -269,8 +300,12 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
 
           <div class="space-y-2" id="snippet">
             <div class="flex items-center justify-between">
-              <h2 class="text-lg font-semibold tracking-tight">Code</h2>
-              <div role="group" aria-label="Snippet" class="flex gap-1">
+              <h2 class="text-lg font-semibold tracking-tight">{{ pt() ? 'Código' : 'Code' }}</h2>
+              <div
+                role="group"
+                [attr.aria-label]="pt() ? 'Trecho de código' : 'Snippet'"
+                class="flex gap-1"
+              >
                 @for (tab of tabs; track tab.id) {
                   <button
                     type="button"
@@ -278,7 +313,7 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
                     [attr.aria-pressed]="snippetTab() === tab.id"
                     (click)="snippetTab.set(tab.id)"
                   >
-                    {{ tab.label }}
+                    {{ tab.label | pgText: pt() }}
                   </button>
                 }
               </div>
@@ -290,13 +325,20 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
           </div>
         </div>
 
-        <aside class="space-y-8 lg:col-span-2 xl:col-span-1" aria-label="Controls">
+        <aside
+          class="space-y-8 lg:col-span-2 xl:col-span-1"
+          [attr.aria-label]="pt() ? 'Controles' : 'Controls'"
+        >
           @if (selected(); as current) {
             @for (key of [current.layer.uid]; track key) {
               <div>
                 <div class="mb-1 flex items-center justify-between gap-2">
                   <h2 class="text-sm font-semibold tracking-tight">
-                    {{ current.spec.label }} inputs
+                    {{
+                      pt()
+                        ? 'Inputs de ' + (current.spec.label | pgText: pt())
+                        : current.spec.label + ' inputs'
+                    }}
                     <span class="text-muted-foreground font-mono text-xs font-normal">{{
                       current.layer.name
                     }}</span>
@@ -307,7 +349,9 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
                       zType="ghost"
                       zSize="icon-sm"
                       type="button"
-                      [attr.aria-label]="'Move ' + current.layer.name + ' up'"
+                      [attr.aria-label]="
+                        pt() ? 'Subir ' + current.layer.name : 'Move ' + current.layer.name + ' up'
+                      "
                       [disabled]="current.index === 0"
                       (click)="move({ from: current.index, to: current.index - 1 })"
                     >
@@ -318,7 +362,11 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
                       zType="ghost"
                       zSize="icon-sm"
                       type="button"
-                      [attr.aria-label]="'Move ' + current.layer.name + ' down'"
+                      [attr.aria-label]="
+                        pt()
+                          ? 'Descer ' + current.layer.name
+                          : 'Move ' + current.layer.name + ' down'
+                      "
                       [disabled]="current.index === layers().length - 1"
                       (click)="move({ from: current.index, to: current.index + 1 })"
                     >
@@ -329,7 +377,7 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
                       zType="ghost"
                       zSize="icon-sm"
                       type="button"
-                      [attr.aria-label]="'Duplicate ' + current.layer.name"
+                      [attr.aria-label]="(pt() ? 'Duplicar ' : 'Duplicate ') + current.layer.name"
                       (click)="duplicate(current.layer.uid)"
                     >
                       <ng-icon name="lucideCopy" size="14" />
@@ -339,15 +387,17 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
                       zType="ghost"
                       zSize="icon-sm"
                       type="button"
-                      [attr.aria-label]="'Frame ' + current.layer.name"
-                      title="Move the camera to this layer's data"
+                      [attr.aria-label]="(pt() ? 'Enquadrar ' : 'Frame ') + current.layer.name"
+                      [title]="frameHint()"
                       (click)="frame(current.spec)"
                     >
                       <ng-icon name="lucideFocus" size="14" />
                     </button>
                   </div>
                 </div>
-                <p class="text-muted-foreground mb-3 text-xs">{{ current.spec.description }}</p>
+                <p class="text-muted-foreground mb-3 text-xs">
+                  {{ current.spec.description | pgText: pt() }}
+                </p>
                 <app-playground-controls
                   [controls]="current.spec.controls"
                   [values]="current.layer.values"
@@ -357,10 +407,16 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
               </div>
             }
           } @else {
-            <p class="text-muted-foreground text-sm">Select a layer to edit its inputs.</p>
+            <p class="text-muted-foreground text-sm">
+              {{
+                pt()
+                  ? 'Selecione uma camada para editar os inputs dela.'
+                  : 'Select a layer to edit its inputs.'
+              }}
+            </p>
           }
           <div>
-            <h2 class="mb-3 text-sm font-semibold tracking-tight">Map</h2>
+            <h2 class="mb-3 text-sm font-semibold tracking-tight">{{ pt() ? 'Mapa' : 'Map' }}</h2>
             <app-playground-controls
               [controls]="mapControls"
               [values]="mapValues()"
@@ -373,13 +429,23 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
 
       <section id="examples" class="scroll-mt-20 space-y-6" aria-labelledby="examples-title">
         <div>
-          <h2 id="examples-title" class="text-2xl font-semibold tracking-tight">Examples</h2>
+          <h2 id="examples-title" class="text-2xl font-semibold tracking-tight">
+            {{ pt() ? 'Exemplos' : 'Examples' }}
+          </h2>
           <p class="text-muted-foreground mt-1 max-w-2xl text-sm">
-            Ready-made scenes to start from: open one in the builder above, then tweak it, share it
-            or copy its code.
+            @if (pt()) {
+              Cenas prontas para começar: abra uma no construtor acima e depois ajuste, compartilhe
+              ou copie o código dela.
+            } @else {
+              Ready-made scenes to start from: open one in the builder above, then tweak it, share
+              it or copy its code.
+            }
           </p>
         </div>
-        <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Examples">
+        <ul
+          class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          [attr.aria-label]="pt() ? 'Exemplos' : 'Examples'"
+        >
           @for (example of examples; track example.id) {
             <li class="bg-card hover:bg-accent/50 relative rounded-xl border p-4 shadow-sm">
               <div class="mb-3 flex gap-1.5" aria-hidden="true">
@@ -389,12 +455,18 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
                   </span>
                 }
               </div>
-              <p class="text-sm font-medium">{{ example.title }}</p>
-              <p class="text-muted-foreground mt-1 text-xs">{{ example.description }}</p>
+              <p class="text-sm font-medium">{{ example.title | pgText: pt() }}</p>
+              <p class="text-muted-foreground mt-1 text-xs">
+                {{ example.description | pgText: pt() }}
+              </p>
               <button
                 type="button"
                 class="focus-visible:ring-ring absolute inset-0 rounded-xl outline-none focus-visible:ring-[3px]"
-                [attr.aria-label]="'Open the ' + example.title + ' example'"
+                [attr.aria-label]="
+                  pt()
+                    ? 'Abrir o exemplo ' + (example.title | pgText: pt())
+                    : 'Open the ' + example.title + ' example'
+                "
                 (click)="loadExample(example)"
               ></button>
             </li>
@@ -404,14 +476,24 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
 
       <section id="gallery" class="scroll-mt-20 space-y-6" aria-labelledby="gallery-title">
         <div>
-          <h2 id="gallery-title" class="text-2xl font-semibold tracking-tight">Style gallery</h2>
+          <h2 id="gallery-title" class="text-2xl font-semibold tracking-tight">
+            {{ pt() ? 'Galeria de estilos' : 'Style gallery' }}
+          </h2>
           <p class="text-muted-foreground mt-1 max-w-2xl text-sm">
-            Basemaps, projection and tilt, each previewed live. Pick one to apply it to the
-            playground map above and copy the matching snippet.
+            @if (pt()) {
+              Basemaps, projeção e inclinação, cada um com prévia ao vivo. Escolha um para aplicar
+              no mapa do playground acima e copiar o trecho de código correspondente.
+            } @else {
+              Basemaps, projection and tilt, each previewed live. Pick one to apply it to the
+              playground map above and copy the matching snippet.
+            }
           </p>
         </div>
 
-        <ul class="grid grid-cols-2 gap-4 md:grid-cols-3" aria-label="Styles">
+        <ul
+          class="grid grid-cols-2 gap-4 md:grid-cols-3"
+          [attr.aria-label]="pt() ? 'Estilos' : 'Styles'"
+        >
           @for (preset of presets; track preset.id) {
             <li
               class="bg-card relative overflow-hidden rounded-xl border shadow-sm"
@@ -430,17 +512,25 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
                 />
               </div>
               <div class="border-t p-3">
-                <p class="text-sm font-medium">{{ preset.label }}</p>
-                <p class="text-muted-foreground mt-0.5 text-xs">{{ preset.description }}</p>
+                <p class="text-sm font-medium">{{ preset.label | pgText: pt() }}</p>
+                <p class="text-muted-foreground mt-0.5 text-xs">
+                  {{ preset.description | pgText: pt() }}
+                </p>
                 @if (preset.note) {
-                  <p class="text-muted-foreground mt-0.5 text-xs italic">{{ preset.note }}</p>
+                  <p class="text-muted-foreground mt-0.5 text-xs italic">
+                    {{ preset.note | pgText: pt() }}
+                  </p>
                 }
               </div>
               <button
                 type="button"
                 class="focus-visible:ring-ring absolute inset-0 rounded-xl outline-none focus-visible:ring-[3px]"
                 [attr.aria-pressed]="preset.id === mapState().presetId"
-                [attr.aria-label]="'Apply ' + preset.label + ' to the playground map'"
+                [attr.aria-label]="
+                  pt()
+                    ? 'Aplicar ' + (preset.label | pgText: pt()) + ' ao mapa do playground'
+                    : 'Apply ' + preset.label + ' to the playground map'
+                "
                 (click)="applyStyle(preset)"
               ></button>
             </li>
@@ -461,6 +551,10 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
   `,
 })
 export class PlaygroundComponent {
+  protected readonly pt = inject(LanguageService).isPt;
+  protected readonly frameHint = computed(() =>
+    this.pt() ? 'Move a câmera para os dados desta camada' : "Move the camera to this layer's data",
+  );
   private viewportTimer: ReturnType<typeof setTimeout> | undefined;
   private copiedTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -484,7 +578,9 @@ export class PlaygroundComponent {
   protected readonly presets = STYLE_PRESETS;
   protected readonly examples = PLAYGROUND_EXAMPLES;
   protected readonly icon = blockIcon;
-  protected readonly buildingPresets = BUILDING_PRESETS.map((preset) => preset.label).join(', ');
+  protected readonly buildingPresets = computed(() =>
+    BUILDING_PRESETS.map((preset) => playgroundText(preset.label, this.pt())).join(', '),
+  );
   protected readonly mapControls = MAP_CONTROLS;
   protected readonly globe = { type: 'globe' } as const;
   protected readonly tabs: { id: SnippetTab; label: string }[] = [
@@ -557,7 +653,7 @@ export class PlaygroundComponent {
       this.drawn()
         .map((layer) => findSpec(layer.specId))
         .filter((spec) => spec.requiresCarto)
-        .map((spec) => spec.label),
+        .map((spec) => playgroundText(spec.label, this.pt())),
     );
     return labels.size ? [...labels].join(', ') : null;
   });

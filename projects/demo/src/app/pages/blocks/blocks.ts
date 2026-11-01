@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideInfo } from '@ng-icons/lucide';
 
 import { BLOCKS } from '@/blocks/registry';
 import { FooterComponent } from '@/layout/footer';
+import { LanguageService } from '@/shared/i18n/language.service';
 import { PageHeaderImports } from '@/shared/page-header';
 
 import { BlockDisplayComponent } from './block-display';
@@ -19,7 +20,11 @@ import { BlockDisplayComponent } from './block-display';
     <app-page-header align="left" size="sm">
       <app-page-header-heading>Blocks</app-page-header-heading>
       <app-page-header-description>
-        Pre-built, ready-to-use map blocks. Browse, preview, and copy them into your app.
+        {{
+          i18n.isPt()
+            ? 'Blocks de mapa prontos para usar. Navegue, veja a prévia e copie para o seu app.'
+            : 'Pre-built, ready-to-use map blocks. Browse, preview, and copy them into your app.'
+        }}
       </app-page-header-description>
     </app-page-header>
 
@@ -35,31 +40,59 @@ import { BlockDisplayComponent } from './block-display';
       >
         <ng-icon name="lucideInfo" size="18" class="text-muted-foreground mt-0.5 shrink-0" />
         <div class="space-y-2">
-          <p>
-            <strong>The UI in these blocks comes from zard/ui.</strong>
-            Cards, badges, buttons, inputs, sidebars and charts are
-            <a
-              href="https://zardui.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-foreground font-medium underline underline-offset-4"
-              >zard/ui</a
-            >
-            components - the Angular port of shadcn/ui, and the kit this site is built with. They
-            are not part of ng-mapcn: every
-            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm"
-              >ng-map-*</code
-            >
-            element is ng-mapcn, everything around it is zard/ui and Tailwind.
-          </p>
-          <p>
-            Each block lists the zard/ui components it uses, and its install button copies the
-            matching
-            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm"
-              >npx zard-cli@latest add ...</code
-            >
-            command. Then copy the files from the Code tab into your app.
-          </p>
+          @if (i18n.isPt()) {
+            <p>
+              <strong>A UI destes blocks vem do zard/ui.</strong>
+              Cards, badges, botões, inputs, barras laterais e gráficos são componentes do
+              <a
+                href="https://zardui.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-foreground font-medium underline underline-offset-4"
+                >zard/ui</a
+              >
+              - o port para Angular do shadcn/ui, e o kit com que este site é feito. Eles não fazem
+              parte do ng-mapcn: todo elemento
+              <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm"
+                >ng-map-*</code
+              >
+              é ng-mapcn, e tudo ao redor é zard/ui e Tailwind.
+            </p>
+            <p>
+              Cada block lista os componentes do zard/ui que usa, e o botão de instalação copia o
+              comando
+              <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm"
+                >npx zard-cli@latest add ...</code
+              >
+              correspondente. Depois, copie os arquivos da aba Código para o seu app.
+            </p>
+          } @else {
+            <p>
+              <strong>The UI in these blocks comes from zard/ui.</strong>
+              Cards, badges, buttons, inputs, sidebars and charts are
+              <a
+                href="https://zardui.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-foreground font-medium underline underline-offset-4"
+                >zard/ui</a
+              >
+              components - the Angular port of shadcn/ui, and the kit this site is built with. They
+              are not part of ng-mapcn: every
+              <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm"
+                >ng-map-*</code
+              >
+              element is ng-mapcn, everything around it is zard/ui and Tailwind.
+            </p>
+            <p>
+              Each block lists the zard/ui components it uses, and its install button copies the
+              matching
+              <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm"
+                >npx zard-cli@latest add ...</code
+              >
+              command. Then copy the files from the Code tab into your app.
+            </p>
+          }
         </div>
       </div>
 
@@ -72,5 +105,6 @@ import { BlockDisplayComponent } from './block-display';
   `,
 })
 export class BlocksComponent {
+  protected readonly i18n = inject(LanguageService);
   protected readonly blocks = BLOCKS;
 }

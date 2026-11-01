@@ -1,5 +1,5 @@
 import { CdkDrag, type CdkDragDrop, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideBoxes,
@@ -22,7 +22,9 @@ import {
 } from '@ng-icons/lucide';
 
 import { ZardButtonComponent } from '@/shared/components/button';
+import { LanguageService } from '@/shared/i18n/language.service';
 
+import { PlaygroundTextPipe } from './playground.pt';
 import type { SceneLayer } from './playground-scene';
 import type { PlaygroundSpec } from './playground-schema';
 
@@ -75,7 +77,7 @@ export const BLOCK_ICON_SET = {
 @Component({
   selector: 'app-playground-palette',
   standalone: true,
-  imports: [CdkDropList, CdkDrag, NgIcon],
+  imports: [CdkDropList, CdkDrag, NgIcon, PlaygroundTextPipe],
   viewProviders: [provideIcons(BLOCK_ICON_SET)],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -99,14 +101,18 @@ export const BLOCK_ICON_SET = {
             type="button"
             [disabled]="disabled().has(spec.id)"
             class="bg-card hover:bg-accent flex w-full cursor-grab items-center gap-2 rounded-md border px-2.5 py-2 text-left text-sm font-medium transition-colors active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-50"
-            [attr.aria-label]="'Add ' + spec.label"
+            [attr.aria-label]="(pt() ? 'Adicionar ' : 'Add ') + (spec.label | pgText: pt())"
             [title]="
-              disabled().has(spec.id) ? 'Already in the scene (one per map)' : spec.description
+              disabled().has(spec.id)
+                ? pt()
+                  ? 'Já está na cena (um por mapa)'
+                  : 'Already in the scene (one per map)'
+                : (spec.description | pgText: pt())
             "
             (click)="addBlock.emit(spec.id)"
           >
             <ng-icon [name]="icon(spec.id)" size="16" class="text-muted-foreground shrink-0" />
-            <span class="truncate">{{ spec.label }}</span>
+            <span class="truncate">{{ spec.label | pgText: pt() }}</span>
           </button>
         </li>
       }
@@ -114,6 +120,7 @@ export const BLOCK_ICON_SET = {
   `,
 })
 export class PlaygroundPaletteComponent {
+  protected readonly pt = inject(LanguageService).isPt;
   readonly specs = input.required<readonly PlaygroundSpec[]>();
   /** Spec ids that cannot be added again (`single` blocks already in the scene). */
   readonly disabled = input<ReadonlySet<string>>(new Set());
@@ -134,7 +141,7 @@ export class PlaygroundPaletteComponent {
 @Component({
   selector: 'app-playground-layers',
   standalone: true,
-  imports: [CdkDropList, CdkDrag, CdkDragHandle, NgIcon, ZardButtonComponent],
+  imports: [CdkDropList, CdkDrag, CdkDragHandle, NgIcon, ZardButtonComponent, PlaygroundTextPipe],
   viewProviders: [provideIcons(BLOCK_ICON_SET)],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -143,7 +150,7 @@ export class PlaygroundPaletteComponent {
       [id]="stackId"
       [cdkDropListData]="layers()"
       (cdkDropListDropped)="dropped($event)"
-      aria-label="Layers"
+      [attr.aria-label]="pt() ? 'Camadas' : 'Layers'"
       class="flex min-h-24 flex-col gap-1.5 rounded-lg border border-dashed p-1.5"
     >
       @for (layer of layers(); track layer.uid) {
@@ -171,7 +178,9 @@ export class PlaygroundPaletteComponent {
           >
             <ng-icon [name]="icon(layer.specId)" size="14" class="text-muted-foreground shrink-0" />
             <span class="min-w-0">
-              <span class="block truncate font-medium">{{ labels()[layer.specId] }}</span>
+              <span class="block truncate font-medium">{{
+                labels()[layer.specId] | pgText: pt()
+              }}</span>
               <span class="text-muted-foreground block truncate font-mono text-xs">{{
                 layer.name
               }}</span>
@@ -182,7 +191,10 @@ export class PlaygroundPaletteComponent {
             zType="ghost"
             zSize="icon-sm"
             type="button"
-            [attr.aria-label]="(layer.visible ? 'Hide ' : 'Show ') + layer.name"
+            [attr.aria-label]="
+              (layer.visible ? (pt() ? 'Ocultar ' : 'Hide ') : pt() ? 'Mostrar ' : 'Show ') +
+              layer.name
+            "
             [attr.aria-pressed]="!layer.visible"
             (click)="toggleLayer.emit(layer.uid)"
           >
@@ -193,7 +205,7 @@ export class PlaygroundPaletteComponent {
             zType="ghost"
             zSize="icon-sm"
             type="button"
-            [attr.aria-label]="'Remove ' + layer.name"
+            [attr.aria-label]="(pt() ? 'Remover ' : 'Remove ') + layer.name"
             (click)="removeLayer.emit(layer.uid)"
           >
             <ng-icon name="lucideTrash2" size="14" />
@@ -201,13 +213,18 @@ export class PlaygroundPaletteComponent {
         </li>
       } @empty {
         <li class="text-muted-foreground list-none px-2 py-6 text-center text-sm">
-          Drag a block here, or click one to add it.
+          {{
+            pt()
+              ? 'Arraste um block para cá, ou clique em um para adicioná-lo.'
+              : 'Drag a block here, or click one to add it.'
+          }}
         </li>
       }
     </ol>
   `,
 })
 export class PlaygroundLayersComponent {
+  protected readonly pt = inject(LanguageService).isPt;
   readonly layers = input.required<readonly SceneLayer[]>();
   readonly selected = input<number>();
   /** Spec id -> label. */
