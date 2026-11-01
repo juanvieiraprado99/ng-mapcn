@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import {
   MapComponent,
   MapControlsComponent,
@@ -8,6 +8,8 @@ import {
   type MapStyleOption,
   MapStyleSwitcherComponent,
 } from 'ng-mapcn';
+
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
@@ -178,20 +180,28 @@ export class MinimapBlankMapComponent {}`;
     <app-docs-page
       title="Controls"
       description="Map control buttons (zoom, compass, locate, fullscreen), a distance scale and a basemap style switcher."
+      titlePt="Controles"
+      descriptionPt="Botões de controle do mapa (zoom, bússola, localização, tela cheia), uma escala de distância e um seletor de estilo do basemap."
     >
       <app-example-section
         title="Basic Usage"
+        titlePt="Uso básico"
         sectionId="basic-usage"
         [code]="controlsCode"
       >
         <span description>
-          The
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-controls</code>
-          component renders map control buttons. Choose a corner with
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">position</code>
-          and toggle individual controls with the
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">show*</code>
-          inputs.
+          @if (i18n.isPt()) {
+            O componente <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-controls</code> renderiza os botões de controle do mapa. Escolha um canto com
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">position</code> e ligue ou desligue cada controle com os inputs <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">show*</code>.
+          } @else {
+            The
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-controls</code>
+            component renders map control buttons. Choose a corner with
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">position</code>
+            and toggle individual controls with the
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">show*</code>
+            inputs.
+          }
         </span>
         <ng-map [center]="[2.3522, 48.8566]" [zoom]="12">
           <ng-map-controls
@@ -204,14 +214,20 @@ export class MinimapBlankMapComponent {}`;
         </ng-map>
       </app-example-section>
 
-      <app-example-section title="Scale" sectionId="scale" [code]="scaleCode">
+      <app-example-section title="Scale" titlePt="Escala" sectionId="scale" [code]="scaleCode">
         <span description>
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-scale</code>
-          draws a distance bar that follows the map as you zoom and pan. Use
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">unit</code>
-          for metric, imperial or both, and
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maxWidth</code>
-          for the longest bar in pixels. It sits bottom-left by default.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-scale</code> desenha uma barra de distância que acompanha o mapa no zoom e no arrasto. Use
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">unit</code> para métrico, imperial ou os dois, e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maxWidth</code> para o comprimento máximo da barra em
+            pixels. Por padrão ele fica no canto inferior esquerdo.
+          } @else {
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-scale</code>
+            draws a distance bar that follows the map as you zoom and pan. Use
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">unit</code>
+            for metric, imperial or both, and
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maxWidth</code>
+            for the longest bar in pixels. It sits bottom-left by default.
+          }
         </span>
         <ng-map [center]="[2.3522, 48.8566]" [zoom]="10">
           <ng-map-scale unit="both" [maxWidth]="120" />
@@ -221,19 +237,27 @@ export class MinimapBlankMapComponent {}`;
 
       <app-example-section
         title="Style switcher"
+        titlePt="Seletor de estilo"
         sectionId="style-switcher"
         [code]="switcherCode"
       >
         <span description>
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-style-switcher</code>
-          lets users pick a basemap from a list of style options. Bind the
-          selection with
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[(value)]</code>
-          and give
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map</code>
-          the initially selected option's styles so the map loads once. Layers
-          are re-added after every switch. On this map the switcher overrides the
-          site's header basemap picker.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-style-switcher</code> deixa o usuário escolher um basemap de uma lista de opções de estilo.
+            Ligue a seleção com <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[(value)]</code> e passe ao <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map</code> os estilos da opção selecionada no início,
+            para que o mapa carregue uma vez só. As camadas são adicionadas de novo a cada troca. Neste
+            mapa, o seletor sobrepõe o seletor de basemap do header do site.
+          } @else {
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-style-switcher</code>
+            lets users pick a basemap from a list of style options. Bind the
+            selection with
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[(value)]</code>
+            and give
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map</code>
+            the initially selected option's styles so the map loads once. Layers
+            are re-added after every switch. On this map the switcher overrides the
+            site's header basemap picker.
+          }
         </span>
         <ng-map
           [center]="[2.3522, 48.8566]"
@@ -252,15 +276,23 @@ export class MinimapBlankMapComponent {}`;
 
       <app-example-section
         title="Minimap"
+        titlePt="Minimapa"
         sectionId="minimap"
         [code]="minimapCode"
       >
         <span description>
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-minimap</code>
-          adds an overview map that follows the main viewport a few zoom levels
-          out and outlines what the main map shows. Click, drag or use the arrow
-          keys on it to navigate the main map, and collapse it with the toggle.
-          It sits bottom-left by default.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-minimap</code> adiciona um mapa de visão geral que acompanha o viewport principal alguns
+            níveis de zoom mais afastado e contorna o que o mapa principal mostra. Clique, arraste ou use as
+            setas do teclado nele para navegar o mapa principal, e recolha-o com o botão. Por padrão ele
+            fica no canto inferior esquerdo.
+          } @else {
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-minimap</code>
+            adds an overview map that follows the main viewport a few zoom levels
+            out and outlines what the main map shows. Click, drag or use the arrow
+            keys on it to navigate the main map, and collapse it with the toggle.
+            It sits bottom-left by default.
+          }
         </span>
         <ng-map [center]="[2.3522, 48.8566]" [zoom]="11">
           <ng-map-minimap />
@@ -270,15 +302,21 @@ export class MinimapBlankMapComponent {}`;
 
       <app-example-section
         title="Blank minimap"
+        titlePt="Minimapa em branco"
         sectionId="minimap-blank"
         [code]="minimapBlankCode"
       >
         <span description>
-          Set
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[blank]="true"</code>
-          to draw only the footprint without basemap tiles, and
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">zoomOffset</code>
-          to change how far out the overview sits.
+          @if (i18n.isPt()) {
+            Use <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[blank]="true"</code> para desenhar só a área visível, sem tiles de basemap, e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">zoomOffset</code> para
+            mudar o quanto a visão geral fica afastada.
+          } @else {
+            Set
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[blank]="true"</code>
+            to draw only the footprint without basemap tiles, and
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">zoomOffset</code>
+            to change how far out the overview sits.
+          }
         </span>
         <ng-map [center]="[2.3522, 48.8566]" [zoom]="11">
           <ng-map-minimap position="top-left" [blank]="true" [zoomOffset]="3" />
@@ -288,6 +326,7 @@ export class MinimapBlankMapComponent {}`;
   `,
 })
 export class ControlsPageComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly controlsCode = CONTROLS_CODE;
   readonly scaleCode = SCALE_CODE;
   readonly switcherCode = SWITCHER_CODE;

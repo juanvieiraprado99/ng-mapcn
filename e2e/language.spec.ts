@@ -44,4 +44,23 @@ test.describe('language', () => {
     await dialog.getByPlaceholder('Buscar...').fill('marcad');
     await expect(dialog.getByRole('option', { name: 'Marcadores' })).toBeVisible();
   });
+
+  test('docs pages translate titles and prose but keep the English anchors', async ({ page }) => {
+    await page.goto('/docs/components/markers');
+    await page.locator('app-language-toggle button').click();
+
+    await expect(page.locator('app-docs-page h1')).toHaveText('Marcadores');
+    const section = page.locator('#basic-example');
+    await expect(section.locator('h2')).toHaveText('Exemplo básico');
+    await expect(section).toContainText('Posicione marcadores com');
+    await expect(page.locator('app-docs-toc')).toContainText('Nesta página');
+    await expect(page.locator('app-docs-toc a[href$="#basic-example"]')).toHaveText(
+      'Exemplo básico',
+    );
+    await expect(page).toHaveTitle('Marcadores de mapa para Angular - ng-mapcn');
+
+    await page.locator('app-language-toggle button').click();
+    await expect(page.locator('app-docs-page h1')).toHaveText('Markers');
+    await expect(page).toHaveTitle('Angular Map Markers - ng-mapcn');
+  });
 });

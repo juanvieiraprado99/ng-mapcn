@@ -4,6 +4,7 @@ import {
   Component,
   computed,
   effect,
+  inject,
   signal,
 } from '@angular/core';
 import type { Map as MapLibreMap } from 'maplibre-gl';
@@ -17,6 +18,8 @@ import {
 } from 'ng-mapcn';
 
 type StyleKey = 'default' | 'openstreetmap' | 'openstreetmap3d';
+import { LanguageService } from '@/shared/i18n/language.service';
+
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
 
@@ -194,34 +197,49 @@ export class CustomStyleMapComponent {
     <app-docs-page
       title="Map"
       description="The simplest way to add an interactive map to your application."
+      titlePt="Mapa"
+      descriptionPt="O jeito mais simples de adicionar um mapa interativo à sua aplicação."
     >
       <app-example-section
         title="Basic Usage"
+        titlePt="Uso básico"
         sectionId="basic-usage"
         [code]="basicCode"
       >
         <span description>
-          The
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map</code>
-          component handles MapLibre GL setup, theming, and provides context
-          for child components.
+          @if (i18n.isPt()) {
+            O componente <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map</code> cuida da configuração do MapLibre GL e do tema, e fornece o contexto para
+            os componentes filhos.
+          } @else {
+            The
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map</code>
+            component handles MapLibre GL setup, theming, and provides context
+            for child components.
+          }
         </span>
         <ng-map [center]="[-74.006, 40.7128]" [zoom]="12" />
       </app-example-section>
 
       <app-example-section
         title="Controlled Mode"
+        titlePt="Modo controlado"
         sectionId="controlled-mode"
         [code]="controlledCode"
       >
         <span description>
-          Use the
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewport</code>
-          input and
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewportChange</code>
-          output to control the map's viewport externally. This is useful when
-          you need to sync the map state with your application or respond to
-          viewport changes.
+          @if (i18n.isPt()) {
+            Use o input <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewport</code> e o output <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewportChange</code> para controlar o viewport do mapa de fora.
+            Isso é útil quando você precisa sincronizar o estado do mapa com a sua aplicação ou reagir a
+            mudanças de viewport.
+          } @else {
+            Use the
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewport</code>
+            input and
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewportChange</code>
+            output to control the map's viewport externally. This is useful when
+            you need to sync the map state with your application or respond to
+            viewport changes.
+          }
         </span>
         <div class="relative h-full">
           <div
@@ -240,18 +258,26 @@ export class CustomStyleMapComponent {
 
       <app-example-section
         title="Blank Basemap"
+        titlePt="Basemap em branco"
         sectionId="blank-basemap"
         [code]="blankCode"
       >
         <span description>
-          The
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">blank</code>
-          input swaps the default street basemap for a transparent, tile-less
-          canvas — perfect for data visualizations where you draw your own
-          layers instead of showing streets and labels. Here, a
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code>
-          layer renders world country borders on top of the transparent
-          canvas.
+          @if (i18n.isPt()) {
+            O input <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">blank</code> troca o basemap de ruas padrão por um canvas transparente, sem tiles — perfeito
+            para visualizações de dados em que você desenha as próprias camadas em vez de mostrar ruas e
+            rótulos. Aqui, uma camada <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code> desenha as fronteiras dos países sobre o canvas
+            transparente.
+          } @else {
+            The
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">blank</code>
+            input swaps the default street basemap for a transparent, tile-less
+            canvas — perfect for data visualizations where you draw your own
+            layers instead of showing streets and labels. Here, a
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code>
+            layer renders world country borders on top of the transparent
+            canvas.
+          }
         </span>
         <ng-map [blank]="true" [center]="[0, 20]" [zoom]="1.2">
           <ng-map-geojson [data]="worldGeoJsonUrl" />
@@ -260,15 +286,21 @@ export class CustomStyleMapComponent {
 
       <app-example-section
         title="Custom Styles"
+        titlePt="Estilos personalizados"
         sectionId="custom-styles"
         [code]="stylesCode"
       >
         <span description>
-          Use the
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">styles</code>
-          input to provide custom map styles. This example uses free vector
-          tiles from OpenFreeMap, an open-source project; the data comes from
-          OpenStreetMap.
+          @if (i18n.isPt()) {
+            Use o input <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">styles</code> para fornecer estilos de mapa próprios. Este exemplo usa tiles vetoriais
+            gratuitos do OpenFreeMap, um projeto open source; os dados vêm do OpenStreetMap.
+          } @else {
+            Use the
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">styles</code>
+            input to provide custom map styles. This example uses free vector
+            tiles from OpenFreeMap, an open-source project; the data comes from
+            OpenStreetMap.
+          }
         </span>
         <div class="relative h-[420px] w-full">
           <ng-map
@@ -292,24 +324,34 @@ export class CustomStyleMapComponent {
 
       <app-example-section
         title="Fit to Bounds"
+        titlePt="Ajustar aos limites"
         sectionId="fit-bounds"
         [code]="fitCode"
       >
         <span description>
-          The
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">fitBounds</code>
-          input fits the camera to the data of the map's children (markers,
-          GeoJSON, routes, arcs, clusters, heatmaps) once the map is loaded,
-          and again only when those bounds change. Pass
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code>
-          to fit explicit bounds, or call
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService.fitBounds()</code>
-          imperatively. It does not fight a controlled
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewport</code>.
-          A draggable marker bound to signals refits continuously while
-          dragged: pass explicit
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code>
-          for that case.
+          @if (i18n.isPt()) {
+            O input <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">fitBounds</code> enquadra a câmera nos dados dos filhos do mapa (marcadores, GeoJSON, rotas,
+            arcos, clusters, mapas de calor) assim que o mapa carrega, e de novo só quando esses limites
+            mudam. Passe <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code> para enquadrar limites explícitos, ou chame
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService.fitBounds()</code> de forma imperativa. Ele não briga com um <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewport</code>
+            controlado. Um marcador arrastável ligado a signals reenquadra o tempo todo enquanto é
+            arrastado: passe <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code> explícitos nesse caso.
+          } @else {
+            The
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">fitBounds</code>
+            input fits the camera to the data of the map's children (markers,
+            GeoJSON, routes, arcs, clusters, heatmaps) once the map is loaded,
+            and again only when those bounds change. Pass
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code>
+            to fit explicit bounds, or call
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService.fitBounds()</code>
+            imperatively. It does not fight a controlled
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewport</code>.
+            A draggable marker bound to signals refits continuously while
+            dragged: pass explicit
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code>
+            for that case.
+          }
         </span>
         <div class="relative h-full">
           <button
@@ -318,7 +360,15 @@ export class CustomStyleMapComponent {
             class="bg-background text-foreground absolute top-3 left-3 z-10 rounded-md border px-3 py-1.5 text-xs shadow-md"
             (click)="toggleFarCity()"
           >
-            {{ fitCities().length > 3 ? 'Remove Tokyo' : 'Add Tokyo' }}
+            {{
+              fitCities().length > 3
+                ? i18n.isPt()
+                  ? 'Remover Tóquio'
+                  : 'Remove Tokyo'
+                : i18n.isPt()
+                  ? 'Adicionar Tóquio'
+                  : 'Add Tokyo'
+            }}
           </button>
           <ng-map [fitBounds]="{ padding: 64, maxZoom: 8 }">
             @for (city of fitCities(); track city.name) {
@@ -335,6 +385,7 @@ export class CustomStyleMapComponent {
   `,
 })
 export class MapPageComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly fitCode = FIT_CODE;
   readonly fitCities = signal([
     { name: 'Paris', lng: 2.35, lat: 48.85 },

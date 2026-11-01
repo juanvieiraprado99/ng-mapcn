@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import {
   MapComponent,
   MapMarkerComponent,
@@ -11,6 +11,7 @@ import {
 } from 'ng-mapcn';
 
 import { ZardButtonComponent } from '@/shared/components/button';
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
@@ -206,22 +207,31 @@ export class MarkerPopupsComponent {
     <app-docs-page
       title="Markers"
       description="Add markers with custom content, labels, tooltips, and popups."
+      titlePt="Marcadores"
+      descriptionPt="Adicione marcadores com conteúdo próprio, rótulos, tooltips e popups."
     >
       <app-example-section
         title="Basic Example"
+        titlePt="Exemplo básico"
         sectionId="basic-example"
         [code]="basicCode"
       >
         <span description>
-          Place markers with
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-marker</code>.
-          Project any HTML into
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-content</code>
-          — leave it empty for the default dot. Add
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-tooltip</code>
-          for hover and focus tooltips and
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-label</code>
-          for always-visible labels.
+          @if (i18n.isPt()) {
+            Posicione marcadores com <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-marker</code>. Projete qualquer HTML em <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-content</code> — deixe
+            vazio para o ponto padrão. Adicione <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-tooltip</code> para tooltips no hover e no foco, e
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-label</code> para rótulos sempre visíveis.
+          } @else {
+            Place markers with
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-marker</code>.
+            Project any HTML into
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-content</code>
+            — leave it empty for the default dot. Add
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-tooltip</code>
+            for hover and focus tooltips and
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-label</code>
+            for always-visible labels.
+          }
         </span>
         <ng-map [center]="[139.735, 35.69]" [zoom]="10.5">
           @for (place of places; track place.name) {
@@ -240,21 +250,30 @@ export class MarkerPopupsComponent {
 
       <app-example-section
         title="Rich Popups"
+        titlePt="Popups ricos"
         sectionId="rich-popups"
         [code]="popupCode"
       >
         <span description>
-          One
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-popup</code>,
-          driven by a signal, shows the selected place. Each marker's content is its own
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;button&gt;</code>,
-          so a click, Enter or Space emits
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">markerClick</code>
-          and selects it. The popup can contain any projected HTML — here with images, ratings,
-          and action buttons. Only one is open at a time; clicking the selected marker again or
-          the map closes it. For a popup attached to each marker, use
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code>
-          (see Marker Popups below).
+          @if (i18n.isPt()) {
+            Um único <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-popup</code>, guiado por um signal, mostra o lugar selecionado. O conteúdo de cada
+            marcador é um <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;button&gt;</code> próprio, então um clique, Enter ou Espaço emite <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">markerClick</code> e
+            o seleciona. O popup pode conter qualquer HTML projetado — aqui com imagens, avaliações e botões
+            de ação. Só um fica aberto por vez; clicar de novo no marcador selecionado ou no mapa o fecha.
+            Para um popup preso a cada marcador, use <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code> (veja Popups de marcador abaixo).
+          } @else {
+            One
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-popup</code>,
+            driven by a signal, shows the selected place. Each marker's content is its own
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;button&gt;</code>,
+            so a click, Enter or Space emits
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">markerClick</code>
+            and selects it. The popup can contain any projected HTML — here with images, ratings,
+            and action buttons. Only one is open at a time; clicking the selected marker again or
+            the map closes it. For a popup attached to each marker, use
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code>
+            (see Marker Popups below).
+          }
         </span>
         <ng-map [center]="[-73.98, 40.74]" [zoom]="11" (mapClick)="selected.set(null)">
           @for (place of richPlaces; track place.name) {
@@ -381,19 +400,26 @@ export class MarkerPopupsComponent {
 
       <app-example-section
         title="Draggable Marker"
+        titlePt="Marcador arrastável"
         sectionId="draggable-marker"
         [code]="draggableCode"
       >
         <span description>
-          Set
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">draggable</code>
-          and listen to
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">dragEnd</code>
-          to track the marker position. The marker also moves from the keyboard: focus it with Tab and
-          use the arrow keys (Shift for a larger step); each key press emits
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">dragEnd</code>.
-          Enter or Space trigger
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">markerClick</code>.
+          @if (i18n.isPt()) {
+            Use <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">draggable</code> e escute <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">dragEnd</code> para acompanhar a posição do marcador. O marcador também se
+            move pelo teclado: foque-o com Tab e use as setas (Shift para um passo maior); cada tecla emite
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">dragEnd</code>. Enter ou Espaço disparam <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">markerClick</code>.
+          } @else {
+            Set
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">draggable</code>
+            and listen to
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">dragEnd</code>
+            to track the marker position. The marker also moves from the keyboard: focus it with Tab and
+            use the arrow keys (Shift for a larger step); each key press emits
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">dragEnd</code>.
+            Enter or Space trigger
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">markerClick</code>.
+          }
         </span>
         <div class="relative h-full">
           <div
@@ -423,31 +449,44 @@ export class MarkerPopupsComponent {
 
       <app-example-section
         title="Marker Popups"
+        titlePt="Popups de marcador"
         sectionId="marker-popups"
         [code]="markerPopupCode"
       >
         <span description>
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code>
-          attaches a popup to its marker: a click, Enter or Space toggles it, and the close button,
-          <kbd class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">Esc</kbd> or another click
-          closes it. Each marker has its own popup. The marker is a button with
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-haspopup="dialog"</code>
-          and
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-expanded</code>,
-          and while the popup is open its
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-controls</code>
-          names the card. The card is a non-modal
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">role="dialog"</code>
-          named by the popup's
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ariaLabel</code>,
-          else the marker's, else "Map popup" (<code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">labels.popup</code>).
-          When the marker content is its own
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;button&gt;</code>,
-          that button is the keyboard target and the marker element gets no role, so mirror the
-          state on the button from a template reference:
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;ng-marker-popup #info&gt;</code>
-          plus
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-haspopup="dialog" [attr.aria-expanded]="info.isOpen()" [attr.aria-controls]="info.isOpen() ? info.cardId : null"</code>.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code> prende um popup ao marcador: um clique, Enter ou Espaço o abre e fecha, e o
+            botão de fechar, <kbd class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">Esc</kbd> ou outro clique o fecham. Cada marcador tem o próprio popup. O marcador é um
+            botão com <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-haspopup="dialog"</code> e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-expanded</code>, e enquanto o popup está aberto o
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-controls</code> dele aponta para o card. O card é um <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">role="dialog"</code> não modal, nomeado pelo
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ariaLabel</code> do popup, senão pelo do marcador, senão por "Map popup" (<code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">labels.popup</code>). Quando o
+            conteúdo do marcador é um <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;button&gt;</code> próprio, esse botão é o alvo do teclado e o elemento
+            do marcador fica sem role; então espelhe o estado no botão a partir de uma referência de
+            template: <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;ng-marker-popup #info&gt;</code> mais
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-haspopup="dialog" [attr.aria-expanded]="info.isOpen()" [attr.aria-controls]="info.isOpen() ? info.cardId : null"</code>.
+          } @else {
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-marker-popup</code>
+            attaches a popup to its marker: a click, Enter or Space toggles it, and the close button,
+            <kbd class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">Esc</kbd> or another click
+            closes it. Each marker has its own popup. The marker is a button with
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-haspopup="dialog"</code>
+            and
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-expanded</code>,
+            and while the popup is open its
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-controls</code>
+            names the card. The card is a non-modal
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">role="dialog"</code>
+            named by the popup's
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ariaLabel</code>,
+            else the marker's, else "Map popup" (<code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">labels.popup</code>).
+            When the marker content is its own
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;button&gt;</code>,
+            that button is the keyboard target and the marker element gets no role, so mirror the
+            state on the button from a template reference:
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;ng-marker-popup #info&gt;</code>
+            plus
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">aria-haspopup="dialog" [attr.aria-expanded]="info.isOpen()" [attr.aria-controls]="info.isOpen() ? info.cardId : null"</code>.
+          }
         </span>
         <ng-map [center]="[2.33, 48.858]" [zoom]="12">
           @for (spot of spots; track spot.name) {
@@ -470,6 +509,7 @@ export class MarkerPopupsComponent {
   `,
 })
 export class MarkersPageComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly basicCode = BASIC_CODE;
   readonly popupCode = POPUP_CODE;
   readonly draggableCode = DRAGGABLE_CODE;

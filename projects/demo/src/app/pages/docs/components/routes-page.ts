@@ -17,6 +17,8 @@ import {
   RouteProgressComponent,
 } from 'ng-mapcn';
 
+import { LanguageService } from '@/shared/i18n/language.service';
+
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
 
@@ -253,17 +255,25 @@ interface OsrmResponse {
     <app-docs-page
       title="Routes"
       description="Draw polylines for trails, deliveries, and directions."
+      titlePt="Rotas"
+      descriptionPt="Desenhe polilinhas para trilhas, entregas e direções."
     >
       <app-example-section
         title="Basic Route"
+        titlePt="Rota básica"
         sectionId="basic-route"
         [code]="basicCode"
       >
         <span description>
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-route</code>
-          renders a line from an array of
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[lng, lat]</code>
-          coordinates. Customize color, width, opacity, and dash pattern.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-route</code> desenha uma linha a partir de um array de coordenadas <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[lng, lat]</code>. Personalize
+            cor, largura, opacidade e tracejado.
+          } @else {
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-route</code>
+            renders a line from an array of
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[lng, lat]</code>
+            coordinates. Customize color, width, opacity, and dash pattern.
+          }
         </span>
         <ng-map [center]="[-73.97, 40.782]" [zoom]="12">
           <ng-map-route
@@ -277,13 +287,19 @@ interface OsrmResponse {
 
       <app-example-section
         title="Route Planning"
+        titlePt="Planejamento de rota"
         sectionId="route-planning"
         [code]="osrmCode"
       >
         <span description>
-          Fetch real driving directions from the free OSRM API and render the
-          returned GeoJSON geometry. This example routes from the Louvre to the
-          Eiffel Tower in Paris.
+          @if (i18n.isPt()) {
+            Busque direções reais de carro na API gratuita do OSRM e desenhe a geometria GeoJSON devolvida.
+            Este exemplo traça a rota do Louvre até a Torre Eiffel, em Paris.
+          } @else {
+            Fetch real driving directions from the free OSRM API and render the
+            returned GeoJSON geometry. This example routes from the Louvre to the
+            Eiffel Tower in Paris.
+          }
         </span>
         <ng-map [center]="[2.325, 48.859]" [zoom]="12.5">
           @if (osrmRoute().length > 0) {
@@ -314,21 +330,27 @@ interface OsrmResponse {
 
       <app-example-section
         title="Progress and Route Marker"
+        titlePt="Progresso e marcador de rota"
         sectionId="route-progress"
         [code]="progressCode"
       >
         <span description>
-          Set
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">progress</code>
-          (0 to 1) and add an
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-progress</code>
-          child to draw the covered part. An
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-marker</code>
-          sits at
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">start</code>,
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">end</code>,
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">progress</code>
-          or a 0 to 1 fraction.
+          @if (i18n.isPt()) {
+            Defina <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">progress</code> (de 0 a 1) e adicione um filho <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-progress</code> para desenhar o trecho
+            percorrido. Um <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-marker</code> fica em <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">start</code>, <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">end</code>, <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">progress</code> ou numa fração de 0 a 1.
+          } @else {
+            Set
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">progress</code>
+            (0 to 1) and add an
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-progress</code>
+            child to draw the covered part. An
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-marker</code>
+            sits at
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">start</code>,
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">end</code>,
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">progress</code>
+            or a 0 to 1 fraction.
+          }
         </span>
         <label after-description class="mb-3 flex items-center gap-3 text-sm">
           Progress {{ (progress() * 100).toFixed(0) }}%
@@ -370,19 +392,26 @@ interface OsrmResponse {
 
       <app-example-section
         title="Route Playback"
+        titlePt="Reprodução de rota"
         sectionId="route-playback"
         [code]="playbackCode"
       >
         <span description>
-          Add an
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-playback</code>
-          child to animate the route progress, with
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">loop</code>
-          and
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">follow</code>
-          for the camera.
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-playback-control</code>
-          adds play, scrub and speed controls to the map.
+          @if (i18n.isPt()) {
+            Adicione um filho <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-playback</code> para animar o progresso da rota, com <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">loop</code> e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">follow</code>
+            para a câmera. O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-playback-control</code> adiciona ao mapa controles de play, avanço e
+            velocidade.
+          } @else {
+            Add an
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-playback</code>
+            child to animate the route progress, with
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">loop</code>
+            and
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">follow</code>
+            for the camera.
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-route-playback-control</code>
+            adds play, scrub and speed controls to the map.
+          }
         </span>
         <label after-description class="mb-3 flex items-center gap-2 text-sm">
           <input
@@ -425,6 +454,7 @@ interface OsrmResponse {
   `,
 })
 export class RoutesPageComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly basicCode = BASIC_CODE;
   readonly osrmCode = OSRM_CODE;
   readonly trail = TRAIL;

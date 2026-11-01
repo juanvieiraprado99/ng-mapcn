@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { ExpressionSpecification } from 'maplibre-gl';
 import {
   MapArcComponent,
@@ -10,6 +10,8 @@ import {
   MarkerContentComponent,
   MarkerLabelComponent,
 } from 'ng-mapcn';
+
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
@@ -239,21 +241,29 @@ const MODE_COLOR_EXPRESSION: ExpressionSpecification = [
     <app-docs-page
       title="Arcs"
       description="Curved great-circle-style lines between coordinate pairs."
+      titlePt="Arcos"
+      descriptionPt="Linhas curvas, no estilo de círculo máximo, entre pares de coordenadas."
     >
       <app-example-section
         title="Basic Arc"
+        titlePt="Arco básico"
         sectionId="basic-arc"
         [code]="basicCode"
       >
         <span description>
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-arc</code>
-          renders smooth Bézier arcs from
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">from</code>/<code
-            class="bg-muted rounded px-1.5 py-0.5 text-xs"
-            >to</code
-          >
-          pairs — here on a globe projection, connecting London to cities
-          around the world.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-arc</code> desenha arcos de Bézier suaves a partir de pares <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">from</code>/<code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">to</code> — aqui numa projeção
+            de globo, ligando Londres a cidades ao redor do mundo.
+          } @else {
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-arc</code>
+            renders smooth Bézier arcs from
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">from</code>/<code
+              class="bg-muted rounded px-1.5 py-0.5 text-xs"
+              >to</code
+            >
+            pairs — here on a globe projection, connecting London to cities
+            around the world.
+          }
         </span>
         <ng-map
           [center]="[hub.lng, hub.lat]"
@@ -290,17 +300,23 @@ const MODE_COLOR_EXPRESSION: ExpressionSpecification = [
 
       <app-example-section
         title="Interactive Arcs"
+        titlePt="Arcos interativos"
         sectionId="interactive-arcs"
         [code]="interactiveCode"
       >
         <span description>
-          Extra datum properties drive the
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">paint</code>
-          via expressions, and
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">hoverPaint</code>
-          +
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">arcHover</code>
-          power the popup. Hover a lane to see its details.
+          @if (i18n.isPt()) {
+            Propriedades extras de cada dado guiam o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">paint</code> por meio de expressões, e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">hoverPaint</code> +
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">arcHover</code> alimentam o popup. Passe o mouse sobre uma rota para ver os detalhes.
+          } @else {
+            Extra datum properties drive the
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">paint</code>
+            via expressions, and
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">hoverPaint</code>
+            +
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">arcHover</code>
+            power the popup. Hover a lane to see its details.
+          }
         </span>
         <div class="relative h-full">
           <ng-map [center]="[20, 20]" [zoom]="0.8">
@@ -374,6 +390,7 @@ const MODE_COLOR_EXPRESSION: ExpressionSpecification = [
   `,
 })
 export class ArcsPageComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly basicCode = BASIC_CODE;
   readonly interactiveCode = INTERACTIVE_CODE;
 

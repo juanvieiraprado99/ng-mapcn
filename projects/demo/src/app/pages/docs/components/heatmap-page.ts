@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { type HeatmapGradient, MapComponent, MapHeatmapComponent } from 'ng-mapcn';
+
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { CodeBlockComponent } from '../../../shared/code-block';
 import { DocsImports } from '../../../shared/docs';
@@ -233,16 +235,25 @@ function buildVisits(): GeoJSON.Feature<GeoJSON.Point, { visits: number }>[] {
     <app-docs-page
       title="Heatmap"
       description="Visualize point density with a declarative, theme-aware heatmap layer."
+      titlePt="Mapa de calor"
+      descriptionPt="Visualize a densidade de pontos com uma camada de mapa de calor declarativa, que segue o tema."
     >
       <app-example-section
         title="Basic Example"
+        titlePt="Exemplo básico"
         sectionId="basic-example"
         [code]="heatmapCode"
       >
         <span description>
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-heatmap</code>
-          renders a GeoJSON point source as a MapLibre heatmap layer. The default gradient follows
-          the map theme. This example weights USGS earthquakes by magnitude.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-heatmap</code> renderiza uma source GeoJSON de pontos como uma camada heatmap do MapLibre. O
+            gradiente padrão acompanha o tema do mapa. Este exemplo pondera os terremotos do USGS pela
+            magnitude.
+          } @else {
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-heatmap</code>
+            renders a GeoJSON point source as a MapLibre heatmap layer. The default gradient follows
+            the map theme. This example weights USGS earthquakes by magnitude.
+          }
         </span>
         <ng-map [center]="[-103.5917, 40.6699]" [zoom]="3">
           <ng-map-heatmap
@@ -254,12 +265,17 @@ function buildVisits(): GeoJSON.Feature<GeoJSON.Point, { visits: number }>[] {
         </ng-map>
       </app-example-section>
 
-      <app-example-section title="Inline data" sectionId="inline-data" [code]="inlineCode">
+      <app-example-section title="Inline data" titlePt="Dados inline" sectionId="inline-data" [code]="inlineCode">
         <span description>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">data</code> also takes a
-          GeoJSON FeatureCollection directly, so no request is needed. Here a per-point
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">visits</code> count is
-          the weight.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">data</code> também aceita uma FeatureCollection GeoJSON direto, então nenhuma requisição é
+            necessária. Aqui o peso é uma contagem de <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">visits</code> em cada ponto.
+          } @else {
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">data</code> also takes a
+            GeoJSON FeatureCollection directly, so no request is needed. Here a per-point
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">visits</code> count is
+            the weight.
+          }
         </span>
         <ng-map [center]="[-46.6333, -23.5505]" [zoom]="10.5">
           <ng-map-heatmap
@@ -273,13 +289,19 @@ function buildVisits(): GeoJSON.Feature<GeoJSON.Point, { visits: number }>[] {
 
       <app-example-section
         title="Custom gradient"
+        titlePt="Gradiente personalizado"
         sectionId="custom-gradient"
         [code]="gradientLiveCode"
       >
         <span description>
-          Pass <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">gradient</code> to
-          replace the theme default. Changing it at runtime updates the existing layer instead of
-          re-creating it.
+          @if (i18n.isPt()) {
+            Passe <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">gradient</code> para substituir o padrão do tema. Mudá-lo em tempo de execução atualiza a
+            camada existente em vez de recriá-la.
+          } @else {
+            Pass <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">gradient</code> to
+            replace the theme default. Changing it at runtime updates the existing layer instead of
+            re-creating it.
+          }
         </span>
         <div after-description class="mb-3 flex gap-2">
           <button
@@ -309,12 +331,17 @@ function buildVisits(): GeoJSON.Feature<GeoJSON.Point, { visits: number }>[] {
         </ng-map>
       </app-example-section>
 
-      <app-example-section title="Live tuning" sectionId="live-tuning" [code]="tuningCode">
+      <app-example-section title="Live tuning" titlePt="Ajuste ao vivo" sectionId="live-tuning" [code]="tuningCode">
         <span description>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">radius</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">intensity</code> and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">opacity</code> are
-          applied with diffed setters, so dragging the sliders never re-creates the layer.
+          @if (i18n.isPt()) {
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">radius</code>, <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">intensity</code> e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">opacity</code> são aplicados com setters por diferença, então arrastar os
+            sliders nunca recria a camada.
+          } @else {
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">radius</code>,
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">intensity</code> and
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">opacity</code> are
+            applied with diffed setters, so dragging the sliders never re-creates the layer.
+          }
         </span>
         <div after-description class="mb-3 grid gap-3 text-sm sm:grid-cols-3">
           <label class="flex flex-col gap-1">
@@ -364,13 +391,19 @@ function buildVisits(): GeoJSON.Feature<GeoJSON.Point, { visits: number }>[] {
 
       <app-example-section
         title="Zoom-dependent heatmap"
+        titlePt="Mapa de calor dependente do zoom"
         sectionId="zoom-dependent-heatmap"
         [code]="zoomLiveCode"
       >
         <span description>
-          Zoom in and out: the radius and intensity expressions scale with the zoom level, and the
-          layer stops rendering from
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">maxZoom</code> 7.
+          @if (i18n.isPt()) {
+            Aproxime e afaste: as expressões de raio e intensidade escalam com o nível de zoom, e a camada
+            para de renderizar a partir do <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maxZoom</code> 7.
+          } @else {
+            Zoom in and out: the radius and intensity expressions scale with the zoom level, and the
+            layer stops rendering from
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">maxZoom</code> 7.
+          }
         </span>
         <ng-map [center]="[-103.5917, 40.6699]" [zoom]="3">
           <ng-map-heatmap
@@ -384,62 +417,94 @@ function buildVisits(): GeoJSON.Feature<GeoJSON.Point, { visits: number }>[] {
         </ng-map>
       </app-example-section>
 
-      <app-docs-section title="Weight" anchor="weight">
-        <p>
-          Set <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">weightProperty</code>
-          to weight points by a numeric feature property.
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">weightRange</code>
-          is the <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">[min, max]</code>
-          of that property, mapped linearly to a weight of 0 to 1.
-        </p>
+      <app-docs-section title="Weight" titlePt="Peso" anchor="weight">
+        @if (i18n.isPt()) {
+          <p>
+            Defina <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">weightProperty</code> para ponderar os pontos por uma propriedade numérica da feature. O
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">weightRange</code> é o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[min, max]</code> dessa propriedade, mapeado linearmente para um peso de 0 a 1.
+          </p>
+        } @else {
+          <p>
+            Set <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">weightProperty</code>
+            to weight points by a numeric feature property.
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">weightRange</code>
+            is the <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">[min, max]</code>
+            of that property, mapped linearly to a weight of 0 to 1.
+          </p>
+        }
         <app-code-block [code]="weightCode" />
       </app-docs-section>
 
-      <app-docs-section title="Gradient and theme" anchor="gradient-and-theme">
-        <p>
-          Without
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">gradient</code>
-          the layer uses
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">defaultHeatmapGradients</code>
-          for the resolved theme and re-adds itself with the matching one after a theme switch. A
-          custom gradient is kept across theme changes.
-        </p>
+      <app-docs-section title="Gradient and theme" titlePt="Gradiente e tema" anchor="gradient-and-theme">
+        @if (i18n.isPt()) {
+          <p>
+            Sem <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">gradient</code>, a camada usa <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">defaultHeatmapGradients</code> para o tema resolvido e se adiciona de
+            novo com o gradiente correspondente depois de uma troca de tema. Um gradiente personalizado é
+            mantido entre trocas de tema.
+          </p>
+        } @else {
+          <p>
+            Without
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">gradient</code>
+            the layer uses
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">defaultHeatmapGradients</code>
+            for the resolved theme and re-adds itself with the matching one after a theme switch. A
+            custom gradient is kept across theme changes.
+          </p>
+        }
         <app-code-block [code]="gradientCode" />
       </app-docs-section>
 
-      <app-docs-section title="Zoom-dependent styling" anchor="zoom-dependent-styling">
-        <p>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">radius</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">intensity</code>
-          and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">opacity</code>
-          accept MapLibre expressions. Use
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">minZoom</code> /
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">maxZoom</code>
-          to limit the zoom range; the heatmap is not rendered from
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">maxZoom</code> up, so a
-          circle layer can take over when zoomed in.
-        </p>
+      <app-docs-section title="Zoom-dependent styling" titlePt="Estilo dependente do zoom" anchor="zoom-dependent-styling">
+        @if (i18n.isPt()) {
+          <p>
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">radius</code>, <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">intensity</code> e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">opacity</code> aceitam expressões do MapLibre. Use <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">minZoom</code> / <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maxZoom</code>
+            para limitar a faixa de zoom; o mapa de calor não é renderizado a partir do <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maxZoom</code>, então
+            uma camada de círculos pode assumir quando o zoom está próximo.
+          </p>
+        } @else {
+          <p>
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">radius</code>,
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">intensity</code>
+            and
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">opacity</code>
+            accept MapLibre expressions. Use
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">minZoom</code> /
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">maxZoom</code>
+            to limit the zoom range; the heatmap is not rendered from
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">maxZoom</code> up, so a
+            circle layer can take over when zoomed in.
+          </p>
+        }
         <app-code-block [code]="zoomCode" />
       </app-docs-section>
 
-      <app-docs-section title="Ids and z-order" anchor="ids-and-z-order">
-        <p>
-          Set <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> to get
-          stable source and layer ids, and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">beforeId</code> to
-          insert the layer below an existing one. Like the other layer components,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">beforeId</code> is
-          applied at creation only, and changing
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> re-creates
-          the layer.
-        </p>
+      <app-docs-section title="Ids and z-order" titlePt="Ids e ordem de camadas" anchor="ids-and-z-order">
+        @if (i18n.isPt()) {
+          <p>
+            Defina <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> para ter ids estáveis de source e layer, e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">beforeId</code> para inserir a camada abaixo
+            de uma existente. Como nos outros componentes de camada, o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">beforeId</code> só é aplicado na criação,
+            e mudar o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> recria a camada.
+          </p>
+        } @else {
+          <p>
+            Set <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> to get
+            stable source and layer ids, and
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">beforeId</code> to
+            insert the layer below an existing one. Like the other layer components,
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">beforeId</code> is
+            applied at creation only, and changing
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> re-creates
+            the layer.
+          </p>
+        }
         <app-code-block [code]="idsCode" />
       </app-docs-section>
     </app-docs-page>
   `,
 })
 export class HeatmapPageComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly heatmapCode = HEATMAP_CODE;
   readonly weightCode = WEIGHT_CODE;
   readonly gradientCode = GRADIENT_CODE;

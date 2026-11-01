@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { MapComponent } from 'ng-mapcn';
 import {
   MapDrawComponent,
@@ -6,6 +13,8 @@ import {
   type MapDrawFeatureCollection,
   type MapDrawMode,
 } from 'ng-mapcn/draw';
+
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { CodeBlockComponent } from '../../../shared/code-block';
 import { DocsImports } from '../../../shared/docs';
@@ -133,39 +142,63 @@ import { buildDrawStyles, defaultDrawPalettes } from 'ng-mapcn/draw';
     <app-docs-page
       title="Draw"
       description="Draw, select and edit points, lines and polygons, built on terra-draw."
+      titlePt="Desenho"
+      descriptionPt="Desenhe, selecione e edite pontos, linhas e polígonos, com base no terra-draw."
     >
-      <app-docs-section title="Installation" anchor="installation">
-        <p>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-draw</code>
-          lives in the optional
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-mapcn/draw</code>
-          entry point, so apps that do not draw never load
-          <a class="underline" href="https://terradraw.dev">terra-draw</a>. Install it and its
-          MapLibre adapter, then import from
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-mapcn/draw</code>.
-        </p>
+      <app-docs-section title="Installation" titlePt="Instalação" anchor="installation">
+        @if (i18n.isPt()) {
+          <p>
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-draw</code> fica no entry point opcional <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-mapcn/draw</code>, então apps que não desenham nunca
+            carregam o <a class="underline" href="https://terradraw.dev">terra-draw</a>. Instale-o junto
+            com o adaptador para MapLibre e importe de <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-mapcn/draw</code>.
+          </p>
+        } @else {
+          <p>
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-draw</code>
+            lives in the optional
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-mapcn/draw</code>
+            entry point, so apps that do not draw never load
+            <a class="underline" href="https://terradraw.dev">terra-draw</a>. Install it and its
+            MapLibre adapter, then import from
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-mapcn/draw</code>.
+          </p>
+        }
         <app-install-command packages="terra-draw terra-draw-maplibre-gl-adapter" />
-        <p>
-          With the copy-paste distribution, add
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">--draw</code> instead:
-          it copies the draw sources to
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;path&gt;/draw</code>
-          and adds both dependencies.
-        </p>
+        @if (i18n.isPt()) {
+          <p>
+            Na distribuição por cópia, use <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">--draw</code>: ele copia o código do draw para <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;path&gt;/draw</code> e
+            adiciona as duas dependências.
+          </p>
+        } @else {
+          <p>
+            With the copy-paste distribution, add
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">--draw</code> instead:
+            it copies the draw sources to
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;path&gt;/draw</code>
+            and adds both dependencies.
+          </p>
+        }
         <app-install-command args="--draw" />
       </app-docs-section>
 
       <app-example-section
         title="Basic Example"
+        titlePt="Exemplo básico"
         sectionId="basic-example"
         [code]="basicCode"
         height="460px"
       >
         <span description>
-          Pick a tool and click the map. Lines and polygons finish by clicking the last vertex
-          again (or Enter); Escape cancels. In
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">select</code> mode drag
-          a shape, drag its vertices, or press Delete to remove it.
+          @if (i18n.isPt()) {
+            Escolha uma ferramenta e clique no mapa. Linhas e polígonos terminam com um clique de novo no
+            último vértice (ou Enter); Escape cancela. No modo <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">select</code>, arraste uma forma, arraste os
+            vértices dela ou pressione Delete para removê-la.
+          } @else {
+            Pick a tool and click the map. Lines and polygons finish by clicking the last vertex
+            again (or Enter); Escape cancels. In
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">select</code> mode drag
+            a shape, drag its vertices, or press Delete to remove it.
+          }
         </span>
         <div
           after-description
@@ -211,16 +244,23 @@ import { buildDrawStyles, defaultDrawPalettes } from 'ng-mapcn/draw';
 
       <app-example-section
         title="Preloaded features and events"
+        titlePt="Features pré-carregadas e eventos"
         sectionId="preloaded-features"
         [code]="preloadedCode"
         height="460px"
       >
         <span description>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">features</code> is a
-          two-way GeoJSON FeatureCollection. This geofence editor starts from one polygon in
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">select</code> mode;
-          edits flow back into the model and out through
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">featureEdit</code>.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">features</code> é uma FeatureCollection GeoJSON em mão dupla. Este editor de cerca geográfica
+            começa com um polígono no modo <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">select</code>; as edições voltam para o modelo e saem pelo
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">featureEdit</code>.
+          } @else {
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">features</code> is a
+            two-way GeoJSON FeatureCollection. This geofence editor starts from one polygon in
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">select</code> mode;
+            edits flow back into the model and out through
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">featureEdit</code>.
+          }
         </span>
         <p after-description class="text-muted-foreground mb-3 text-sm" data-testid="draw-last">
           Last event: {{ last()?.action ?? 'none' }} ({{ zones().features.length }} zones)
@@ -236,54 +276,80 @@ import { buildDrawStyles, defaultDrawPalettes } from 'ng-mapcn/draw';
         </ng-map>
       </app-example-section>
 
-      <app-docs-section title="Features model" anchor="features-model">
-        <p>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">features</code> is a
-          GeoJSON
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">FeatureCollection</code>
-          of points, lines and polygons, so it plugs straight into
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code>
-          or your backend.
-        </p>
+      <app-docs-section title="Features model" titlePt="Modelo de features" anchor="features-model">
+        @if (i18n.isPt()) {
+          <p>
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">features</code> é uma <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">FeatureCollection</code> GeoJSON de pontos, linhas e polígonos, então ele se
+            encaixa direto no <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code> ou no seu backend.
+          </p>
+        } @else {
+          <p>
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">features</code> is a
+            GeoJSON
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">FeatureCollection</code>
+            of points, lines and polygons, so it plugs straight into
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code>
+            or your backend.
+          </p>
+        }
         <app-code-block [code]="modelCode" />
       </app-docs-section>
 
-      <app-docs-section title="Modes and editing" anchor="modes-and-editing">
-        <p>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">modes</code> lists the
-          shapes the user can draw and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">mode</code> is the
-          active tool (two-way). With
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">editable</code> (the
-          default) the
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">select</code> mode
-          drags shapes, reshapes lines and polygons by their vertices, inserts vertices from
-          midpoints and deletes vertices.
-        </p>
+      <app-docs-section title="Modes and editing" titlePt="Modos e edição" anchor="modes-and-editing">
+        @if (i18n.isPt()) {
+          <p>
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">modes</code> lista as formas que o usuário pode desenhar e o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">mode</code> é a ferramenta ativa (em mão
+            dupla). Com <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">editable</code> (o padrão), o modo <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">select</code> arrasta formas, remodela linhas e polígonos
+            pelos vértices, insere vértices a partir dos pontos médios e apaga vértices.
+          </p>
+        } @else {
+          <p>
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">modes</code> lists the
+            shapes the user can draw and
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">mode</code> is the
+            active tool (two-way). With
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">editable</code> (the
+            default) the
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">select</code> mode
+            drags shapes, reshapes lines and polygons by their vertices, inserts vertices from
+            midpoints and deletes vertices.
+          </p>
+        }
         <app-code-block [code]="modesCode" />
       </app-docs-section>
 
-      <app-docs-section title="Events" anchor="events">
+      <app-docs-section title="Events" titlePt="Eventos" anchor="events">
         <app-code-block [code]="eventsCode" />
       </app-docs-section>
 
-      <app-docs-section title="Theme and style changes" anchor="theme-and-style-changes">
-        <p>
-          The palette follows the resolved map theme. A theme switch replaces the map style, which
-          removes terra-draw's layers, so the component stops terra-draw and starts it again on the
-          new style with the same features and mode. The same restart happens when
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">modes</code> or
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">editable</code> change; a
-          shape that is still being drawn is lost. Changing
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">color</code> restyles in
-          place.
-        </p>
+      <app-docs-section title="Theme and style changes" titlePt="Mudanças de tema e de estilo" anchor="theme-and-style-changes">
+        @if (i18n.isPt()) {
+          <p>
+            A paleta segue o tema resolvido do mapa. Uma troca de tema substitui o estilo do mapa, o que
+            remove as camadas do terra-draw; então o componente para o terra-draw e o inicia de novo no
+            novo estilo, com as mesmas features e o mesmo modo. O mesmo reinício acontece quando <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">modes</code> ou
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">editable</code> mudam; uma forma que ainda está sendo desenhada é perdida. Mudar <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">color</code> reestiliza
+            no lugar.
+          </p>
+        } @else {
+          <p>
+            The palette follows the resolved map theme. A theme switch replaces the map style, which
+            removes terra-draw's layers, so the component stops terra-draw and starts it again on the
+            new style with the same features and mode. The same restart happens when
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">modes</code> or
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">editable</code> change; a
+            shape that is still being drawn is lost. Changing
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">color</code> restyles in
+            place.
+          </p>
+        }
         <app-code-block [code]="themeCode" />
       </app-docs-section>
     </app-docs-page>
   `,
 })
 export class DrawPageComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly basicCode = BASIC_CODE;
   readonly preloadedCode = PRELOADED_CODE;
   readonly modelCode = MODEL_CODE;
