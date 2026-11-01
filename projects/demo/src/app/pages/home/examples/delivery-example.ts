@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import {
   MapComponent,
   MapMarkerComponent,
@@ -9,6 +9,7 @@ import {
 } from 'ng-mapcn';
 
 import { ExampleCardComponent } from '../../../shared/example-card';
+import { LanguageService } from '../../../shared/i18n/language.service';
 
 const STORE = { lng: -0.14, lat: 51.5154 };
 const HOME = { lng: -0.07, lat: 51.51 };
@@ -107,7 +108,7 @@ const ROUTE: [number, number][] = [
         <ng-map-marker [longitude]="store.lng" [latitude]="store.lat">
           <ng-marker-content>
             <div class="size-3.5 rounded-full border-2 border-white bg-emerald-500 shadow-lg"></div>
-            <ng-marker-label>Store</ng-marker-label>
+            <ng-marker-label>{{ t().store }}</ng-marker-label>
           </ng-marker-content>
         </ng-map-marker>
 
@@ -134,13 +135,13 @@ const ROUTE: [number, number][] = [
               </svg>
             </div>
           </ng-marker-content>
-          <ng-marker-tooltip>On the way</ng-marker-tooltip>
+          <ng-marker-tooltip>{{ t().onTheWay }}</ng-marker-tooltip>
         </ng-map-marker>
 
         <ng-map-marker [longitude]="home.lng" [latitude]="home.lat">
           <ng-marker-content>
             <div class="size-3.5 rounded-full border-2 border-white bg-red-500 shadow-lg"></div>
-            <ng-marker-label>Home</ng-marker-label>
+            <ng-marker-label>{{ t().home }}</ng-marker-label>
           </ng-marker-content>
         </ng-map-marker>
       </ng-map>
@@ -148,6 +149,8 @@ const ROUTE: [number, number][] = [
   `,
 })
 export class DeliveryExampleComponent {
+  private readonly i18n = inject(LanguageService);
+  protected readonly t = computed(() => this.i18n.messages().home.delivery);
   readonly store = STORE;
   readonly home = HOME;
   readonly route = ROUTE;

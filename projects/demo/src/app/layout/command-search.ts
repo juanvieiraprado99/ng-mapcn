@@ -16,6 +16,7 @@ import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardCommandImports, type ZardCommandOption } from '@/shared/components/command';
 import { ZardDialogImports } from '@/shared/components/dialog';
 import { ZardKbdComponent } from '@/shared/components/kbd';
+import { LanguageService } from '@/shared/i18n/language.service';
 import { siteNavigation } from '@/shared/site-navigation';
 
 /** mapcn `CommandSearch`: ⌘K / Ctrl+K palette over every page of the site. */
@@ -46,12 +47,12 @@ import { siteNavigation } from '@/shared/site-navigation';
       zType="outline"
       zSize="sm"
       type="button"
-      aria-label="Jump to pages, components, and docs"
+      [attr.aria-label]="i18n.messages().search.description"
       class="text-muted-foreground hover:text-foreground mr-2.5 hidden w-48 justify-start bg-transparent font-normal md:flex dark:bg-transparent"
       (click)="open.set(true)"
     >
       <ng-icon name="lucideSearch" size="14" />
-      <span>Search...</span>
+      <span>{{ i18n.messages().search.trigger }}</span>
       <kbd z-kbd class="text-muted-foreground ml-auto bg-transparent">⌘K</kbd>
     </button>
 
@@ -60,28 +61,32 @@ import { siteNavigation } from '@/shared/site-navigation';
       [zClosable]="false"
       class="top-[min(22vh,10rem)] translate-y-0 gap-0 overflow-hidden p-0"
     >
-      <z-dialog-title class="sr-only">Search...</z-dialog-title>
-      <z-dialog-description class="sr-only"
-        >Jump to pages, components, and docs</z-dialog-description
-      >
+      <z-dialog-title class="sr-only">{{ i18n.messages().search.trigger }}</z-dialog-title>
+      <z-dialog-description class="sr-only">{{
+        i18n.messages().search.description
+      }}</z-dialog-description>
       <!-- shadcn CommandDialog sizing: taller input and items, 20px icons. -->
       <z-command
         #command="zCommand"
         class="**:data-[slot=command-input-wrapper]:h-12 **:data-[slot=command-input]:h-12 **:data-[slot=command-group]:px-2 **:data-[slot=command-group-heading]:px-2 **:data-[slot=command-group-heading]:font-medium **:data-[slot=command-item]:px-2 **:data-[slot=command-item]:py-3 [&_[data-slot=command-input-wrapper]_ng-icon]:text-xl [&_[data-slot=command-item]_ng-icon]:text-xl"
         (zCommandSelected)="select($event)"
       >
-        <z-command-input placeholder="Search..." />
+        <z-command-input [placeholder]="i18n.messages().search.trigger" />
         <z-command-list>
           @if (command.isEmpty()) {
             <div class="text-muted-foreground flex flex-col items-center gap-1.5 py-8 text-sm">
               <ng-icon name="lucideFileText" size="20" class="opacity-40" />
-              <span>No results found</span>
+              <span>{{ i18n.messages().search.empty }}</span>
             </div>
           }
-          @for (group of groups; track group.title) {
-            <z-command-option-group [zLabel]="group.title">
+          @for (group of groups; track group.title.en) {
+            <z-command-option-group [zLabel]="i18n.text(group.title)">
               @for (item of group.items; track item.href) {
-                <z-command-option [zValue]="item.href" [zLabel]="item.title" [zIcon]="item.icon" />
+                <z-command-option
+                  [zValue]="item.href"
+                  [zLabel]="i18n.text(item.title)"
+                  [zIcon]="item.icon"
+                />
               }
             </z-command-option-group>
           }
@@ -92,16 +97,16 @@ import { siteNavigation } from '@/shared/site-navigation';
           <span class="flex items-center gap-1.5">
             <kbd z-kbd><ng-icon name="lucideArrowUp" size="12" /></kbd>
             <kbd z-kbd><ng-icon name="lucideArrowDown" size="12" /></kbd>
-            <span>navigate</span>
+            <span>{{ i18n.messages().search.navigate }}</span>
           </span>
           <span class="flex items-center gap-1.5">
             <kbd z-kbd><ng-icon name="lucideCornerDownLeft" size="12" /></kbd>
-            <span>select</span>
+            <span>{{ i18n.messages().search.select }}</span>
           </span>
         </div>
         <span class="flex items-baseline gap-1.5">
           <kbd z-kbd>esc</kbd>
-          <span>close</span>
+          <span>{{ i18n.messages().search.close }}</span>
         </span>
       </div>
     </z-dialog>
@@ -109,6 +114,7 @@ import { siteNavigation } from '@/shared/site-navigation';
 })
 export class CommandSearchComponent {
   private readonly router = inject(Router);
+  protected readonly i18n = inject(LanguageService);
 
   protected readonly open = signal(false);
   protected readonly groups = siteNavigation;

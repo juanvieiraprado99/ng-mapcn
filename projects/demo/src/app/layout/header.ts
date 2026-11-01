@@ -1,14 +1,16 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSeparatorComponent } from '@/shared/components/separator';
+import { LanguageService } from '@/shared/i18n/language.service';
 import { mainNavItems } from '@/shared/site-navigation';
 
 import { BasemapPickerComponent } from './basemap-picker';
 import { BrandMarkComponent } from './brand-mark';
 import { CommandSearchComponent } from './command-search';
 import { GithubButtonComponent } from './github-button';
+import { LanguageToggleComponent } from './language-toggle';
 import { LogoComponent } from './logo';
 import { MobileNavComponent } from './mobile-nav';
 import { ThemeToggleComponent } from './theme-toggle';
@@ -25,6 +27,7 @@ import { ThemeToggleComponent } from './theme-toggle';
     BrandMarkComponent,
     CommandSearchComponent,
     GithubButtonComponent,
+    LanguageToggleComponent,
     LogoComponent,
     MobileNavComponent,
     ThemeToggleComponent,
@@ -40,7 +43,7 @@ import { ThemeToggleComponent } from './theme-toggle';
         <a
           routerLink="/"
           class="-ml-1 flex size-8 items-center justify-center lg:hidden"
-          aria-label="ng-mapcn home"
+          [attr.aria-label]="i18n.messages().header.homeLabel"
         >
           <app-brand-mark class="size-6" />
         </a>
@@ -52,7 +55,9 @@ import { ThemeToggleComponent } from './theme-toggle';
         />
         <div class="hidden items-center gap-0.5 lg:flex">
           @for (item of navItems; track item.href) {
-            <a z-button zType="ghost" zSize="sm" [routerLink]="item.href">{{ item.title }}</a>
+            <a z-button zType="ghost" zSize="sm" [routerLink]="item.href">{{
+              i18n.text(item.title)
+            }}</a>
           }
         </div>
 
@@ -60,6 +65,7 @@ import { ThemeToggleComponent } from './theme-toggle';
           <app-basemap-picker class="mr-1 hidden xl:block" />
           <app-command-search />
           <app-github-button />
+          <app-language-toggle />
           <app-theme-toggle />
         </div>
       </nav>
@@ -67,5 +73,6 @@ import { ThemeToggleComponent } from './theme-toggle';
   `,
 })
 export class HeaderComponent {
+  protected readonly i18n = inject(LanguageService);
   protected readonly navItems = mainNavItems;
 }

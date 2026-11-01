@@ -18,6 +18,7 @@ import {
 } from '@angular/router';
 
 import { provideZard } from '@/shared/core/provider/providezard';
+import { LanguageService } from '@/shared/i18n/language.service';
 import { ThemeService } from '@/shared/theme.service';
 import { SiteTitleStrategy } from '@/shared/title-strategy';
 
@@ -41,6 +42,8 @@ export const appConfig: ApplicationConfig = {
     // Eager: block views (no header, no theme toggle) still need its `t` hotkey
     // and the cross-window sync that keeps preview iframes on the page's theme.
     provideAppInitializer(() => void inject(ThemeService)),
+    // Eager too: applies the saved language right after hydration, on every page.
+    provideAppInitializer(() => void inject(LanguageService)),
     { provide: TitleStrategy, useClass: SiteTitleStrategy },
   ],
 };

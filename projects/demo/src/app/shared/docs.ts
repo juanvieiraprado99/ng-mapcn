@@ -13,6 +13,7 @@ import { lucideChevronLeft, lucideChevronRight } from '@ng-icons/lucide';
 
 import { DocsTocComponent, type TocItem } from '@/layout/docs-toc';
 import { ZardButtonComponent } from '@/shared/components/button';
+import { LanguageService } from '@/shared/i18n/language.service';
 import { docsNeighbours } from '@/shared/site-navigation';
 
 export function slugify(text: string): string {
@@ -48,14 +49,14 @@ export function slugify(text: string): string {
           @if (neighbours.prev; as prev) {
             <a z-button zType="ghost" zSize="sm" class="-ml-2 h-auto py-2" [routerLink]="prev.href">
               <ng-icon name="lucideChevronLeft" size="16" />
-              {{ prev.title }}
+              {{ i18n.text(prev.title) }}
             </a>
           } @else {
             <div></div>
           }
           @if (neighbours.next; as next) {
             <a z-button zType="ghost" zSize="sm" class="-mr-2 h-auto py-2" [routerLink]="next.href">
-              {{ next.title }}
+              {{ i18n.text(next.title) }}
               <ng-icon name="lucideChevronRight" size="16" />
             </a>
           }
@@ -78,6 +79,7 @@ export class DocsPageComponent {
   readonly title = input.required<string>();
   readonly description = input('');
 
+  protected readonly i18n = inject(LanguageService);
   protected readonly neighbours = docsNeighbours(routePath(inject(ActivatedRoute)));
 
   private readonly sections = signal<DocsSectionComponent[]>([]);

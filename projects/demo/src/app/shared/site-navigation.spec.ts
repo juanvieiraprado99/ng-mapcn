@@ -78,12 +78,21 @@ describe('site navigation', () => {
   });
 
   it('header links exclude Home', () => {
-    expect(mainNavItems.map((i) => i.title)).toEqual([
+    expect(mainNavItems.map((i) => i.title.en)).toEqual([
       'Docs',
       'Components',
       'Blocks',
       'Playground',
     ]);
+  });
+
+  it('every title has an English and a Portuguese text', () => {
+    const titles = [...siteNavigation, ...allItems()].map((entry) => entry.title);
+
+    for (const title of titles) {
+      expect(title.en, JSON.stringify(title)).toBeTruthy();
+      expect(title['pt-BR'], JSON.stringify(title)).toBeTruthy();
+    }
   });
 
   it('prev/next links skip file entries and stop at the ends', () => {

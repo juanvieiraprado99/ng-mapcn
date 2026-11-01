@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import {
   MapComponent,
   MapMarkerComponent,
@@ -7,6 +7,7 @@ import {
 } from 'ng-mapcn';
 
 import { ExampleCardComponent } from '../../../shared/example-card';
+import { LanguageService } from '../../../shared/i18n/language.service';
 
 const ANALYTICS_DATA = [
   { lng: -74.006, lat: 40.7128, city: 'New York', users: 847, size: 14 },
@@ -41,7 +42,7 @@ const ANALYTICS_DATA = [
         class="bg-background/95 border-border/50 absolute top-3 left-3 z-10 rounded-lg border p-3 shadow-lg backdrop-blur-md"
       >
         <div class="text-muted-foreground mb-1 text-[10px] tracking-wider uppercase">
-          Active Users
+          {{ t().activeUsers }}
         </div>
         <div class="text-2xl leading-tight font-semibold">3,544</div>
         <div class="mt-1 flex items-center gap-1">
@@ -59,7 +60,7 @@ const ANALYTICS_DATA = [
             <path d="m22 7-8.5 8.5-5-5L2 17" />
           </svg>
           <span class="text-foreground text-xs">+12.5%</span>
-          <span class="text-muted-foreground text-xs">vs last hour</span>
+          <span class="text-muted-foreground text-xs">{{ t().vsLastHour }}</span>
         </div>
       </div>
 
@@ -80,7 +81,7 @@ const ANALYTICS_DATA = [
             <ng-marker-tooltip>
               <div class="text-center">
                 <div class="font-medium">{{ loc.city }}</div>
-                <div class="text-background/80">{{ loc.users }} users</div>
+                <div class="text-background/80">{{ loc.users }} {{ t().users }}</div>
               </div>
             </ng-marker-tooltip>
           </ng-map-marker>
@@ -90,5 +91,7 @@ const ANALYTICS_DATA = [
   `,
 })
 export class AnalyticsExampleComponent {
+  private readonly i18n = inject(LanguageService);
+  protected readonly t = computed(() => this.i18n.messages().home.analytics);
   readonly data = ANALYTICS_DATA;
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import {
   MapComponent,
   MapMarkerComponent,
@@ -7,6 +7,7 @@ import {
 } from 'ng-mapcn';
 
 import { ExampleCardComponent } from '../../../shared/example-card';
+import { LanguageService } from '../../../shared/i18n/language.service';
 
 type Status = 'available' | 'in-use' | 'offline';
 
@@ -16,6 +17,8 @@ interface ChargingStation {
   lat: number;
   status: Status;
   detail: string;
+  /** In-use stations: time until the charger frees up (worded per language). */
+  minutesLeft?: number;
 }
 
 const STATIONS: ChargingStation[] = [
@@ -31,7 +34,8 @@ const STATIONS: ChargingStation[] = [
     lng: -122.435,
     lat: 37.7625,
     status: 'in-use',
-    detail: '~15 min remaining',
+    detail: '',
+    minutesLeft: 15,
   },
   { name: 'Hayes Valley', lng: -122.4264, lat: 37.7759, status: 'offline', detail: '' },
   {
@@ -67,7 +71,8 @@ const STATIONS: ChargingStation[] = [
     lng: -122.478,
     lat: 37.781,
     status: 'in-use',
-    detail: '~8 min remaining',
+    detail: '',
+    minutesLeft: 8,
   },
   { name: 'Potrero Hill', lng: -122.401, lat: 37.76, status: 'offline', detail: '' },
   {
@@ -86,10 +91,13 @@ const STATIONS: ChargingStation[] = [
   },
 ];
 
-const STATUS_CONFIG: Record<Status, { bg: string; label: string; textClass: string }> = {
-  available: { bg: 'bg-emerald-500', label: 'Available', textClass: 'text-emerald-500' },
-  'in-use': { bg: 'bg-amber-500', label: 'In Use', textClass: 'text-amber-500' },
-  offline: { bg: 'bg-zinc-400', label: 'Offline', textClass: 'text-muted-foreground' },
+const STATUS_CONFIG: Record<
+  Status,
+  { bg: string; label: 'available' | 'inUse' | 'offline'; textClass: string }
+> = {
+  available: { bg: 'bg-emerald-500', label: 'available', textClass: 'text-emerald-500' },
+  'in-use': { bg: 'bg-amber-500', label: 'inUse', textClass: 'text-amber-500' },
+  offline: { bg: 'bg-zinc-400', label: 'offline', textClass: 'text-muted-foreground' },
 };
 
 @Component({
@@ -139,10 +147,14 @@ const STATUS_CONFIG: Record<Status, { bg: string; label: string; textClass: stri
                 <div class="flex items-center gap-1">
                   <span class="size-1.5 rounded-full {{ config[station.status].bg }}"></span>
                   <span class="{{ config[station.status].textClass }}">{{
-                    config[station.status].label
+                    t()[config[station.status].label]
                   }}</span>
                 </div>
-                @if (station.detail) {
+                @if (station.minutesLeft; as minutes) {
+                  <div class="text-muted-foreground text-[11px]">
+                    {{ t().remaining(minutes) }}
+                  </div>
+                } @else if (station.detail) {
                   <div class="text-muted-foreground text-[11px]">
                     {{ station.detail }}
                   </div>
@@ -156,6 +168,8 @@ const STATUS_CONFIG: Record<Status, { bg: string; label: string; textClass: stri
   `,
 })
 export class EvChargingExampleComponent {
+  private readonly i18n = inject(LanguageService);
+  protected readonly t = computed(() => this.i18n.messages().home.ev);
   readonly stations = STATIONS;
   readonly config = STATUS_CONFIG;
 }

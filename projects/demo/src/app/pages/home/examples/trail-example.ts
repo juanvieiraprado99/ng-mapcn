@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import {
   MapComponent,
   MapMarkerComponent,
@@ -7,6 +7,7 @@ import {
 } from 'ng-mapcn';
 
 import { ExampleCardComponent } from '../../../shared/example-card';
+import { LanguageService } from '../../../shared/i18n/language.service';
 
 // Central Park cycling route
 const TRAIL_COORDINATES: [number, number][] = [
@@ -58,20 +59,20 @@ const TRAIL_COORDINATES: [number, number][] = [
             <circle cx="15" cy="5" r="1" />
             <path d="M12 17.5V14l-3-3 4-3 2 3h2" />
           </svg>
-          <span class="text-xs font-medium">Central Park Loop</span>
+          <span class="text-xs font-medium">{{ t().name }}</span>
         </div>
         <div class="grid grid-cols-3 gap-3 text-center">
           <div>
             <div class="text-sm font-semibold">6.2</div>
-            <div class="text-muted-foreground text-[9px] uppercase">Miles</div>
+            <div class="text-muted-foreground text-[9px] uppercase">{{ t().miles }}</div>
           </div>
           <div>
             <div class="text-sm font-semibold">32</div>
-            <div class="text-muted-foreground text-[9px] uppercase">Mins</div>
+            <div class="text-muted-foreground text-[9px] uppercase">{{ t().mins }}</div>
           </div>
           <div>
             <div class="text-sm font-semibold">285</div>
-            <div class="text-muted-foreground text-[9px] uppercase">Cal</div>
+            <div class="text-muted-foreground text-[9px] uppercase">{{ t().cal }}</div>
           </div>
         </div>
       </div>
@@ -99,6 +100,8 @@ const TRAIL_COORDINATES: [number, number][] = [
   `,
 })
 export class TrailExampleComponent {
+  private readonly i18n = inject(LanguageService);
+  protected readonly t = computed(() => this.i18n.messages().home.trail);
   readonly coordinates = TRAIL_COORDINATES;
   readonly start = TRAIL_COORDINATES[0];
   readonly end = TRAIL_COORDINATES[TRAIL_COORDINATES.length - 1];
