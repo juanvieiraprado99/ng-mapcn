@@ -144,7 +144,7 @@ export function fromSlider(percent: number, min: number, max: number, step: numb
               ></textarea>
               @if (errors()[control.key]; as message) {
                 <p [id]="id + '-error'" class="text-destructive text-xs" role="alert">
-                  {{ message }}
+                  {{ message | pgText: pt() }} {{ 'Keeping the last value.' | pgText: pt() }}
                 </p>
               }
             }
@@ -169,6 +169,7 @@ export class PlaygroundControlsComponent {
   readonly valueChange = output<ControlChange>();
 
   private readonly drafts = signal<Record<string, string>>({});
+  /** The English message per control key; the template translates it and adds "Keeping the last value." */
   protected readonly errors = signal<Record<string, string>>({});
 
   protected readonly String = String;
@@ -229,12 +230,12 @@ export class PlaygroundControlsComponent {
     try {
       parsed = JSON.parse(text);
     } catch {
-      fail('Not valid JSON, keeping the last value.');
+      fail('Not valid JSON.');
       return;
     }
     const invalid = control.validate?.(parsed);
     if (invalid) {
-      fail(`${invalid} Keeping the last value.`);
+      fail(invalid);
       return;
     }
     clearError();

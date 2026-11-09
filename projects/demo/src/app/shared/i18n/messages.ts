@@ -44,6 +44,11 @@ const en = {
     pasteKey: 'Paste your API key',
     optionalOnLocalhost: 'Optional on localhost',
     storedLocally: 'Stored only in your browser.',
+    /** Per provider id (`BasemapId`); providers without a note are left out. */
+    notes: {
+      osm: 'Raster tiles. Dev/demo only — see the OSM tile usage policy.',
+      stadia: 'Key optional on localhost (rate limited).',
+    } as Partial<Record<string, string>>,
   },
   github: {
     label: 'GitHub repository',
@@ -145,6 +150,10 @@ const ptBR: Messages = {
     pasteKey: 'Cole sua chave de API',
     optionalOnLocalhost: 'Opcional no localhost',
     storedLocally: 'Fica salva só no seu navegador.',
+    notes: {
+      osm: 'Tiles raster. Só para desenvolvimento e demos: veja a política de uso de tiles do OSM.',
+      stadia: 'Chave opcional no localhost (com limite de requisições).',
+    },
   },
   github: {
     label: 'Repositório no GitHub',

@@ -3,7 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { PLAYGROUND_PT, playgroundText } from './playground.pt';
 import { PLAYGROUND_EXAMPLES } from './playground-examples';
 import type { Control } from './playground-schema';
-import { PLAYGROUND_SPECS } from './playground-specs';
+import {
+  PLAYGROUND_SPECS,
+  validateClusterColors,
+  validateClusterThresholds,
+} from './playground-specs';
 import { MAP_CONTROLS, STYLE_PRESETS } from './style-presets';
 
 /** Every text of a control the playground displays. Options whose label is their value
@@ -37,6 +41,16 @@ describe('playground pt-BR glossary', () => {
     ];
 
     expect(texts.filter((text) => !(text in PLAYGROUND_PT))).toEqual([]);
+  });
+
+  it('translates the JSON field validation messages', () => {
+    const messages = [
+      'Not valid JSON.',
+      'Keeping the last value.',
+      validateClusterColors('red'),
+      validateClusterThresholds([2, 1]),
+    ];
+    expect(messages.filter((text) => !text || !(text in PLAYGROUND_PT))).toEqual([]);
   });
 
   it('falls back to the English text', () => {

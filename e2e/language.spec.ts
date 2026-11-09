@@ -78,4 +78,19 @@ test.describe('language', () => {
     await expect(page.getByRole('heading', { name: 'Galeria de estilos' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Adicionar Marcador' })).toBeVisible();
   });
+
+  test('the API reference translates its prose and descriptions, not the code names', async ({
+    page,
+  }) => {
+    await page.goto('/docs/api-reference');
+    await page.locator('app-language-toggle button').click();
+
+    await expect(page.locator('app-docs-page h1')).toHaveText('Referência da API');
+    const map = page.locator('#map');
+    await expect(map.locator('h2')).toHaveText('Map');
+    await expect(map).toContainText('O componente contêiner raiz');
+    await expect(map).toContainText('Nível de zoom inicial do mapa.');
+    await expect(map.getByRole('cell', { name: 'zoom', exact: true })).toBeVisible();
+    await expect(page.locator('#mapcontextservice')).toContainText('Membro');
+  });
 });

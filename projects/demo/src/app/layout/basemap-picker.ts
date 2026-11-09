@@ -137,12 +137,12 @@ import { BasemapSwatchComponent } from './basemap-swatch';
             />
             <p class="text-muted-foreground text-[11px] leading-snug">
               {{ t().storedLocally }}
-              @if (basemap.provider().note; as note) {
+              @if (note(); as note) {
                 {{ note }}
               }
             </p>
           </div>
-        } @else if (basemap.provider().note; as note) {
+        } @else if (note(); as note) {
           <p class="text-muted-foreground border-t px-3.5 py-2.5 text-[11px] leading-snug">
             {{ note }}
           </p>
@@ -155,6 +155,7 @@ export class BasemapPickerComponent {
   protected readonly basemap = inject(BasemapService);
   private readonly i18n = inject(LanguageService);
   protected readonly t = computed(() => this.i18n.messages().basemap);
+  protected readonly note = computed(() => this.t().notes[this.basemap.provider().id]);
 
   /** MapTiler renders nothing without a key; Stadia works keyless on localhost. */
   protected readonly missingKey = computed(

@@ -212,6 +212,13 @@ export const PLAYGROUND_PT: Record<string, string> = {
   'Sketch an area': 'Esboce uma área',
   'Draw polygons over the GeoJSON areas, then switch to Select to edit them.':
     'Desenhe polígonos sobre as áreas GeoJSON e depois mude para Selecionar para editá-los.',
+
+  // --- JSON field validation
+  'Not valid JSON.': 'JSON inválido.',
+  'Keeping the last value.': 'O último valor foi mantido.',
+  'Three CSS colors, e.g. ["#22c55e", "#eab308", "#ef4444"].':
+    'Três cores CSS, por exemplo ["#22c55e", "#eab308", "#ef4444"].',
+  'Two increasing numbers, e.g. [100, 750].': 'Dois números crescentes, por exemplo [100, 750].',
 };
 
 /** The pt-BR text of a playground string, or the string itself (English or untranslated). */
