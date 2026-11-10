@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { createRequire, Module } from 'node:module';
 import { delimiter, dirname, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -92,16 +92,30 @@ function usage(registry) {
   ].join('\n');
 }
 
+/** The `node_modules` directory that contains the package whose `package.json` is `pkgJson`. */
+function nodeModulesRootOf(pkgJson) {
+  const real = realpathSync(pkgJson);
+  const at = real.lastIndexOf(`${sep}node_modules${sep}`);
+  return at === -1 ? undefined : real.slice(0, at + `${sep}node_modules`.length);
+}
+
 /**
  * Loads the workspace's own devkit. It is a transitive dependency of @angular/cli, so under
  * non-hoisted layouts (pnpm) it is only reachable through @angular/cli. Returns the modules plus the
- * node_modules directory that holds @angular-devkit/schematics.
+ * node_modules directories the bundled schematics need on NODE_PATH: the one holding
+ * @angular-devkit/schematics and the one holding @angular/cli (beside @schematics/angular).
  */
 export function resolveDevkit(cwd) {
   const req = createRequire(join(cwd, 'package.json'));
   let cliReq = req;
+  const nodeModulesDirs = [];
+  const addDir = (dir) => {
+    if (dir && !nodeModulesDirs.includes(dir)) nodeModulesDirs.push(dir);
+  };
   try {
-    cliReq = createRequire(req.resolve('@angular/cli/package.json'));
+    const cliPkg = req.resolve('@angular/cli/package.json');
+    cliReq = createRequire(cliPkg);
+    addDir(nodeModulesRootOf(cliPkg));
   } catch {
     // @angular/cli is not a direct dependency: resolve from the workspace.
   }
@@ -109,6 +123,12 @@ export function resolveDevkit(cwd) {
   const marker = `${sep}node_modules${sep}@angular-devkit${sep}`;
   const at = toolsPath.lastIndexOf(marker);
   if (at === -1) throw new Error('Unexpected @angular-devkit/schematics location');
+  addDir(toolsPath.slice(0, at + `${sep}node_modules`.length));
+  try {
+    addDir(nodeModulesRootOf(cliReq.resolve('@schematics/angular/package.json')));
+  } catch {
+    // optional: usually beside @angular/cli, already added.
+  }
   const load = (id) => {
     try {
       return cliReq(id);
@@ -120,7 +140,7 @@ export function resolveDevkit(cwd) {
     NodeWorkflow: cliReq('@angular-devkit/schematics/tools').NodeWorkflow,
     lastValueFrom: load('rxjs').lastValueFrom,
     logging: load('@angular-devkit/core').logging,
-    nodeModulesDir: toolsPath.slice(0, at + `${sep}node_modules`.length),
+    nodeModulesDirs,
   };
 }
 
@@ -183,17 +203,23 @@ export async function main(argv, env = {}) {
   try {
     const devkit = resolveDevkit(cwd);
     ({ NodeWorkflow, lastValueFrom, logging } = devkit);
-    // The bundled schematics `require('@angular-devkit/schematics')` from wherever this package
-    // lives (the npx cache), where it is not installed: expose the devkit's node_modules to them.
+    // The bundled schematics `require('@angular-devkit/schematics')` and `@schematics/angular` from
+    // wherever this package lives (the npx cache), where they are not installed: expose the
+    // workspace's node_modules directories to them.
     const current = (process.env.NODE_PATH ?? '').split(delimiter).filter(Boolean);
-    if (!current.includes(devkit.nodeModulesDir)) {
-      process.env.NODE_PATH = [devkit.nodeModulesDir, ...current].join(delimiter);
+    const extra = devkit.nodeModulesDirs.filter((d) => !current.includes(d));
+    if (extra.length) {
+      process.env.NODE_PATH = [...extra, ...current].join(delimiter);
       Module._initPaths();
     }
-  } catch {
-    err(
-      'Could not find @angular-devkit/schematics. Run "npm install" in your Angular workspace first.',
-    );
+  } catch (e) {
+    if (e?.code === 'MODULE_NOT_FOUND' && /@angular-devkit\/schematics/.test(e.message ?? '')) {
+      err(
+        'Could not find @angular-devkit/schematics. Run "npm install" in your Angular workspace first.',
+      );
+    } else {
+      err(`Could not load the Angular devkit: ${e?.message ?? e}`);
+    }
     return 1;
   }
 

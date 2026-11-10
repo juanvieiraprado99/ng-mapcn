@@ -1,4 +1,15 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { Module } from 'node:module';
+import { tmpdir } from 'node:os';
 import { join, sep } from 'node:path';
 
 import { afterAll, describe, expect, it } from 'vitest';
@@ -110,6 +121,25 @@ describe('main', () => {
     expect(readFileSync(join(cwd, TARGET, 'index.ts'), 'utf8')).toContain('map-marker');
   });
 
+  it('explains a missing devkit', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ng-mapcn-nodevkit-'));
+    // Earlier tests leave the repo's devkit on NODE_PATH: start from a clean resolution path.
+    const savedNodePath = process.env.NODE_PATH;
+    delete process.env.NODE_PATH;
+    Module._initPaths();
+    try {
+      writeFileSync(join(dir, 'package.json'), '{}');
+      writeFileSync(join(dir, 'angular.json'), '{"version":1,"projects":{}}');
+      const missing = await run(dir, ['init', '--skip-install']);
+      expect(missing.code).toBe(1);
+      expect(missing.err).toContain('Could not find @angular-devkit/schematics');
+    } finally {
+      if (savedNodePath !== undefined) process.env.NODE_PATH = savedNodePath;
+      Module._initPaths();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('add without items prints usage', async () => {
     const cwd = workspace('add-usage');
     const { code, err } = await run(cwd, ['add']);
@@ -175,15 +205,49 @@ describe('resolveDevkit', () => {
 
     expect(existsSync(join(cwd, 'node_modules', '@angular-devkit'))).toBe(false);
     const devkit = resolveDevkit(cwd);
-    expect(devkit.nodeModulesDir.toLowerCase()).toBe(nested.toLowerCase());
+    expect(devkit.nodeModulesDirs.map((d: string) => d.toLowerCase())).toContain(
+      nested.toLowerCase(),
+    );
     expect(typeof devkit.NodeWorkflow).toBe('function');
     expect(typeof devkit.logging.Logger).toBe('function');
     expect(devkit.lastValueFrom()).toBe(1);
   });
 
+  it('also returns the node_modules that holds @angular/cli (pnpm: beside @schematics/angular)', () => {
+    const cwd = workspace('devkit-pnpm');
+    const store = join(cwd, 'node_modules', '.pnpm');
+    const cliNm = join(store, '@angular+cli@1', 'node_modules');
+    const devNm = join(store, '@angular-devkit+schematics@1', 'node_modules');
+    write(join(cliNm, '@angular', 'cli', 'package.json'), '{"name":"@angular/cli"}');
+    write(join(cliNm, '@schematics', 'angular', 'package.json'), '{"name":"@schematics/angular"}');
+    write(join(devNm, '@angular-devkit', 'schematics', 'package.json'), '{"name":"s"}');
+    write(
+      join(devNm, '@angular-devkit', 'schematics', 'tools', 'index.js'),
+      'exports.NodeWorkflow = class NodeWorkflow {};',
+    );
+    write(join(devNm, '@angular-devkit', 'core', 'package.json'), '{"name":"c","main":"i.js"}');
+    write(join(devNm, '@angular-devkit', 'core', 'i.js'), 'exports.logging = {};');
+    write(join(devNm, 'rxjs', 'package.json'), '{"name":"rxjs","main":"i.js"}');
+    write(join(devNm, 'rxjs', 'i.js'), 'exports.lastValueFrom = () => 1;');
+    // Simulate pnpm: the workspace sees @angular/cli by symlink, the devkit is only beside it.
+    mkdirSync(join(cwd, 'node_modules', '@angular'), { recursive: true });
+    symlinkSync(
+      join(cliNm, '@angular', 'cli'),
+      join(cwd, 'node_modules', '@angular', 'cli'),
+      'junction',
+    );
+    symlinkSync(join(devNm, '@angular-devkit'), join(cliNm, '@angular-devkit'), 'junction');
+
+    const dirs = resolveDevkit(cwd).nodeModulesDirs.map((d: string) => d.toLowerCase());
+    expect(dirs).toContain(cliNm.toLowerCase());
+    expect(dirs).toContain(devNm.toLowerCase());
+    expect(new Set(dirs).size).toBe(dirs.length);
+  });
+
   it('still resolves the hoisted layout (the repo)', () => {
     const devkit = resolveDevkit(ROOT);
     expect(typeof devkit.NodeWorkflow).toBe('function');
-    expect(devkit.nodeModulesDir.endsWith(`${sep}node_modules`)).toBe(true);
+    expect(devkit.nodeModulesDirs.length).toBeGreaterThan(0);
+    for (const d of devkit.nodeModulesDirs) expect(d.endsWith(`${sep}node_modules`)).toBe(true);
   });
 });
