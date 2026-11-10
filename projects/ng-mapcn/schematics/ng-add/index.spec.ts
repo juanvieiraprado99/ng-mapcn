@@ -357,23 +357,26 @@ describe('ng-add schematic', () => {
     });
   });
 
-  describe('draw option', () => {
-    it('leaves draw and terra-draw out by default', async () => {
+  describe('component selection', () => {
+    it('copies core only by default', async () => {
       const tree = await run();
 
+      expect(tree.exists(`${DEFAULT_PATH}/components/map/map.component.ts`)).toBe(true);
+      expect(tree.files.some((f) => f.includes('/components/map-marker/'))).toBe(false);
+      expect(tree.readContent(`${DEFAULT_PATH}/index.ts`)).not.toContain('map-marker');
       expect(tree.exists(`${DEFAULT_PATH}/draw/map-draw.component.ts`)).toBe(false);
       expect(readJson(tree, 'package.json').dependencies['terra-draw']).toBeUndefined();
     });
 
-    it('copies the draw sources and adds terra-draw with --draw', async () => {
-      const tree = await run({ draw: true });
+    it('copies every component except draw with --all', async () => {
+      const tree = await run({ all: true });
 
-      expect(tree.exists(`${DEFAULT_PATH}/draw/map-draw.component.ts`)).toBe(true);
       expect(tree.exists(`${DEFAULT_PATH}/components/map/map.component.ts`)).toBe(true);
-      const deps = readJson(tree, 'package.json').dependencies;
-      expect(deps['terra-draw']).toBe('^1.37.0');
-      expect(deps['terra-draw-maplibre-gl-adapter']).toBe('^1.5.0');
-      expect(deps['maplibre-gl']).toBe('^6.11.2');
+      expect(tree.exists(`${DEFAULT_PATH}/components/map-marker/map-marker.component.ts`)).toBe(
+        true,
+      );
+      expect(tree.readContent(`${DEFAULT_PATH}/index.ts`)).toContain('map-marker');
+      expect(tree.exists(`${DEFAULT_PATH}/draw/map-draw.component.ts`)).toBe(false);
     });
   });
 

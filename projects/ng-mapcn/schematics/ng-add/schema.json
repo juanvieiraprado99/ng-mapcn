@@ -16,9 +16,14 @@
       "description": "Directory (relative to the workspace root) where the map components are copied.",
       "default": "src/app/components/ui/map"
     },
-    "draw": {
+    "all": {
       "type": "boolean",
-      "description": "Also copy the optional draw component (ng-mapcn/draw) and add its terra-draw dependencies.",
+      "description": "Also copy every component (except draw) instead of only the core map.",
+      "default": false
+    },
+    "skipInstall": {
+      "type": "boolean",
+      "description": "Do not install packages after copying.",
       "default": false
     }
   },

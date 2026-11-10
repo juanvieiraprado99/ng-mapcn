@@ -58,7 +58,8 @@ const PASSTHROUGH_CSS = `
 interface NgAddOptions {
   project?: string;
   path: string;
-  draw?: boolean;
+  all?: boolean;
+  skipInstall?: boolean;
 }
 
 export function ngAdd(options: NgAddOptions): Rule {
@@ -71,13 +72,8 @@ export function ngAdd(options: NgAddOptions): Rule {
       addMaplibreDependency(),
       projectName ? registerBuildOptions(projectName) : noop(),
       appendGlobalStyles(path, project),
-      schematic('add', {
-        path,
-        all: true,
-        components: options.draw ? ['draw'] : [],
-        skipInstall: true,
-      }),
-      installDependencies(),
+      schematic('add', { path, all: options.all, components: [], skipInstall: true }),
+      options.skipInstall ? noop() : installDependencies(),
     ]);
   };
 }
