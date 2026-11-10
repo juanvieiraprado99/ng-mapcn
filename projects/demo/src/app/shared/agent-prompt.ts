@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCheck, lucideCopy } from '@ng-icons/lucide';
 
 import { ZardButtonComponent } from '@/shared/components/button';
+import { LanguageService } from '@/shared/i18n/language.service';
 import { SITE_URL } from '@/shared/seo/site';
 
 /** Prompt an AI coding agent can follow to install ng-mapcn (mapcn `mapInstallAgentPrompt`). */
@@ -26,11 +27,12 @@ export const MAP_INSTALL_AGENT_PROMPT = `Read the ng-mapcn agent instructions at
       (click)="copy()"
     >
       <ng-icon [name]="copied() ? 'lucideCheck' : 'lucideCopy'" size="12" />
-      {{ copied() ? 'Copied — paste into your agent' : 'Copy prompt for your agent' }}
+      {{ copied() ? i18n.messages().home.copiedPrompt : i18n.messages().home.copyPrompt }}
     </button>
   `,
 })
 export class AgentPromptComponent {
+  protected readonly i18n = inject(LanguageService);
   protected readonly copied = signal(false);
 
   protected async copy(): Promise<void> {

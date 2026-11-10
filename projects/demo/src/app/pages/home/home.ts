@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideArrowRight } from '@ng-icons/lucide';
@@ -7,6 +7,7 @@ import { BrandMarkComponent } from '@/layout/brand-mark';
 import { FooterComponent } from '@/layout/footer';
 import { AgentPromptComponent } from '@/shared/agent-prompt';
 import { ZardButtonComponent } from '@/shared/components/button';
+import { LanguageService } from '@/shared/i18n/language.service';
 import { PageHeaderImports } from '@/shared/page-header';
 import { GITHUB_URL } from '@/shared/site-navigation';
 
@@ -47,24 +48,24 @@ import { TrailExampleComponent } from './examples/trail-example';
         style="--stagger: 0"
       >
         <app-brand-mark class="size-5" />
-        Now on MapLibre GL v6
+        {{ t().badge }}
         <ng-icon name="lucideArrowRight" size="12" aria-hidden="true" />
       </a>
-      <app-page-header-heading>Beautiful maps, made simple</app-page-header-heading>
+      <app-page-header-heading>{{ t().heading }}</app-page-header-heading>
       <app-page-header-description>
-        Ready to use, customizable map components for Angular.
+        {{ t().description }}
         <br class="hidden sm:block" />
-        Built on MapLibre. Styled with Tailwind.
+        {{ t().descriptionLine2 }}
       </app-page-header-description>
       <app-page-actions class="mt-5 flex-col gap-4">
         <div class="flex flex-wrap items-center justify-center gap-3">
-          <a z-button routerLink="/docs" class="min-w-36 justify-center">Get Started</a>
+          <a z-button routerLink="/docs" class="min-w-36 justify-center">{{ t().getStarted }}</a>
           <a
             z-button
             zType="outline"
             routerLink="/docs/components/map"
             class="min-w-36 justify-center"
-            >View Components</a
+            >{{ t().viewComponents }}</a
           >
         </div>
         <app-agent-prompt />
@@ -78,7 +79,7 @@ import { TrailExampleComponent } from './examples/trail-example';
       style="--stagger: 4.5"
       aria-labelledby="examples-heading"
     >
-      <h2 id="examples-heading" class="sr-only">Angular map examples built with ng-mapcn</h2>
+      <h2 id="examples-heading" class="sr-only">{{ t().examplesHeading }}</h2>
       <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         @defer (on viewport) {
           <app-analytics-example />
@@ -122,6 +123,8 @@ import { TrailExampleComponent } from './examples/trail-example';
   `,
 })
 export class HomeComponent {
+  private readonly i18n = inject(LanguageService);
+  protected readonly t = computed(() => this.i18n.messages().home);
   protected readonly releasesUrl = `${GITHUB_URL}/releases`;
 
   // Same grid footprint as the cards they stand in for, so nothing shifts when

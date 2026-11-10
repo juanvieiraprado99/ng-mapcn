@@ -4,6 +4,7 @@ import { lucideMoon, lucideSun } from '@ng-icons/lucide';
 
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSkeletonComponent } from '@/shared/components/skeleton';
+import { LanguageService } from '@/shared/i18n/language.service';
 import { ThemeService } from '@/shared/theme.service';
 
 /**
@@ -24,7 +25,7 @@ import { ThemeService } from '@/shared/theme.service';
         zType="ghost"
         zSize="icon-sm"
         type="button"
-        aria-label="Toggle theme"
+        [attr.aria-label]="i18n.messages().theme.toggle"
         (click)="theme.toggleTheme()"
       >
         <ng-icon [name]="theme.theme() === 'dark' ? 'lucideMoon' : 'lucideSun'" size="16" />
@@ -36,6 +37,7 @@ import { ThemeService } from '@/shared/theme.service';
 })
 export class ThemeToggleComponent {
   protected readonly theme = inject(ThemeService);
+  protected readonly i18n = inject(LanguageService);
   protected readonly mounted = signal(false);
 
   constructor() {

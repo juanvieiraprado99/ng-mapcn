@@ -31,6 +31,11 @@ export const routes: Routes = [
               'store locator Angular',
               'choropleth map',
             ],
+            pt: {
+              title: 'Blocks e templates de mapa para Angular',
+              description:
+                'Blocks de mapa prontos para Angular, feitos com ng-mapcn e zard/ui: dashboards de analytics, coropléticos, mapas de calor, localizadores de lojas, rastreio de entregas e mais. Copie e cole.',
+            },
           },
         },
         loadChildren: () => import('./pages/blocks/blocks.routes').then((m) => m.BLOCKS_ROUTES),
@@ -44,6 +49,11 @@ export const routes: Routes = [
             description:
               'Visual playground for ng-mapcn: stack map components as blocks, edit their inputs live, share the scene as a link and copy the matching Angular code.',
             keywords: ['Angular map playground', 'MapLibre Angular demo', 'Angular map styles'],
+            pt: {
+              title: 'Playground de mapas para Angular',
+              description:
+                'Playground visual do ng-mapcn: empilhe componentes de mapa como blocos, edite os inputs ao vivo, compartilhe a cena por link e copie o código Angular correspondente.',
+            },
           },
         },
         loadChildren: () =>
@@ -56,6 +66,11 @@ export const routes: Routes = [
           seo: {
             description:
               'The open-source projects ng-mapcn is built on: mapcn, MapLibre GL, zard/ui, Tailwind CSS and the basemap providers that make beautiful Angular maps possible.',
+            pt: {
+              title: 'Créditos',
+              description:
+                'Os projetos open source em que o ng-mapcn se apoia: mapcn, MapLibre GL, zard/ui, Tailwind CSS e os provedores de basemap que tornam possíveis mapas bonitos em Angular.',
+            },
           },
         },
         loadComponent: () => import('./pages/credits/credits').then((m) => m.CreditsComponent),

@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   input,
   linkedSignal,
   signal,
@@ -14,6 +15,7 @@ import type { BlockMeta } from '@/blocks/registry';
 import { CodeCopyButtonComponent } from '@/shared/code-copy-button';
 import { CodeSurfaceComponent } from '@/shared/code-surface';
 import { ZardCollapsibleImports } from '@/shared/components/collapsible';
+import { LanguageService } from '@/shared/i18n/language.service';
 
 interface FileTree {
   name: string;
@@ -93,7 +95,9 @@ const ROW =
             class="min-h-0 flex-1 overflow-auto"
           />
         } @else {
-          <div class="bg-code text-muted-foreground flex-1 p-4 text-sm">Loading…</div>
+          <div class="bg-code text-muted-foreground flex-1 p-4 text-sm">
+            {{ i18n.isPt() ? 'Carregando…' : 'Loading…' }}
+          </div>
         }
       </div>
     </div>
@@ -143,6 +147,7 @@ const ROW =
   `,
 })
 export class BlockCodeViewerComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly block = input.required<BlockMeta>();
 
   protected readonly row = ROW;

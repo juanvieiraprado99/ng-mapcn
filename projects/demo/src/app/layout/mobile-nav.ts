@@ -16,6 +16,7 @@ import {
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { filter } from 'rxjs';
 
+import { LanguageService } from '@/shared/i18n/language.service';
 import { siteNavigation } from '@/shared/site-navigation';
 
 import { BasemapPickerCompactComponent } from './basemap-picker-compact';
@@ -56,7 +57,7 @@ import { BasemapPickerCompactComponent } from './basemap-picker-compact';
           [class]="open() ? 'top-[0.4rem] -rotate-45' : 'top-2.5'"
         ></span>
       </span>
-      <span class="text-lg leading-none font-medium">Menu</span>
+      <span class="text-lg leading-none font-medium">{{ i18n.messages().mobileNav.menu }}</span>
     </button>
 
     <ng-template #panel>
@@ -69,18 +70,22 @@ import { BasemapPickerCompactComponent } from './basemap-picker-compact';
       <div
         id="mobile-nav-panel"
         role="dialog"
-        aria-label="Site navigation"
+        [attr.aria-label]="i18n.messages().mobileNav.label"
         class="bg-background/90 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 fixed inset-x-0 top-14 bottom-0 z-50 overflow-y-auto backdrop-blur duration-100 lg:hidden"
       >
         <nav class="flex flex-col gap-12 px-6 py-6">
           <div class="flex flex-col gap-4">
-            <div class="text-muted-foreground text-sm font-medium">Map style</div>
+            <div class="text-muted-foreground text-sm font-medium">
+              {{ i18n.messages().basemap.title }}
+            </div>
             <app-basemap-picker-compact (picked)="open.set(false)" />
           </div>
 
-          @for (group of groups; track group.title) {
+          @for (group of groups; track group.title.en) {
             <div class="flex flex-col gap-4">
-              <div class="text-muted-foreground text-sm font-medium">{{ group.title }}</div>
+              <div class="text-muted-foreground text-sm font-medium">
+                {{ i18n.text(group.title) }}
+              </div>
               <div class="flex flex-col gap-3">
                 @for (item of group.items; track item.href) {
                   @if (item.file) {
@@ -91,7 +96,7 @@ import { BasemapPickerCompactComponent } from './basemap-picker-compact';
                       [class]="link"
                       (click)="open.set(false)"
                     >
-                      {{ item.title }}
+                      {{ i18n.text(item.title) }}
                     </a>
                   } @else {
                     <a
@@ -101,7 +106,7 @@ import { BasemapPickerCompactComponent } from './basemap-picker-compact';
                       [class]="link"
                       (click)="open.set(false)"
                     >
-                      {{ item.title }}
+                      {{ i18n.text(item.title) }}
                     </a>
                   }
                 }
@@ -114,6 +119,7 @@ import { BasemapPickerCompactComponent } from './basemap-picker-compact';
   `,
 })
 export class MobileNavComponent {
+  protected readonly i18n = inject(LanguageService);
   protected readonly open = signal(false);
   private readonly panel = viewChild<TemplateRef<unknown>>('panel');
   // Read off the template itself: injecting ViewContainerRef in the constructor

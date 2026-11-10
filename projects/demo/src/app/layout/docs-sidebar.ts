@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
+import { LanguageService } from '@/shared/i18n/language.service';
 import { docsNavigation } from '@/shared/site-navigation';
 
 /**
@@ -18,12 +19,12 @@ import { docsNavigation } from '@/shared/site-navigation';
   },
   template: `
     <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-auto pt-10">
-      @for (group of groups; track group.title) {
+      @for (group of groups; track group.title.en) {
         <div class="relative flex w-full min-w-0 flex-col">
           <div
             class="text-sidebar-foreground/70 flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium"
           >
-            {{ group.title }}
+            {{ i18n.text(group.title) }}
           </div>
           <ul class="flex w-full min-w-0 flex-col gap-1">
             @for (item of group.items; track item.href) {
@@ -35,7 +36,7 @@ import { docsNavigation } from '@/shared/site-navigation';
                     rel="noopener"
                     class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground ring-sidebar-ring flex h-8 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm font-medium outline-hidden focus-visible:ring-2"
                   >
-                    <span class="truncate">{{ item.title }}</span>
+                    <span class="truncate">{{ i18n.text(item.title) }}</span>
                   </a>
                 } @else {
                   <a
@@ -46,7 +47,7 @@ import { docsNavigation } from '@/shared/site-navigation';
                     [attr.data-active]="rla.isActive"
                     class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground ring-sidebar-ring flex h-8 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm font-medium outline-hidden focus-visible:ring-2"
                   >
-                    <span class="truncate">{{ item.title }}</span>
+                    <span class="truncate">{{ i18n.text(item.title) }}</span>
                   </a>
                 }
               </li>
@@ -58,5 +59,6 @@ import { docsNavigation } from '@/shared/site-navigation';
   `,
 })
 export class DocsSidebarComponent {
+  protected readonly i18n = inject(LanguageService);
   protected readonly groups = docsNavigation;
 }

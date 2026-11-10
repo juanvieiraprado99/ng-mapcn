@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import type { FilterSpecification } from 'maplibre-gl';
 import { MapComponent, type MapSymbolImage, MapSymbolLayerComponent } from 'ng-mapcn';
+
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
@@ -357,24 +359,36 @@ function pinkDot(size: number, radius: number): MapSymbolImage {
     <app-docs-page
       title="Symbols"
       description="Draw icons and text labels for GeoJSON points with a collision-aware symbol layer."
+      titlePt="Símbolos"
+      descriptionPt="Desenhe ícones e rótulos de texto para pontos GeoJSON com uma camada de símbolos que detecta colisões."
     >
-      <app-example-section title="Text labels" sectionId="text-labels" [code]="labelsCode">
+      <app-example-section title="Text labels" titlePt="Rótulos de texto" sectionId="text-labels" [code]="labelsCode">
         <span description>
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm"
-            >ng-map-symbol-layer</code
-          >
-          renders a GeoJSON point source as a MapLibre symbol layer. Set
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">textField</code> to a
-          property expression or a
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">{{ '{name}' }}</code>
-          template. The places in these examples are fictional, so every label you see on the map
-          comes from the layer, not from the basemap. Labels collide by default, so crowded ones
-          thin out as you zoom out. Without
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">textColor</code> and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">textHaloColor</code>
-          the colors follow the map theme: dark text on a white halo in light mode, light text on a
-          black halo in dark mode. Switch the site theme to see them change. The other examples set
-          their own colors.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-symbol-layer</code> renderiza uma source GeoJSON de pontos como uma camada symbol do
+            MapLibre. Defina <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">textField</code> como uma expressão de propriedade ou um template
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">{{ '{name}' }}</code>. Os lugares destes exemplos são fictícios, então todo rótulo que você vê no
+            mapa vem da camada, e não do basemap. Os rótulos colidem por padrão, então os mais apertados
+            somem quando você afasta o zoom. Sem <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">textColor</code> e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">textHaloColor</code>, as cores seguem o tema do
+            mapa: texto escuro com halo branco no modo claro, texto claro com halo preto no modo escuro.
+            Troque o tema do site para ver a mudança. Os outros exemplos definem as próprias cores.
+          } @else {
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm"
+              >ng-map-symbol-layer</code
+            >
+            renders a GeoJSON point source as a MapLibre symbol layer. Set
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">textField</code> to a
+            property expression or a
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">{{ '{name}' }}</code>
+            template. The places in these examples are fictional, so every label you see on the map
+            comes from the layer, not from the basemap. Labels collide by default, so crowded ones
+            thin out as you zoom out. Without
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">textColor</code> and
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">textHaloColor</code>
+            the colors follow the map theme: dark text on a white halo in light mode, light text on a
+            black halo in dark mode. Switch the site theme to see them change. The other examples set
+            their own colors.
+          }
         </span>
         <ng-map [center]="[-9.14, 38.722]" [zoom]="13.5">
           <ng-map-symbol-layer
@@ -386,16 +400,22 @@ function pinkDot(size: number, radius: number): MapSymbolImage {
         </ng-map>
       </app-example-section>
 
-      <app-example-section title="Icons" sectionId="icons" [code]="iconsCode">
+      <app-example-section title="Icons" titlePt="Ícones" sectionId="icons" [code]="iconsCode">
         <span description>
-          Register images by id with
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">images</code> and pick
-          one per feature with
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">icon</code>, here the
-          expression
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">['get', 'kind']</code>:
-          orange pins are cafés, green pins viewpoints and blue pins stations. The label sits below
-          the icon by default. The images survive theme switches.
+          @if (i18n.isPt()) {
+            Registre imagens por id com <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">images</code> e escolha uma por feature com <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">icon</code>, aqui a expressão
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">['get', 'kind']</code>: pinos laranja são cafés, verdes são mirantes e azuis são estações. Por
+            padrão o rótulo fica abaixo do ícone. As imagens sobrevivem às trocas de tema.
+          } @else {
+            Register images by id with
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">images</code> and pick
+            one per feature with
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">icon</code>, here the
+            expression
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">['get', 'kind']</code>:
+            orange pins are cafés, green pins viewpoints and blue pins stations. The label sits below
+            the icon by default. The images survive theme switches.
+          }
         </span>
         <ng-map [center]="[-9.14, 38.722]" [zoom]="13.5">
           <ng-map-symbol-layer
@@ -410,13 +430,19 @@ function pinkDot(size: number, radius: number): MapSymbolImage {
         </ng-map>
       </app-example-section>
 
-      <app-example-section title="Live options" sectionId="live-options" [code]="liveCode">
+      <app-example-section title="Live options" titlePt="Opções ao vivo" sectionId="live-options" [code]="liveCode">
         <span description>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">allowOverlap</code>
-          and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">textSize</code> are
-          applied with diffed setters, so toggling them never re-creates the layer. The labels are
-          packed on purpose: with overlap off, colliding ones are dropped.
+          @if (i18n.isPt()) {
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">allowOverlap</code> e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">textSize</code> são aplicados com setters por diferença, então ligá-los e
+            desligá-los nunca recria a camada. Os rótulos estão apertados de propósito: com a sobreposição
+            desligada, os que colidem são descartados.
+          } @else {
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">allowOverlap</code>
+            and
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">textSize</code> are
+            applied with diffed setters, so toggling them never re-creates the layer. The labels are
+            packed on purpose: with overlap off, colliding ones are dropped.
+          }
         </span>
         <div after-description class="mb-3 flex gap-2">
           <button
@@ -449,20 +475,30 @@ function pinkDot(size: number, radius: number): MapSymbolImage {
         </ng-map>
       </app-example-section>
 
-      <app-example-section title="Images" sectionId="images" [code]="imagesCode">
+      <app-example-section title="Images" titlePt="Imagens" sectionId="images" [code]="imagesCode">
         <span description>
-          An image is a URL (PNG, WebP or JPEG; SVG cannot be decoded), a URL with
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">sdf</code> or
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">pixelRatio</code>, or
-          already decoded pixels. This map uses all three forms: the blue pin is a URL, the pink dot
-          is raw pixels built in code, and the diamond is an SDF image that
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">iconColor</code>
-          recolors to purple. Only SDF images are recolored, and SDF and regular images cannot be
-          mixed in one layer, so there is one layer for each. Both layers pass the same
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">images</code>: an id is
-          registered once per map and stays until the last layer using it is gone. Changing
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">images</code> adds,
-          swaps or removes images without re-creating the layer.
+          @if (i18n.isPt()) {
+            Uma imagem é uma URL (PNG, WebP ou JPEG; SVG não pode ser decodificado), uma URL com <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">sdf</code> ou
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">pixelRatio</code>, ou pixels já decodificados. Este mapa usa as três formas: o pino azul é uma URL, o
+            ponto rosa são pixels brutos montados em código, e o losango é uma imagem SDF que o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">iconColor</code>
+            pinta de roxo. Só imagens SDF são recoloridas, e imagens SDF e comuns não podem se misturar numa
+            camada, então há uma camada para cada. As duas camadas passam o mesmo <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">images</code>: um id é
+            registrado uma vez por mapa e fica até sair a última camada que o usa. Mudar <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">images</code> adiciona,
+            troca ou remove imagens sem recriar a camada.
+          } @else {
+            An image is a URL (PNG, WebP or JPEG; SVG cannot be decoded), a URL with
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">sdf</code> or
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">pixelRatio</code>, or
+            already decoded pixels. This map uses all three forms: the blue pin is a URL, the pink dot
+            is raw pixels built in code, and the diamond is an SDF image that
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">iconColor</code>
+            recolors to purple. Only SDF images are recolored, and SDF and regular images cannot be
+            mixed in one layer, so there is one layer for each. Both layers pass the same
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">images</code>: an id is
+            registered once per map and stays until the last layer using it is gone. Changing
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">images</code> adds,
+            swaps or removes images without re-creating the layer.
+          }
         </span>
         <ng-map [center]="[-9.14, 38.722]" [zoom]="13.5">
           <ng-map-symbol-layer
@@ -491,18 +527,25 @@ function pinkDot(size: number, radius: number): MapSymbolImage {
 
       <app-example-section
         title="Text, filters and zoom"
+        titlePt="Texto, filtros e zoom"
         sectionId="text-filters-and-zoom"
         [code]="textCode"
       >
         <span description>
-          Text options are reconciled live, so a new
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">textSize</code> or
-          color never re-creates the layer.
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">filter</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">minZoom</code> and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">maxZoom</code> work like
-          on the other layer components. Here the text size is interpolated over the zoom level and
-          the buttons switch the filter.
+          @if (i18n.isPt()) {
+            As opções de texto são reconciliadas ao vivo, então um novo <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">textSize</code> ou uma nova cor nunca
+            recriam a camada. <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">filter</code>, <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">minZoom</code> e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maxZoom</code> funcionam como nos outros componentes de
+            camada. Aqui o tamanho do texto é interpolado pelo nível de zoom e os botões trocam o filtro.
+          } @else {
+            Text options are reconciled live, so a new
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">textSize</code> or
+            color never re-creates the layer.
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">filter</code>,
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">minZoom</code> and
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">maxZoom</code> work like
+            on the other layer components. Here the text size is interpolated over the zoom level and
+            the buttons switch the filter.
+          }
         </span>
         <div after-description class="mb-3 flex flex-wrap items-center gap-2">
           <div class="flex gap-1" role="group" aria-label="Filter by kind">
@@ -543,21 +586,28 @@ function pinkDot(size: number, radius: number): MapSymbolImage {
 
       <app-example-section
         title="Interaction and ids"
+        titlePt="Interação e ids"
         sectionId="interaction-and-ids"
         [code]="interactionCode"
       >
         <span description>
-          Set <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">interactive</code>
-          to receive
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">featureClick</code> and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">featureHover</code>
-          events. The pointer turns into a hand over a symbol. Two layers share this map, each with
-          its own
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code>: the source
-          and layer ids are
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">symbol-source-&lt;id&gt;</code>
-          and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">symbol-layer-&lt;id&gt;</code>.
+          @if (i18n.isPt()) {
+            Defina <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">interactive</code> para receber os eventos <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">featureClick</code> e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">featureHover</code>. O ponteiro vira
+            uma mãozinha sobre um símbolo. Duas camadas dividem este mapa, cada uma com o próprio <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">id</code>: os
+            ids de source e de layer são <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">symbol-source-&lt;id&gt;</code> e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">symbol-layer-&lt;id&gt;</code>.
+          } @else {
+            Set <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">interactive</code>
+            to receive
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">featureClick</code> and
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">featureHover</code>
+            events. The pointer turns into a hand over a symbol. Two layers share this map, each with
+            its own
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code>: the source
+            and layer ids are
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">symbol-source-&lt;id&gt;</code>
+            and
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">symbol-layer-&lt;id&gt;</code>.
+          }
         </span>
         <div after-description class="mb-3 grid gap-1 text-sm">
           <p data-testid="clicked">
@@ -596,6 +646,7 @@ function pinkDot(size: number, radius: number): MapSymbolImage {
   `,
 })
 export class SymbolsPageComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly labelsCode = LABELS_CODE;
   readonly iconsCode = ICONS_CODE;
   readonly liveCode = LIVE_CODE;

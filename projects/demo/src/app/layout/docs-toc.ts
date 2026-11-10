@@ -2,10 +2,13 @@ import {
   afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
+  inject,
   input,
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
+import { LanguageService } from '@/shared/i18n/language.service';
 
 export interface TocItem {
   title: string;
@@ -19,9 +22,9 @@ export interface TocItem {
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <nav aria-label="On this page" class="flex flex-col">
+    <nav [attr.aria-label]="i18n.messages().docs.onThisPage" class="flex flex-col">
       <p class="text-muted-foreground mb-3 text-[11px] font-semibold tracking-wide uppercase">
-        On This Page
+        {{ i18n.messages().docs.onThisPage }}
       </p>
       <div class="flex flex-col gap-1.5">
         @for (item of ordered(); track item.slug) {
@@ -43,6 +46,8 @@ export interface TocItem {
 })
 export class DocsTocComponent {
   readonly items = input.required<TocItem[]>();
+
+  protected readonly i18n = inject(LanguageService);
 
   protected readonly active = signal<string | null>(null);
   /** Items in document order — sections inside @for blocks register late. */

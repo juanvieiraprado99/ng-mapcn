@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import {
   type ClusterPointClickEvent,
   MapClusterLayerComponent,
   MapComponent,
 } from 'ng-mapcn';
+
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { CodeBlockComponent } from '../../../shared/code-block';
 import { DocsImports } from '../../../shared/docs';
@@ -82,19 +84,28 @@ const COLORS_CODE = `<!-- ng-mapcn defaults: ['#22c55e', '#eab308', '#ef4444'] (
     <app-docs-page
       title="Clusters"
       description="Cluster large point datasets with zoom-to-expand behavior."
+      titlePt="Clusters"
+      descriptionPt="Agrupe grandes conjuntos de pontos, com zoom para expandir."
     >
       <app-example-section
         title="Basic Example"
+        titlePt="Exemplo básico"
         sectionId="basic-example"
         [code]="clusterCode"
       >
         <span description>
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-cluster-layer</code>
-          clusters point features automatically. Circle color and size scale
-          with the cluster count; clicking a cluster zooms in, clicking a point
-          emits
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">pointClick</code>.
-          This example shows USGS earthquake data.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-cluster-layer</code> agrupa features de ponto automaticamente. A cor e o tamanho do círculo
+            crescem com a contagem do cluster; clicar num cluster aproxima o zoom, e clicar num ponto emite
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">pointClick</code>. Este exemplo mostra dados de terremotos do USGS.
+          } @else {
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-cluster-layer</code>
+            clusters point features automatically. Circle color and size scale
+            with the cluster count; clicking a cluster zooms in, clicking a point
+            emits
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">pointClick</code>.
+            This example shows USGS earthquake data.
+          }
         </span>
         <div class="relative h-full">
           @if (magnitude(); as mag) {
@@ -115,55 +126,81 @@ const COLORS_CODE = `<!-- ng-mapcn defaults: ['#22c55e', '#eab308', '#ef4444'] (
         </div>
       </app-example-section>
 
-      <app-docs-section title="Ids and z-order" anchor="ids-and-z-order">
-        <p>
-          Set <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> to get
-          stable source and layer ids you can target with
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">queryRenderedFeatures</code>
-          or custom layers, and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">beforeId</code> to
-          insert the cluster layers below an existing layer. Both follow
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code>:
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">beforeId</code> is
-          applied when the layers are created, and changing
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> re-creates
-          them.
-        </p>
+      <app-docs-section title="Ids and z-order" titlePt="Ids e ordem de camadas" anchor="ids-and-z-order">
+        @if (i18n.isPt()) {
+          <p>
+            Defina <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> para ter ids estáveis de source e layer que você pode usar no
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">queryRenderedFeatures</code> ou em camadas próprias, e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">beforeId</code> para inserir as camadas do
+            cluster abaixo de uma camada existente. Os dois seguem o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code>: o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">beforeId</code> é
+            aplicado quando as camadas são criadas, e mudar o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> as recria.
+          </p>
+        } @else {
+          <p>
+            Set <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> to get
+            stable source and layer ids you can target with
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">queryRenderedFeatures</code>
+            or custom layers, and
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">beforeId</code> to
+            insert the cluster layers below an existing layer. Both follow
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code>:
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">beforeId</code> is
+            applied when the layers are created, and changing
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> re-creates
+            them.
+          </p>
+        }
         <app-code-block [code]="idsCode" />
       </app-docs-section>
 
-      <app-docs-section title="Typed properties" anchor="typed-properties">
-        <p>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-cluster-layer</code>
-          and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code>
-          are generic over the feature properties. The type is inferred from
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">[data]</code>, so
-          click and hover payloads are typed. It defaults to
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">Record&lt;string, unknown&gt;</code>.
-        </p>
+      <app-docs-section title="Typed properties" titlePt="Propriedades tipadas" anchor="typed-properties">
+        @if (i18n.isPt()) {
+          <p>
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-cluster-layer</code> e o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code> são genéricos sobre as propriedades das features.
+            O tipo é inferido de <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[data]</code>, então os payloads de clique e hover são tipados. O padrão é
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">Record&lt;string, unknown&gt;</code>.
+          </p>
+        } @else {
+          <p>
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-cluster-layer</code>
+            and
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code>
+            are generic over the feature properties. The type is inferred from
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">[data]</code>, so
+            click and hover payloads are typed. It defaults to
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">Record&lt;string, unknown&gt;</code>.
+          </p>
+        }
         <app-code-block [code]="typedCode" />
       </app-docs-section>
 
-      <app-docs-section title="Default colors" anchor="default-colors">
-        <p>
-          ng-mapcn clusters default to green, yellow and red
-          (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">#22c55e</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">#eab308</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">#ef4444</code>),
-          while mapcn uses blues
-          (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">#3b82f6</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">#1d4ed8</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">#1e3a8a</code>).
-          Pass <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">clusterColors</code>
-          to match mapcn.
-        </p>
+      <app-docs-section title="Default colors" titlePt="Cores padrão" anchor="default-colors">
+        @if (i18n.isPt()) {
+          <p>
+            Os clusters do ng-mapcn usam verde, amarelo e vermelho por padrão (<code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">#22c55e</code>, <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">#eab308</code>,
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">#ef4444</code>), enquanto o mapcn usa tons de azul (<code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">#3b82f6</code>, <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">#1d4ed8</code>, <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">#1e3a8a</code>). Passe
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">clusterColors</code> para ficar igual ao mapcn.
+          </p>
+        } @else {
+          <p>
+            ng-mapcn clusters default to green, yellow and red
+            (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">#22c55e</code>,
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">#eab308</code>,
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">#ef4444</code>),
+            while mapcn uses blues
+            (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">#3b82f6</code>,
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">#1d4ed8</code>,
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">#1e3a8a</code>).
+            Pass <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">clusterColors</code>
+            to match mapcn.
+          </p>
+        }
         <app-code-block [code]="colorsCode" />
       </app-docs-section>
     </app-docs-page>
   `,
 })
 export class ClustersPageComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly clusterCode = CLUSTER_CODE;
   readonly idsCode = IDS_CODE;
   readonly typedCode = TYPED_CODE;

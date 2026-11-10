@@ -24,7 +24,6 @@ export interface BasemapProvider {
   readonly needsKey: boolean;
   /** Where the user gets an API key. */
   readonly keyUrl?: string;
-  readonly note?: string;
   /** `undefined` = fall back to the library's Carto defaults. */
   styles(key: string): MapStylesConfig | undefined;
 }
@@ -52,7 +51,6 @@ export const BASEMAP_PROVIDERS: readonly BasemapProvider[] = [
     label: 'OpenStreetMap',
     kind: 'raster',
     needsKey: false,
-    note: 'Raster tiles. Dev/demo only — see the OSM tile usage policy.',
     styles: () => ({ light: OSM_RASTER_STYLE, dark: OSM_RASTER_STYLE }),
   },
   {
@@ -75,7 +73,6 @@ export const BASEMAP_PROVIDERS: readonly BasemapProvider[] = [
     kind: 'vector',
     needsKey: true,
     keyUrl: 'https://client.stadiamaps.com/',
-    note: 'Key optional on localhost (rate limited).',
     styles: (key) => {
       const auth = key ? `?api_key=${encodeURIComponent(key)}` : '';
       return {

@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MapComponent, MapGeoJSONComponent, type MapGeoJSONEvent } from 'ng-mapcn';
+
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
@@ -76,17 +78,25 @@ export class GeojsonOverlayComponent {
     <app-docs-page
       title="GeoJSON"
       description="Render polygons and lines from GeoJSON with declarative hover states."
+      titlePt="GeoJSON"
+      descriptionPt="Renderize polígonos e linhas a partir de GeoJSON, com estados de hover declarativos."
     >
       <app-example-section
         title="Basic GeoJSON"
+        titlePt="GeoJSON básico"
         sectionId="basic-geojson"
         [code]="basicCode"
       >
         <span description>
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code>
-          accepts a URL or an inline GeoJSON object. On a blank basemap it uses
-          theme-aware monochrome defaults — here rendering world country
-          borders.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code> aceita uma URL ou um objeto GeoJSON inline. Sobre um basemap em branco, ele
+            usa padrões monocromáticos que seguem o tema — aqui desenhando as fronteiras dos países.
+          } @else {
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-geojson</code>
+            accepts a URL or an inline GeoJSON object. On a blank basemap it uses
+            theme-aware monochrome defaults — here rendering world country
+            borders.
+          }
         </span>
         <ng-map [blank]="true" [center]="[0, 20]" [zoom]="1.2">
           <ng-map-geojson [data]="worldUrl" />
@@ -95,15 +105,21 @@ export class GeojsonOverlayComponent {
 
       <app-example-section
         title="Overlay on a Map"
+        titlePt="Sobreposição num mapa"
         sectionId="overlay-on-a-map"
         [code]="overlayCode"
       >
         <span description>
-          Layer GeoJSON over a street basemap with custom paints. Set
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code>
-          and a
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">fillHoverPaint</code>
-          to get declarative hover highlighting via feature-state.
+          @if (i18n.isPt()) {
+            Sobreponha GeoJSON a um basemap de ruas com paints próprios. Defina <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code> e um
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">fillHoverPaint</code> para ter destaque de hover declarativo via feature-state.
+          } @else {
+            Layer GeoJSON over a street basemap with custom paints. Set
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code>
+            and a
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">fillHoverPaint</code>
+            to get declarative hover highlighting via feature-state.
+          }
         </span>
         <div class="relative h-full">
           <div
@@ -132,6 +148,7 @@ export class GeojsonOverlayComponent {
   `,
 })
 export class GeojsonPageComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly basicCode = BASIC_CODE;
   readonly overlayCode = OVERLAY_CODE;
   readonly worldUrl = WORLD_GEOJSON;

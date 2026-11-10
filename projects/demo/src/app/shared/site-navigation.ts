@@ -1,10 +1,13 @@
+import type { Localized } from './i18n/messages';
+
 /**
  * Single source of truth for the site navigation (mirrors mapcn's
  * `site-navigation.ts`): header nav, mobile sheet, command search, docs
  * sidebar and the docs prev/next links all read from here.
  */
 export interface SiteNavigationItem {
-  title: string;
+  /** Per language; render it with `LanguageService.text()`. */
+  title: Localized<string>;
   href: string;
   /** lucide icon registered by the consumer (command search). */
   icon: 'lucideBookOpen' | 'lucideLayers2' | 'lucideCornerDownRight';
@@ -13,60 +16,127 @@ export interface SiteNavigationItem {
 }
 
 export interface SiteNavigationGroup {
-  title: string;
+  title: Localized<string>;
   items: SiteNavigationItem[];
 }
 
+/** Names that read the same in every language (component names, file names). */
+const same = (title: string): Localized<string> => ({ en: title, 'pt-BR': title });
+
 export const docsNavigation: SiteNavigationGroup[] = [
   {
-    title: 'Basics',
+    title: { en: 'Basics', 'pt-BR': 'Básico' },
     items: [
-      { title: 'Getting Started', href: '/docs', icon: 'lucideBookOpen' },
-      { title: 'Installation', href: '/docs/installation', icon: 'lucideBookOpen' },
-      { title: 'Testing your maps', href: '/docs/testing', icon: 'lucideBookOpen' },
-      { title: 'llms.txt', href: '/llms.txt', icon: 'lucideBookOpen', file: true },
-      { title: 'API Reference', href: '/docs/api-reference', icon: 'lucideBookOpen' },
-      { title: 'Map Styles', href: '/docs/basemaps', icon: 'lucideBookOpen' },
-      { title: 'Roadmap', href: '/docs/roadmap', icon: 'lucideBookOpen' },
+      {
+        title: { en: 'Getting Started', 'pt-BR': 'Primeiros passos' },
+        href: '/docs',
+        icon: 'lucideBookOpen',
+      },
+      {
+        title: { en: 'Installation', 'pt-BR': 'Instalação' },
+        href: '/docs/installation',
+        icon: 'lucideBookOpen',
+      },
+      {
+        title: { en: 'Testing your maps', 'pt-BR': 'Testando seus mapas' },
+        href: '/docs/testing',
+        icon: 'lucideBookOpen',
+      },
+      { title: same('llms.txt'), href: '/llms.txt', icon: 'lucideBookOpen', file: true },
+      {
+        title: { en: 'API Reference', 'pt-BR': 'Referência da API' },
+        href: '/docs/api-reference',
+        icon: 'lucideBookOpen',
+      },
+      {
+        title: { en: 'Map Styles', 'pt-BR': 'Estilos de mapa' },
+        href: '/docs/basemaps',
+        icon: 'lucideBookOpen',
+      },
+      { title: same('Roadmap'), href: '/docs/roadmap', icon: 'lucideBookOpen' },
     ],
   },
   {
-    title: 'Components',
+    title: { en: 'Components', 'pt-BR': 'Componentes' },
     items: [
-      { title: 'Map', href: '/docs/components/map', icon: 'lucideLayers2' },
-      { title: 'Controls', href: '/docs/components/controls', icon: 'lucideLayers2' },
-      { title: 'Legend', href: '/docs/components/legend', icon: 'lucideLayers2' },
-      { title: 'Markers', href: '/docs/components/markers', icon: 'lucideLayers2' },
-      { title: 'Popups', href: '/docs/components/popups', icon: 'lucideLayers2' },
-      { title: 'Routes', href: '/docs/components/routes', icon: 'lucideLayers2' },
-      { title: 'Arcs', href: '/docs/components/arcs', icon: 'lucideLayers2' },
-      { title: 'GeoJSON', href: '/docs/components/geojson', icon: 'lucideLayers2' },
-      { title: 'Clusters', href: '/docs/components/clusters', icon: 'lucideLayers2' },
-      { title: 'Heatmap', href: '/docs/components/heatmap', icon: 'lucideLayers2' },
-      { title: 'Symbols', href: '/docs/components/symbols', icon: 'lucideLayers2' },
-      { title: 'Tile Sources', href: '/docs/components/tile-sources', icon: 'lucideLayers2' },
-      { title: '3D Buildings & Terrain', href: '/docs/components/3d', icon: 'lucideLayers2' },
-      { title: 'Draw', href: '/docs/components/draw', icon: 'lucideLayers2' },
-      { title: 'Advanced', href: '/docs/components/advanced', icon: 'lucideLayers2' },
+      { title: same('Map'), href: '/docs/components/map', icon: 'lucideLayers2' },
+      {
+        title: { en: 'Controls', 'pt-BR': 'Controles' },
+        href: '/docs/components/controls',
+        icon: 'lucideLayers2',
+      },
+      {
+        title: { en: 'Legend', 'pt-BR': 'Legenda' },
+        href: '/docs/components/legend',
+        icon: 'lucideLayers2',
+      },
+      {
+        title: { en: 'Markers', 'pt-BR': 'Marcadores' },
+        href: '/docs/components/markers',
+        icon: 'lucideLayers2',
+      },
+      { title: same('Popups'), href: '/docs/components/popups', icon: 'lucideLayers2' },
+      {
+        title: { en: 'Routes', 'pt-BR': 'Rotas' },
+        href: '/docs/components/routes',
+        icon: 'lucideLayers2',
+      },
+      {
+        title: { en: 'Arcs', 'pt-BR': 'Arcos' },
+        href: '/docs/components/arcs',
+        icon: 'lucideLayers2',
+      },
+      { title: same('GeoJSON'), href: '/docs/components/geojson', icon: 'lucideLayers2' },
+      { title: same('Clusters'), href: '/docs/components/clusters', icon: 'lucideLayers2' },
+      { title: same('Heatmap'), href: '/docs/components/heatmap', icon: 'lucideLayers2' },
+      {
+        title: { en: 'Symbols', 'pt-BR': 'Símbolos' },
+        href: '/docs/components/symbols',
+        icon: 'lucideLayers2',
+      },
+      {
+        title: { en: 'Tile Sources', 'pt-BR': 'Fontes de tiles' },
+        href: '/docs/components/tile-sources',
+        icon: 'lucideLayers2',
+      },
+      {
+        title: { en: '3D Buildings & Terrain', 'pt-BR': 'Prédios 3D e terreno' },
+        href: '/docs/components/3d',
+        icon: 'lucideLayers2',
+      },
+      {
+        title: { en: 'Draw', 'pt-BR': 'Desenho' },
+        href: '/docs/components/draw',
+        icon: 'lucideLayers2',
+      },
+      {
+        title: { en: 'Advanced', 'pt-BR': 'Avançado' },
+        href: '/docs/components/advanced',
+        icon: 'lucideLayers2',
+      },
     ],
   },
 ];
 
 const pageItems: SiteNavigationItem[] = [
-  { title: 'Home', href: '/', icon: 'lucideCornerDownRight' },
-  { title: 'Docs', href: '/docs', icon: 'lucideCornerDownRight' },
-  { title: 'Components', href: '/docs/components/map', icon: 'lucideCornerDownRight' },
-  { title: 'Blocks', href: '/blocks', icon: 'lucideCornerDownRight' },
-  { title: 'Playground', href: '/playground', icon: 'lucideCornerDownRight' },
+  { title: { en: 'Home', 'pt-BR': 'Início' }, href: '/', icon: 'lucideCornerDownRight' },
+  { title: same('Docs'), href: '/docs', icon: 'lucideCornerDownRight' },
+  {
+    title: { en: 'Components', 'pt-BR': 'Componentes' },
+    href: '/docs/components/map',
+    icon: 'lucideCornerDownRight',
+  },
+  { title: same('Blocks'), href: '/blocks', icon: 'lucideCornerDownRight' },
+  { title: same('Playground'), href: '/playground', icon: 'lucideCornerDownRight' },
 ];
 
 export const siteNavigation: SiteNavigationGroup[] = [
-  { title: 'Pages', items: pageItems },
+  { title: { en: 'Pages', 'pt-BR': 'Páginas' }, items: pageItems },
   ...docsNavigation,
 ];
 
 /** Header links: every page except Home. */
-export const mainNavItems = pageItems.filter((item) => item.title !== 'Home');
+export const mainNavItems = pageItems.filter((item) => item.href !== '/');
 
 /** Flat docs order, used for the prev/next links at the bottom of each page. */
 const docsOrder = docsNavigation.flatMap((group) => group.items).filter((item) => !item.file);

@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 
 import { ZardButtonComponent } from '@/shared/components/button';
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { CodeCopyButtonComponent } from './code-copy-button';
 import { CodeSurfaceComponent } from './code-surface';
@@ -49,7 +50,7 @@ let nextId = 0;
                 [attr.aria-controls]="codeId"
                 (click)="expanded.set(true)"
               >
-                View Code
+                {{ i18n.messages().docs.viewCode }}
               </button>
             </div>
           }
@@ -65,6 +66,7 @@ export class ComponentPreviewComponent {
   /** Height of the preview panel. The expanded code block caps separately. */
   readonly height = input('420px');
 
+  protected readonly i18n = inject(LanguageService);
   protected readonly codeId = `component-preview-code-${nextId++}`;
   protected readonly expanded = signal(false);
 }

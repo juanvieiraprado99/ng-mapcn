@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { LanguageService } from '@/shared/i18n/language.service';
 import { GITHUB_URL } from '@/shared/site-navigation';
 
 import { LogoComponent } from './logo';
@@ -25,8 +26,7 @@ interface FooterLink {
           <div class="col-span-2 md:col-span-2">
             <app-logo class="w-fit" />
             <p class="text-muted-foreground mt-2 max-w-xs text-sm leading-relaxed">
-              Free &amp; open-source, ready-to-use, customizable map components for Angular. An
-              Angular port of
+              {{ t().tagline }}
               <a
                 href="https://mapcn.dev"
                 target="_blank"
@@ -55,7 +55,7 @@ interface FooterLink {
             </div>
           </div>
 
-          @for (column of columns; track column.title) {
+          @for (column of columns(); track column.title) {
             <div>
               <h3 class="mb-3 text-sm font-semibold">{{ column.title }}</h3>
               <ul class="space-y-2.5">
@@ -85,13 +85,13 @@ interface FooterLink {
 
         <div class="mt-12 border-t pt-6">
           <p class="text-muted-foreground text-xs">
-            © {{ year }} ng-mapcn. Released under the
+            © {{ year }} ng-mapcn. {{ t().released }}
             <a
               [href]="githubUrl + '/blob/main/LICENSE'"
               target="_blank"
               rel="noopener noreferrer"
               class="hover:text-foreground underline underline-offset-4 transition-colors"
-              >MIT License</a
+              >{{ t().license }}</a
             >.
           </p>
         </div>
@@ -103,25 +103,28 @@ export class FooterComponent {
   protected readonly githubUrl = GITHUB_URL;
   protected readonly year = new Date().getFullYear();
 
-  protected readonly columns: { title: string; links: FooterLink[] }[] = [
+  private readonly i18n = inject(LanguageService);
+  protected readonly t = computed(() => this.i18n.messages().footer);
+
+  protected readonly columns = computed((): { title: string; links: FooterLink[] }[] => [
     {
-      title: 'Product',
+      title: this.t().product,
       links: [
-        { label: 'Documentation', href: '/docs' },
-        { label: 'Components', href: '/docs/components/map' },
-        { label: 'Blocks', href: '/blocks' },
-        { label: 'Credits', href: '/credits' },
+        { label: this.t().documentation, href: '/docs' },
+        { label: this.t().components, href: '/docs/components/map' },
+        { label: this.t().blocks, href: '/blocks' },
+        { label: this.t().credits, href: '/credits' },
       ],
     },
     {
-      title: 'Community',
+      title: this.t().community,
       links: [
         { label: 'GitHub', href: GITHUB_URL, external: true },
-        { label: 'Issues', href: `${GITHUB_URL}/issues`, external: true },
+        { label: this.t().issues, href: `${GITHUB_URL}/issues`, external: true },
       ],
     },
     {
-      title: 'Resources',
+      title: this.t().resources,
       links: [
         { label: 'MapLibre GL', href: 'https://maplibre.org/', external: true },
         { label: 'mapcn', href: 'https://mapcn.dev/', external: true },
@@ -129,5 +132,5 @@ export class FooterComponent {
         { label: 'Tailwind CSS', href: 'https://tailwindcss.com/', external: true },
       ],
     },
-  ];
+  ]);
 }

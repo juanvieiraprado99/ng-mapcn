@@ -6,6 +6,7 @@ import {
   shippedMilestones,
   stableMilestone,
 } from './roadmap.data';
+import { periodPt, ROADMAP_PT } from './roadmap.data.pt';
 
 const milestones = [stableMilestone, ...nextMilestones, ...shippedMilestones];
 
@@ -58,5 +59,19 @@ describe('roadmap data', () => {
   it('uses unique anchor ids', () => {
     const ids = milestones.map((m) => m.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('has a pt-BR translation for every milestone, with the same goals and deliverables', () => {
+    expect(Object.keys(ROADMAP_PT).sort()).toEqual(milestones.map((m) => m.id).sort());
+    for (const m of milestones) {
+      const pt = ROADMAP_PT[m.id];
+      expect(pt.goals.length, m.id).toBe(m.goals.length);
+      expect(pt.deliverables.length, m.id).toBe(m.deliverables.length);
+    }
+  });
+
+  it('writes the period month in Portuguese', () => {
+    expect(periodPt('22.0.0-beta.7 · October 2026')).toBe('22.0.0-beta.7 · outubro de 2026');
+    expect(periodPt('22.0.0')).toBe('22.0.0');
   });
 });

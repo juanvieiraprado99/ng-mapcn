@@ -324,7 +324,8 @@ describe('docs: setup and config snippets match the demo', () => {
   });
 
   it('the selector table and the Playwright snippet match MAP_TEST_SELECTORS', () => {
-    const rows = new TestingComponent().selectors;
+    // The page injects LanguageService, so it needs an injection context.
+    const rows = TestBed.runInInjectionContext(() => new TestingComponent()).selectors;
     expect(rows.map((row) => [row.name, row.type])).toEqual(
       Object.entries(MAP_TEST_SELECTORS).map(([key, selector]) => [key, `'${selector}'`]),
     );

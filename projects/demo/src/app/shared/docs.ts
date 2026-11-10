@@ -13,6 +13,7 @@ import { lucideChevronLeft, lucideChevronRight } from '@ng-icons/lucide';
 
 import { DocsTocComponent, type TocItem } from '@/layout/docs-toc';
 import { ZardButtonComponent } from '@/shared/components/button';
+import { LanguageService } from '@/shared/i18n/language.service';
 import { docsNeighbours } from '@/shared/site-navigation';
 
 export function slugify(text: string): string {
@@ -33,12 +34,12 @@ export function slugify(text: string): string {
   imports: [RouterLink, NgIcon, ZardButtonComponent, DocsTocComponent],
   viewProviders: [provideIcons({ lucideChevronLeft, lucideChevronRight })],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'flex min-w-0 flex-1' },
+  host: { class: 'flex min-w-0 flex-1', '[attr.title]': 'null' },
   template: `
     <div class="mx-auto flex max-w-[50rem] min-w-0 flex-1 flex-col pt-10 pb-20 lg:px-4">
       <div class="space-y-2">
-        <h1 class="text-foreground text-3xl font-semibold tracking-tight">{{ title() }}</h1>
-        <p class="text-muted-foreground text-base leading-relaxed">{{ description() }}</p>
+        <h1 class="text-foreground text-3xl font-semibold tracking-tight">{{ heading() }}</h1>
+        <p class="text-muted-foreground text-base leading-relaxed">{{ lead() }}</p>
       </div>
       <div class="mt-12 mb-12 space-y-12">
         <ng-content />
@@ -48,14 +49,14 @@ export function slugify(text: string): string {
           @if (neighbours.prev; as prev) {
             <a z-button zType="ghost" zSize="sm" class="-ml-2 h-auto py-2" [routerLink]="prev.href">
               <ng-icon name="lucideChevronLeft" size="16" />
-              {{ prev.title }}
+              {{ i18n.text(prev.title) }}
             </a>
           } @else {
             <div></div>
           }
           @if (neighbours.next; as next) {
             <a z-button zType="ghost" zSize="sm" class="-mr-2 h-auto py-2" [routerLink]="next.href">
-              {{ next.title }}
+              {{ i18n.text(next.title) }}
               <ng-icon name="lucideChevronRight" size="16" />
             </a>
           }
@@ -77,13 +78,23 @@ export function slugify(text: string): string {
 export class DocsPageComponent {
   readonly title = input.required<string>();
   readonly description = input('');
+  /** pt-BR texts; English is used when omitted. */
+  readonly titlePt = input<string>();
+  readonly descriptionPt = input<string>();
 
+  protected readonly i18n = inject(LanguageService);
+  protected readonly heading = computed(() =>
+    this.i18n.isPt() ? (this.titlePt() ?? this.title()) : this.title(),
+  );
+  protected readonly lead = computed(() =>
+    this.i18n.isPt() ? (this.descriptionPt() ?? this.description()) : this.description(),
+  );
   protected readonly neighbours = docsNeighbours(routePath(inject(ActivatedRoute)));
 
   private readonly sections = signal<DocsSectionComponent[]>([]);
   protected readonly tocItems = computed<TocItem[]>(() =>
     this.sections()
-      .map((section) => ({ title: section.title() ?? '', slug: section.slug() }))
+      .map((section) => ({ title: section.heading() ?? '', slug: section.slug() }))
       .filter((item) => item.title),
   );
 
@@ -102,16 +113,16 @@ export class DocsPageComponent {
   standalone: true,
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block' },
+  host: { class: 'block', '[attr.title]': 'null' },
   template: `
     <section class="scroll-m-24 space-y-5" [attr.id]="title() ? slug() : null">
-      @if (title(); as heading) {
+      @if (heading(); as heading) {
         <div class="group flex w-fit items-baseline gap-2">
           <h2 class="text-foreground text-xl font-semibold tracking-tight">{{ heading }}</h2>
           <a
             [routerLink]="[]"
             [fragment]="slug()"
-            [attr.aria-label]="'Link to ' + heading"
+            [attr.aria-label]="i18n.messages().docs.linkTo + heading"
             class="text-muted-foreground/60 hover:text-foreground text-xl font-semibold opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
             >#</a
           >
@@ -127,9 +138,15 @@ export class DocsPageComponent {
 })
 export class DocsSectionComponent {
   readonly title = input<string>();
-  /** Anchor id; derived from the title when omitted. */
+  /** pt-BR heading; the English `title` is used when omitted. */
+  readonly titlePt = input<string>();
+  /** Anchor id; derived from the English title when omitted, so links work in both languages. */
   readonly anchor = input<string>();
 
+  protected readonly i18n = inject(LanguageService);
+  readonly heading = computed(() =>
+    this.i18n.isPt() ? (this.titlePt() ?? this.title()) : this.title(),
+  );
   readonly slug = computed(() => this.anchor() ?? slugify(this.title() ?? ''));
 
   constructor() {

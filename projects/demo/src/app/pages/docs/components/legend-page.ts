@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import {
   MapComponent,
   MapGeoJSONComponent,
@@ -9,6 +9,8 @@ import {
   MarkerContentComponent,
   MarkerTooltipComponent,
 } from 'ng-mapcn';
+
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
@@ -240,20 +242,28 @@ const VISITORS: Record<string, number> = {
     <app-docs-page
       title="Legend"
       description="Explain what the colours and symbols on your map mean, with category swatches, gradients and your own content."
+      titlePt="Legenda"
+      descriptionPt="Explique o que significam as cores e os símbolos do seu mapa, com amostras de categoria, gradientes e conteúdo próprio."
     >
       <app-example-section
         title="Categories"
+        titlePt="Categorias"
         sectionId="categories"
         [code]="categoriesCode"
       >
         <span description>
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-legend</code>
-          renders a card from
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">sections</code>.
-          A
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">categories</code>
-          section lists swatches (circle, square or line) with labels. It sits
-          top-left by default.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-legend</code> renderiza um card a partir de <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">sections</code>. Uma seção <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">categories</code> lista amostras
+            (círculo, quadrado ou linha) com rótulos. Por padrão ele fica no canto superior esquerdo.
+          } @else {
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-legend</code>
+            renders a card from
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">sections</code>.
+            A
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">categories</code>
+            section lists swatches (circle, square or line) with labels. It sits
+            top-left by default.
+          }
         </span>
         <ng-map [center]="[2.3522, 48.8566]" [zoom]="11.5">
           @for (place of places; track place.name) {
@@ -273,16 +283,23 @@ const VISITORS: Record<string, number> = {
 
       <app-example-section
         title="Gradient"
+        titlePt="Gradiente"
         sectionId="gradient"
         [code]="gradientCode"
       >
         <span description>
-          A
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">gradient</code>
-          section draws a colour ramp from its stops. The first and last stops are
-          always labelled; middle stops are labelled when they fit. Use
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">format</code>
-          to render the values.
+          @if (i18n.isPt()) {
+            Uma seção <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">gradient</code> desenha uma rampa de cores a partir dos seus stops. O primeiro e o último
+            stop sempre têm rótulo; os do meio ganham rótulo quando cabem. Use <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">format</code> para formatar os
+            valores.
+          } @else {
+            A
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">gradient</code>
+            section draws a colour ramp from its stops. The first and last stops are
+            always labelled; middle stops are labelled when they fit. Use
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">format</code>
+            to render the values.
+          }
         </span>
         <ng-map [blank]="true" [center]="[12, 28]" [zoom]="1.4">
           <ng-map-geojson [data]="worldUrl" [fillPaint]="fillPaint" />
@@ -292,16 +309,22 @@ const VISITORS: Record<string, number> = {
 
       <app-example-section
         title="Collapsible with custom content"
+        titlePt="Recolhível, com conteúdo próprio"
         sectionId="collapsible"
         [code]="collapsibleCode"
       >
         <span description>
-          Set
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">collapsible</code>
-          to add a header button; bind
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[(collapsed)]</code>
-          to control it. Anything you project into the legend renders below its
-          sections.
+          @if (i18n.isPt()) {
+            Use <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">collapsible</code> para adicionar um botão no cabeçalho; ligue <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[(collapsed)]</code> para controlá-lo.
+            Tudo o que você projetar na legenda aparece abaixo das seções.
+          } @else {
+            Set
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">collapsible</code>
+            to add a header button; bind
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">[(collapsed)]</code>
+            to control it. Anything you project into the legend renders below its
+            sections.
+          }
         </span>
         <ng-map [center]="[-0.12, 51.5]" [zoom]="11">
           <ng-map-route [coordinates]="route" color="#4285F4" />
@@ -329,6 +352,7 @@ const VISITORS: Record<string, number> = {
   `,
 })
 export class LegendPageComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly categoriesCode = CATEGORIES_CODE;
   readonly gradientCode = GRADIENT_CODE;
   readonly collapsibleCode = COLLAPSIBLE_CODE;

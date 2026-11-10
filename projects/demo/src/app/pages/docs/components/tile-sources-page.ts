@@ -1,4 +1,4 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import {
   type ImageOverlayCoordinates,
   MapComponent,
@@ -6,6 +6,8 @@ import {
   MapRasterSourceComponent,
   MapVectorSourceComponent,
 } from 'ng-mapcn';
+
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { BuildingsLayerComponent, registerPmtilesProtocol } from '../../../blocks/pmtiles/pmtiles';
 import { CodeBlockComponent } from '../../../shared/code-block';
@@ -205,18 +207,26 @@ effect(() => {
     <app-docs-page
       title="Tile Sources"
       description="Raster tiles, vector tiles (including PMTiles) and georeferenced images as declarative sources."
+      titlePt="Fontes de tiles"
+      descriptionPt="Tiles raster, tiles vetoriais (incluindo PMTiles) e imagens georreferenciadas como sources declarativas."
     >
       <app-example-section
         title="Raster tiles"
+        titlePt="Tiles raster"
         sectionId="raster-tiles"
         [code]="rasterCode"
       >
         <span description>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-raster-source</code>
-          adds a raster tile source and the layer that draws it (XYZ, TMS or WMS templates).
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">opacity</code> and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">visible</code> are
-          reconciled on the existing layer.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-raster-source</code> adiciona uma source de tiles raster e a camada que a desenha (templates
+            XYZ, TMS ou WMS). <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">opacity</code> e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">visible</code> são reconciliados na camada existente.
+          } @else {
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-raster-source</code>
+            adds a raster tile source and the layer that draws it (XYZ, TMS or WMS templates).
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">opacity</code> and
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">visible</code> are
+            reconciled on the existing layer.
+          }
         </span>
         <div after-description class="mb-3 flex flex-wrap items-center gap-4 text-sm">
           <label class="flex items-center gap-2">
@@ -251,13 +261,18 @@ effect(() => {
         </ng-map>
       </app-example-section>
 
-      <app-example-section title="Image overlay" sectionId="image-overlay" [code]="imageCode">
+      <app-example-section title="Image overlay" titlePt="Sobreposição de imagem" sectionId="image-overlay" [code]="imageCode">
         <span description>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-image-overlay</code>
-          pins an image to four corner coordinates. Changing
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">coordinates</code>
-          moves the live image source (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">setCoordinates</code>)
-          without re-creating it.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-image-overlay</code> fixa uma imagem em quatro coordenadas de canto. Mudar <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">coordinates</code>
+            move a source de imagem viva (<code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">setCoordinates</code>) sem recriá-la.
+          } @else {
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-image-overlay</code>
+            pins an image to four corner coordinates. Changing
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">coordinates</code>
+            moves the live image source (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">setCoordinates</code>)
+            without re-creating it.
+          }
         </span>
         <div after-description class="mb-3 flex gap-2">
           <button
@@ -280,22 +295,32 @@ effect(() => {
 
       <app-example-section
         title="Vector tiles from PMTiles"
+        titlePt="Tiles vetoriais a partir de PMTiles"
         sectionId="vector-tiles-pmtiles"
         [code]="pmtilesCode"
       >
         <span description>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-vector-source</code>
-          adds the source only. This example reads a real static
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">.pmtiles</code>
-          archive (no tile server): a small Protomaps extract of central Florence, built from
-          OpenStreetMap data. A small layer component draws its
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">buildings</code>
-          layer once it finds the source by id. Hover a building to highlight it with
-          feature-state (the tiles already carry feature ids, so no
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code>
-          is needed). The same code is the
-          <a class="underline" href="/blocks">pmtiles block</a>; copying it requires
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">npm i pmtiles</code>.
+          @if (i18n.isPt()) {
+            O <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-vector-source</code> adiciona só a source. Este exemplo lê um arquivo <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">.pmtiles</code> estático de
+            verdade (sem servidor de tiles): um pequeno recorte do Protomaps do centro de Florença, feito
+            com dados do OpenStreetMap. Um pequeno componente de camada desenha a camada <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">buildings</code> assim
+            que encontra a source pelo id. Passe o mouse sobre um prédio para destacá-lo com feature-state
+            (os tiles já trazem ids de feature, então não é preciso <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code>). O mesmo código é o
+            <a class="underline" href="/blocks">block pmtiles</a>; copiá-lo exige <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">npm i pmtiles</code>.
+          } @else {
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-vector-source</code>
+            adds the source only. This example reads a real static
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">.pmtiles</code>
+            archive (no tile server): a small Protomaps extract of central Florence, built from
+            OpenStreetMap data. A small layer component draws its
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">buildings</code>
+            layer once it finds the source by id. Hover a building to highlight it with
+            feature-state (the tiles already carry feature ids, so no
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code>
+            is needed). The same code is the
+            <a class="underline" href="/blocks">pmtiles block</a>; copying it requires
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">npm i pmtiles</code>.
+          }
         </span>
         <ng-map [center]="[11.2543, 43.7672]" [zoom]="15.5">
           <ng-map-vector-source id="florence" [url]="archiveUrl" />
@@ -303,77 +328,119 @@ effect(() => {
         </ng-map>
       </app-example-section>
 
-      <app-docs-section title="Registering the PMTiles protocol" anchor="pmtiles-protocol">
-        <p>
-          ng-mapcn does not depend on
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">pmtiles</code>.
-          Run <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">npm i pmtiles</code> in your app (also required to copy the pmtiles block) and register the protocol once, before a
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">pmtiles://</code>
-          source is added. The URL is
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">pmtiles://</code>
-          followed by the archive URL; the server must support HTTP range requests.
-        </p>
+      <app-docs-section title="Registering the PMTiles protocol" titlePt="Registrando o protocolo PMTiles" anchor="pmtiles-protocol">
+        @if (i18n.isPt()) {
+          <p>
+            O ng-mapcn não depende do <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">pmtiles</code>. Rode <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">npm i pmtiles</code> no seu app (também necessário para
+            copiar o block pmtiles) e registre o protocolo uma vez, antes de adicionar uma source
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">pmtiles://</code>. A URL é <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">pmtiles://</code> seguido da URL do arquivo; o servidor precisa suportar
+            requisições HTTP com range.
+          </p>
+        } @else {
+          <p>
+            ng-mapcn does not depend on
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">pmtiles</code>.
+            Run <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">npm i pmtiles</code> in your app (also required to copy the pmtiles block) and register the protocol once, before a
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">pmtiles://</code>
+            source is added. The URL is
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">pmtiles://</code>
+            followed by the archive URL; the server must support HTTP range requests.
+          </p>
+        }
         <app-code-block [code]="protocolCode" />
       </app-docs-section>
 
-      <app-docs-section title="Draw the layers" anchor="draw-the-layers">
-        <p>
-          A vector source has no layers of its own. Add them with
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">map.addLayer</code>
-          from a component that reads
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService</code>
-          and waits for the source with
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">hasSource(id)</code>.
-          When a source component is torn down, or a theme switch reloads the style, it removes
-          <strong>every layer still using its source</strong> (yours included) and then the source.
-          Gate on <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">hasSource(id)</code>
-          so your layers are re-added when the source comes back.
-        </p>
+      <app-docs-section title="Draw the layers" titlePt="Desenhe as camadas" anchor="draw-the-layers">
+        @if (i18n.isPt()) {
+          <p>
+            Uma source vetorial não tem camadas próprias. Adicione-as com <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">map.addLayer</code> a partir de um
+            componente que lê o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService</code> e espera a source com <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">hasSource(id)</code>. Quando um
+            componente de source é destruído, ou uma troca de tema recarrega o estilo, ele remove
+            <strong>toda camada que ainda usa a sua source</strong> (as suas inclusive) e depois a source.
+            Condicione em <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">hasSource(id)</code> para que as suas camadas sejam adicionadas de novo quando a
+            source voltar.
+          </p>
+        } @else {
+          <p>
+            A vector source has no layers of its own. Add them with
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">map.addLayer</code>
+            from a component that reads
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService</code>
+            and waits for the source with
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">hasSource(id)</code>.
+            When a source component is torn down, or a theme switch reloads the style, it removes
+            <strong>every layer still using its source</strong> (yours included) and then the source.
+            Gate on <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">hasSource(id)</code>
+            so your layers are re-added when the source comes back.
+          </p>
+        }
         <app-code-block [code]="layerCode" />
       </app-docs-section>
 
-      <app-docs-section title="Source ids and the registry" anchor="source-ids">
-        <p>
-          The MapLibre source id is exactly the
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> input
-          (auto-generated when omitted), so layers can reference it as
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">source: 'florence'</code>.
-          Raster layers are named
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">raster-layer-&lt;id&gt;</code>
-          and image layers
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">image-layer-&lt;id&gt;</code>.
-          Each source component announces its source in
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService</code>
-          while it exists on the map: it disappears when a theme switch removes the style and comes
-          back once the source is re-added, so a consumer re-runs by itself.
-        </p>
+      <app-docs-section title="Source ids and the registry" titlePt="Ids de source e o registro" anchor="source-ids">
+        @if (i18n.isPt()) {
+          <p>
+            O id da source no MapLibre é exatamente o input <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> (gerado automaticamente quando omitido),
+            então as camadas podem referenciá-lo como <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">source: 'florence'</code>. Camadas raster se chamam
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">raster-layer-&lt;id&gt;</code> e camadas de imagem <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">image-layer-&lt;id&gt;</code>. Cada componente de
+            source anuncia a sua source no <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService</code> enquanto ela existe no mapa: ela some quando
+            uma troca de tema remove o estilo e volta quando a source é adicionada de novo, então quem a
+            consome roda de novo sozinho.
+          </p>
+        } @else {
+          <p>
+            The MapLibre source id is exactly the
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> input
+            (auto-generated when omitted), so layers can reference it as
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">source: 'florence'</code>.
+            Raster layers are named
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">raster-layer-&lt;id&gt;</code>
+            and image layers
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">image-layer-&lt;id&gt;</code>.
+            Each source component announces its source in
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService</code>
+            while it exists on the map: it disappears when a theme switch removes the style and comes
+            back once the source is re-added, so a consumer re-runs by itself.
+          </p>
+        }
         <app-code-block [code]="registryCode" />
       </app-docs-section>
 
-      <app-docs-section title="URLs, TileJSON and WMS" anchor="urls-tilejson-wms">
-        <p>
-          Give <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tiles</code> (URL
-          templates) or <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">url</code>
-          (a TileJSON document). Both are updated in place with
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">setTiles</code> /
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">setUrl</code>.
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tileSize</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">minzoom</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">maxzoom</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">scheme</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">attribution</code> and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code> are
-          read when the source is created. The mode (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">url</code> or <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tiles</code>) is fixed at creation too: switching between them later is ignored. Change the
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> to rebuild it
-          with new ones.
-        </p>
+      <app-docs-section title="URLs, TileJSON and WMS" titlePt="URLs, TileJSON e WMS" anchor="urls-tilejson-wms">
+        @if (i18n.isPt()) {
+          <p>
+            Informe <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">tiles</code> (templates de URL) ou <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">url</code> (um documento TileJSON). Os dois são atualizados no
+            lugar com <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">setTiles</code> / <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">setUrl</code>. <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">tileSize</code>, <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">minzoom</code>, <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maxzoom</code>, <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code>, <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">scheme</code>,
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">attribution</code> e <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code> são lidos quando a source é criada. O modo (<code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">url</code> ou <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">tiles</code>)
+            também é fixado na criação: trocar entre eles depois é ignorado. Mude o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> para recriá-la com
+            valores novos.
+          </p>
+        } @else {
+          <p>
+            Give <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tiles</code> (URL
+            templates) or <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">url</code>
+            (a TileJSON document). Both are updated in place with
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">setTiles</code> /
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">setUrl</code>.
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tileSize</code>,
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">minzoom</code>,
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">maxzoom</code>,
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code>,
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">scheme</code>,
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">attribution</code> and
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code> are
+            read when the source is created. The mode (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">url</code> or <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tiles</code>) is fixed at creation too: switching between them later is ignored. Change the
+            <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> to rebuild it
+            with new ones.
+          </p>
+        }
         <app-code-block [code]="tileJsonCode" />
       </app-docs-section>
     </app-docs-page>
   `,
 })
 export class TileSourcesPageComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly rasterCode = RASTER_CODE;
   readonly imageCode = IMAGE_CODE;
   readonly pmtilesCode = PMTILES_CODE;

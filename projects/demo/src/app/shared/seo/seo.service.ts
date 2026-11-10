@@ -27,6 +27,8 @@ export interface RouteSeo {
   noindex?: boolean;
   /** Canonical path when it differs from the page's own path. */
   canonical?: string;
+  /** pt-BR title/description, applied in the browser when the visitor picks Portuguese. */
+  pt?: { title?: string; description?: string };
 }
 
 /**
@@ -48,7 +50,12 @@ export class SeoService {
    */
   apply(pageTitle: string | null, path: string, seo: RouteSeo | undefined): void {
     const name = seo?.title ?? pageTitle;
-    const title = seo?.home || !name ? SITE_TITLE : `${name} - ${SITE_NAME}`;
+    // The home page uses the whole site title; `seo.title` there replaces it (pt-BR).
+    const title = seo?.home
+      ? (seo.title ?? SITE_TITLE)
+      : !name
+        ? SITE_TITLE
+        : `${name} - ${SITE_NAME}`;
     const description = seo?.description ?? SITE_DESCRIPTION;
     const url = this.absolute(seo?.canonical ?? path);
     const keywords = [...(seo?.keywords ?? []), ...SITE_KEYWORDS];

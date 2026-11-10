@@ -1,11 +1,13 @@
-import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { ZardCheckboxComponent } from '@/shared/components/checkbox';
 import { ZardInputComponent } from '@/shared/components/input';
 import { ZardSelectImports } from '@/shared/components/select/select.imports';
 import { ZardSliderComponent } from '@/shared/components/slider/slider.component';
+import { LanguageService } from '@/shared/i18n/language.service';
 
+import { PlaygroundTextPipe } from './playground.pt';
 import type { Control, Values } from './playground-schema';
 
 export interface ControlChange {
@@ -34,6 +36,7 @@ export function fromSlider(percent: number, min: number, max: number, step: numb
   standalone: true,
   imports: [
     FormsModule,
+    PlaygroundTextPipe,
     ZardCheckboxComponent,
     ZardInputComponent,
     ZardSelectImports,
@@ -55,19 +58,21 @@ export function fromSlider(percent: number, min: number, max: number, step: numb
                 [ngModel]="value === true"
                 (checkChange)="emit(control.key, $event)"
               >
-                {{ control.label }}
+                {{ control.label | pgText: pt() }}
               </z-checkbox>
             }
             @case ('range') {
               <div class="flex items-center justify-between">
-                <span class="text-sm font-medium" [id]="id + '-label'">{{ control.label }}</span>
+                <span class="text-sm font-medium" [id]="id + '-label'">{{
+                  control.label | pgText: pt()
+                }}</span>
                 <output class="text-muted-foreground font-mono text-xs" [attr.for]="id">{{
                   value
                 }}</output>
               </div>
               <z-slider
                 [id]="id"
-                [zAriaLabel]="control.label"
+                [zAriaLabel]="control.label | pgText: pt()"
                 [zValueText]="[String(value)]"
                 [attr.aria-describedby]="describedBy(control, id)"
                 [zStep]="(control.step / (control.max - control.min)) * 100"
@@ -76,7 +81,9 @@ export function fromSlider(percent: number, min: number, max: number, step: numb
               />
             }
             @case ('select') {
-              <span class="text-sm font-medium" [id]="id + '-label'">{{ control.label }}</span>
+              <span class="text-sm font-medium" [id]="id + '-label'">{{
+                control.label | pgText: pt()
+              }}</span>
               <z-select
                 [id]="id"
                 [attr.aria-describedby]="describedBy(control, id)"
@@ -84,13 +91,17 @@ export function fromSlider(percent: number, min: number, max: number, step: numb
                 (zSelectionChange)="emit(control.key, control.options[+$any($event)].value)"
               >
                 @for (option of control.options; track $index) {
-                  <z-select-item [zValue]="'' + $index">{{ option.label }}</z-select-item>
+                  <z-select-item [zValue]="'' + $index">{{
+                    option.label | pgText: pt()
+                  }}</z-select-item>
                 }
               </z-select>
             }
             @case ('color') {
               <div class="flex items-center justify-between">
-                <label class="text-sm font-medium" [attr.for]="id">{{ control.label }}</label>
+                <label class="text-sm font-medium" [attr.for]="id">{{
+                  control.label | pgText: pt()
+                }}</label>
                 <output class="text-muted-foreground font-mono text-xs" [attr.for]="id">{{
                   value
                 }}</output>
@@ -105,7 +116,9 @@ export function fromSlider(percent: number, min: number, max: number, step: numb
               />
             }
             @case ('text') {
-              <label class="text-sm font-medium" [attr.for]="id">{{ control.label }}</label>
+              <label class="text-sm font-medium" [attr.for]="id">{{
+                control.label | pgText: pt()
+              }}</label>
               <input
                 z-input
                 type="text"
@@ -116,7 +129,9 @@ export function fromSlider(percent: number, min: number, max: number, step: numb
               />
             }
             @case ('json') {
-              <label class="text-sm font-medium" [attr.for]="id">{{ control.label }} (JSON)</label>
+              <label class="text-sm font-medium" [attr.for]="id"
+                >{{ control.label | pgText: pt() }} (JSON)</label
+              >
               <textarea
                 [id]="id"
                 rows="2"
@@ -129,13 +144,15 @@ export function fromSlider(percent: number, min: number, max: number, step: numb
               ></textarea>
               @if (errors()[control.key]; as message) {
                 <p [id]="id + '-error'" class="text-destructive text-xs" role="alert">
-                  {{ message }}
+                  {{ message | pgText: pt() }} {{ 'Keeping the last value.' | pgText: pt() }}
                 </p>
               }
             }
           }
           @if (control.description; as hint) {
-            <p class="text-muted-foreground text-xs" [id]="id + '-hint'">{{ hint }}</p>
+            <p class="text-muted-foreground text-xs" [id]="id + '-hint'">
+              {{ hint | pgText: pt() }}
+            </p>
           }
         </div>
       }
@@ -143,6 +160,7 @@ export function fromSlider(percent: number, min: number, max: number, step: numb
   `,
 })
 export class PlaygroundControlsComponent {
+  protected readonly pt = inject(LanguageService).isPt;
   readonly controls = input.required<readonly Control[]>();
   readonly values = input.required<Values>();
   /** Makes the field ids unique when several groups share the page. */
@@ -151,6 +169,7 @@ export class PlaygroundControlsComponent {
   readonly valueChange = output<ControlChange>();
 
   private readonly drafts = signal<Record<string, string>>({});
+  /** The English message per control key; the template translates it and adds "Keeping the last value." */
   protected readonly errors = signal<Record<string, string>>({});
 
   protected readonly String = String;
@@ -211,12 +230,12 @@ export class PlaygroundControlsComponent {
     try {
       parsed = JSON.parse(text);
     } catch {
-      fail('Not valid JSON, keeping the last value.');
+      fail('Not valid JSON.');
       return;
     }
     const invalid = control.validate?.(parsed);
     if (invalid) {
-      fail(`${invalid} Keeping the last value.`);
+      fail(invalid);
       return;
     }
     clearError();

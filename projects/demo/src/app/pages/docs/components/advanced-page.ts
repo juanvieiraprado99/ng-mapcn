@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import {
   MapComponent,
@@ -7,6 +7,8 @@ import {
   MarkerContentComponent,
   MarkerLabelComponent,
 } from 'ng-mapcn';
+
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { CodeBlockComponent } from '../../../shared/code-block';
 import { DocsImports } from '../../../shared/docs';
@@ -129,21 +131,29 @@ const CITIES = [
     <app-docs-page
       title="Advanced"
       description="Raw map access, synced viewports, and the map context service."
+      titlePt="Avançado"
+      descriptionPt="Acesso direto ao mapa, viewports sincronizados e o serviço de contexto do mapa."
     >
       <app-example-section
         title="Using the Map Instance"
+        titlePt="Usando a instância do mapa"
         sectionId="using-the-map-instance"
         [code]="mapReadyCode"
       >
         <span description>
-          The
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">mapReady</code>
-          output hands you the raw
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maplibre-gl</code>
-          Map instance for anything the declarative API doesn't cover. Here it
-          drives
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">flyTo</code>
-          on a globe projection.
+          @if (i18n.isPt()) {
+            O output <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">mapReady</code> entrega a instância bruta do Map do <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maplibre-gl</code> para tudo o que a API
+            declarativa não cobre. Aqui ela comanda o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">flyTo</code> numa projeção de globo.
+          } @else {
+            The
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">mapReady</code>
+            output hands you the raw
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">maplibre-gl</code>
+            Map instance for anything the declarative API doesn't cover. Here it
+            drives
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">flyTo</code>
+            on a globe projection.
+          }
         </span>
         <div class="relative h-full">
           <div class="absolute inset-x-3 top-3 z-10 flex flex-wrap gap-1.5">
@@ -173,13 +183,18 @@ const CITIES = [
 
       <app-example-section
         title="Fly to Markers"
+        titlePt="Voar até os marcadores"
         sectionId="fly-to-markers"
         [code]="flytoMarkersCode"
       >
         <span description>
-          Combine
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">markerClick</code>
-          with the map instance: click a marker to fly to its city.
+          @if (i18n.isPt()) {
+            Combine o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">markerClick</code> com a instância do mapa: clique num marcador para voar até a cidade dele.
+          } @else {
+            Combine
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">markerClick</code>
+            with the map instance: click a marker to fly to its city.
+          }
         </span>
         <ng-map [center]="[7, 46.5]" [zoom]="4" (mapReady)="markersMap = $event">
           @for (city of cities; track city.name) {
@@ -201,13 +216,19 @@ const CITIES = [
 
       <app-example-section
         title="Synced Viewports"
+        titlePt="Viewports sincronizados"
         sectionId="synced-viewports"
         [code]="syncedCode"
       >
         <span description>
-          Two maps sharing one controlled
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewport</code>
-          signal. Pan or zoom either map and the other follows.
+          @if (i18n.isPt()) {
+            Dois mapas dividindo um único signal <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewport</code> controlado. Mova ou dê zoom em qualquer um e o
+            outro acompanha.
+          } @else {
+            Two maps sharing one controlled
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">viewport</code>
+            signal. Pan or zoom either map and the other follows.
+          }
         </span>
         <div class="grid h-full grid-cols-2 gap-2">
           <ng-map
@@ -221,24 +242,33 @@ const CITIES = [
         </div>
       </app-example-section>
 
-      <app-docs-section title="Using the Context Service" anchor="using-the-context-service">
-        <p>
-          Build your own map components: any component projected inside
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map</code>
-          can inject
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService</code>
-          to access the map instance,
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">isLoaded</code>,
-          and the resolved theme — the Angular equivalent of mapcn's
-          <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">useMap()</code>
-          hook.
-        </p>
+      <app-docs-section title="Using the Context Service" titlePt="Usando o serviço de contexto" anchor="using-the-context-service">
+        @if (i18n.isPt()) {
+          <p>
+            Crie os seus próprios componentes de mapa: qualquer componente projetado dentro do <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map</code> pode
+            injetar o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService</code> para acessar a instância do mapa, o <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">isLoaded</code> e o tema resolvido
+            — o equivalente em Angular ao hook <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">useMap()</code> do mapcn.
+          </p>
+        } @else {
+          <p>
+            Build your own map components: any component projected inside
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map</code>
+            can inject
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService</code>
+            to access the map instance,
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">isLoaded</code>,
+            and the resolved theme — the Angular equivalent of mapcn's
+            <code class="bg-muted relative rounded-md px-1.5 py-0.5 font-mono text-sm">useMap()</code>
+            hook.
+          </p>
+        }
         <app-code-block [code]="contextCode" />
       </app-docs-section>
     </app-docs-page>
   `,
 })
 export class AdvancedPageComponent {
+  protected readonly i18n = inject(LanguageService);
   readonly mapReadyCode = MAP_READY_CODE;
   readonly flytoMarkersCode = FLYTO_MARKERS_CODE;
   readonly syncedCode = SYNCED_CODE;

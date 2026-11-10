@@ -4,6 +4,7 @@ import { lucideExternalLink } from '@ng-icons/lucide';
 
 import { type BasemapProvider, BasemapService } from '@/shared/basemap.service';
 import { ZardInputComponent } from '@/shared/components/input';
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { BasemapSwatchComponent } from './basemap-swatch';
 
@@ -21,7 +22,7 @@ import { BasemapSwatchComponent } from './basemap-swatch';
   template: `
     <div
       role="radiogroup"
-      aria-label="Map style"
+      [attr.aria-label]="t().title"
       class="-mx-6 -my-1 flex gap-3 overflow-x-auto px-6 py-1 [scrollbar-width:none]"
     >
       @for (provider of basemap.providers; track provider.id) {
@@ -58,7 +59,7 @@ import { BasemapSwatchComponent } from './basemap-swatch';
           [placeholder]="keyPlaceholder()"
           [value]="basemap.key()"
           (input)="setKey($any($event.target).value)"
-          [attr.aria-label]="basemap.provider().label + ' API key'"
+          [attr.aria-label]="basemap.provider().label + ' ' + t().apiKey"
         />
         @if (basemap.provider().keyUrl; as keyUrl) {
           <a
@@ -67,7 +68,7 @@ import { BasemapSwatchComponent } from './basemap-swatch';
             rel="noopener noreferrer"
             class="text-muted-foreground hover:text-foreground inline-flex shrink-0 items-center gap-1 text-xs"
           >
-            Get a key
+            {{ t().getKey }}
             <ng-icon name="lucideExternalLink" size="12" />
           </a>
         }
@@ -77,14 +78,16 @@ import { BasemapSwatchComponent } from './basemap-swatch';
 })
 export class BasemapPickerCompactComponent {
   protected readonly basemap = inject(BasemapService);
+  private readonly i18n = inject(LanguageService);
+  protected readonly t = computed(() => this.i18n.messages().basemap);
 
   /** A pick that is ready to render, so the menu can close. */
   readonly picked = output<void>();
 
   protected readonly keyPlaceholder = computed(
     () =>
-      `${this.basemap.provider().label} API key` +
-      (this.basemap.provider().id === 'stadia' ? ' (optional on localhost)' : ''),
+      `${this.basemap.provider().label} ${this.t().apiKey}` +
+      (this.basemap.provider().id === 'stadia' ? ` (${this.t().optionalOnLocalhost})` : ''),
   );
 
   /** Keyed providers without a stored key stay open to show the key field. */

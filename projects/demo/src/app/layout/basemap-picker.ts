@@ -7,6 +7,7 @@ import { ZardBadgeComponent } from '@/shared/components/badge';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardInputComponent } from '@/shared/components/input';
 import { type ZardPopoverDirective, ZardPopoverImports } from '@/shared/components/popover';
+import { LanguageService } from '@/shared/i18n/language.service';
 
 import { BasemapSwatchComponent } from './basemap-swatch';
 
@@ -40,12 +41,12 @@ import { BasemapSwatchComponent } from './basemap-swatch';
       [zContent]="content"
       zAlign="end"
       [zSideOffset]="8"
-      [attr.aria-label]="'Change map style, current: ' + basemap.provider().label"
-      title="Change the map style used by every map on this site"
+      [attr.aria-label]="t().currentLabel + basemap.provider().label"
+      [title]="t().hint"
     >
       <app-basemap-swatch [provider]="basemap.providerId()" class="h-6 w-9 rounded-[5px]" />
       <span class="flex flex-col items-start gap-0.5 leading-none">
-        <span class="text-muted-foreground text-[10px] font-normal">Map style</span>
+        <span class="text-muted-foreground text-[10px] font-normal">{{ t().title }}</span>
         <span class="text-xs font-medium">{{ basemap.provider().label }}</span>
       </span>
       @if (missingKey()) {
@@ -57,13 +58,17 @@ import { BasemapSwatchComponent } from './basemap-swatch';
     <ng-template #content>
       <z-popover class="w-80 gap-0 p-0">
         <z-popover-header class="px-3.5 pt-3 pb-2">
-          <z-popover-title>Map style</z-popover-title>
+          <z-popover-title>{{ t().title }}</z-popover-title>
           <z-popover-description class="text-xs">
-            Every map on this site follows your pick.
+            {{ t().description }}
           </z-popover-description>
         </z-popover-header>
 
-        <div role="radiogroup" aria-label="Map style" class="flex flex-col gap-0.5 p-1.5 pt-0">
+        <div
+          role="radiogroup"
+          [attr.aria-label]="t().title"
+          class="flex flex-col gap-0.5 p-1.5 pt-0"
+        >
           @for (provider of basemap.providers; track provider.id) {
             @let selected = provider.id === basemap.providerId();
             <button
@@ -82,12 +87,14 @@ import { BasemapSwatchComponent } from './basemap-swatch';
                 <span class="flex items-center gap-1.5 text-sm font-medium">
                   {{ provider.label }}
                   @if (provider.id === 'carto') {
-                    <z-badge zType="secondary" class="px-1.5 py-0 text-[10px]">Default</z-badge>
+                    <z-badge zType="secondary" class="px-1.5 py-0 text-[10px]">{{
+                      t().default
+                    }}</z-badge>
                   }
                 </span>
                 <span class="text-muted-foreground text-xs">
-                  {{ provider.kind === 'vector' ? 'Vector' : 'Raster' }} ·
-                  {{ provider.needsKey ? 'API key' : 'No key needed' }}
+                  {{ provider.kind === 'vector' ? t().vector : t().raster }} ·
+                  {{ provider.needsKey ? t().apiKey : t().noKey }}
                 </span>
               </span>
               <ng-icon
@@ -103,7 +110,7 @@ import { BasemapSwatchComponent } from './basemap-swatch';
           <div class="bg-muted/40 flex flex-col gap-2 border-t px-3.5 py-3">
             <div class="flex items-center justify-between">
               <label for="basemap-key" class="text-xs font-medium">
-                {{ basemap.provider().label }} API key
+                {{ basemap.provider().label }} {{ t().apiKey }}
               </label>
               @if (basemap.provider().keyUrl; as keyUrl) {
                 <a
@@ -112,7 +119,7 @@ import { BasemapSwatchComponent } from './basemap-swatch';
                   rel="noopener noreferrer"
                   class="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs"
                 >
-                  Get a key
+                  {{ t().getKey }}
                   <ng-icon name="lucideExternalLink" size="12" />
                 </a>
               }
@@ -129,13 +136,13 @@ import { BasemapSwatchComponent } from './basemap-swatch';
               (input)="setKey($any($event.target).value)"
             />
             <p class="text-muted-foreground text-[11px] leading-snug">
-              Stored only in your browser.
-              @if (basemap.provider().note; as note) {
+              {{ t().storedLocally }}
+              @if (note(); as note) {
                 {{ note }}
               }
             </p>
           </div>
-        } @else if (basemap.provider().note; as note) {
+        } @else if (note(); as note) {
           <p class="text-muted-foreground border-t px-3.5 py-2.5 text-[11px] leading-snug">
             {{ note }}
           </p>
@@ -146,6 +153,9 @@ import { BasemapSwatchComponent } from './basemap-swatch';
 })
 export class BasemapPickerComponent {
   protected readonly basemap = inject(BasemapService);
+  private readonly i18n = inject(LanguageService);
+  protected readonly t = computed(() => this.i18n.messages().basemap);
+  protected readonly note = computed(() => this.t().notes[this.basemap.provider().id]);
 
   /** MapTiler renders nothing without a key; Stadia works keyless on localhost. */
   protected readonly missingKey = computed(
@@ -153,7 +163,7 @@ export class BasemapPickerComponent {
   );
 
   protected readonly keyPlaceholder = computed(() =>
-    this.basemap.provider().id === 'stadia' ? 'Optional on localhost' : 'Paste your API key',
+    this.basemap.provider().id === 'stadia' ? this.t().optionalOnLocalhost : this.t().pasteKey,
   );
 
   /** Keyed providers keep the popover open so the key can be pasted right away. */

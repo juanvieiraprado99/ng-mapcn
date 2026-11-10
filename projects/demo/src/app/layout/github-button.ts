@@ -3,10 +3,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   signal,
 } from '@angular/core';
 
 import { ZardButtonComponent } from '@/shared/components/button';
+import { LanguageService } from '@/shared/i18n/language.service';
 import { GITHUB_REPO, GITHUB_URL } from '@/shared/site-navigation';
 
 const CACHE_KEY = 'ng-mapcn:github-stars';
@@ -54,6 +56,7 @@ const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumFracti
 })
 export class GithubButtonComponent {
   protected readonly url = GITHUB_URL;
+  private readonly i18n = inject(LanguageService);
   private readonly stars = signal<number | null>(null);
 
   protected readonly starsText = computed(() => {
@@ -62,7 +65,8 @@ export class GithubButtonComponent {
   });
   protected readonly label = computed(() => {
     const stars = this.stars();
-    return stars === null ? 'GitHub repository' : `GitHub repository, ${stars} stars`;
+    const t = this.i18n.messages().github;
+    return stars === null ? t.label : t.stars(stars);
   });
 
   constructor() {

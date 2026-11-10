@@ -12,6 +12,7 @@ import {
 import { RouterLink } from '@angular/router';
 
 import { BLOCK_COMPONENTS, findBlock } from '@/blocks/registry';
+import { LanguageService } from '@/shared/i18n/language.service';
 
 /**
  * mapcn `/view/[name]`: a block alone on the page — the iframe source of the
@@ -28,15 +29,18 @@ import { BLOCK_COMPONENTS, findBlock } from '@/blocks/registry';
       <ng-container *ngComponentOutlet="block" />
     } @else if (missing()) {
       <div class="flex min-h-screen flex-col items-center justify-center gap-2 text-sm">
-        <p class="text-muted-foreground">Block not found.</p>
-        <a routerLink="/blocks" class="text-foreground font-medium underline underline-offset-4"
-          >Back to blocks</a
-        >
+        <p class="text-muted-foreground">
+          {{ i18n.isPt() ? 'Block não encontrado.' : 'Block not found.' }}
+        </p>
+        <a routerLink="/blocks" class="text-foreground font-medium underline underline-offset-4">{{
+          i18n.isPt() ? 'Voltar para os blocks' : 'Back to blocks'
+        }}</a>
       </div>
     }
   `,
 })
 export class BlockViewComponent {
+  protected readonly i18n = inject(LanguageService);
   /** Route param, bound through `withComponentInputBinding`. */
   readonly name = input.required<string>();
 
