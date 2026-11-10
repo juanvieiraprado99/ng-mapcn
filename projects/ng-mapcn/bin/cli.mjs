@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { createRequire, Module } from 'node:module';
+import { createInterface } from 'node:readline/promises';
 import { delimiter, dirname, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -11,9 +12,11 @@ export class UsageError extends Error {
 }
 
 const COMMANDS = ['init', 'add', 'list', 'help', 'version'];
-const BOOLEAN_FLAGS = new Set(['all', 'overwrite', 'skipInstall']);
-const STRING_FLAGS = new Set(['path', 'project']);
-const DEFAULT_PATH = 'src/app/components/ui/map';
+const BOOLEAN_FLAGS = new Set(['all', 'overwrite', 'skipInstall', 'yes']);
+const STRING_FLAGS = new Set(['path', 'project', 'alias']);
+export const CONFIG_FILE = 'ng-mapcn.json';
+export const DEFAULT_PATH = 'src/app/shared/components/map';
+export const DEFAULT_ALIAS = '@/shared/components/map';
 
 const camel = (s) => s.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 
@@ -27,6 +30,8 @@ export function parseArgs(argv) {
       command = 'help';
     } else if (arg === '-v' || arg === '--version') {
       command = 'version';
+    } else if (arg === '-y') {
+      options.yes = true;
     } else if (arg.startsWith('--')) {
       const eq = arg.indexOf('=');
       const name = camel(eq === -1 ? arg.slice(2) : arg.slice(2, eq));
@@ -69,19 +74,57 @@ function readJson(file) {
   return JSON.parse(readFileSync(file, 'utf8'));
 }
 
+/** `ng-mapcn.json` written by `init`, or null. */
+export function readConfig(cwd) {
+  const file = join(cwd, CONFIG_FILE);
+  if (!existsSync(file)) return null;
+  try {
+    const config = readJson(file);
+    return typeof config.path === 'string' ? config : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The questions `init` asks (shadcn/Zard style). `ask(question, fallback)` returns the answer, or
+ * the fallback for an empty one.
+ */
+export async function askInitOptions(ask, saved) {
+  const path = await ask('Where should the map components be copied?', saved?.path ?? DEFAULT_PATH);
+  const alias = await ask('Import alias for them?', saved?.alias ?? DEFAULT_ALIAS);
+  return { path, alias };
+}
+
+/** Terminal prompt for {@link askInitOptions}; null when stdin is not interactive. */
+function terminalAsk() {
+  if (!process.stdin.isTTY || !process.stdout.isTTY) return null;
+  return async (question, fallback) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    try {
+      const answer = (await rl.question(`${question} (${fallback}) `)).trim();
+      return answer || fallback;
+    } finally {
+      rl.close();
+    }
+  };
+}
+
 function usage(registry) {
   const names = Object.keys(registry.items);
   return [
     'Usage: ng-mapcn <command> [options]',
     '',
     'Commands:',
-    '  init                 Set up maplibre-gl and copy the core map',
+    '  init                 Set up maplibre-gl, the import alias and copy the core map',
     '  add <items...>       Copy components (and their dependencies) into your app',
     '  list                 List available components (✓ = installed)',
     '',
     'Options:',
-    `  --path <dir>         Target directory (default: ${DEFAULT_PATH})`,
+    `  --path <dir>         Target directory (init default: ${DEFAULT_PATH}; then ${CONFIG_FILE})`,
+    `  --alias <import>     Import alias for it, added to tsconfig paths (init default: ${DEFAULT_ALIAS})`,
     '  --project <name>     Angular project (init)',
+    '  -y, --yes            Do not ask, use the defaults (init)',
     '  --all                Every component except draw',
     '  --overwrite          Replace existing files (add)',
     '  --skip-install       Do not install packages',
@@ -182,7 +225,21 @@ export async function main(argv, env = {}) {
     );
     return 1;
   }
-  const target = options.path ?? DEFAULT_PATH;
+  const config = readConfig(cwd);
+  if (
+    command === 'init' &&
+    !options.yes &&
+    options.path === undefined &&
+    options.alias === undefined
+  ) {
+    const ask = env.ask === undefined ? terminalAsk() : env.ask;
+    if (ask) Object.assign(options, await askInitOptions(ask, config));
+  }
+  if (command !== 'init' && options.path === undefined && !config) {
+    err(`${CONFIG_FILE} not found. Run "npx ng-mapcn@latest init" first, or pass --path <dir>.`);
+    return 1;
+  }
+  const target = options.path ?? config?.path ?? DEFAULT_PATH;
 
   if (command === 'list') {
     for (const item of Object.values(registry.items)) {
@@ -256,7 +313,8 @@ export async function main(argv, env = {}) {
     command === 'init'
       ? {
           project: options.project,
-          path: target,
+          path: options.path ?? config?.path,
+          alias: options.alias ?? config?.alias,
           all: options.all,
           skipInstall: options.skipInstall,
         }

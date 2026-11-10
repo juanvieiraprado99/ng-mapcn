@@ -22,8 +22,7 @@
     },
     "path": {
       "type": "string",
-      "description": "Directory (relative to the workspace root) where the components are copied.",
-      "default": "src/app/components/ui/map"
+      "description": "Directory (relative to the workspace root) where the components are copied. Defaults to the path saved in ng-mapcn.json by init."
     },
     "skipInstall": {
       "type": "boolean",

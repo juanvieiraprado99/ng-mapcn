@@ -6,13 +6,15 @@ import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
 import { renderBarrel } from '../registry/barrel';
 import { readRegistry, resolve } from '../registry/resolve';
+import { DEFAULT_PATH, readConfig } from '../utils/config';
 import { joinPath, normalizeTargetPath } from '../utils/path';
 
 export interface AddOptions {
   components?: string[];
   all?: boolean;
   overwrite?: boolean;
-  path: string;
+  /** Target folder; defaults to the one saved in ng-mapcn.json by `init`, else the default. */
+  path?: string;
   skipInstall?: boolean;
 }
 
@@ -22,8 +24,8 @@ export interface AddOptions {
  * With no components it copies the core only.
  */
 export function add(options: AddOptions): Rule {
-  const path = normalizeTargetPath(options.path);
   return (tree: Tree, context: SchematicContext) => {
+    const path = normalizeTargetPath(options.path ?? readConfig(tree)?.path ?? DEFAULT_PATH);
     const registry = readRegistry();
     const resolution = resolve(registry, options.components ?? [], { all: options.all });
 

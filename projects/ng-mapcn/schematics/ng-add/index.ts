@@ -13,7 +13,15 @@ import {
   type WorkspaceDefinition,
 } from '@schematics/angular/utility';
 
+import {
+  DEFAULT_ALIAS,
+  DEFAULT_PATH,
+  normalizeAlias,
+  readConfig,
+  writeConfig,
+} from '../utils/config';
 import { dirnamePath, joinPath, normalizeTargetPath, relativePath } from '../utils/path';
+import { ensureAlias } from '../utils/tsconfig';
 
 // v6.4.1+ fixes GHSA-jrc7-96c5-q579 (attribution XSS); the copied sources are written against v6.
 const MAPLIBRE_VERSION = '^6.11.2';
@@ -57,14 +65,17 @@ const PASSTHROUGH_CSS = `
 
 interface NgAddOptions {
   project?: string;
-  path: string;
+  path?: string;
+  alias?: string;
   all?: boolean;
   skipInstall?: boolean;
 }
 
 export function ngAdd(options: NgAddOptions): Rule {
-  const path = normalizeTargetPath(options.path);
   return async (tree: Tree, context: SchematicContext) => {
+    const saved = readConfig(tree);
+    const path = normalizeTargetPath(options.path ?? saved?.path ?? DEFAULT_PATH);
+    const alias = normalizeAlias(options.alias ?? saved?.alias ?? DEFAULT_ALIAS);
     const workspace = await readWorkspaceOrWarn(tree, context);
     const projectName = workspace ? resolveProjectName(workspace, options.project) : undefined;
     const project = projectName ? workspace?.projects.get(projectName) : undefined;
@@ -73,8 +84,25 @@ export function ngAdd(options: NgAddOptions): Rule {
       projectName ? registerBuildOptions(projectName) : noop(),
       appendGlobalStyles(path, project),
       schematic('add', { path, all: options.all, components: [], skipInstall: true }),
+      addImportAlias(path, alias, project),
+      (t: Tree) => writeConfig(t, { path, alias, project: projectName }),
       options.skipInstall ? noop() : installDependencies(),
+      (_t: Tree, ctx: SchematicContext) => {
+        ctx.logger.info(`Import the map from "${alias}":`);
+        ctx.logger.info(`  import { MapComponent } from '${alias}';`);
+      },
     ]);
+  };
+}
+
+/** Maps the alias to the copy folder in tsconfig (also in the project tsconfigs that set paths). */
+function addImportAlias(path: string, alias: string, project?: ProjectDefinition): Rule {
+  return (tree: Tree, context: SchematicContext) => {
+    const projectTsconfigs = ['build', 'test']
+      .map((target) => project?.targets.get(target)?.options?.['tsConfig'])
+      .filter((file): file is string => typeof file === 'string');
+    ensureAlias(tree, context, { path, alias, projectTsconfigs });
+    return tree;
   };
 }
 

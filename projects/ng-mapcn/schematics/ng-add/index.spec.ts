@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 // Runs against the compiled collection: `npm run test:schematics` builds it first.
 const COLLECTION = join(process.cwd(), 'dist', 'ng-mapcn', 'schematics', 'collection.json');
 const MAPLIBRE_CSS = 'node_modules/maplibre-gl/dist/maplibre-gl.css';
-const DEFAULT_PATH = 'src/app/components/ui/map';
+const DEFAULT_PATH = 'src/app/shared/components/map';
 
 interface Workspace {
   pkg?: object | null;
@@ -282,7 +282,7 @@ describe('ng-add schematic', () => {
       expect(
         tree
           .readContent('src/styles.scss')
-          .startsWith("@use './app/components/ui/map/styles/index' as *;\n"),
+          .startsWith("@use './app/shared/components/map/styles/index' as *;\n"),
       ).toBe(true);
     });
 
@@ -348,6 +348,44 @@ describe('ng-add schematic', () => {
 
       expect(tree.exists('src/vendor/map/components/map/map.component.ts')).toBe(true);
       expect(tree.exists(`${DEFAULT_PATH}/index.ts`)).toBe(false);
+    });
+
+    it('saves ng-mapcn.json with the path, alias and project', async () => {
+      const tree = await run();
+
+      expect(readJson(tree, 'ng-mapcn.json')).toEqual({
+        path: DEFAULT_PATH,
+        alias: '@/shared/components/map',
+        project: 'app',
+      });
+    });
+
+    it('maps the alias in tsconfig.json', async () => {
+      const base = createTree();
+      base.create('tsconfig.json', '{\n  "compilerOptions": {}\n}\n');
+      const tree = await run({}, base);
+
+      expect(readJson(tree, 'tsconfig.json').compilerOptions.paths).toEqual({
+        '@/*': ['./src/app/*'],
+      });
+    });
+
+    it('maps a custom alias to a custom path', async () => {
+      const base = createTree();
+      base.create('tsconfig.json', '{ "compilerOptions": {} }');
+      const tree = await run({ path: 'libs/maps', alias: '@maps' }, base);
+
+      expect(readJson(tree, 'tsconfig.json').compilerOptions.paths).toEqual({
+        '@maps': ['./libs/maps'],
+        '@maps/*': ['./libs/maps/*'],
+      });
+      expect(readJson(tree, 'ng-mapcn.json')).toMatchObject({ path: 'libs/maps', alias: '@maps' });
+    });
+
+    it('rejects an alias with a wildcard or quotes', async () => {
+      for (const alias of ['@maps/*', "it's", '']) {
+        await expect(run({ alias })).rejects.toThrow(/--alias/);
+      }
     });
 
     it('schedules a node-package install task', async () => {

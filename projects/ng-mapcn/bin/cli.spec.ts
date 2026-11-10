@@ -15,14 +15,15 @@ import { join, sep } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 
 // @ts-expect-error plain ESM module without type declarations
-import { main, parseArgs, resolveDevkit, UsageError } from './cli.mjs';
+import { askInitOptions, main, parseArgs, resolveDevkit, UsageError } from './cli.mjs';
 
 // Runs against the compiled collection: `npm run test:schematics` builds it first.
 const ROOT = process.cwd();
 const COLLECTION = join(ROOT, 'dist', 'ng-mapcn', 'schematics', 'collection.json');
 const TMP = join(ROOT, 'tmp', 'cli');
 const MAPLIBRE_CSS = 'node_modules/maplibre-gl/dist/maplibre-gl.css';
-const TARGET = 'src/app/components/ui/map';
+const TARGET = 'src/app/shared/components/map';
+const ALIAS = '@/shared/components/map';
 
 function workspace(name: string, { empty = false } = {}): string {
   const dir = join(TMP, name);
@@ -48,14 +49,29 @@ function workspace(name: string, { empty = false } = {}): string {
     }),
   );
   writeFileSync(join(dir, 'src', 'styles.scss'), 'body { margin: 0; }\n');
+  writeFileSync(
+    join(dir, 'tsconfig.json'),
+    '/* To learn more about this file see: https://angular.dev/config/tsconfig. */\n' +
+      '{\n  "compilerOptions": {\n    "strict": true\n  }\n}\n',
+  );
   return dir;
 }
 
-async function run(cwd: string, argv: string[]) {
+/** A workspace where `init` already ran (ng-mapcn.json present), without running it. */
+function initialized(name: string): string {
+  const dir = workspace(name);
+  writeFileSync(join(dir, 'ng-mapcn.json'), JSON.stringify({ path: TARGET, alias: ALIAS }));
+  return dir;
+}
+
+type Ask = (question: string, fallback: string) => Promise<string>;
+
+async function run(cwd: string, argv: string[], ask: Ask | null = null) {
   const stdout: string[] = [];
   const stderr: string[] = [];
   const code: number = await main(argv, {
     cwd,
+    ask,
     collection: COLLECTION,
     stdout: (s: string) => stdout.push(s),
     stderr: (s: string) => stderr.push(s),
@@ -88,6 +104,13 @@ describe('parseArgs', () => {
       options: { skipInstall: true, all: true },
     });
   });
+  it('reads --alias, --yes and -y', () => {
+    expect(parseArgs(['init', '--alias', '@maps', '--yes']).options).toMatchObject({
+      alias: '@maps',
+      yes: true,
+    });
+    expect(parseArgs(['init', '-y']).options.yes).toBe(true);
+  });
   it('maps no command, -h and -v', () => {
     expect(parseArgs([]).command).toBe('help');
     expect(parseArgs(['-h']).command).toBe('help');
@@ -98,7 +121,8 @@ describe('parseArgs', () => {
   });
 });
 
-describe('main', () => {
+// The first run loads the devkit cold (several seconds on Windows).
+describe('main', { timeout: 60_000 }, () => {
   it('init copies the core and sets up angular.json', async () => {
     const cwd = workspace('init');
     const { code } = await run(cwd, ['init', '--skip-install']);
@@ -107,6 +131,74 @@ describe('main', () => {
     const styles = JSON.parse(readFileSync(join(cwd, 'angular.json'), 'utf8')).projects.app
       .architect.build.options.styles;
     expect(styles).toContain(MAPLIBRE_CSS);
+  });
+
+  it('init saves ng-mapcn.json and maps the alias in tsconfig.json (comments kept)', async () => {
+    const cwd = workspace('init-config');
+    const { code, out } = await run(cwd, ['init', '--skip-install']);
+    expect(code).toBe(0);
+    expect(JSON.parse(readFileSync(join(cwd, 'ng-mapcn.json'), 'utf8'))).toEqual({
+      path: TARGET,
+      alias: ALIAS,
+      project: 'app',
+    });
+    const tsconfig = readFileSync(join(cwd, 'tsconfig.json'), 'utf8');
+    expect(tsconfig).toContain('/* To learn more about this file');
+    expect(tsconfig).toContain('"@/*": [');
+    expect(tsconfig).toContain('"./src/app/*"');
+    expect(tsconfig).not.toContain('baseUrl');
+    expect(out).toContain(`import { MapComponent } from '${ALIAS}';`);
+  });
+
+  it('init asks where to copy and which alias, then add and list use the answers', async () => {
+    const cwd = workspace('init-ask');
+    const questions: string[] = [];
+    const answers = ['libs/maps', '@maps'];
+    const ask: Ask = async (question) => {
+      questions.push(question);
+      return answers.shift()!;
+    };
+    expect((await run(cwd, ['init', '--skip-install'], ask)).code).toBe(0);
+    expect(questions).toHaveLength(2);
+    expect(existsSync(join(cwd, 'libs/maps/components/map/map.component.ts'))).toBe(true);
+    const paths = readFileSync(join(cwd, 'tsconfig.json'), 'utf8');
+    expect(paths).toContain('"@maps": [');
+    expect(paths).toContain('"./libs/maps"');
+    expect(paths).toContain('"@maps/*": [');
+
+    expect((await run(cwd, ['add', 'scale', '--skip-install'])).code).toBe(0);
+    expect(existsSync(join(cwd, 'libs/maps/components/map-scale/map-scale.component.ts'))).toBe(
+      true,
+    );
+    expect(existsSync(join(cwd, TARGET))).toBe(false);
+    const { out } = await run(cwd, ['list']);
+    expect(out.split('\n').find((l) => l.includes('scale'))).toContain('✓');
+  });
+
+  it('init --yes and explicit flags skip the questions', async () => {
+    let asked = 0;
+    const ask: Ask = async (_q, fallback) => {
+      asked++;
+      return fallback;
+    };
+    expect((await run(workspace('init-yes'), ['init', '--yes', '--skip-install'], ask)).code).toBe(
+      0,
+    );
+    expect(
+      (await run(workspace('init-flag'), ['init', '--path', 'src/maps', '--skip-install'], ask))
+        .code,
+    ).toBe(0);
+    expect(asked).toBe(0);
+  });
+
+  it('add and list without ng-mapcn.json ask to run init first', async () => {
+    const cwd = workspace('no-config');
+    for (const argv of [['add', 'marker'], ['list']]) {
+      const { code, err } = await run(cwd, argv);
+      expect(code).toBe(1);
+      expect(err).toContain('ng-mapcn.json not found');
+      expect(err).toContain('init');
+    }
   });
 
   it('add copies a component after init', async () => {
@@ -141,7 +233,7 @@ describe('main', () => {
   });
 
   it('add without items prints usage', async () => {
-    const cwd = workspace('add-usage');
+    const cwd = initialized('add-usage');
     const { code, err } = await run(cwd, ['add']);
     expect(code).toBe(1);
     expect(err).toContain('marker');
@@ -157,7 +249,7 @@ describe('main', () => {
   });
 
   it('list with an empty target shows no check marks', async () => {
-    const cwd = workspace('list-empty');
+    const cwd = initialized('list-empty');
     const { code, out } = await run(cwd, ['list']);
     expect(code).toBe(0);
     expect(out).toContain('core');
@@ -172,10 +264,26 @@ describe('main', () => {
   });
 
   it('unknown component exits 1', async () => {
-    const cwd = workspace('unknown');
+    const cwd = initialized('unknown');
     const { code, err } = await run(cwd, ['add', 'nope', '--skip-install']);
     expect(code).toBe(1);
     expect(err).toMatch(/Unknown component/);
+  });
+});
+
+describe('askInitOptions', () => {
+  it('offers the saved config, else the defaults, as fallbacks', async () => {
+    const fallbacks: string[] = [];
+    const echo = async (_q: string, fallback: string) => {
+      fallbacks.push(fallback);
+      return fallback;
+    };
+    expect(await askInitOptions(echo, null)).toEqual({ path: TARGET, alias: ALIAS });
+    expect(await askInitOptions(echo, { path: 'libs/x', alias: '@x' })).toEqual({
+      path: 'libs/x',
+      alias: '@x',
+    });
+    expect(fallbacks).toEqual([TARGET, ALIAS, 'libs/x', '@x']);
   });
 });
 

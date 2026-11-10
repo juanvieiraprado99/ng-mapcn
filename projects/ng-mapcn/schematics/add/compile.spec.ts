@@ -96,4 +96,57 @@ describe('per-component copies type-check on their own', () => {
 
     expect(failures, failures.join('\n')).toEqual([]);
   }, 300_000);
+
+  it('a consumer file compiles importing from the alias that init maps', async () => {
+    const runner = new SchematicTestRunner('ng-mapcn', COLLECTION);
+    const tree = Tree.empty();
+    tree.create(
+      'package.json',
+      JSON.stringify({ name: 'app', dependencies: { 'maplibre-gl': '^6.11.2' } }),
+    );
+    tree.create('tsconfig.json', JSON.stringify({ compilerOptions: tsconfig.compilerOptions }));
+    tree.create(
+      'angular.json',
+      JSON.stringify({ version: 1, projects: { app: { root: '', architect: {} } } }),
+    );
+    const afterInit = await runner.runSchematic('ng-add', { skipInstall: true }, tree);
+    const result = await runner.runSchematic(
+      'add',
+      { components: ['controls', 'draw'], skipInstall: true },
+      afterInit,
+    );
+
+    const dir = join(OUT, 'consumer');
+    rmSync(dir, { recursive: true, force: true });
+    for (const file of result.files) {
+      if (!file.startsWith('/src/') && file !== '/tsconfig.json') continue;
+      const target = join(dir, file.slice(1));
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, result.read(file)!);
+    }
+    // The snippet the docs show for the Controls page, as a copy-paste user pastes it.
+    writeFileSync(
+      join(dir, 'src', 'app', 'controls-map.ts'),
+      `import { Component } from '@angular/core';
+import { MapComponent, MapControlsComponent } from '@/shared/components/map';
+import { MapDrawComponent } from '@/shared/components/map/draw';
+
+@Component({
+  selector: 'app-controls-map',
+  imports: [MapComponent, MapControlsComponent, MapDrawComponent],
+  template: '<ng-map><ng-map-controls /><ng-map-draw /></ng-map>',
+})
+export class ControlsMapComponent {}
+`,
+    );
+    const generated = JSON.parse(readFileSync(join(dir, 'tsconfig.json'), 'utf8'));
+    expect(generated.compilerOptions.paths).toEqual({ '@/*': ['./src/app/*'] });
+    writeFileSync(
+      join(dir, 'tsconfig.json'),
+      JSON.stringify({ ...generated, include: ['src/**/*.ts'] }, null, 2),
+    );
+
+    const { code, out } = await tsc(dir);
+    expect(code, out).toBe(0);
+  }, 120_000);
 });

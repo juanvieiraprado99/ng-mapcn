@@ -11,7 +11,7 @@ import type { Registry } from '../registry/types';
 // Runs against the compiled collection: `npm run test:schematics` builds it first.
 const DIST = join(process.cwd(), 'dist', 'ng-mapcn', 'schematics');
 const COLLECTION = join(DIST, 'collection.json');
-const DEFAULT_PATH = 'src/app/components/ui/map';
+const DEFAULT_PATH = 'src/app/shared/components/map';
 const registry = JSON.parse(readFileSync(join(DIST, 'registry.json'), 'utf8')) as Registry;
 
 const pkgTree = (pkg: object = { name: 'app', dependencies: { 'maplibre-gl': '^6.11.2' } }) => {
@@ -160,6 +160,24 @@ describe('add schematic', () => {
     expect(tree.exists('libs/maps/ui/index.ts')).toBe(true);
     expect(tree.exists('libs/maps/ui/components/map/map.component.ts')).toBe(true);
     expect(tree.files.some((f) => f.startsWith(`/${DEFAULT_PATH}/`))).toBe(false);
+  });
+
+  it('copies to the folder saved in ng-mapcn.json when no path is given', async () => {
+    const tree = pkgTree();
+    tree.create('ng-mapcn.json', JSON.stringify({ path: 'libs/maps', alias: '@maps' }));
+    const result = await run({ components: ['scale'] }, tree);
+
+    expect(result.exists('libs/maps/components/map-scale/map-scale.component.ts')).toBe(true);
+    expect(result.files.some((f) => f.startsWith(`/${DEFAULT_PATH}/`))).toBe(false);
+  });
+
+  it('an explicit path wins over ng-mapcn.json', async () => {
+    const tree = pkgTree();
+    tree.create('ng-mapcn.json', JSON.stringify({ path: 'libs/maps', alias: '@maps' }));
+    const result = await run({ components: ['scale'], path: 'libs/other' }, tree);
+
+    expect(result.exists('libs/other/index.ts')).toBe(true);
+    expect(result.exists('libs/maps/index.ts')).toBe(false);
   });
 
   it('rejects invalid paths', async () => {

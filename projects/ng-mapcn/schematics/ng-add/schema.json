@@ -14,7 +14,14 @@
     "path": {
       "type": "string",
       "description": "Directory (relative to the workspace root) where the map components are copied.",
-      "default": "src/app/components/ui/map"
+      "default": "src/app/shared/components/map",
+      "x-prompt": "Where should the map components be copied?"
+    },
+    "alias": {
+      "type": "string",
+      "description": "Import alias for the copied components, added to tsconfig paths.",
+      "default": "@/shared/components/map",
+      "x-prompt": "Import alias for them?"
     },
     "all": {
       "type": "boolean",
