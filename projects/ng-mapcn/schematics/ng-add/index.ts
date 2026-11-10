@@ -71,7 +71,12 @@ export function ngAdd(options: NgAddOptions): Rule {
       addMaplibreDependency(),
       projectName ? registerBuildOptions(projectName) : noop(),
       appendGlobalStyles(path, project),
-      schematic('map', { path, draw: options.draw }),
+      schematic('add', {
+        path,
+        all: true,
+        components: options.draw ? ['draw'] : [],
+        skipInstall: true,
+      }),
       installDependencies(),
     ]);
   };

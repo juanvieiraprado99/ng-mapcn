@@ -1,7 +1,7 @@
 // Builds the schematics into dist/ng-mapcn/schematics. Run after
 // `ng build ng-mapcn` (which creates dist/ng-mapcn).
 import { execSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,16 +24,8 @@ mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, 'package.json'), JSON.stringify({ type: 'commonjs' }, null, 2) + '\n');
 cpSync(join(schematicsSrc, 'collection.json'), join(outDir, 'collection.json'));
 cpSync(join(schematicsSrc, 'ng-add', 'schema.json'), join(outDir, 'ng-add', 'schema.json'));
-cpSync(join(schematicsSrc, 'map', 'schema.json'), join(outDir, 'map', 'schema.json'));
 cpSync(join(schematicsSrc, 'registry.json'), join(outDir, 'registry.json'));
 cpSync(join(schematicsSrc, 'add', 'files'), join(outDir, 'add', 'files'), { recursive: true });
-// Task 4 creates add/schema.json; the legacy map/* copies go away with it.
-if (existsSync(join(schematicsSrc, 'add', 'schema.json'))) {
-  cpSync(join(schematicsSrc, 'add', 'schema.json'), join(outDir, 'add', 'schema.json'));
-}
-for (const legacy of ['files', 'draw-files']) {
-  const from = join(schematicsSrc, 'map', legacy);
-  if (existsSync(from)) cpSync(from, join(outDir, 'map', legacy), { recursive: true });
-}
+cpSync(join(schematicsSrc, 'add', 'schema.json'), join(outDir, 'add', 'schema.json'));
 
 console.log(`Schematics built to ${outDir}`);
