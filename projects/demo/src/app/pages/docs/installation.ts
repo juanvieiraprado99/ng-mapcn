@@ -4,6 +4,8 @@ import { MapComponent, MapControlsComponent } from 'ng-mapcn';
 import { CodeBlockComponent } from '../../shared/code-block';
 import { DocsImports } from '../../shared/docs';
 import { InstallCommandComponent } from '../../shared/install-command';
+import { PropTableComponent } from '../../shared/prop-table';
+import { REGISTRY_ITEMS } from './registry-items.generated';
 
 const USAGE_CODE = `import { Component } from '@angular/core';
 import { MapComponent, MapControlsComponent } from 'ng-mapcn';
@@ -29,6 +31,7 @@ export class MyMapComponent {}`;
     DocsImports,
     CodeBlockComponent,
     InstallCommandComponent,
+    PropTableComponent,
     MapComponent,
     MapControlsComponent,
   ],
@@ -49,16 +52,49 @@ export class MyMapComponent {}`;
       </app-docs-section>
 
       <app-docs-section title="Installation">
-        <p>Run the following command to add the map components:</p>
-        <app-install-command />
+        <p>Run the following command to set up the map:</p>
+        <app-install-command cli="init" />
         <p>
-          This copies the component sources into your app (shadcn-style), installs
-          <code [class]="code">maplibre-gl</code> and registers its CSS.
-          <code [class]="code">ng add</code> installs with your workspace's package manager (npm,
-          pnpm, yarn or bun).
+          This installs <code [class]="code">maplibre-gl</code>, registers its CSS and worker
+          assets, adds the global popup styles and copies only the core
+          <code [class]="code">&lt;ng-map&gt;</code> component into your app (shadcn-style). It
+          installs with your workspace's package manager (npm, pnpm, yarn or bun). The Angular CLI
+          equivalent is <code [class]="code">ng add ng-mapcn</code>; pass
+          <code [class]="code">--path</code> to change the target folder (default
+          <code [class]="code">src/app/components/ui/map</code>).
         </p>
         <p>Alternatively, install it as a regular npm package:</p>
         <app-install-command packages="ng-mapcn maplibre-gl" />
+      </app-docs-section>
+
+      <app-docs-section title="Add components" anchor="add-components">
+        <p>Then copy the components you need, one command for as many as you want:</p>
+        <app-install-command cli="add marker route" />
+        <p>
+          Each item brings the files it depends on, and the core is always included. Files that
+          already exist are skipped (and logged), so your edits are safe; pass
+          <code [class]="code">--overwrite</code> to replace them. Pass
+          <code [class]="code">--all</code> to copy every item except
+          <code [class]="code">draw</code>, which is opt-in because it adds
+          <code [class]="code">terra-draw</code>. Run
+          <code [class]="code">npx ng-mapcn@latest list</code> to see the items and which ones are
+          already installed. The Angular CLI equivalent is
+          <code [class]="code">ng g ng-mapcn:add marker route</code>.
+        </p>
+        <p>
+          Dependencies point one way: <code [class]="code">marker-popup</code> pulls in
+          <code [class]="code">marker</code>, but adding
+          <code [class]="code">marker</code> alone does not copy the popup or tooltip. Names accept
+          the component form too (<code [class]="code">map-marker</code>,
+          <code [class]="code">Marker</code>) and commas
+          (<code [class]="code">marker,route</code>).
+        </p>
+        <app-prop-table
+          [rows]="items"
+          nameLabel="Item"
+          typeLabel="Depends on"
+          [showDefault]="false"
+        />
       </app-docs-section>
 
       <app-docs-section title="Usage">
@@ -102,6 +138,13 @@ export class MyMapComponent {}`;
 })
 export class InstallationComponent {
   readonly usageCode = USAGE_CODE;
+  /** Every item except the core, which `init` already copies. */
+  protected readonly items = REGISTRY_ITEMS.filter((item) => item.name !== 'core').map((item) => ({
+    name: item.name,
+    type: [...item.dependsOn, ...item.packages].join(', ') || '—',
+    default: '',
+    description: item.description,
+  }));
   readonly skillCommand = 'npx skills add juanvieiraprado99/ng-mapcn';
   readonly skillUrl = 'https://github.com/juanvieiraprado99/ng-mapcn/tree/main/skills/ng-mapcn';
 

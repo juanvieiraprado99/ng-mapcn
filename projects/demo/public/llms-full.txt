@@ -1,18 +1,19 @@
 # ng-mapcn — full reference
 
-> Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
+> Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `npx ng-mapcn init` / `add` (you own the code).
 
-Version: 22.0.0-beta.8 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
+Version: 22.0.0-beta.9 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
 
 ## Installation
 
 ### Copy-paste (recommended, shadcn-style)
 
 ```bash
-ng add ng-mapcn
+npx ng-mapcn@latest init
+npx ng-mapcn@latest add marker route
 ```
 
-Adds `maplibre-gl`, registers its CSS, appends the required `.maplibregl-popup-*` overrides and copies the component sources into `src/app/components/ui/map` (customize with `--path`). `ng add` installs with the workspace's package manager (npm, pnpm, yarn or bun).
+`init` (the same as `ng add ng-mapcn`) adds `maplibre-gl`, registers its CSS, appends the required `.maplibregl-popup-*` overrides and copies only the core `<ng-map>` into `src/app/components/ui/map` (customize with `--path`). `add` (the same as `ng g ng-mapcn:add`) copies the components you list and the files they depend on: the core is always included, existing files are skipped unless `--overwrite`, `--all` copies everything except `draw` (opt-in, it adds terra-draw: `add draw`), and `list` shows the items and the installed ones. `marker-content`, `marker-popup` and `marker-tooltip` depend on `marker`. Both install with the workspace's package manager (npm, pnpm, yarn or bun).
 
 ### npm package
 
@@ -826,7 +827,7 @@ Unit-test components that render `ng-map` in jsdom, without WebGL. `maplibre-gl`
 - **Vitest** (first-class): a setup file with `vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'))` and `configureFakeMapLibre({ spy: vi.fn })`, plus `server: { deps: { inline: [/ng-mapcn/] } }` in the Vitest config (without it the real `maplibre-gl` is loaded and the mock has no effect).
 - **Jest**: `moduleNameMapper: { '^maplibre-gl$': 'ng-mapcn/testing/maplibre' }` and `configureFakeMapLibre({ spy: jest.fn })`. Documented, not tested by ng-mapcn.
 - **Karma/Jasmine**: not supported (they cannot mock an ES module).
-- `ng add` does not copy the testing files: copy-paste users depend on the npm package for the fake.
+- `init` and `add` do not copy the testing files: copy-paste users depend on the npm package for the fake.
 - `ng-mapcn/testing/harness` imports `@angular/cdk/testing`, an optional peer: install `@angular/cdk` to use it.
 - Stable: `fakeRegistry`, the fake's getters and `structuralCalls()`. The fake's raw `calls` strings are not.
 - Change host values after rendering with `update(fixture, props)` (it calls `markForCheck()`) or signals in `hostProps`: in zoneless apps (the Angular default) a direct `fixture.componentInstance.x = ...` needs `fixture.changeDetectorRef.markForCheck()`, or the dev-mode check throws NG0100.
@@ -938,7 +939,7 @@ The map is created in `afterNextRender` (browser-only, after hydration) and ever
 - **Signals-first** — standalone components, `input()`/`output()`, `effect()`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
 - **SSR-safe** — the map is created in `afterNextRender`; nothing touches `document` on the server
-- **Copy-paste distribution** — `ng add ng-mapcn` copies the sources into your project (shadcn-style)
+- **Copy-paste distribution** — `npx ng-mapcn add <components>` copies the sources into your project (shadcn-style)
 
 ## Tech Stack
 

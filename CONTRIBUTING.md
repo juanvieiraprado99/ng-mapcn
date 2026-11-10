@@ -42,9 +42,9 @@ Inside `projects/ng-mapcn/src/lib/`:
 | `utils/bounds.ts`                                                                                                                                                                                  | Bounds helpers and `MapFitBoundsOptions` for `fitBounds` / `registerBounds`                            |
 | `styles/`                                                                                                                                                                                          | SCSS tokens/utilities and `map-styles.ts` (Carto defaults + `blankMapStyle`)                           |
 
-`projects/ng-mapcn/draw/` is the optional `ng-mapcn/draw` secondary entry point (`ng-map-draw`, built on terra-draw). The core entry must never import it; `ng add --draw` copies it to `<path>/draw` through `scripts/sync-schematic-files.mjs`.
+`projects/ng-mapcn/draw/` is the optional `ng-mapcn/draw` secondary entry point (`ng-map-draw`, built on terra-draw). The core entry must never import it; `npx ng-mapcn add draw` copies it to `<path>/draw` through `scripts/sync-schematic-files.mjs`.
 
-The library is also distributed by schematics (`ng add ng-mapcn`). `scripts/sync-schematic-files.mjs` mirrors `src/lib/**` into `schematics/map/files/`. That folder is generated and git-ignored, so never edit it by hand.
+The library is also distributed shadcn-style: `npx ng-mapcn init` (= `ng add ng-mapcn`) sets up the app and copies the core, and `npx ng-mapcn add <items>` (= `ng g ng-mapcn:add <items>`) copies components with the files they depend on. `scripts/generate-registry.mjs` builds the registry (`schematics/registry.json`: per item, its files, the items and the npm packages it needs) from the import graph of `src/lib/**`, and `scripts/sync-schematic-files.mjs` mirrors the sources into `schematics/add/files/`. Both are generated and git-ignored, so never edit them by hand. An item is a folder under `src/lib/components/` without its `map-` prefix (`map-marker` is `marker`; the `map` folder is `core`; `draw` is the optional entry point), and its description is the first sentence of the JSDoc above its component class, so give every new component one. The CLI lives in `projects/ng-mapcn/bin/` (`ng-mapcn.mjs` entry, `cli.mjs` logic); test it packed with `npx --package=<tgz> ng-mapcn <command>`. `scripts/generate-registry-docs.mjs` writes the items table of the Installation page.
 
 ## Library invariants
 
@@ -87,15 +87,15 @@ Unit tests run on [Vitest](https://vitest.dev) through the Angular CLI (`@angula
 ```bash
 npm test               # library + schematics + demo tests
 npm run test:lib       # library only
-npm run test:schematics  # builds the schematics, then tests ng-add / map with SchematicTestRunner
+npm run test:schematics  # builds the schematics, then tests ng-add / add with SchematicTestRunner
 npm run test:demo      # demo only (needs `npm run install:lib` first)
 npm run test:coverage  # library with coverage, written to coverage/ng-mapcn
 ng test ng-mapcn       # watch mode
 ```
 
-- Specs live next to the code as `*.spec.ts` under `projects/ng-mapcn/src/lib/`. They are not copied by the `ng add` schematic.
+- Specs live next to the code as `*.spec.ts` under `projects/ng-mapcn/src/lib/`. They are not copied by `init` or `add`.
 - MapLibre is mocked globally in `projects/ng-mapcn/src/testing/setup.ts`, so specs never create a real map. The fake is published as the `ng-mapcn/testing/maplibre` entry point (`projects/ng-mapcn/testing/maplibre/`): it has no imports, and its methods become `vi.fn` spies through `configureFakeMapLibre({ spy: vi.fn })` in the setup. Import `projects/ng-mapcn/src/testing/maplibre-fake.ts` (a re-export) to inspect the fake instances.
-- Test helpers go in `projects/ng-mapcn/src/testing/`, never in `src/lib`, so they are not shipped by the package or the schematic. Helpers meant for consumers go in the `ng-mapcn/testing` entry point (`projects/ng-mapcn/testing/src/`), which the package ships and the schematic never copies; `src/testing/render.ts` wraps them with the synchronous fake-timer `loadMap` the specs use.
+- Test helpers go in `projects/ng-mapcn/src/testing/`, never in `src/lib`, so they are not shipped by the package or the CLI. Helpers meant for consumers go in the `ng-mapcn/testing` entry point (`projects/ng-mapcn/testing/src/`), which the package ships and the schematic never copies; `src/testing/render.ts` wraps them with the synchronous fake-timer `loadMap` the specs use.
 - jsdom has no layout, so `ng-map` would wait forever for a non-zero container size. Render maps with `renderMap` from `src/testing/render.ts`, which stubs the size, and use `loadMap` (with `vi.useFakeTimers()`) to open the load gate.
 - Restore global state in `afterEach`: real timers, `vi.restoreAllMocks()` and the `<html>` class.
 

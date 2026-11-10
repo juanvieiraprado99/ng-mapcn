@@ -20,6 +20,7 @@ export default defineConfig([
     'projects/ng-mapcn/schematics/add/files/',
     'projects/ng-mapcn/schematics/registry.json',
     'projects/demo/src/app/blocks/block-sources.generated.ts',
+    'projects/demo/src/app/pages/docs/registry-items.generated.ts',
     'projects/demo/public/',
   ]),
   {

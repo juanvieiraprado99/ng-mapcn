@@ -5,16 +5,17 @@ import { lucideCheck, lucideCopy } from '@ng-icons/lucide';
 import { ZardButtonComponent } from '@/shared/components/button';
 
 const PACKAGE_MANAGERS = [
-  { manager: 'pnpm', exec: 'pnpm', add: 'pnpm add' },
-  { manager: 'npm', exec: 'npx', add: 'npm install' },
-  { manager: 'yarn', exec: 'yarn', add: 'yarn add' },
-  { manager: 'bun', exec: 'bunx', add: 'bun add' },
+  { manager: 'pnpm', exec: 'pnpm', dlx: 'pnpm dlx', add: 'pnpm add' },
+  { manager: 'npm', exec: 'npx', dlx: 'npx', add: 'npm install' },
+  { manager: 'yarn', exec: 'yarn', dlx: 'yarn dlx', add: 'yarn add' },
+  { manager: 'bun', exec: 'bunx', dlx: 'bunx', add: 'bun add' },
 ] as const;
 
 /**
  * mapcn `InstallCommand`: one command per package manager on "line" tabs.
  * By default the command runs the project's own Angular CLI (`ng add`) through each manager,
- * which then installs with that same manager. With `packages`, it installs them directly.
+ * which then installs with that same manager. With `cli`, it runs the standalone `ng-mapcn` CLI
+ * (`npx ng-mapcn@latest <cli>`). With `packages`, it installs them directly.
  */
 @Component({
   selector: 'app-install-command',
@@ -62,17 +63,24 @@ const PACKAGE_MANAGERS = [
 export class InstallCommandComponent {
   /** Package passed to `ng add`. */
   readonly name = input('ng-mapcn');
-  /** Extra `ng add` arguments, e.g. `--draw`. */
+  /** Extra `ng add` arguments, e.g. `--skip-install`. */
   readonly args = input('');
   /** Space-separated packages to install directly (`npm install ...`) instead of `ng add`. */
   readonly packages = input<string>();
+  /** `ng-mapcn` CLI arguments, e.g. `init` or `add marker route`, run with each manager's executor. */
+  readonly cli = input<string>();
 
   protected readonly tabs = computed(() => {
     const packages = this.packages();
+    const cli = this.cli();
     const args = this.args() ? ` ${this.args()}` : '';
-    return PACKAGE_MANAGERS.map(({ manager, exec, add }) => ({
+    return PACKAGE_MANAGERS.map(({ manager, exec, dlx, add }) => ({
       manager,
-      command: packages ? `${add} ${packages}` : `${exec} ng add ${this.name()}${args}`,
+      command: cli
+        ? `${dlx} ng-mapcn@latest ${cli}`
+        : packages
+          ? `${add} ${packages}`
+          : `${exec} ng add ${this.name()}${args}`,
     }));
   });
   protected readonly active = signal<string>(PACKAGE_MANAGERS[0].manager);

@@ -33,8 +33,8 @@ export const DOCS_ROUTES: Routes = [
           seo: {
             title: 'Install Angular Map Components',
             description:
-              'Install ng-mapcn in your Angular app with ng add or npm. Sets up maplibre-gl, registers its CSS and copies the map components into your project in one step.',
-            keywords: ['ng add ng-mapcn', 'install MapLibre Angular', 'Angular map setup'],
+              'Install ng-mapcn in your Angular app with npx ng-mapcn init or npm. Sets up maplibre-gl, registers its CSS and copies the map core into your project, then add components one by one.',
+            keywords: ['npx ng-mapcn init', 'install MapLibre Angular', 'Angular map setup'],
             breadcrumbs: [{ name: 'Docs', path: '/docs' }],
           },
         },

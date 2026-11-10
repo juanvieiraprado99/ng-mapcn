@@ -146,13 +146,13 @@ import { buildDrawStyles, defaultDrawPalettes } from 'ng-mapcn/draw';
         </p>
         <app-install-command packages="terra-draw terra-draw-maplibre-gl-adapter" />
         <p>
-          With the copy-paste distribution, add
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">--draw</code> instead:
-          it copies the draw sources to
+          With the copy-paste distribution, add the
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">draw</code> item
+          instead: it copies the draw sources to
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">&lt;path&gt;/draw</code>
           and adds both dependencies.
         </p>
-        <app-install-command args="--draw" />
+        <app-install-command cli="add draw" />
       </app-docs-section>
 
       <app-example-section

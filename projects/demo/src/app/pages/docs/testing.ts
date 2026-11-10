@@ -317,8 +317,8 @@ import {
             the Jest setup is documented but not tested.
           </li>
           <li>
-            <strong>Copy-paste users.</strong> <code [class]="code">ng add ng-mapcn</code> copies
-            the component sources but not the testing files. Install the
+            <strong>Copy-paste users.</strong> <code [class]="code">npx ng-mapcn@latest init</code> and
+            <code [class]="code">add</code> copy the component sources but not the testing files. Install the
             <code [class]="code">ng-mapcn</code> package as a dev dependency to get the fake, the
             helpers and the harnesses.
           </li>

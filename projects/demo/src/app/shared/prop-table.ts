@@ -28,7 +28,7 @@ export interface PropRow {
         <thead z-table-header>
           <tr z-table-row>
             <th z-table-head class="h-10 text-xs font-medium">{{ nameLabel() }}</th>
-            <th z-table-head class="h-10 text-xs font-medium">Type</th>
+            <th z-table-head class="h-10 text-xs font-medium">{{ typeLabel() }}</th>
             @if (showDefault()) {
               <th z-table-head class="h-10 text-xs font-medium">Default</th>
             }
@@ -69,6 +69,8 @@ export class PropTableComponent {
   readonly title = input<string>();
   /** Header of the first column ("Prop", "Input", "Output", ...). */
   readonly nameLabel = input('Prop');
+  /** Header of the second column ("Type", "Depends on", ...). */
+  readonly typeLabel = input('Type');
   /** Shows the Default column; turn it off for rows that have no defaults (functions, exports). */
   readonly showDefault = input(true);
 

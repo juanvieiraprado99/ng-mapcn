@@ -168,7 +168,7 @@ export class BlockDisplayComponent {
   );
   /** zard-cli for the block's UI, or the map library itself when it needs none. */
   protected readonly command = computed(
-    () => zardInstallCommand(this.block()) ?? 'npx ng add ng-mapcn',
+    () => zardInstallCommand(this.block()) ?? 'npx ng-mapcn@latest init',
   );
 
   protected readonly docsUrl = zardDocsUrl;

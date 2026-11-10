@@ -9,8 +9,10 @@ import { InstallCommandComponent } from './install-command';
   imports: [InstallCommandComponent],
   template: `
     <app-install-command id="ng-add" />
-    <app-install-command id="ng-add-args" args="--draw" />
+    <app-install-command id="ng-add-args" args="--skip-install" />
     <app-install-command id="packages" packages="ng-mapcn maplibre-gl" />
+    <app-install-command id="cli" cli="init" />
+    <app-install-command id="cli-add" cli="add marker route" />
   `,
 })
 class HostComponent {}
@@ -44,7 +46,9 @@ describe('InstallCommandComponent', () => {
 
   it('appends the ng add arguments', async () => {
     const fixture = await render();
-    expect(commands(fixture.nativeElement, 'ng-add-args')[1]).toBe('npx ng add ng-mapcn --draw');
+    expect(commands(fixture.nativeElement, 'ng-add-args')[1]).toBe(
+      'npx ng add ng-mapcn --skip-install',
+    );
   });
 
   it('installs the packages directly with each manager', async () => {
@@ -55,5 +59,18 @@ describe('InstallCommandComponent', () => {
       'yarn add ng-mapcn maplibre-gl',
       'bun add ng-mapcn maplibre-gl',
     ]);
+  });
+
+  it('renders the CLI command per package manager', async () => {
+    const fixture = await render();
+    expect(commands(fixture.nativeElement, 'cli')).toEqual([
+      'pnpm dlx ng-mapcn@latest init',
+      'npx ng-mapcn@latest init',
+      'yarn dlx ng-mapcn@latest init',
+      'bunx ng-mapcn@latest init',
+    ]);
+    expect(commands(fixture.nativeElement, 'cli-add')[1]).toBe(
+      'npx ng-mapcn@latest add marker route',
+    );
   });
 });

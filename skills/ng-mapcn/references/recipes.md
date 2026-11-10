@@ -1,6 +1,6 @@
 # ng-mapcn recipes
 
-Copy-paste examples. Import from `'ng-mapcn'` (or from the folder `ng add` copied into your app). Every map needs a parent with an explicit height. Coordinates are `[longitude, latitude]`.
+Copy-paste examples. Import from `'ng-mapcn'` (or from the folder `init`/`add` copied into your app). Every map needs a parent with an explicit height. Coordinates are `[longitude, latitude]`.
 
 Contents: [Controls](#controls) | [Markers from an array](#markers-from-an-array) | [Draggable marker](#draggable-marker) | [Standalone popup](#standalone-popup) | [Route](#route) | [GeoJSON with hover](#geojson-with-hover) | [Arcs](#arcs) | [Clusters](#clusters) | [Heatmap](#heatmap) | [Symbols](#symbols) | [Tile sources](#tile-sources) | [Draw](#draw) | [Controlled viewport and raw map](#controlled-viewport-and-raw-map) | [Basemaps, theme, projection](#basemaps-theme-projection) | [Custom layer component](#custom-layer-component) | [Lazy loading](#lazy-loading) | [Fit to data](#fit-to-data) | [3D buildings and terrain](#3d-buildings-and-terrain) | [Testing](#testing)
 
@@ -418,7 +418,7 @@ Gotchas: the map needs a pitch to look 3D (`pitch` is an `options` entry, not an
 
 ## Draw
 
-Needs `npm i terra-draw terra-draw-maplibre-gl-adapter` (or `ng add ng-mapcn --draw`); import from the `'ng-mapcn/draw'` entry point (copy-paste: `<path>/draw`).
+Needs `npm i terra-draw terra-draw-maplibre-gl-adapter` (or `npx ng-mapcn@latest add draw`); import from the `'ng-mapcn/draw'` entry point (copy-paste: `<path>/draw`).
 
 ```ts
 import { Component, signal, viewChild } from '@angular/core';
@@ -580,7 +580,7 @@ Keep every `ng-mapcn` import inside a lazily loaded file:
 
 ## Testing
 
-Unit-test components that render `<ng-map>` in jsdom (no WebGL). `ng-mapcn` imports `maplibre-gl` statically, so the runner replaces that module with the fake from `ng-mapcn/testing/maplibre`. Three entry points, all from the npm package (`ng add` does not copy them): `ng-mapcn/testing/maplibre` (the fake), `ng-mapcn/testing` (helpers) and `ng-mapcn/testing/harness` (CDK harnesses, needs the optional `@angular/cdk` peer). Never import them from app code. Vitest is first-class; Jest is documented but untested; Karma/Jasmine are unsupported.
+Unit-test components that render `<ng-map>` in jsdom (no WebGL). `ng-mapcn` imports `maplibre-gl` statically, so the runner replaces that module with the fake from `ng-mapcn/testing/maplibre`. Three entry points, all from the npm package (`init` and `add` do not copy them): `ng-mapcn/testing/maplibre` (the fake), `ng-mapcn/testing` (helpers) and `ng-mapcn/testing/harness` (CDK harnesses, needs the optional `@angular/cdk` peer). Never import them from app code. Vitest is first-class; Jest is documented but untested; Karma/Jasmine are unsupported.
 
 Vitest setup (`src/testing/setup.ts` in `setupFiles`, and a config in `runnerConfig` that inlines `ng-mapcn`):
 

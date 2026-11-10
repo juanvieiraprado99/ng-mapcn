@@ -8,7 +8,7 @@ export const SITE_URL = 'https://ng-mapcn.vercel.app';
 export const SITE_NAME = 'ng-mapcn';
 export const SITE_TITLE = 'ng-mapcn - Beautiful maps, made simple for Angular';
 export const SITE_DESCRIPTION =
-  'Beautiful, ready-to-use map components for Angular. Built on MapLibre GL, styled with Tailwind CSS, and installed with ng add — markers, popups, routes, clusters and more.';
+  'Beautiful, ready-to-use map components for Angular. Built on MapLibre GL, styled with Tailwind CSS, and installed one component at a time with npx ng-mapcn add — markers, popups, routes, clusters and more.';
 export const SITE_AUTHOR = 'Juan Prado';
 export const SITE_AUTHOR_URL = 'https://github.com/juanvieiraprado99';
 export const SITE_REPO = GITHUB_URL;

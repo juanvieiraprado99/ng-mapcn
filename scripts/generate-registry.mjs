@@ -110,8 +110,11 @@ function describe(text) {
     .split(/\s@\w+/)[0]
     .replace(/\s+/g, ' ')
     .trim();
-  const sentence = /^.*?[.!?](?=\s|$)/.exec(noTags);
-  return (sentence ? sentence[0] : noTags).trim();
+  // Keep "e.g." / "i.e." inside the sentence and show markdown links as their text.
+  const plain = noTags.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
+  const masked = plain.replace(/\b(e\.g|i\.e)\./g, '$1\u0000');
+  const sentence = /^.*?[.!?](?=\s|$)/.exec(masked);
+  return (sentence ? sentence[0] : masked).replaceAll('\u0000', '.').trim();
 }
 
 /** Package name of a bare specifier. */

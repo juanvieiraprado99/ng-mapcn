@@ -23,17 +23,18 @@ const api = JSON.parse(
 
 const publicDir = join(root, 'projects', 'demo', 'public');
 
-const INTRO = `> Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via \`ng add\` (you own the code).`;
+const INTRO = `> Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via \`npx ng-mapcn init\` / \`add\` (you own the code).`;
 
 const INSTALLATION = `## Installation
 
 ### Copy-paste (recommended, shadcn-style)
 
 \`\`\`bash
-ng add ng-mapcn
+npx ng-mapcn@latest init
+npx ng-mapcn@latest add marker route
 \`\`\`
 
-Adds \`maplibre-gl\`, registers its CSS, appends the required \`.maplibregl-popup-*\` overrides and copies the component sources into \`src/app/components/ui/map\` (customize with \`--path\`). \`ng add\` installs with the workspace's package manager (npm, pnpm, yarn or bun).
+\`init\` (the same as \`ng add ng-mapcn\`) adds \`maplibre-gl\`, registers its CSS, appends the required \`.maplibregl-popup-*\` overrides and copies only the core \`<ng-map>\` into \`src/app/components/ui/map\` (customize with \`--path\`). \`add\` (the same as \`ng g ng-mapcn:add\`) copies the components you list and the files they depend on: the core is always included, existing files are skipped unless \`--overwrite\`, \`--all\` copies everything except \`draw\` (opt-in, it adds terra-draw: \`add draw\`), and \`list\` shows the items and the installed ones. \`marker-content\`, \`marker-popup\` and \`marker-tooltip\` depend on \`marker\`. Both install with the workspace's package manager (npm, pnpm, yarn or bun).
 
 ### npm package
 
@@ -98,7 +99,7 @@ const FEATURES = `## Key Features
 - **Signals-first** — standalone components, \`input()\`/\`output()\`, \`effect()\`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
 - **SSR-safe** — the map is created in \`afterNextRender\`; nothing touches \`document\` on the server
-- **Copy-paste distribution** — \`ng add ng-mapcn\` copies the sources into your project (shadcn-style)`;
+- **Copy-paste distribution** — \`npx ng-mapcn add <components>\` copies the sources into your project (shadcn-style)`;
 
 const TECH_STACK = `## Tech Stack
 
@@ -151,7 +152,7 @@ Version: ${pkg.version} · License: ${pkg.license ?? 'MIT'} · npm: https://www.
 
 - [Home](${SITE_URL}/): live examples — trails, arcs, fly-to, delivery, analytics, EV charging.
 - [Documentation](${SITE_URL}/docs): introduction, features and supported basemaps.
-- [Installation](${SITE_URL}/docs/installation): \`ng add\` (copy-paste) or npm package.
+- [Installation](${SITE_URL}/docs/installation): \`npx ng-mapcn init\` / \`add\` (copy-paste) or npm package.
 - [Map Styles](${SITE_URL}/docs/basemaps): a working example per provider (Carto, OpenFreeMap, OpenStreetMap, MapTiler, Stadia).
 - [Testing your maps](${SITE_URL}/docs/testing): unit-test components that render \`ng-map\` without WebGL (MapLibre fake, helpers, CDK harnesses; Vitest first-class).
 - [API Reference](${SITE_URL}/docs/api-reference): every component with inputs and outputs.
@@ -277,7 +278,7 @@ Unit-test components that render \`ng-map\` in jsdom, without WebGL. \`maplibre-
 - **Vitest** (first-class): a setup file with \`vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'))\` and \`configureFakeMapLibre({ spy: vi.fn })\`, plus \`server: { deps: { inline: [/ng-mapcn/] } }\` in the Vitest config (without it the real \`maplibre-gl\` is loaded and the mock has no effect).
 - **Jest**: \`moduleNameMapper: { '^maplibre-gl$': 'ng-mapcn/testing/maplibre' }\` and \`configureFakeMapLibre({ spy: jest.fn })\`. Documented, not tested by ng-mapcn.
 - **Karma/Jasmine**: not supported (they cannot mock an ES module).
-- \`ng add\` does not copy the testing files: copy-paste users depend on the npm package for the fake.
+- \`init\` and \`add\` do not copy the testing files: copy-paste users depend on the npm package for the fake.
 - \`ng-mapcn/testing/harness\` imports \`@angular/cdk/testing\`, an optional peer: install \`@angular/cdk\` to use it.
 - Stable: \`fakeRegistry\`, the fake's getters and \`structuralCalls()\`. The fake's raw \`calls\` strings are not.
 - Change host values after rendering with \`update(fixture, props)\` (it calls \`markForCheck()\`) or signals in \`hostProps\`: in zoneless apps (the Angular default) a direct \`fixture.componentInstance.x = ...\` needs \`fixture.changeDetectorRef.markForCheck()\`, or the dev-mode check throws NG0100.
