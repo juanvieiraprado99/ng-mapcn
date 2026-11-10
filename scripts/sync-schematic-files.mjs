@@ -2,7 +2,7 @@
 // emits schematics/registry.json, so the `add` schematic copies the exact same code the npm package
 // ships. Run before building schematics (see build-schematics.mjs).
 import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildRegistry, realPaths, writeRegistry } from './generate-registry.mjs';
 
@@ -19,11 +19,12 @@ rmSync(filesDir, { recursive: true, force: true });
 mkdirSync(filesDir, { recursive: true });
 
 const isSpec = (src) => src.endsWith('.spec.ts');
-const isTesting = (src) => /[\\/]testing([\\/]|$)/.test(src);
+// Relative to the copied root: a checkout under a folder named `testing` must still copy.
+const isTesting = (root, src) => /(^|[\\/])testing([\\/]|$)/.test(relative(root, src));
 
 cpSync(paths.libDir, filesDir, {
   recursive: true,
-  filter: (src) => !isSpec(src) && !isTesting(src),
+  filter: (src) => !isSpec(src) && !isTesting(paths.libDir, src),
 });
 
 // Opt-in `ng-mapcn/draw` sources, copied to <path>/draw. The npm entry imports the core from the
@@ -32,7 +33,7 @@ const drawFilesDir = join(filesDir, 'draw');
 mkdirSync(drawFilesDir, { recursive: true });
 cpSync(paths.drawDir, drawFilesDir, {
   recursive: true,
-  filter: (src) => !isSpec(src) && !isTesting(src),
+  filter: (src) => !isSpec(src) && !isTesting(paths.drawDir, src),
 });
 for (const file of readdirSync(drawFilesDir)) {
   const path = join(drawFilesDir, file);

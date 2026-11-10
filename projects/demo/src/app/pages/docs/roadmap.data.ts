@@ -240,7 +240,9 @@ export const nextMilestones: RoadmapMilestone[] = [
     deliverables: [
       done('npx ng-mapcn init / add with dependency resolution'),
       done('Registry manifest mapping each component to its files'),
+      done('init asks for the folder and the import alias, saved in ng-mapcn.json'),
       todo('init asks which components to install (multi-select)'),
+      todo('Standalone CLI package, so npx does not download the library peers'),
       todo('Block schematics: add a gallery block to your app in one command'),
     ],
   },

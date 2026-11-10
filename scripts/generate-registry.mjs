@@ -18,7 +18,11 @@ export class RegistryError extends Error {
   }
 }
 
-const IGNORED_BARE = /^(@angular\/|rxjs$|rxjs\/|tslib$|geojson$|maplibre-gl$|ng-mapcn$)/;
+// Packages every Angular app already has (or `init` adds: maplibre-gl, @types/geojson). Any other
+// bare import, other @angular/* packages such as the optional @angular/cdk included, must be a
+// peer dependency so `add` can install it.
+const IGNORED_BARE =
+  /^(@angular\/(core|common|platform-browser)(\/|$)|rxjs$|rxjs\/|tslib$|geojson$|maplibre-gl$|ng-mapcn$)/;
 const TEXT_EXT = /\.(ts|scss|css|html)$/;
 const TESTING_IMPORT = /(^|\/)testing(\/|$)/;
 

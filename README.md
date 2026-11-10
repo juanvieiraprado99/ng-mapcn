@@ -65,7 +65,9 @@ Then it will:
 4. Append the required `.maplibregl-popup-*` CSS overrides to your global stylesheet
 5. Copy only the core (`<ng-map>`, its services, providers and styles) to `src/app/shared/components/map`
 6. Map the import alias in `tsconfig.json` compilerOptions `paths`: `"@/*": ["./src/app/*"]` when the app has no `@/*` yet (an existing one that covers the folder is kept; otherwise exact `"<alias>"` / `"<alias>/*"` entries), never `baseUrl`
-7. Save the folder and the alias in `ng-mapcn.json` at the workspace root, where `add` and `list` read them
+7. Save the folder, the alias and the project in `ng-mapcn.json` at the workspace root, where `add` and `list` read them (running `init` again keeps them)
+
+In a workspace with several projects, `init` sets up the application and copies into its `src/app`; with more than one application it takes the first and says so (pass `--project <name>`). Upgrading from 22.0.0-beta.9 or earlier, where `ng add` copied everything to `src/app/components/ui/map` without `ng-mapcn.json`: `add` keeps using that folder and `init` adopts it instead of making a second copy.
 
 You then import the components from the alias, `import { MapComponent } from '@/shared/components/map';`, like shadcn's `@/components/ui/...`. Every example in these docs uses it; with the npm package, import from `'ng-mapcn'` instead.
 
@@ -79,7 +81,7 @@ npx ng-mapcn@latest add marker-popup controls
 
 The component in step 2 needs `marker-popup` (which brings `marker`); `controls` is for `<ng-map-controls />`. Add only what your templates import.
 
-`add` copies the items, into the folder saved in `ng-mapcn.json`, and the files they depend on (the core is always included), skips files that already exist and differ from the source, logging each one (pass `--overwrite` to replace them, including customized core or shared files such as `map.component.ts`), regenerates the `index.ts` barrel on every run (hand edits to it are lost) from what is on disk and adds the npm packages the items need. Names accept `marker`, `map-marker`, `Marker` or `marker,route`; an unknown name fails and lists the valid ones. `--all` copies every item except `draw`. `npx ng-mapcn@latest list` shows the items and marks the installed ones. The Angular CLI equivalents are `ng add ng-mapcn` and `ng g ng-mapcn:add marker-popup controls`.
+`add` copies the items, into the folder saved in `ng-mapcn.json`, and the files they depend on (the core is always included), keeps files that already exist and differ from the source (line endings aside) and lists them at the end, since the components it just copied may need their newer version (pass `--overwrite` to replace them, including customized core or shared files such as `map.component.ts`), regenerates the `index.ts` barrel on every run (hand edits to it are lost) from what is on disk and adds the npm packages the items need. Names accept `marker`, `map-marker`, `Marker` or `marker,route`; an unknown name fails and lists the valid ones. `--all` copies every item except `draw`. `npx ng-mapcn@latest list` shows the items and marks the installed ones. The Angular CLI equivalents are `ng add ng-mapcn` and `ng g ng-mapcn:add marker-popup controls`.
 
 Dependencies point one way: `marker-content`, `marker-popup` and `marker-tooltip` depend on `marker`, so `add marker-popup` also copies `marker`, but `add marker` alone does not copy the popup or tooltip.
 

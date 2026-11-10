@@ -13,15 +13,13 @@
     },
     "path": {
       "type": "string",
-      "description": "Directory (relative to the workspace root) where the map components are copied.",
-      "default": "src/app/shared/components/map",
-      "x-prompt": "Where should the map components be copied?"
+      "description": "Directory (relative to the workspace root) where the map components are copied. Defaults to the folder saved in ng-mapcn.json, else <sourceRoot>/app/shared/components/map. No schema default, so a saved folder is never overridden.",
+      "x-prompt": "Where should the map components be copied? (Enter: the saved folder, else <sourceRoot>/app/shared/components/map)"
     },
     "alias": {
       "type": "string",
-      "description": "Import alias for the copied components, added to tsconfig paths.",
-      "default": "@/shared/components/map",
-      "x-prompt": "Import alias for them?"
+      "description": "Import alias for the copied components, added to tsconfig paths. Defaults to the one saved in ng-mapcn.json, else @/shared/components/map.",
+      "x-prompt": "Import alias for them? (Enter: the saved alias, else @/shared/components/map)"
     },
     "all": {
       "type": "boolean",

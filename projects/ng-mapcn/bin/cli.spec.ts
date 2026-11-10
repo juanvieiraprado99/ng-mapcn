@@ -191,6 +191,74 @@ describe('main', { timeout: 60_000 }, () => {
     expect(asked).toBe(0);
   });
 
+  it('init offers the saved folder and alias as the defaults on a rerun', async () => {
+    const cwd = initialized('init-rerun');
+    writeFileSync(
+      join(cwd, 'ng-mapcn.json'),
+      JSON.stringify({ path: 'libs/maps', alias: '@maps' }),
+    );
+    const fallbacks: string[] = [];
+    const ask: Ask = async (_q, fallback) => {
+      fallbacks.push(fallback);
+      return fallback;
+    };
+    expect((await run(cwd, ['init', '--skip-install'], ask)).code).toBe(0);
+    expect(fallbacks).toEqual(['libs/maps', '@maps']);
+    expect(existsSync(join(cwd, 'libs/maps/components/map/map.component.ts'))).toBe(true);
+    expect(existsSync(join(cwd, TARGET))).toBe(false);
+  });
+
+  it('init sets up the application, not a library listed first', async () => {
+    const cwd = workspace('init-app');
+    const build = { builder: '@angular/build:application', options: { styles: [] } };
+    writeFileSync(
+      join(cwd, 'angular.json'),
+      JSON.stringify({
+        version: 1,
+        projects: {
+          ui: { projectType: 'library', root: 'projects/ui', architect: { build } },
+          web: {
+            projectType: 'application',
+            root: 'projects/web',
+            sourceRoot: 'projects/web/src',
+            architect: { build },
+          },
+        },
+      }),
+    );
+    const fallbacks: string[] = [];
+    const ask: Ask = async (_q, fallback) => {
+      fallbacks.push(fallback);
+      return fallback;
+    };
+    expect((await run(cwd, ['init', '--skip-install'], ask)).code).toBe(0);
+    expect(fallbacks[0]).toBe('projects/web/src/app/shared/components/map');
+    const projects = JSON.parse(readFileSync(join(cwd, 'angular.json'), 'utf8')).projects;
+    expect(projects.web.architect.build.options.styles).toContain(MAPLIBRE_CSS);
+    expect(projects.ui.architect.build.options.styles).not.toContain(MAPLIBRE_CSS);
+  });
+
+  it('add reads an ng-mapcn.json that only has the path, like ng g ng-mapcn:add', async () => {
+    const cwd = workspace('path-only');
+    writeFileSync(join(cwd, 'ng-mapcn.json'), JSON.stringify({ path: 'libs/maps' }));
+    expect((await run(cwd, ['add', 'scale', '--skip-install'])).code).toBe(0);
+    expect(existsSync(join(cwd, 'libs/maps/components/map-scale/map-scale.component.ts'))).toBe(
+      true,
+    );
+  });
+
+  it('add adopts the folder an earlier version copied to when there is no ng-mapcn.json', async () => {
+    const cwd = workspace('legacy');
+    const legacy = 'src/app/components/ui/map';
+    mkdirSync(join(cwd, legacy, 'components/map'), { recursive: true });
+    writeFileSync(join(cwd, legacy, 'components/map/map.component.ts'), '// old copy');
+    const { code, err } = await run(cwd, ['add', 'scale', '--skip-install']);
+    expect(code).toBe(0);
+    expect(err).toContain(`Using the copy in ${legacy}`);
+    expect(existsSync(join(cwd, legacy, 'components/map-scale/map-scale.component.ts'))).toBe(true);
+    expect(existsSync(join(cwd, TARGET))).toBe(false);
+  });
+
   it('add and list without ng-mapcn.json ask to run init first', async () => {
     const cwd = workspace('no-config');
     for (const argv of [['add', 'marker'], ['list']]) {
@@ -272,18 +340,18 @@ describe('main', { timeout: 60_000 }, () => {
 });
 
 describe('askInitOptions', () => {
-  it('offers the saved config, else the defaults, as fallbacks', async () => {
+  it('offers the fallbacks, the alias one derived from the folder answered', async () => {
     const fallbacks: string[] = [];
     const echo = async (_q: string, fallback: string) => {
       fallbacks.push(fallback);
       return fallback;
     };
-    expect(await askInitOptions(echo, null)).toEqual({ path: TARGET, alias: ALIAS });
-    expect(await askInitOptions(echo, { path: 'libs/x', alias: '@x' })).toEqual({
-      path: 'libs/x',
-      alias: '@x',
+    const aliasFor = (path: string) => (path === 'src/app/maps' ? '@/maps' : '@x');
+    expect(await askInitOptions(echo, { path: 'src/app/maps', aliasFor })).toEqual({
+      path: 'src/app/maps',
+      alias: '@/maps',
     });
-    expect(fallbacks).toEqual([TARGET, ALIAS, 'libs/x', '@x']);
+    expect(fallbacks).toEqual(['src/app/maps', '@/maps']);
   });
 });
 

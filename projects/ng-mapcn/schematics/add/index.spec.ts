@@ -12,6 +12,7 @@ import type { Registry } from '../registry/types';
 const DIST = join(process.cwd(), 'dist', 'ng-mapcn', 'schematics');
 const COLLECTION = join(DIST, 'collection.json');
 const DEFAULT_PATH = 'src/app/shared/components/map';
+const LEGACY_PATH = 'src/app/components/ui/map';
 const registry = JSON.parse(readFileSync(join(DIST, 'registry.json'), 'utf8')) as Registry;
 
 const pkgTree = (pkg: object = { name: 'app', dependencies: { 'maplibre-gl': '^6.11.2' } }) => {
@@ -71,22 +72,45 @@ describe('add schematic', () => {
     expect(result.readContent(`${DEFAULT_PATH}/utils/map-utils.ts`)).toBe('// mine');
   });
 
-  it('logs one skipped line for a customized file and none for untouched ones', async () => {
+  it('warns once, listing the kept files, only when one differs', async () => {
     let tree = await run();
-    infos.length = 0;
+    warnings.length = 0;
     tree = await run({ components: ['marker'] }, tree);
-    expect(infos.filter((m) => m.startsWith('skipped'))).toEqual([]);
+    expect(warnings).toEqual([]);
 
     tree.overwrite(`${DEFAULT_PATH}/utils/map-utils.ts`, '// mine');
     infos.length = 0;
     await run({ components: ['marker'] }, tree);
-    const skipped = infos.filter((m) => m.startsWith('skipped'));
-    expect(skipped).toEqual([
-      `skipped ${DEFAULT_PATH}/utils/map-utils.ts (exists, differs; use --overwrite to replace)`,
-    ]);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('Kept 1 existing file(s) that differ from this version');
+    expect(warnings[0]).toContain(`  ${DEFAULT_PATH}/utils/map-utils.ts`);
+    expect(warnings[0]).toContain('--overwrite');
     expect(
       infos.some((m) => /Created 0, overwritten 0, skipped 1, unchanged \d+ file\(s\)/.test(m)),
     ).toBe(true);
+  });
+
+  it('counts a copy that only differs in line endings (CRLF checkout) as unchanged', async () => {
+    const tree = await run({ components: ['marker'] });
+    for (const file of tree.files.filter((f) => f.startsWith(`/${DEFAULT_PATH}/`))) {
+      tree.overwrite(file, tree.readContent(file).replace(/\n/g, '\r\n'));
+    }
+    warnings.length = 0;
+    infos.length = 0;
+    await run({ components: ['marker'] }, tree);
+
+    expect(warnings).toEqual([]);
+    expect(infos.some((m) => /skipped 0, unchanged \d+ file\(s\)/.test(m))).toBe(true);
+  });
+
+  it('adopts the folder an earlier version copied to when there is no ng-mapcn.json', async () => {
+    const tree = pkgTree();
+    tree.create(`${LEGACY_PATH}/components/map/map.component.ts`, '// old copy');
+    const result = await run({ components: ['scale'] }, tree);
+
+    expect(result.exists(`${LEGACY_PATH}/components/map-scale/map-scale.component.ts`)).toBe(true);
+    expect(result.files.some((f) => f.startsWith(`/${DEFAULT_PATH}/`))).toBe(false);
+    expect(warnings.some((w) => w.includes(`Using the copy in ${LEGACY_PATH}`))).toBe(true);
   });
 
   it('does not touch index.ts when the barrel is identical', async () => {
@@ -181,7 +205,7 @@ describe('add schematic', () => {
   });
 
   it('rejects invalid paths', async () => {
-    for (const path of ['', '/abs', '../up', 'a/../b', 'it"s']) {
+    for (const path of ['/abs', '../up', 'a/../b', 'it"s']) {
       await expect(run({ path })).rejects.toThrow(/--path/);
     }
   });

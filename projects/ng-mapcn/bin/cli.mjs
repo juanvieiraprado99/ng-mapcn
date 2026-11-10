@@ -14,9 +14,6 @@ export class UsageError extends Error {
 const COMMANDS = ['init', 'add', 'list', 'help', 'version'];
 const BOOLEAN_FLAGS = new Set(['all', 'overwrite', 'skipInstall', 'yes']);
 const STRING_FLAGS = new Set(['path', 'project', 'alias']);
-export const CONFIG_FILE = 'ng-mapcn.json';
-export const DEFAULT_PATH = 'src/app/shared/components/map';
-export const DEFAULT_ALIAS = '@/shared/components/map';
 
 const camel = (s) => s.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 
@@ -74,25 +71,38 @@ function readJson(file) {
   return JSON.parse(readFileSync(file, 'utf8'));
 }
 
-/** `ng-mapcn.json` written by `init`, or null. */
-export function readConfig(cwd) {
-  const file = join(cwd, CONFIG_FILE);
-  if (!existsSync(file)) return null;
+/**
+ * The copy-paste defaults and rules shared with the schematics (`schematics/utils/defaults.ts`,
+ * compiled next to the collection), so the CLI and `ng add` / `ng g` read ng-mapcn.json, pick the
+ * project and default the folder the same way.
+ */
+export function loadDefaults(collection) {
+  return createRequire(collection)('./utils/defaults.js');
+}
+
+/** `ng-mapcn.json` written by `init`, parsed with the schematics' rules, or null. */
+export function readConfig(cwd, defaults) {
+  const file = join(cwd, defaults.CONFIG_FILE);
+  return existsSync(file) ? defaults.parseConfig(readFileSync(file, 'utf8')) : null;
+}
+
+/** angular.json projects, or {} when it cannot be read as plain JSON. */
+function readProjects(cwd) {
   try {
-    const config = readJson(file);
-    return typeof config.path === 'string' ? config : null;
+    return readJson(join(cwd, 'angular.json')).projects ?? {};
   } catch {
-    return null;
+    return {};
   }
 }
 
 /**
  * The questions `init` asks (shadcn/Zard style). `ask(question, fallback)` returns the answer, or
- * the fallback for an empty one.
+ * the fallback for an empty one. `fallbacks.path` and `fallbacks.aliasFor(path)` are what the
+ * schematic would choose by itself; the alias default follows the folder just answered.
  */
-export async function askInitOptions(ask, saved) {
-  const path = await ask('Where should the map components be copied?', saved?.path ?? DEFAULT_PATH);
-  const alias = await ask('Import alias for them?', saved?.alias ?? DEFAULT_ALIAS);
+export async function askInitOptions(ask, fallbacks) {
+  const path = await ask('Where should the map components be copied?', fallbacks.path);
+  const alias = await ask('Import alias for them?', fallbacks.aliasFor(path));
   return { path, alias };
 }
 
@@ -110,7 +120,8 @@ function terminalAsk() {
   };
 }
 
-function usage(registry) {
+function usage(registry, defaults) {
+  const { CONFIG_FILE, DEFAULT_PATH, DEFAULT_ALIAS } = defaults;
   const names = Object.keys(registry.items);
   return [
     'Usage: ng-mapcn <command> [options]',
@@ -214,8 +225,9 @@ export async function main(argv, env = {}) {
     return 0;
   }
   const registry = readJson(registryFile);
+  const defaults = loadDefaults(collection);
   if (command === 'help') {
-    out(usage(registry));
+    out(usage(registry, defaults));
     return 0;
   }
 
@@ -225,21 +237,45 @@ export async function main(argv, env = {}) {
     );
     return 1;
   }
-  const config = readConfig(cwd);
-  if (
-    command === 'init' &&
-    !options.yes &&
-    options.path === undefined &&
-    options.alias === undefined
-  ) {
-    const ask = env.ask === undefined ? terminalAsk() : env.ask;
-    if (ask) Object.assign(options, await askInitOptions(ask, config));
+  const config = readConfig(cwd, defaults);
+  // A copy an earlier version of `ng add` made, before ng-mapcn.json existed: adopt it.
+  const legacy =
+    !config && existsSync(join(cwd, defaults.LEGACY_PATH, defaults.CORE_MARKER))
+      ? defaults.LEGACY_PATH
+      : undefined;
+
+  if (command === 'init') {
+    // Same project and folder the schematic would pick, so the questions show the real defaults.
+    const projects = readProjects(cwd);
+    const choice = defaults.pickProject(projects, options.project, config?.project);
+    if (choice.warning) err(choice.warning);
+    if (choice.name) options.project = choice.name;
+    if (!options.yes && options.path === undefined && options.alias === undefined) {
+      const ask = env.ask === undefined ? terminalAsk() : env.ask;
+      if (ask) {
+        const project = projects[choice.name];
+        const fallbacks = {
+          path: config?.path ?? legacy ?? defaults.defaultPathFor(project),
+          // The saved alias goes with the saved folder; another folder gets its own `@/...`.
+          aliasFor: (path) =>
+            config && config.path === path ? config.alias : defaults.defaultAliasFor(path, project),
+        };
+        Object.assign(options, await askInitOptions(ask, fallbacks));
+      }
+    }
+  } else if (options.path === undefined && !config) {
+    if (!legacy) {
+      err(
+        `${defaults.CONFIG_FILE} not found. Run "npx ng-mapcn@latest init" first, or pass --path <dir>.`,
+      );
+      return 1;
+    }
+    err(
+      `Using the copy in ${legacy}, made by an earlier version. Run "npx ng-mapcn@latest init" ` +
+        `to save it in ${defaults.CONFIG_FILE} and map an import alias for it.`,
+    );
   }
-  if (command !== 'init' && options.path === undefined && !config) {
-    err(`${CONFIG_FILE} not found. Run "npx ng-mapcn@latest init" first, or pass --path <dir>.`);
-    return 1;
-  }
-  const target = options.path ?? config?.path ?? DEFAULT_PATH;
+  const target = options.path ?? config?.path ?? legacy;
 
   if (command === 'list') {
     for (const item of Object.values(registry.items)) {
@@ -252,7 +288,7 @@ export async function main(argv, env = {}) {
   if (command === 'add' && items.length === 0 && !options.all) {
     err('Specify at least one component, or pass --all.');
     err('');
-    err(usage(registry));
+    err(usage(registry, defaults));
     return 1;
   }
 
@@ -313,8 +349,8 @@ export async function main(argv, env = {}) {
     command === 'init'
       ? {
           project: options.project,
-          path: options.path ?? config?.path,
-          alias: options.alias ?? config?.alias,
+          path: options.path,
+          alias: options.alias,
           all: options.all,
           skipInstall: options.skipInstall,
         }

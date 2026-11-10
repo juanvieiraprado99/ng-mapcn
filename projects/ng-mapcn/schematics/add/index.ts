@@ -6,7 +6,7 @@ import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
 import { renderBarrel } from '../registry/barrel';
 import { readRegistry, resolve } from '../registry/resolve';
-import { DEFAULT_PATH, readConfig } from '../utils/config';
+import { defaultTarget, given, LEGACY_PATH } from '../utils/config';
 import { joinPath, normalizeTargetPath } from '../utils/path';
 
 export interface AddOptions {
@@ -25,13 +25,21 @@ export interface AddOptions {
  */
 export function add(options: AddOptions): Rule {
   return (tree: Tree, context: SchematicContext) => {
-    const path = normalizeTargetPath(options.path ?? readConfig(tree)?.path ?? DEFAULT_PATH);
+    const fallback = defaultTarget(tree);
+    const explicit = given(options.path);
+    const path = normalizeTargetPath(explicit ?? fallback.path);
+    if (!explicit && fallback.legacy) {
+      context.logger.warn(
+        `Using the copy in ${LEGACY_PATH}, made by an earlier version. Run "npx ng-mapcn init" ` +
+          'to save it in ng-mapcn.json and map an import alias for it.',
+      );
+    }
     const registry = readRegistry();
     const resolution = resolve(registry, options.components ?? [], { all: options.all });
 
     let created = 0;
     let overwritten = 0;
-    let skipped = 0;
+    const kept: string[] = [];
     let unchanged = 0;
     for (const file of resolution.files) {
       const target = joinPath(path, file);
@@ -40,14 +48,13 @@ export function add(options: AddOptions): Rule {
       if (!existing) {
         tree.create(target, content);
         created++;
-      } else if (existing.equals(content)) {
+      } else if (sameText(existing, content)) {
         unchanged++;
       } else if (options.overwrite) {
         tree.overwrite(target, content);
         overwritten++;
       } else {
-        context.logger.info(`skipped ${target} (exists, differs; use --overwrite to replace)`);
-        skipped++;
+        kept.push(target);
       }
     }
 
@@ -70,8 +77,16 @@ export function add(options: AddOptions): Rule {
 
     const names = resolution.items.join(', ');
     context.logger.info(
-      `Installed: ${names}. Created ${created}, overwritten ${overwritten}, skipped ${skipped}, unchanged ${unchanged} file(s).`,
+      `Installed: ${names}. Created ${created}, overwritten ${overwritten}, skipped ${kept.length}, unchanged ${unchanged} file(s).`,
     );
+    if (kept.length) {
+      context.logger.warn(
+        `Kept ${kept.length} existing file(s) that differ from this version (your edits, or a copy ` +
+          `from an older version):\n${kept.map((f) => `  ${f}`).join('\n')}\n` +
+          'The components just copied are written against this version and may not compile with ' +
+          'them. Compare them, or run again with --overwrite to replace them (your edits are lost).',
+      );
+    }
     if (added.names().length) {
       context.logger.info(
         `Added dependencies: ${added
@@ -82,6 +97,13 @@ export function add(options: AddOptions): Rule {
     }
     return tree;
   };
+}
+
+/** Same content, ignoring line endings (git may check copies out with CRLF). */
+function sameText(a: Buffer, b: Buffer): boolean {
+  if (a.equals(b)) return true;
+  const text = (buffer: Buffer) => buffer.toString('utf8').replace(/\r\n/g, '\n');
+  return text(a) === text(b);
 }
 
 interface DependencyRule {

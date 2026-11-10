@@ -87,6 +87,20 @@ export class MyMapComponent {}`;
           <code [class]="code">&#64;/shared/components/map</code>; if you chose another alias, use
           yours.
         </p>
+        <p>
+          In a workspace with several projects, <code [class]="code">init</code> sets up the
+          application (and copies into its <code [class]="code">src/app</code>); with more than one
+          application it takes the first and says so: pass
+          <code [class]="code">--project &lt;name&gt;</code> to choose. Running it again keeps the
+          folder, alias and project saved in <code [class]="code">ng-mapcn.json</code>.
+        </p>
+        <app-docs-note>
+          <strong>Upgrading from 22.0.0-beta.9 or earlier:</strong> <code [class]="code">ng add</code>
+          used to copy everything to <code [class]="code">src/app/components/ui/map</code>, without
+          <code [class]="code">ng-mapcn.json</code>. <code [class]="code">add</code> keeps using
+          that folder, and <code [class]="code">init</code> adopts it (no second copy): run it once
+          to save the folder and map an import alias.
+        </app-docs-note>
         <app-docs-note>
           <strong>Bundle budget:</strong> a fresh Angular app exceeds the default 1 MB initial
           budget once <code [class]="code">maplibre-gl</code> is used (about 1.4 MB). Lazy-load the
@@ -109,7 +123,9 @@ export class MyMapComponent {}`;
         <app-install-command cli="add marker-popup controls" />
         <p>
           Each item brings the files it depends on, and the core is always included. Files that
-          already exist and differ from the source are skipped (and logged), so your edits are safe; pass
+          already exist and differ from the source (line endings aside) are kept, so your edits are
+          safe; <code [class]="code">add</code> lists them at the end, because the components it
+          just copied may need their newer version. Pass
           <code [class]="code">--overwrite</code> to replace them (this also replaces customized
           core or shared files in the closure, such as
           <code [class]="code">map.component.ts</code>). The

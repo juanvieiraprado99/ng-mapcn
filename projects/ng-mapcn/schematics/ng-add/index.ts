@@ -14,9 +14,13 @@ import {
 } from '@schematics/angular/utility';
 
 import {
-  DEFAULT_ALIAS,
-  DEFAULT_PATH,
+  defaultAliasFor,
+  defaultTarget,
+  given,
+  LEGACY_PATH,
   normalizeAlias,
+  pickProject,
+  type ProjectInfo,
   readConfig,
   writeConfig,
 } from '../utils/config';
@@ -74,11 +78,31 @@ interface NgAddOptions {
 export function ngAdd(options: NgAddOptions): Rule {
   return async (tree: Tree, context: SchematicContext) => {
     const saved = readConfig(tree);
-    const path = normalizeTargetPath(options.path ?? saved?.path ?? DEFAULT_PATH);
-    const alias = normalizeAlias(options.alias ?? saved?.alias ?? DEFAULT_ALIAS);
     const workspace = await readWorkspaceOrWarn(tree, context);
-    const projectName = workspace ? resolveProjectName(workspace, options.project) : undefined;
+    const choice = workspace
+      ? pickProject(projectInfos(workspace), given(options.project), saved?.project)
+      : { name: undefined };
+    if (choice.warning) context.logger.warn(choice.warning);
+    const projectName = choice.name;
     const project = projectName ? workspace?.projects.get(projectName) : undefined;
+
+    // Blank options (Enter at a prompt) fall back to the saved config, an earlier copy, the default.
+    const explicitPath = given(options.path);
+    const info: ProjectInfo | undefined = project && {
+      projectType: project.extensions['projectType'] as string | undefined,
+      root: project.root,
+      sourceRoot: project.sourceRoot,
+    };
+    const fallback = defaultTarget(tree, info);
+    const path = normalizeTargetPath(explicitPath ?? fallback.path);
+    if (!explicitPath && fallback.legacy) {
+      context.logger.info(
+        `Found the copy an earlier version made in ${LEGACY_PATH}: keeping it there.`,
+      );
+    }
+    // The saved alias only fits the saved folder; else derive it from the folder (`@/...`).
+    const savedAlias = saved && saved.path === path ? saved.alias : undefined;
+    const alias = normalizeAlias(given(options.alias) ?? savedAlias ?? defaultAliasFor(path, info));
     return chain([
       addMaplibreDependency(),
       projectName ? registerBuildOptions(projectName) : noop(),
@@ -127,13 +151,17 @@ async function readWorkspaceOrWarn(
   }
 }
 
-/** The requested project, else the first one (the CLI passes the default project as `project`). */
-function resolveProjectName(
-  workspace: WorkspaceDefinition,
-  requested?: string,
-): string | undefined {
-  if (requested) return requested;
-  return workspace.projects.keys().next().value;
+/** angular.json projects in the shape {@link pickProject} reads. */
+function projectInfos(workspace: WorkspaceDefinition): Record<string, ProjectInfo> {
+  const infos: Record<string, ProjectInfo> = {};
+  for (const [name, project] of workspace.projects) {
+    infos[name] = {
+      projectType: project.extensions['projectType'] as string | undefined,
+      root: project.root,
+      sourceRoot: project.sourceRoot,
+    };
+  }
+  return infos;
 }
 
 function noop(): Rule {

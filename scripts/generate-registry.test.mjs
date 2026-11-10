@@ -118,6 +118,29 @@ test('npm dependencies come from peer ranges', () => {
   assert.deepEqual(reg.items.core.dependencies, {});
 });
 
+test('@angular/* packages beyond core/common/platform-browser need a peer (e.g. @angular/cdk)', () => {
+  const tree = {
+    ...coreTree,
+    'lib/components/map-a/a.component.ts':
+      "import { Component } from '@angular/core';\nimport { toSignal } from '@angular/core/rxjs-interop';\nimport { Overlay } from '@angular/cdk/overlay';\nexport class A {}\n",
+  };
+  assert.throws(
+    () => buildRegistry(fixture('cdk-missing', tree)),
+    (error) =>
+      error instanceof RegistryError &&
+      error.problems.some((p) => p.includes("'@angular/cdk' is not listed in peerDependencies")),
+  );
+
+  const withPeer = fixture('cdk-peer', {
+    ...tree,
+    'package.json': JSON.stringify({
+      version: '1.0.0',
+      peerDependencies: { '@angular/cdk': '^22.0.0' },
+    }),
+  });
+  assert.deepEqual(buildRegistry(withPeer).items.a.dependencies, { '@angular/cdk': '^22.0.0' });
+});
+
 test('draw maps ng-mapcn symbols through public-api', () => {
   const reg = buildRegistry(
     fixture('draw-symbols', {

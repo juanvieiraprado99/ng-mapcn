@@ -1,34 +1,33 @@
 import { SchematicsException, type Tree } from '@angular-devkit/schematics';
 
-/** Workspace-root file that remembers where `init` copied the components. */
-export const CONFIG_FILE = 'ng-mapcn.json';
-export const DEFAULT_PATH = 'src/app/shared/components/map';
-export const DEFAULT_ALIAS = '@/shared/components/map';
+import {
+  CONFIG_FILE,
+  CORE_MARKER,
+  defaultPathFor,
+  LEGACY_PATH,
+  type NgMapcnConfig,
+  parseConfig,
+  type ProjectInfo,
+} from './defaults';
+import { joinPath } from './path';
 
-export interface NgMapcnConfig {
-  /** Folder (relative to the workspace root) holding the copied components. */
-  path: string;
-  /** Import specifier that resolves to `path` (tsconfig `paths`), e.g. `@/shared/components/map`. */
-  alias: string;
-  /** Angular project `init` set up. */
-  project?: string;
-}
+export {
+  CONFIG_FILE,
+  DEFAULT_ALIAS,
+  DEFAULT_PATH,
+  defaultAliasFor,
+  defaultPathFor,
+  LEGACY_PATH,
+  type NgMapcnConfig,
+  parseConfig,
+  pickProject,
+  type ProjectInfo,
+} from './defaults';
 
-/** The saved config, or null when `init` has not run (or the file is not valid JSON). */
+/** The saved config, or null when `init` has not run (or the file is not valid). */
 export function readConfig(tree: Tree): NgMapcnConfig | null {
   const buffer = tree.read(CONFIG_FILE);
-  if (!buffer) return null;
-  try {
-    const parsed = JSON.parse(buffer.toString()) as Partial<NgMapcnConfig>;
-    if (typeof parsed.path !== 'string' || typeof parsed.alias !== 'string') return null;
-    return {
-      path: parsed.path,
-      alias: parsed.alias,
-      ...(typeof parsed.project === 'string' ? { project: parsed.project } : {}),
-    };
-  } catch {
-    return null;
-  }
+  return buffer ? parseConfig(buffer.toString()) : null;
 }
 
 export function writeConfig(tree: Tree, config: NgMapcnConfig): void {
@@ -43,6 +42,26 @@ export function writeConfig(tree: Tree, config: NgMapcnConfig): void {
   )}\n`;
   if (!tree.exists(CONFIG_FILE)) tree.create(CONFIG_FILE, content);
   else if (tree.read(CONFIG_FILE)?.toString() !== content) tree.overwrite(CONFIG_FILE, content);
+}
+
+/**
+ * The folder to use when no `--path` is given: the saved one, else the folder an earlier version
+ * of `ng add` copied to (so an existing copy is adopted instead of copied a second time), else the
+ * default. `legacy` says which case applied.
+ */
+export function defaultTarget(
+  tree: Tree,
+  project?: ProjectInfo,
+): { path: string; legacy: boolean } {
+  const saved = readConfig(tree);
+  if (saved) return { path: saved.path, legacy: false };
+  if (tree.exists(joinPath(LEGACY_PATH, CORE_MARKER))) return { path: LEGACY_PATH, legacy: true };
+  return { path: defaultPathFor(project), legacy: false };
+}
+
+/** A blank option (an empty answer to a prompt) counts as not given. */
+export function given(value: string | undefined): string | undefined {
+  return value?.trim() ? value : undefined;
 }
 
 /**
