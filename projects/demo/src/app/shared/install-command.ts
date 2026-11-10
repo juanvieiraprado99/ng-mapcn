@@ -11,6 +11,9 @@ const PACKAGE_MANAGERS = [
   { manager: 'bun', exec: 'bunx', dlx: 'bunx', add: 'bun add' },
 ] as const;
 
+/** Selected package manager, shared by every command on the page (mapcn keeps one choice too). */
+const activeManager = signal<string>(PACKAGE_MANAGERS[0].manager);
+
 /**
  * mapcn `InstallCommand`: one command per package manager on "line" tabs.
  * By default the command runs the project's own Angular CLI (`ng add`) through each manager,
@@ -56,7 +59,11 @@ const PACKAGE_MANAGERS = [
           <ng-icon [name]="copied() ? 'lucideCheck' : 'lucideCopy'" size="16" />
         </button>
       </div>
-      <pre class="overflow-x-auto p-4 text-sm"><code class="font-mono">{{ command() }}</code></pre>
+      <!-- tabindex: long commands scroll, and a scrollable region must be keyboard reachable. -->
+      <pre
+        class="overflow-x-auto p-4 text-sm"
+        tabindex="0"
+      ><code class="font-mono">{{ command() }}</code></pre>
     </div>
   `,
 })
@@ -83,7 +90,7 @@ export class InstallCommandComponent {
           : `${exec} ng add ${this.name()}${args}`,
     }));
   });
-  protected readonly active = signal<string>(PACKAGE_MANAGERS[0].manager);
+  protected readonly active = activeManager;
   protected readonly command = computed(
     () => this.tabs().find((tab) => tab.manager === this.active())?.command ?? '',
   );

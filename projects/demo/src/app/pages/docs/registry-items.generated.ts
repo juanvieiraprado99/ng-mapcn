@@ -7,6 +7,10 @@ export interface RegistryItemDoc {
   dependsOn: string[];
   /** npm packages added to package.json. */
   packages: string[];
+  /** Names the item's own files export, used to tell which items a docs snippet imports. */
+  exports: string[];
+  /** Element selectors of the item's components, for docs snippets that are template fragments. */
+  selectors: string[];
 }
 
 export const REGISTRY_ITEMS: RegistryItemDoc[] = [
@@ -14,25 +18,85 @@ export const REGISTRY_ITEMS: RegistryItemDoc[] = [
     "name": "core",
     "description": "Renders a MapLibre GL map and provides the map context to every child component.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "BoundsGetter",
+      "BoundsTuple",
+      "DEFAULT_FIT_MAX_ZOOM",
+      "DEFAULT_MAP_LABELS",
+      "MAP_DEFAULT_STYLES",
+      "MAP_LABELS",
+      "MapArcDatum",
+      "MapArcEvent",
+      "MapComponent",
+      "MapContextService",
+      "MapFitBoundsOptions",
+      "MapGeoJSONEvent",
+      "MapLabels",
+      "MapStylesConfig",
+      "MapViewport",
+      "ThemeService",
+      "blankMapStyle",
+      "buildArcCoordinates",
+      "coordinatesBounds",
+      "cumulativeLengths",
+      "defaultStyles",
+      "geoJsonBounds",
+      "getDarkMapStyle",
+      "getLightMapStyle",
+      "getViewport",
+      "injectMapLabels",
+      "mergeHoverPaint",
+      "nextId",
+      "pointAlongLine",
+      "provideMapLabels",
+      "provideMapStyles",
+      "sameBounds",
+      "sliceLineByProgress",
+      "toBoundsTuple",
+      "unionBounds"
+    ],
+    "selectors": [
+      "ng-map"
+    ]
   },
   {
     "name": "arc",
     "description": "Draws curved arcs between origin/destination points (flight paths, network links).",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapArcComponent"
+    ],
+    "selectors": [
+      "ng-map-arc"
+    ]
   },
   {
     "name": "cluster-layer",
     "description": "Clustered point layer: cluster circles colored/sized by point count, a count label, and unclustered point dots.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "ClusterClickEvent",
+      "ClusterPointClickEvent",
+      "MapClusterLayerComponent"
+    ],
+    "selectors": [
+      "ng-map-cluster-layer"
+    ]
   },
   {
     "name": "controls",
     "description": "Adds zoom, compass, locate and fullscreen buttons to the map.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapControlsComponent"
+    ],
+    "selectors": [
+      "ng-map-controls"
+    ]
   },
   {
     "name": "draw",
@@ -41,43 +105,109 @@ export const REGISTRY_ITEMS: RegistryItemDoc[] = [
     "packages": [
       "terra-draw",
       "terra-draw-maplibre-gl-adapter"
+    ],
+    "exports": [
+      "DrawHexColor",
+      "DrawStyles",
+      "MapDrawComponent",
+      "MapDrawEvent",
+      "MapDrawFeature",
+      "MapDrawFeatureCollection",
+      "MapDrawGeometry",
+      "MapDrawMode",
+      "MapDrawProperties",
+      "MapDrawShape",
+      "buildDrawStyles",
+      "defaultDrawPalettes"
+    ],
+    "selectors": [
+      "ng-map-draw"
     ]
   },
   {
     "name": "fill-extrusion",
     "description": "Declarative 3D extrusion (MapLibre fill-extrusion layer) of polygons from a vector or GeoJSON source, e.g. 3D buildings.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "BuildingSchema",
+      "CARTO_BUILDING_SCHEMAS",
+      "CARTO_SOURCE_ID",
+      "MapFillExtrusionComponent",
+      "defaultExtrusionColors"
+    ],
+    "selectors": [
+      "ng-map-fill-extrusion"
+    ]
   },
   {
     "name": "geojson",
     "description": "Renders arbitrary GeoJSON as fill + outline layers on the map.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapGeoJSONComponent",
+      "MapGeoJSONData"
+    ],
+    "selectors": [
+      "ng-map-geojson"
+    ]
   },
   {
     "name": "heatmap",
     "description": "Declarative heatmap layer: a GeoJSON point source rendered as a MapLibre heatmap layer with a theme-aware default gradient.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "HeatmapGradient",
+      "MapHeatmapComponent",
+      "MapHeatmapData",
+      "defaultHeatmapGradients",
+      "heatmapColorExpression"
+    ],
+    "selectors": [
+      "ng-map-heatmap"
+    ]
   },
   {
     "name": "image-overlay",
     "description": "Georeferenced image drawn on the map between four corner coordinates (a scanned map, a radar frame, a floor plan).",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "ImageOverlayCoordinates",
+      "MapImageOverlayComponent"
+    ],
+    "selectors": [
+      "ng-map-image-overlay"
+    ]
   },
   {
     "name": "legend",
     "description": "Shows a legend panel that explains the colors or symbols used on the map.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapLegendCategory",
+      "MapLegendComponent",
+      "MapLegendSection"
+    ],
+    "selectors": [
+      "ng-map-legend"
+    ]
   },
   {
     "name": "marker",
     "description": "Places a marker on the map at a longitude/latitude with projected custom content.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapMarkerComponent",
+      "MarkerContextService"
+    ],
+    "selectors": [
+      "ng-map-marker"
+    ]
   },
   {
     "name": "marker-content",
@@ -85,13 +215,25 @@ export const REGISTRY_ITEMS: RegistryItemDoc[] = [
     "dependsOn": [
       "marker"
     ],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MarkerContentComponent"
+    ],
+    "selectors": [
+      "ng-marker-content"
+    ]
   },
   {
     "name": "marker-label",
     "description": "Shows a small text label next to a marker.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MarkerLabelComponent"
+    ],
+    "selectors": [
+      "ng-marker-label"
+    ]
   },
   {
     "name": "marker-popup",
@@ -99,7 +241,13 @@ export const REGISTRY_ITEMS: RegistryItemDoc[] = [
     "dependsOn": [
       "marker"
     ],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MarkerPopupComponent"
+    ],
+    "selectors": [
+      "ng-marker-popup"
+    ]
   },
   {
     "name": "marker-tooltip",
@@ -107,31 +255,63 @@ export const REGISTRY_ITEMS: RegistryItemDoc[] = [
     "dependsOn": [
       "marker"
     ],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MarkerTooltipComponent"
+    ],
+    "selectors": [
+      "ng-marker-tooltip"
+    ]
   },
   {
     "name": "minimap",
     "description": "Overview map: a second MapLibre instance in a corner of <ng-map> that follows the main viewport at a lower zoom.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapMinimapComponent"
+    ],
+    "selectors": [
+      "ng-map-minimap"
+    ]
   },
   {
     "name": "popup",
     "description": "Standalone popup anchored at a lng/lat (no marker).",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapPopupComponent"
+    ],
+    "selectors": [
+      "ng-map-popup"
+    ]
   },
   {
     "name": "raster-source",
     "description": "Raster tile source (XYZ, TMS, WMS through a {bbox-epsg-3857} template) plus the raster layer that draws it.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapRasterSourceComponent"
+    ],
+    "selectors": [
+      "ng-map-raster-source"
+    ]
   },
   {
     "name": "route",
     "description": "Draws a line through a list of coordinates, such as a route or track.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapRouteComponent",
+      "RouteContextService",
+      "RouteSources"
+    ],
+    "selectors": [
+      "ng-map-route"
+    ]
   },
   {
     "name": "route-marker",
@@ -140,7 +320,14 @@ export const REGISTRY_ITEMS: RegistryItemDoc[] = [
       "marker",
       "route"
     ],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "RouteMarkerAt",
+      "RouteMarkerComponent"
+    ],
+    "selectors": [
+      "ng-route-marker"
+    ]
   },
   {
     "name": "route-playback",
@@ -148,7 +335,13 @@ export const REGISTRY_ITEMS: RegistryItemDoc[] = [
     "dependsOn": [
       "route"
     ],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "RoutePlaybackComponent"
+    ],
+    "selectors": [
+      "ng-route-playback"
+    ]
   },
   {
     "name": "route-playback-control",
@@ -156,7 +349,13 @@ export const REGISTRY_ITEMS: RegistryItemDoc[] = [
     "dependsOn": [
       "route-playback"
     ],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "RoutePlaybackControlComponent"
+    ],
+    "selectors": [
+      "ng-route-playback-control"
+    ]
   },
   {
     "name": "route-progress",
@@ -164,36 +363,78 @@ export const REGISTRY_ITEMS: RegistryItemDoc[] = [
     "dependsOn": [
       "route"
     ],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "RouteProgressComponent"
+    ],
+    "selectors": [
+      "ng-route-progress"
+    ]
   },
   {
     "name": "scale",
     "description": "Draws a scale bar that updates as the map moves.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapScaleComponent"
+    ],
+    "selectors": [
+      "ng-map-scale"
+    ]
   },
   {
     "name": "style-switcher",
     "description": "Lets the user switch between several map base styles.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapStyleOption",
+      "MapStyleSwitcherComponent"
+    ],
+    "selectors": [
+      "ng-map-style-switcher"
+    ]
   },
   {
     "name": "symbol-layer",
     "description": "Declarative symbol layer: icons and/or text labels for a GeoJSON point source, rendered as a MapLibre symbol layer (collision-aware, so crowded labels thin out by themselves).",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapSymbolData",
+      "MapSymbolImage",
+      "MapSymbolImageData",
+      "MapSymbolLayerComponent"
+    ],
+    "selectors": [
+      "ng-map-symbol-layer"
+    ]
   },
   {
     "name": "terrain",
     "description": "Declarative 3D terrain: a raster-dem source drives map.setTerrain, with an optional hillshade layer.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapTerrainComponent",
+      "TerrainEncoding",
+      "defaultTerrainTiles"
+    ],
+    "selectors": [
+      "ng-map-terrain"
+    ]
   },
   {
     "name": "vector-source",
     "description": "Vector tile source (MVT), including PMTiles through the pmtiles:// protocol.",
     "dependsOn": [],
-    "packages": []
+    "packages": [],
+    "exports": [
+      "MapVectorSourceComponent"
+    ],
+    "selectors": [
+      "ng-map-vector-source"
+    ]
   }
 ];

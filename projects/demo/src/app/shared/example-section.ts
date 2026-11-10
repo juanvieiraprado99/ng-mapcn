@@ -1,23 +1,29 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 import { ComponentPreviewComponent } from './component-preview';
 import { DocsSectionComponent } from './docs';
 import type { CodeLang } from './highlighter';
+import { InstallCommandComponent } from './install-command';
+import { installItemsFor } from './install-items';
 
 /**
  * A docs section with a live example: mapcn's `DocsSection` + `ComponentPreview`
- * pair. Text marked `description` becomes the paragraph above the preview.
+ * pair. Text marked `description` becomes the paragraph above the preview. When the snippet
+ * imports registry items, an `npx ng-mapcn@latest add …` command for them sits under it.
  */
 @Component({
   selector: 'app-example-section',
   standalone: true,
-  imports: [ComponentPreviewComponent, DocsSectionComponent],
+  imports: [ComponentPreviewComponent, DocsSectionComponent, InstallCommandComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block', '[attr.lang]': 'null' },
   template: `
     <app-docs-section [title]="title()" [anchor]="sectionId()">
       <p><ng-content select="[description]" /></p>
       <ng-content select="[after-description]" />
+      @if (installCli(); as cli) {
+        <app-install-command data-testid="example-install" [cli]="cli" />
+      }
       <app-component-preview [code]="code()" [lang]="lang()" [height]="height()">
         <ng-content />
       </app-component-preview>
@@ -31,4 +37,10 @@ export class ExampleSectionComponent {
   /** Defaults to a guess based on the snippet (see `detectLang`). */
   readonly lang = input<CodeLang>();
   readonly height = input('420px');
+
+  /** `add <items>` for what the snippet imports, or null when it only needs the core. */
+  protected readonly installCli = computed(() => {
+    const items = installItemsFor(this.code());
+    return items.length ? `add ${items.join(' ')}` : null;
+  });
 }
