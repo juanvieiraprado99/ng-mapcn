@@ -285,7 +285,7 @@ Unit-test components that render \`ng-map\` in jsdom, without WebGL. \`maplibre-
 - **Vitest** (first-class): a setup file with \`vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'))\` and \`configureFakeMapLibre({ spy: vi.fn })\`, plus \`server: { deps: { inline: [/ng-mapcn/] } }\` in the Vitest config (without it the real \`maplibre-gl\` is loaded and the mock has no effect).
 - **Jest**: \`moduleNameMapper: { '^maplibre-gl$': 'ng-mapcn/testing/maplibre' }\` and \`configureFakeMapLibre({ spy: jest.fn })\`. Documented, not tested by ng-mapcn.
 - **Karma/Jasmine**: not supported (they cannot mock an ES module).
-- \`init\` and \`add\` do not copy the testing files: copy-paste users depend on the npm package for the fake.
+- \`init\` and \`add\` do not copy the testing files: copy-paste users install the npm package as a dev dependency and call \`configureMapTesting({ mapComponent: MapComponent, mapContext: MapContextService })\` in the setup file, both imported from their alias (\`@/shared/components/map\`), so \`renderMap()\` renders their copied \`<ng-map>\` (without it, it throws a message that says so). The harnesses need no setup.
 - \`ng-mapcn/testing/harness\` imports \`@angular/cdk/testing\`, an optional peer: install \`@angular/cdk\` to use it.
 - Stable: \`fakeRegistry\`, the fake's getters and \`structuralCalls()\`. The fake's raw \`calls\` strings are not.
 - Change host values after rendering with \`update(fixture, props)\` (it calls \`markForCheck()\`) or signals in \`hostProps\`: in zoneless apps (the Angular default) a direct \`fixture.componentInstance.x = ...\` needs \`fixture.changeDetectorRef.markForCheck()\`, or the dev-mode check throws NG0100.

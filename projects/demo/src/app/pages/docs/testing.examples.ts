@@ -19,6 +19,16 @@ configureFakeMapLibre({ spy: vi.fn });
 
 beforeEach(() => fakeRegistry.reset());`;
 
+/** Added to the setup file when the components were copied by `npx ng-mapcn init`. */
+export const COPY_PASTE_SETUP = `import { configureMapTesting } from 'ng-mapcn/testing';
+
+// Your copied classes, from the alias init mapped (see ng-mapcn.json).
+import { MapComponent, MapContextService } from '@/shared/components/map';
+
+// renderMap() renders this <ng-map> and getFakeMap()/loadMap() read this context,
+// instead of the npm package's classes.
+configureMapTesting({ mapComponent: MapComponent, mapContext: MapContextService });`;
+
 /** `vitest.config.mts`, wired through `runnerConfig` for the Angular CLI builder. */
 export const VITEST_CONFIG = `import { defineConfig } from 'vitest/config';
 
