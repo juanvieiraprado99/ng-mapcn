@@ -98,7 +98,7 @@ function ownerOf(file) {
 /** First sentence of the JSDoc above `export class`. */
 function describe(text) {
   const m =
-    /\/\*\*((?:(?!\*\/)[\s\S])*)\*\/\s*(?:@\w+\([\s\S]*?\)\s*)*export\s+(?:abstract\s+)?class\b/.exec(
+    /\/\*\*((?:(?!\*\/)[\s\S])*)\*\/\s*(?:@\w+\([\s\S]*?\)\s*)*(?:\/\/[^\n]*\n\s*)*export\s+(?:abstract\s+)?class\b/.exec(
       text,
     );
   if (!m) return '';

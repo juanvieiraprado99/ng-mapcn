@@ -49,6 +49,7 @@ import { getViewport, type MapViewport } from '../../utils/map-utils';
 /** Worker file `ng add` copies to the build output root (`angular.json` assets). */
 const MAPLIBRE_WORKER_FILE = 'maplibre-gl-worker.mjs';
 
+/** Renders a MapLibre GL map and provides the map context to every child component. */
 @Component({
   selector: 'ng-map',
   templateUrl: './map.component.html',

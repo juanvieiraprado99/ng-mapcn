@@ -19,6 +19,7 @@ import { addMapLayers } from '../../utils/layers';
 import { nextId } from '../../utils/map-utils';
 import { RouteContextService } from './route-context.service';
 
+/** Draws a line through a list of coordinates, such as a route or track. */
 @Component({
   selector: 'ng-map-route',
   template: '<ng-content />',

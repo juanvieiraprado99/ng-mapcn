@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
+/** Shows a small text label next to a marker. */
 @Component({
   selector: 'ng-marker-label',
   template: '<ng-content />',

@@ -18,6 +18,7 @@ import { applyClassName } from '../../utils/class-name';
 import { renderPortal } from '../../utils/portal';
 import { MarkerContextService } from '../map-marker/marker-context.service';
 
+/** Shows a tooltip when the pointer hovers over a marker. */
 @Component({
   selector: 'ng-marker-tooltip',
   template: '<ng-template #tpl><ng-content /></ng-template>',
