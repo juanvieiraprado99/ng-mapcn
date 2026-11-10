@@ -130,6 +130,51 @@ export const DOCS_ROUTES: Routes = [
           import('./components/controls-page').then((m) => m.ControlsPageComponent),
       },
       {
+        path: 'components/scale',
+        title: 'Scale',
+        data: {
+          seo: {
+            title: 'Angular Map Scale Bar',
+            description:
+              'Add a distance scale bar to an Angular map with ng-map-scale: metric, imperial or both, updated as the map zooms and pans.',
+            keywords: ['map scale bar Angular', 'MapLibre scale control', 'distance scale'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () =>
+          import('./components/scale-page').then((m) => m.ScalePageComponent),
+      },
+      {
+        path: 'components/style-switcher',
+        title: 'Style Switcher',
+        data: {
+          seo: {
+            title: 'Angular Map Style Switcher',
+            description:
+              'Let users switch the basemap of an Angular map with ng-map-style-switcher: a list of light/dark style options, two-way bound, with your layers re-added after every switch.',
+            keywords: ['basemap switcher Angular', 'MapLibre style switcher', 'change map style'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () =>
+          import('./components/style-switcher-page').then((m) => m.StyleSwitcherPageComponent),
+      },
+      {
+        path: 'components/minimap',
+        title: 'Minimap',
+        data: {
+          seo: {
+            title: 'Angular Map Minimap',
+            description:
+              'Add an overview minimap to an Angular map with ng-map-minimap: it follows the main viewport, outlines it and navigates it by click, drag or keyboard.',
+            keywords: ['minimap Angular', 'overview map MapLibre', 'inset map'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () =>
+          import('./components/minimap-page').then((m) => m.MinimapPageComponent),
+      },
+      {
         path: 'components/legend',
         title: 'Legend',
         data: {
@@ -265,35 +310,84 @@ export const DOCS_ROUTES: Routes = [
           import('./components/symbols-page').then((m) => m.SymbolsPageComponent),
       },
       {
-        path: 'components/tile-sources',
-        title: 'Tile Sources',
+        path: 'components/raster-source',
+        title: 'Raster Tiles',
         data: {
           seo: {
-            title: 'Angular Map Tile Sources',
+            title: 'Angular Map Raster Tiles',
             description:
-              'Add raster tiles, vector tiles, PMTiles archives and georeferenced image overlays to an Angular map with ng-map-raster-source, ng-map-vector-source and ng-map-image-overlay.',
-            keywords: ['Angular raster tiles', 'PMTiles Angular', 'MapLibre vector tiles', 'WMS overlay'],
+              'Add XYZ, TMS or WMS raster tiles to an Angular map with ng-map-raster-source: a declarative source and layer with live opacity and visibility.',
+            keywords: ['Angular raster tiles', 'WMS overlay', 'MapLibre raster source'],
             breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
           },
         },
         loadComponent: () =>
-          import('./components/tile-sources-page').then((m) => m.TileSourcesPageComponent),
+          import('./components/raster-source-page').then((m) => m.RasterSourcePageComponent),
       },
       {
-        path: 'components/3d',
-        title: '3D Buildings & Terrain',
+        path: 'components/vector-source',
+        title: 'Vector Tiles',
         data: {
           seo: {
-            title: 'Angular 3D Map Buildings and Terrain',
+            title: 'Angular Map Vector Tiles and PMTiles',
             description:
-              'Render 3D buildings and real terrain with hillshade on an Angular map using ng-map-fill-extrusion and ng-map-terrain, powered by MapLibre GL.',
-            keywords: ['Angular 3D map', '3D buildings MapLibre', 'MapLibre terrain hillshade', 'fill-extrusion'],
+              'Add vector tiles and PMTiles archives to an Angular map with ng-map-vector-source, then draw your own layers that survive theme switches.',
+            keywords: ['PMTiles Angular', 'MapLibre vector tiles', 'vector source Angular'],
             breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
           },
         },
         loadComponent: () =>
-          import('./components/three-d-page').then((m) => m.ThreeDPageComponent),
+          import('./components/vector-source-page').then((m) => m.VectorSourcePageComponent),
       },
+      {
+        path: 'components/image-overlay',
+        title: 'Image Overlay',
+        data: {
+          seo: {
+            title: 'Angular Map Image Overlay',
+            description:
+              'Pin a georeferenced image (a scanned map, a radar frame, a floor plan) to four corners on an Angular map with ng-map-image-overlay.',
+            keywords: ['image overlay Angular map', 'georeferenced image MapLibre', 'map image source'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () =>
+          import('./components/image-overlay-page').then((m) => m.ImageOverlayPageComponent),
+      },
+      {
+        path: 'components/fill-extrusion',
+        title: '3D Buildings',
+        data: {
+          seo: {
+            title: 'Angular 3D Map Buildings',
+            description:
+              'Render 3D buildings on an Angular map with ng-map-fill-extrusion: extrude the basemap buildings or your own polygons by a height property, powered by MapLibre GL.',
+            keywords: ['Angular 3D map', '3D buildings MapLibre', 'fill-extrusion'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () =>
+          import('./components/fill-extrusion-page').then((m) => m.FillExtrusionPageComponent),
+      },
+      {
+        path: 'components/terrain',
+        title: 'Terrain',
+        data: {
+          seo: {
+            title: 'Angular Map 3D Terrain',
+            description:
+              'Drape an Angular map over real elevation with ng-map-terrain: Terrarium or Terrain-RGB tiles, exaggeration and hillshade, powered by MapLibre GL.',
+            keywords: ['MapLibre terrain hillshade', 'Angular 3D terrain', 'elevation map'],
+            breadcrumbs: [{ name: 'Docs', path: '/docs' }, { name: 'Components', path: '/docs/components/map' }],
+          },
+        },
+        loadComponent: () =>
+          import('./components/terrain-page').then((m) => m.TerrainPageComponent),
+      },
+      // Pages split per component: old links land on the first one (vercel.json answers 301 for
+      // the prerendered site, where redirect routes have no HTML).
+      { path: 'components/tile-sources', redirectTo: 'components/raster-source' },
+      { path: 'components/3d', redirectTo: 'components/fill-extrusion' },
       {
         path: 'components/draw',
         title: 'Draw',

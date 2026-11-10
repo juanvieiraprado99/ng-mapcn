@@ -126,6 +126,9 @@ const componentList = api.sections
 const DOCS_COMPONENT_PAGES = [
   { label: 'Map', slug: 'map' },
   { label: 'Controls', slug: 'controls' },
+  { label: 'Scale', slug: 'scale' },
+  { label: 'Style Switcher', slug: 'style-switcher' },
+  { label: 'Minimap', slug: 'minimap' },
   { label: 'Legend', slug: 'legend' },
   { label: 'Markers', slug: 'markers' },
   { label: 'Popups', slug: 'popups' },
@@ -135,8 +138,11 @@ const DOCS_COMPONENT_PAGES = [
   { label: 'Clusters', slug: 'clusters' },
   { label: 'Heatmap', slug: 'heatmap' },
   { label: 'Symbols', slug: 'symbols' },
-  { label: 'Tile Sources', slug: 'tile-sources' },
-  { label: '3D Buildings & Terrain', slug: '3d' },
+  { label: 'Raster Tiles', slug: 'raster-source' },
+  { label: 'Vector Tiles', slug: 'vector-source' },
+  { label: 'Image Overlay', slug: 'image-overlay' },
+  { label: '3D Buildings', slug: 'fill-extrusion' },
+  { label: 'Terrain', slug: 'terrain' },
   { label: 'Draw', slug: 'draw' },
   { label: 'Advanced', slug: 'advanced' },
 ];

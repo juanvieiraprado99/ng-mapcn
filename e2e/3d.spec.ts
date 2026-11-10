@@ -3,11 +3,12 @@ import type { Locator } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { gotoAndWaitForMap, mapCall } from './map-helpers';
 
-// Docs page examples, in template order.
+// Each docs page's first example.
 const BUILDINGS = 0;
-const TERRAIN = 1;
+const TERRAIN = 0;
 
-const PAGE = '/docs/components/3d';
+const BUILDINGS_PAGE = '/docs/components/fill-extrusion';
+const TERRAIN_PAGE = '/docs/components/terrain';
 const EXTRUSION = 'fill-extrusion-layer-buildings';
 const DEM_SOURCE = 'terrain-source-relief';
 const HILLSHADE = 'terrain-hillshade-relief';
@@ -26,7 +27,7 @@ test.describe('3D buildings', () => {
   test('extrudes the basemap building layer with the Carto defaults, over a pitched map', async ({
     page,
   }) => {
-    await gotoAndWaitForMap(page, PAGE, BUILDINGS);
+    await gotoAndWaitForMap(page, BUILDINGS_PAGE, BUILDINGS);
 
     const layer = await mapCall(
       page,
@@ -60,7 +61,7 @@ test.describe('3D buildings', () => {
   });
 
   test('the building tiles reach the source (height survives the round trip)', async ({ page }) => {
-    await gotoAndWaitForMap(page, PAGE, BUILDINGS);
+    await gotoAndWaitForMap(page, BUILDINGS_PAGE, BUILDINGS);
 
     await expect
       .poll(
@@ -77,7 +78,7 @@ test.describe('3D buildings', () => {
   });
 
   test('opacity and color are reconciled on the same layer', async ({ page }) => {
-    await gotoAndWaitForMap(page, PAGE, BUILDINGS);
+    await gotoAndWaitForMap(page, BUILDINGS_PAGE, BUILDINGS);
     const paint = (property: string) =>
       mapCall(
         page,
@@ -111,7 +112,7 @@ test.describe('3D buildings', () => {
   });
 
   test('the extrusion comes back after a theme switch', async ({ page }) => {
-    await gotoAndWaitForMap(page, PAGE, BUILDINGS);
+    await gotoAndWaitForMap(page, BUILDINGS_PAGE, BUILDINGS);
     await expect
       .poll(() => mapCall(page, BUILDINGS, (map, id) => !!map.getLayer(id), EXTRUSION))
       .toBe(true);
@@ -157,7 +158,7 @@ test.describe('terrain', () => {
     mapCall(page, TERRAIN, (map) => map.getTerrain());
 
   test('enables the terrain from a raster-dem source with a hillshade layer', async ({ page }) => {
-    await gotoAndWaitForMap(page, PAGE, TERRAIN);
+    await gotoAndWaitForMap(page, TERRAIN_PAGE, TERRAIN);
 
     expect(await terrain(page)).toEqual({ source: DEM_SOURCE, exaggeration: 1.5 });
     const state = await mapCall(
@@ -180,7 +181,7 @@ test.describe('terrain', () => {
   });
 
   test('the elevation tiles are decoded: the terrain reports an elevation', async ({ page }) => {
-    await gotoAndWaitForMap(page, PAGE, TERRAIN);
+    await gotoAndWaitForMap(page, TERRAIN_PAGE, TERRAIN);
 
     await expect
       .poll(() => mapCall(page, TERRAIN, (map) => map.queryTerrainElevation(map.getCenter())), {
@@ -190,7 +191,7 @@ test.describe('terrain', () => {
   });
 
   test('exaggeration is re-applied on the live terrain', async ({ page }) => {
-    await gotoAndWaitForMap(page, PAGE, TERRAIN);
+    await gotoAndWaitForMap(page, TERRAIN_PAGE, TERRAIN);
 
     await setRange(
       page
@@ -204,7 +205,7 @@ test.describe('terrain', () => {
   });
 
   test('toggling the hillshade adds and removes only its layer', async ({ page }) => {
-    await gotoAndWaitForMap(page, PAGE, TERRAIN);
+    await gotoAndWaitForMap(page, TERRAIN_PAGE, TERRAIN);
     const hasHillshade = () => mapCall(page, TERRAIN, (map, id) => !!map.getLayer(id), HILLSHADE);
     expect(await hasHillshade()).toBe(true);
 
@@ -220,7 +221,7 @@ test.describe('terrain', () => {
   test('the terrain, source and hillshade are re-applied after a theme switch', async ({
     page,
   }) => {
-    await gotoAndWaitForMap(page, PAGE, TERRAIN);
+    await gotoAndWaitForMap(page, TERRAIN_PAGE, TERRAIN);
     await expect.poll(() => terrain(page)).not.toBeNull();
 
     await page.locator('app-theme-toggle button').click();
@@ -254,7 +255,7 @@ test.describe('terrain', () => {
   });
 
   test('the hillshade reads its own DEM source with the same tiles', async ({ page }) => {
-    await gotoAndWaitForMap(page, PAGE, TERRAIN);
+    await gotoAndWaitForMap(page, TERRAIN_PAGE, TERRAIN);
 
     const sources = await mapCall(
       page,
@@ -277,7 +278,7 @@ test.describe('terrain', () => {
   });
 
   test('a steep pitch keeps the terrain and its elevation', async ({ page }) => {
-    await gotoAndWaitForMap(page, PAGE, TERRAIN);
+    await gotoAndWaitForMap(page, TERRAIN_PAGE, TERRAIN);
 
     await mapCall(page, TERRAIN, (map) => {
       map.jumpTo({ pitch: 80, bearing: 45 });
@@ -290,7 +291,7 @@ test.describe('terrain', () => {
   });
 
   test('the terrain survives a switch to the globe projection and back', async ({ page }) => {
-    await gotoAndWaitForMap(page, PAGE, TERRAIN);
+    await gotoAndWaitForMap(page, TERRAIN_PAGE, TERRAIN);
 
     await mapCall(page, TERRAIN, (map) => {
       map.setProjection({ type: 'globe' });

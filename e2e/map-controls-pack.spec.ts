@@ -1,17 +1,19 @@
 import { expect, minimalStyle, test } from './fixtures';
 import { gotoAndWaitForMap, layerIds, mapCall } from './map-helpers';
 
-const CONTROLS_URL = '/docs/components/controls';
+const SCALE_URL = '/docs/components/scale';
+const SWITCHER_URL = '/docs/components/style-switcher';
 const LEGEND_URL = '/docs/components/legend';
 
 // Docs page examples, in template order.
-const SCALE = 1;
-const SWITCHER = 2;
+const SCALE = 0;
+const SCALE_WITH_CONTROLS = 1;
+const SWITCHER = 0;
 const COLLAPSIBLE = 2;
 
 test.describe('map controls pack', () => {
   test('scale label changes after zoom', async ({ page }) => {
-    await gotoAndWaitForMap(page, CONTROLS_URL, SCALE);
+    await gotoAndWaitForMap(page, SCALE_URL, SCALE);
     const labels = page.locator('ng-map').nth(SCALE).locator('.ng-scale .ng-scale-label');
     await expect(labels.first()).not.toHaveText('');
     const before = await labels.allTextContents();
@@ -37,7 +39,7 @@ test.describe('map controls pack', () => {
   });
 
   test('style switcher keeps layers', async ({ page }) => {
-    await gotoAndWaitForMap(page, CONTROLS_URL, SWITCHER);
+    await gotoAndWaitForMap(page, SWITCHER_URL, SWITCHER);
     const own = (ids: string[]) => ids.filter((id) => id.includes('switcher-area'));
     const before = own(await layerIds(page, SWITCHER));
     expect(before.length).toBeGreaterThan(0);
@@ -97,8 +99,8 @@ test.describe('map controls pack', () => {
         },
       });
     });
-    await gotoAndWaitForMap(page, CONTROLS_URL, SCALE);
-    const map = page.locator('ng-map').nth(SCALE);
+    await gotoAndWaitForMap(page, SCALE_URL, SCALE_WITH_CONTROLS);
+    const map = page.locator('ng-map').nth(SCALE_WITH_CONTROLS);
     const boxes = [];
     for (const selector of ['.ng-controls', '.ng-scale', '.maplibregl-ctrl-attrib']) {
       const box = await map.locator(selector).first().boundingBox();
