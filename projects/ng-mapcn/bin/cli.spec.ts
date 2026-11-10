@@ -1,10 +1,10 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 
 import { afterAll, describe, expect, it } from 'vitest';
 
 // @ts-expect-error plain ESM module without type declarations
-import { main, parseArgs, UsageError } from './cli.mjs';
+import { main, parseArgs, resolveDevkit, UsageError } from './cli.mjs';
 
 // Runs against the compiled collection: `npm run test:schematics` builds it first.
 const ROOT = process.cwd();
@@ -146,5 +146,44 @@ describe('main', () => {
     const { code, err } = await run(cwd, ['add', 'nope', '--skip-install']);
     expect(code).toBe(1);
     expect(err).toMatch(/Unknown component/);
+  });
+});
+
+describe('resolveDevkit', () => {
+  const write = (file: string, content: string) => {
+    mkdirSync(join(file, '..'), { recursive: true });
+    writeFileSync(file, content);
+  };
+
+  it('resolves a devkit nested under @angular/cli (non-hoisted layout)', () => {
+    const cwd = workspace('devkit-nested');
+    const cli = join(cwd, 'node_modules', '@angular', 'cli');
+    const nested = join(cli, 'node_modules');
+    write(join(cli, 'package.json'), '{"name":"@angular/cli","version":"0.0.0"}');
+    write(join(nested, '@angular-devkit', 'schematics', 'package.json'), '{"name":"s"}');
+    write(
+      join(nested, '@angular-devkit', 'schematics', 'tools', 'index.js'),
+      'exports.NodeWorkflow = class NodeWorkflow {};',
+    );
+    write(join(nested, '@angular-devkit', 'core', 'package.json'), '{"name":"c","main":"i.js"}');
+    write(
+      join(nested, '@angular-devkit', 'core', 'i.js'),
+      'exports.logging = { Logger: class {} };',
+    );
+    write(join(nested, 'rxjs', 'package.json'), '{"name":"rxjs","main":"i.js"}');
+    write(join(nested, 'rxjs', 'i.js'), 'exports.lastValueFrom = () => 1;');
+
+    expect(existsSync(join(cwd, 'node_modules', '@angular-devkit'))).toBe(false);
+    const devkit = resolveDevkit(cwd);
+    expect(devkit.nodeModulesDir.toLowerCase()).toBe(nested.toLowerCase());
+    expect(typeof devkit.NodeWorkflow).toBe('function');
+    expect(typeof devkit.logging.Logger).toBe('function');
+    expect(devkit.lastValueFrom()).toBe(1);
+  });
+
+  it('still resolves the hoisted layout (the repo)', () => {
+    const devkit = resolveDevkit(ROOT);
+    expect(typeof devkit.NodeWorkflow).toBe('function');
+    expect(devkit.nodeModulesDir.endsWith(`${sep}node_modules`)).toBe(true);
   });
 });

@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire, Module } from 'node:module';
-import { delimiter, dirname, join } from 'node:path';
+import { delimiter, dirname, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export class UsageError extends Error {
@@ -92,6 +92,38 @@ function usage(registry) {
   ].join('\n');
 }
 
+/**
+ * Loads the workspace's own devkit. It is a transitive dependency of @angular/cli, so under
+ * non-hoisted layouts (pnpm) it is only reachable through @angular/cli. Returns the modules plus the
+ * node_modules directory that holds @angular-devkit/schematics.
+ */
+export function resolveDevkit(cwd) {
+  const req = createRequire(join(cwd, 'package.json'));
+  let cliReq = req;
+  try {
+    cliReq = createRequire(req.resolve('@angular/cli/package.json'));
+  } catch {
+    // @angular/cli is not a direct dependency: resolve from the workspace.
+  }
+  const toolsPath = cliReq.resolve('@angular-devkit/schematics/tools');
+  const marker = `${sep}node_modules${sep}@angular-devkit${sep}`;
+  const at = toolsPath.lastIndexOf(marker);
+  if (at === -1) throw new Error('Unexpected @angular-devkit/schematics location');
+  const load = (id) => {
+    try {
+      return cliReq(id);
+    } catch {
+      return req(id);
+    }
+  };
+  return {
+    NodeWorkflow: cliReq('@angular-devkit/schematics/tools').NodeWorkflow,
+    lastValueFrom: load('rxjs').lastValueFrom,
+    logging: load('@angular-devkit/core').logging,
+    nodeModulesDir: toolsPath.slice(0, at + `${sep}node_modules`.length),
+  };
+}
+
 export async function main(argv, env = {}) {
   const cwd = env.cwd ?? process.cwd();
   const out = env.stdout ?? ((s) => process.stdout.write(s + '\n'));
@@ -147,18 +179,17 @@ export async function main(argv, env = {}) {
     return 1;
   }
 
-  // The bundled schematics `require('@angular-devkit/schematics')` from wherever this package lives
-  // (the npx cache), where it is not installed. Make the workspace's node_modules visible to them.
-  const nodePaths = [join(cwd, 'node_modules'), process.env.NODE_PATH].filter(Boolean);
-  process.env.NODE_PATH = nodePaths.join(delimiter);
-  Module._initPaths();
-
   let NodeWorkflow, lastValueFrom, logging;
   try {
-    const req = createRequire(join(cwd, 'package.json'));
-    ({ NodeWorkflow } = req('@angular-devkit/schematics/tools'));
-    ({ lastValueFrom } = req('rxjs'));
-    ({ logging } = req('@angular-devkit/core'));
+    const devkit = resolveDevkit(cwd);
+    ({ NodeWorkflow, lastValueFrom, logging } = devkit);
+    // The bundled schematics `require('@angular-devkit/schematics')` from wherever this package
+    // lives (the npx cache), where it is not installed: expose the devkit's node_modules to them.
+    const current = (process.env.NODE_PATH ?? '').split(delimiter).filter(Boolean);
+    if (!current.includes(devkit.nodeModulesDir)) {
+      process.env.NODE_PATH = [devkit.nodeModulesDir, ...current].join(delimiter);
+      Module._initPaths();
+    }
   } catch {
     err(
       'Could not find @angular-devkit/schematics. Run "npm install" in your Angular workspace first.',
