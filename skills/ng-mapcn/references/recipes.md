@@ -418,7 +418,7 @@ Gotchas: the map needs a pitch to look 3D (`pitch` is an `options` entry, not an
 
 ## Draw
 
-Needs `npm i terra-draw terra-draw-maplibre-gl-adapter` (or `npx ng-mapcn@latest add draw`); import from the `'ng-mapcn/draw'` entry point (copy-paste: `<path>/draw`).
+Needs `npm i terra-draw terra-draw-maplibre-gl-adapter` (or `npx ng-mapcn@latest add draw`); import from the `'ng-mapcn/draw'` entry point (copy-paste: `'@/shared/components/map/draw'`).
 
 ```ts
 import { Component, signal, viewChild } from '@angular/core';

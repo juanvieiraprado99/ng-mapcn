@@ -573,7 +573,7 @@ No outputs. Also exported: `defaultTerrainTiles`, `TerrainEncoding`.
 
 ## ng-map-draw
 
-Class `MapDrawComponent`, from the optional **`'ng-mapcn/draw'`** entry point (copy-paste: `<path>/draw`, via `npx ng-mapcn@latest add draw`). Built on `terra-draw` + `terra-draw-maplibre-gl-adapter` (optional peer dependencies; install them). The core `'ng-mapcn'` entry never imports them.
+Class `MapDrawComponent`, from the optional **`'ng-mapcn/draw'`** entry point (copy-paste: `'@/shared/components/map/draw'`, via `npx ng-mapcn@latest add draw`). Built on `terra-draw` + `terra-draw-maplibre-gl-adapter` (optional peer dependencies; install them). The core `'ng-mapcn'` entry never imports them.
 
 | Input      | Type                                                   | Default       | Notes                                                                                                                                          |
 | ---------- | ------------------------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |

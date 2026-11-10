@@ -3,8 +3,8 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCheck, lucideMaximize, lucideTerminal } from '@ng-icons/lucide';
 
-import { blockUsage } from '@/blocks/block-usage';
-import { type BlockMeta, zardDocsUrl, zardInstallCommand } from '@/blocks/registry';
+import { blockInstallCommands, blockUsage } from '@/blocks/block-usage';
+import { type BlockMeta, zardDocsUrl } from '@/blocks/registry';
 import { CodeBlockComponent } from '@/shared/code-block';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSeparatorComponent } from '@/shared/components/separator';
@@ -127,6 +127,16 @@ const TAB_TRIGGER =
       @if (usage(); as snippet) {
         <div class="mt-3" [hidden]="active() !== 'usage'">
           <p class="text-muted-foreground mb-2 text-sm">
+            In an app set up with <code class="font-mono">npx ng-mapcn@latest init</code>, add what
+            the block uses:
+          </p>
+          <app-code-block
+            class="mb-4"
+            [code]="installCommands()"
+            lang="bash"
+            [showLineNumbers]="false"
+          />
+          <p class="text-muted-foreground mb-2 text-sm">
             After copying the files into your app, render the block like this.
           </p>
           <app-code-block [code]="snippet" lang="angular-ts" filename="page.component.ts" />
@@ -166,10 +176,12 @@ export class BlockDisplayComponent {
   protected readonly frameUrl = computed(() =>
     this.sanitizer.bypassSecurityTrustResourceUrl(this.viewUrl()),
   );
-  /** zard-cli for the block's UI, or the map library itself when it needs none. */
-  protected readonly command = computed(
-    () => zardInstallCommand(this.block()) ?? 'npx ng-mapcn@latest init',
+  /** `ng-mapcn add` for the map items the block uses, then zard-cli for its UI (one per line). */
+  protected readonly installCommands = computed(() =>
+    blockInstallCommands(this.block(), this.sources() ?? {}).join('\n'),
   );
+  /** The header button: the ng-mapcn command (the zard one is in the Usage tab). */
+  protected readonly command = computed(() => this.installCommands().split('\n')[0]);
 
   protected readonly docsUrl = zardDocsUrl;
 

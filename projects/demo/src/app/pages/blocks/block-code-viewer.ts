@@ -14,6 +14,7 @@ import type { BlockMeta } from '@/blocks/registry';
 import { CodeCopyButtonComponent } from '@/shared/code-copy-button';
 import { CodeSurfaceComponent } from '@/shared/code-surface';
 import { ZardCollapsibleImports } from '@/shared/components/collapsible';
+import { toCopyPasteImports } from '@/shared/copy-paste-imports';
 
 interface FileTree {
   name: string;
@@ -155,7 +156,8 @@ export class BlockCodeViewerComponent {
   protected readonly sources = signal<Record<string, string> | null>(null);
   protected readonly activeSource = computed(() => {
     const path = this.activeFile().replace(/^app\//, '');
-    return this.sources()?.[path] ?? '';
+    // Shown as the user's copy: ng-mapcn imports point at the copy-paste alias.
+    return toCopyPasteImports(this.sources()?.[path] ?? '');
   });
 
   constructor() {

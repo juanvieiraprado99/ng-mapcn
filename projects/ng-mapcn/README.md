@@ -50,13 +50,24 @@ npx ng-mapcn@latest init
 
 `init` installs with your workspace's package manager (npm, pnpm, yarn or bun), so run it as `npx`, `pnpm dlx`, `yarn dlx` (Yarn 2+ only) or `bunx` as you prefer. It is the same as `ng add ng-mapcn`.
 
-This will:
+It asks two questions (Enter keeps the default; `--yes` skips them, `--path` / `--alias` answer them up front):
+
+```text
+? Where should the map components be copied? (src/app/shared/components/map)
+? Import alias for them? (@/shared/components/map)
+```
+
+Then it will:
 
 1. Add `maplibre-gl` to your dependencies (and `@types/geojson` to your dev dependencies)
 2. Register `maplibre-gl/dist/maplibre-gl.css` in `angular.json`
 3. Register MapLibre's worker files as build assets (see [MapLibre worker](#maplibre-worker))
 4. Append the required `.maplibregl-popup-*` CSS overrides to your global stylesheet
-5. Copy only the core (`<ng-map>`, its services, providers and styles) to `src/app/components/ui/map` (customize with `--path`)
+5. Copy only the core (`<ng-map>`, its services, providers and styles) to `src/app/shared/components/map`
+6. Map the import alias in `tsconfig.json` compilerOptions `paths`: `"@/*": ["./src/app/*"]` when the app has no `@/*` yet (an existing one that covers the folder is kept; otherwise exact `"<alias>"` / `"<alias>/*"` entries), never `baseUrl`
+7. Save the folder and the alias in `ng-mapcn.json` at the workspace root, where `add` and `list` read them
+
+You then import the components from the alias, `import { MapComponent } from '@/shared/components/map';`, like shadcn's `@/components/ui/...`. Every example in these docs uses it; with the npm package, import from `'ng-mapcn'` instead.
 
 A fresh Angular app exceeds the default 1 MB initial bundle budget once `maplibre-gl` is used (about 1.4 MB). Lazy-load the route that holds the map, or wrap the map in `@defer`, so `maplibre-gl` stays out of the initial bundle, before you raise `budgets` in `angular.json`.
 
@@ -68,13 +79,13 @@ npx ng-mapcn@latest add marker-popup controls
 
 The component in step 2 needs `marker-popup` (which brings `marker`); `controls` is for `<ng-map-controls />`. Add only what your templates import.
 
-`add` copies the items and the files they depend on (the core is always included), skips files that already exist and differ from the source, logging each one (pass `--overwrite` to replace them, including customized core or shared files such as `map.component.ts`), regenerates the `index.ts` barrel on every run (hand edits to it are lost) from what is on disk and adds the npm packages the items need. Names accept `marker`, `map-marker`, `Marker` or `marker,route`; an unknown name fails and lists the valid ones. `--all` copies every item except `draw`. `npx ng-mapcn@latest list` shows the items and marks the installed ones. The Angular CLI equivalents are `ng add ng-mapcn` and `ng g ng-mapcn:add marker-popup controls`.
+`add` copies the items, into the folder saved in `ng-mapcn.json`, and the files they depend on (the core is always included), skips files that already exist and differ from the source, logging each one (pass `--overwrite` to replace them, including customized core or shared files such as `map.component.ts`), regenerates the `index.ts` barrel on every run (hand edits to it are lost) from what is on disk and adds the npm packages the items need. Names accept `marker`, `map-marker`, `Marker` or `marker,route`; an unknown name fails and lists the valid ones. `--all` copies every item except `draw`. `npx ng-mapcn@latest list` shows the items and marks the installed ones. The Angular CLI equivalents are `ng add ng-mapcn` and `ng g ng-mapcn:add marker-popup controls`.
 
 Dependencies point one way: `marker-content`, `marker-popup` and `marker-tooltip` depend on `marker`, so `add marker-popup` also copies `marker`, but `add marker` alone does not copy the popup or tooltip.
 
 If your app already depends on an older `maplibre-gl`, `init` keeps your version and warns: update it to `^6.11.2`.
 
-Drawing (`ng-map-draw`) is opt-in so apps that do not draw never install [terra-draw](https://terradraw.dev): run `npx ng-mapcn@latest add draw` to copy the draw sources to `<path>/draw` (import from there) and add `terra-draw` and `terra-draw-maplibre-gl-adapter` to your dependencies.
+Drawing (`ng-map-draw`) is opt-in so apps that do not draw never install [terra-draw](https://terradraw.dev): run `npx ng-mapcn@latest add draw` to copy the draw sources to `<folder>/draw` (import from `'@/shared/components/map/draw'`) and add `terra-draw` and `terra-draw-maplibre-gl-adapter` to your dependencies.
 
 Or as a regular npm package:
 
@@ -130,11 +141,11 @@ Bundlers cannot resolve MapLibre's default worker location (`import.meta.url`); 
 
 ### 2. Add a map
 
-A complete standalone component (with the copy-paste install, import from `./components/ui/map` instead of `'ng-mapcn'`):
+A complete standalone component (with the npm package, import from `'ng-mapcn'` instead of `'@/shared/components/map'`):
 
 ```ts
 import { Component } from '@angular/core';
-import { MapComponent, MapMarkerComponent, MarkerPopupComponent } from 'ng-mapcn';
+import { MapComponent, MapMarkerComponent, MarkerPopupComponent } from '@/shared/components/map';
 
 @Component({
   selector: 'app-map',
@@ -200,7 +211,7 @@ Without a `theme` input, the map watches the `dark`/`light` class (or a `data-th
 Any MapLibre-compatible style works. Set it per map with `styles`, or once for the whole app with `provideMapStyles()`:
 
 ```ts
-import { provideMapStyles } from 'ng-mapcn';
+import { provideMapStyles } from '@/shared/components/map';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -221,7 +232,7 @@ Precedence: `ng-map-style-switcher` selection → `[styles]` → `[blank]` → `
 Control tooltips, the loader and the popup close button are English by default. Override them app-wide with `provideMapLabels()` (static value, signal or factory; missing keys keep the English default), or per component with the `labels` input on `ng-map`, `ng-map-controls`, `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher`, `ng-map-minimap`, `ng-route-playback-control`, `ng-map-marker`, `ng-map-popup` and `ng-marker-popup`:
 
 ```ts
-import { provideMapLabels } from 'ng-mapcn';
+import { provideMapLabels } from '@/shared/components/map';
 
 provideMapLabels({
   zoomIn: 'Aproximar',

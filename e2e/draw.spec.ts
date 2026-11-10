@@ -17,7 +17,10 @@ const counts = (page: Page) => page.getByTestId('draw-count');
 
 /** Viewport pixel of a point inside map number `mapIndex`, as a fraction of its canvas. */
 async function canvasPoint(page: Page, mapIndex: number, fx: number, fy: number) {
-  const box = await page.locator('ng-map').nth(mapIndex).locator('canvas').boundingBox();
+  // Mouse coordinates are viewport pixels: the map must be on screen, wherever the page puts it.
+  const canvas = page.locator('ng-map').nth(mapIndex).locator('canvas');
+  await canvas.scrollIntoViewIfNeeded();
+  const box = await canvas.boundingBox();
   expect(box).not.toBeNull();
   return { x: box!.x + box!.width * fx, y: box!.y + box!.height * fy };
 }
@@ -272,11 +275,13 @@ test.describe('draw', () => {
     const before = await coordinates();
 
     await page.getByRole('button', { name: 'Select', exact: true }).first().click();
-    await clickAll(page, [at]);
-    await page.mouse.move(at.x, at.y);
+    // Clicking the toolbar may scroll the page: read the point again.
+    const point = await canvasPoint(page, BASIC, 0.5, 0.5);
+    await clickAll(page, [point]);
+    await page.mouse.move(point.x, point.y);
     await page.mouse.down();
-    await page.mouse.move(at.x + 30, at.y + 20, { steps: 5 });
-    await page.mouse.move(at.x + 60, at.y + 40, { steps: 5 });
+    await page.mouse.move(point.x + 30, point.y + 20, { steps: 5 });
+    await page.mouse.move(point.x + 60, point.y + 40, { steps: 5 });
     await page.mouse.up();
 
     await expect.poll(coordinates).not.toBe(before);

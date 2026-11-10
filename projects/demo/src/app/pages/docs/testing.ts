@@ -53,14 +53,14 @@ import {
           mocks <code [class]="code">maplibre-gl</code> and turns the fake's methods into
           <code [class]="code">vi.fn()</code> spies:
         </p>
-        <app-code-block [code]="vitestSetup" filename="src/testing/setup.ts" />
+        <app-code-block [rewriteImports]="false" [code]="vitestSetup" filename="src/testing/setup.ts" />
         <p>
           The config tells Vitest to process <code [class]="code">ng-mapcn</code> itself instead of
           loading it from <code [class]="code">node_modules</code>:
         </p>
-        <app-code-block [code]="vitestConfig" filename="vitest.config.mts" />
+        <app-code-block [rewriteImports]="false" [code]="vitestConfig" filename="vitest.config.mts" />
         <p>Then point the Angular CLI test target at both files:</p>
-        <app-code-block [code]="angularJsonTest" filename="angular.json" />
+        <app-code-block [rewriteImports]="false" [code]="angularJsonTest" filename="angular.json" />
         <app-docs-note>
           <strong>Why the inline regex matters:</strong> without
           <code [class]="code">server.deps.inline</code> Node loads the packaged
@@ -78,8 +78,8 @@ import {
           <code [class]="code">maplibre-gl</code> at the fake and pass
           <code [class]="code">jest.fn</code> as the spy factory:
         </p>
-        <app-code-block [code]="jestConfig" filename="jest.config.js" />
-        <app-code-block [code]="jestSetup" filename="src/testing/setup.ts" />
+        <app-code-block [rewriteImports]="false" [code]="jestConfig" filename="jest.config.js" />
+        <app-code-block [rewriteImports]="false" [code]="jestSetup" filename="src/testing/setup.ts" />
         <app-docs-note>
           <strong>Not tested by ng-mapcn.</strong> The library's own tests and the demo run on
           Vitest only. The Jest setup follows the fake's documented contract, but it has not been
@@ -99,7 +99,7 @@ import {
           <code [class]="code">MapContextService</code>. Layer components wait for the map to load,
           so call <code [class]="code">loadMap()</code> before asserting on sources and layers:
         </p>
-        <app-code-block [code]="firstSpec" filename="delivery-map.spec.ts" />
+        <app-code-block [rewriteImports]="false" [code]="firstSpec" filename="delivery-map.spec.ts" />
         <p>
           This spec is not pseudo-code: the demo's own test suite runs this exact text and fails if
           the page and the test drift apart.
@@ -113,7 +113,7 @@ import {
           <code [class]="code">renderMap()</code> patches the layout getters jsdom lacks.
         </p>
         <app-prop-table nameLabel="Function" [rows]="helpers" [showDefault]="false" />
-        <app-code-block [code]="eventsSpec" filename="route-interactions.spec.ts" />
+        <app-code-block [rewriteImports]="false" [code]="eventsSpec" filename="route-interactions.spec.ts" />
         <app-docs-note>
           <strong>Change host values through <code [class]="code">update()</code> or signals.</strong>
           In zoneless apps (the Angular default, and any test setup without zone.js) assigning
@@ -200,7 +200,7 @@ import {
           <code [class]="code">false</code>. To keep a popup open while the spec fires map clicks,
           bind <code [class]="code">[closeOnClick]="false"</code>:
         </p>
-        <app-code-block [code]="popupClicksSpec" filename="popup-clicks.spec.ts" />
+        <app-code-block [rewriteImports]="false" [code]="popupClicksSpec" filename="popup-clicks.spec.ts" />
       </app-docs-section>
 
       <app-docs-section title="Component harnesses">
@@ -230,14 +230,14 @@ import {
           Limitations).
         </p>
         <app-prop-table nameLabel="Harness" [rows]="harnesses" [showDefault]="false" />
-        <app-code-block [code]="harnessSpec" filename="marker-popup.spec.ts" />
+        <app-code-block [rewriteImports]="false" [code]="harnessSpec" filename="marker-popup.spec.ts" />
         <p>
           The harnesses are a separate entry point on purpose: they import
           <code [class]="code">&#64;angular/cdk/testing</code>, which is an
           <strong>optional peer dependency</strong> of ng-mapcn. Install it only if you use them;
           <code [class]="code">ng-mapcn/testing</code> works without it.
         </p>
-        <app-code-block [code]="installCdk" lang="bash" [showLineNumbers]="false" />
+        <app-code-block [rewriteImports]="false" [code]="installCdk" lang="bash" [showLineNumbers]="false" />
       </app-docs-section>
 
       <app-docs-section title="DOM selectors for end-to-end tests">
@@ -250,7 +250,7 @@ import {
           every entry against the real MapLibre in Chromium.
         </p>
         <app-prop-table nameLabel="Key" [rows]="selectors" [showDefault]="false" />
-        <app-code-block [code]="selectorsE2e" filename="e2e/map.spec.ts" />
+        <app-code-block [rewriteImports]="false" [code]="selectorsE2e" filename="e2e/map.spec.ts" />
       </app-docs-section>
 
       <app-docs-section title="Fake timers">
@@ -261,7 +261,7 @@ import {
           that out. By default they wait on a real timer, which a fake clock would never fire. With
           fake timers installed, tell them how to advance your clock:
         </p>
-        <app-code-block [code]="fakeTimersSpec" filename="fake-timers.spec.ts" />
+        <app-code-block [rewriteImports]="false" [code]="fakeTimersSpec" filename="fake-timers.spec.ts" />
         <p>
           Pair the two: set <code [class]="code">advanceTimers</code> only while fake timers are
           installed (<code [class]="code">vi.advanceTimersByTime</code> throws when they are off),
@@ -318,9 +318,12 @@ import {
           </li>
           <li>
             <strong>Copy-paste users.</strong> <code [class]="code">npx ng-mapcn@latest init</code> and
-            <code [class]="code">add</code> copy the component sources but not the testing files. Install the
-            <code [class]="code">ng-mapcn</code> package as a dev dependency to get the fake, the
-            helpers and the harnesses.
+            <code [class]="code">add</code> copy the component sources but not the testing files.
+            Install the <code [class]="code">ng-mapcn</code> package as a dev dependency: the MapLibre
+            fake and the harnesses work with your copied components, but
+            <code [class]="code">renderMap</code> and <code [class]="code">loadMap</code> render the
+            package's own <code [class]="code">MapComponent</code>, so use them only with the npm
+            package. The examples on this page import from <code [class]="code">ng-mapcn</code>.
           </li>
           <li>
             <strong>The controls harness uses CSS <code [class]="code">:has()</code>.</strong> It

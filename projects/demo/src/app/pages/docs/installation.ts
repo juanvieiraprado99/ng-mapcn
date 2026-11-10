@@ -54,14 +54,38 @@ export class MyMapComponent {}`;
       <app-docs-section title="Installation">
         <p>Run the following command to set up the map:</p>
         <app-install-command cli="init" />
+        <p>It asks two questions (press Enter to keep the defaults):</p>
+        <app-code-block [code]="initPrompts" lang="bash" [showLineNumbers]="false" />
+        <p>Then it:</p>
+        <ul class="ml-6 list-disc space-y-1">
+          <li>
+            installs <code [class]="code">maplibre-gl</code> with your workspace's package manager
+            (npm, pnpm, yarn or bun), and registers its CSS and worker assets;
+          </li>
+          <li>adds the global popup styles;</li>
+          <li>
+            copies only the core <code [class]="code">&lt;ng-map&gt;</code> into
+            <code [class]="code">src/app/shared/components/map</code> (shadcn-style: the code is
+            yours);
+          </li>
+          <li>
+            maps the import alias in <code [class]="code">tsconfig.json</code>
+            (<code [class]="code">"&#64;/*": ["./src/app/*"]</code> when your app has no
+            <code [class]="code">&#64;/*</code> yet, never <code [class]="code">baseUrl</code>), so
+            you import with <code [class]="code">from '&#64;/shared/components/map'</code>;
+          </li>
+          <li>
+            saves both answers in <code [class]="code">ng-mapcn.json</code> at the workspace root,
+            where <code [class]="code">add</code> and <code [class]="code">list</code> read them.
+          </li>
+        </ul>
         <p>
-          This installs <code [class]="code">maplibre-gl</code>, registers its CSS and worker
-          assets, adds the global popup styles and copies only the core
-          <code [class]="code">&lt;ng-map&gt;</code> component into your app (shadcn-style). It
-          installs with your workspace's package manager (npm, pnpm, yarn or bun). The Angular CLI
-          equivalent is <code [class]="code">ng add ng-mapcn</code>; pass
-          <code [class]="code">--path</code> to change the target folder (default
-          <code [class]="code">src/app/components/ui/map</code>).
+          Pass <code [class]="code">--yes</code> to skip the questions, or
+          <code [class]="code">--path</code> and <code [class]="code">--alias</code> to answer
+          them up front. The Angular CLI equivalent is <code [class]="code">ng add ng-mapcn</code>.
+          Every example on this site imports from
+          <code [class]="code">&#64;/shared/components/map</code>; if you chose another alias, use
+          yours.
         </p>
         <app-docs-note>
           <strong>Bundle budget:</strong> a fresh Angular app exceeds the default 1 MB initial
@@ -70,12 +94,18 @@ export class MyMapComponent {}`;
           of the initial bundle before you raise <code [class]="code">budgets</code> in
           <code [class]="code">angular.json</code>.
         </app-docs-note>
-        <p>Alternatively, install it as a regular npm package:</p>
+        <p>
+          Alternatively, install it as a regular npm package, and import from
+          <code [class]="code">ng-mapcn</code> instead of the alias:
+        </p>
         <app-install-command packages="ng-mapcn maplibre-gl" />
       </app-docs-section>
 
       <app-docs-section title="Add components" anchor="add-components">
-        <p>Then copy the components you need, one command for as many as you want:</p>
+        <p>
+          Then copy the components you need, one command for as many as you want. They land in
+          the folder saved in <code [class]="code">ng-mapcn.json</code>:
+        </p>
         <app-install-command cli="add marker-popup controls" />
         <p>
           Each item brings the files it depends on, and the core is always included. Files that
@@ -109,7 +139,7 @@ export class MyMapComponent {}`;
       </app-docs-section>
 
       <app-docs-section title="Usage">
-        <p>Import and use the map components:</p>
+        <p>Import the components from your alias and use them:</p>
         <app-code-block [code]="usageCode" />
         <div class="bg-card h-[320px] overflow-hidden rounded-lg border shadow-sm">
           <ng-map [center]="[-74.006, 40.7128]" [zoom]="11">
@@ -149,6 +179,8 @@ export class MyMapComponent {}`;
 })
 export class InstallationComponent {
   readonly usageCode = USAGE_CODE;
+  readonly initPrompts = `? Where should the map components be copied? (src/app/shared/components/map)
+? Import alias for them? (@/shared/components/map)`;
   /** Every item except the core, which `init` already copies. */
   protected readonly items = REGISTRY_ITEMS.filter((item) => item.name !== 'core').map((item) => ({
     name: item.name,
