@@ -122,7 +122,7 @@ const TAB_TRIGGER =
         <div class="relative h-(--block-preview-height) w-full overflow-hidden rounded-xl border">
           <iframe
             [src]="frameUrl()"
-            [title]="block().title"
+            [title]="pt() ? block().titlePt : block().title"
             loading="lazy"
             class="size-full border-0"
           ></iframe>

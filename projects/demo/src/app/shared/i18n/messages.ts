@@ -18,6 +18,9 @@ const en = {
   header: {
     homeLabel: 'ng-mapcn home',
   },
+  theme: {
+    toggle: 'Toggle theme',
+  },
   search: {
     trigger: 'Search...',
     description: 'Jump to pages, components, and docs',
@@ -123,6 +126,9 @@ const ptBR: Messages = {
   },
   header: {
     homeLabel: 'Início do ng-mapcn',
+  },
+  theme: {
+    toggle: 'Alternar tema',
   },
   search: {
     trigger: 'Buscar...',

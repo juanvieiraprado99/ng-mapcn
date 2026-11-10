@@ -34,7 +34,7 @@ export function slugify(text: string): string {
   imports: [RouterLink, NgIcon, ZardButtonComponent, DocsTocComponent],
   viewProviders: [provideIcons({ lucideChevronLeft, lucideChevronRight })],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'flex min-w-0 flex-1' },
+  host: { class: 'flex min-w-0 flex-1', '[attr.title]': 'null' },
   template: `
     <div class="mx-auto flex max-w-[50rem] min-w-0 flex-1 flex-col pt-10 pb-20 lg:px-4">
       <div class="space-y-2">
@@ -113,7 +113,7 @@ export class DocsPageComponent {
   standalone: true,
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block' },
+  host: { class: 'block', '[attr.title]': 'null' },
   template: `
     <section class="scroll-m-24 space-y-5" [attr.id]="title() ? slug() : null">
       @if (heading(); as heading) {

@@ -16,9 +16,11 @@ import {
   withComponentInputBinding,
   withInMemoryScrolling,
 } from '@angular/router';
+import { provideMapLabels } from 'ng-mapcn';
 
 import { provideZard } from '@/shared/core/provider/providezard';
 import { LanguageService } from '@/shared/i18n/language.service';
+import { siteMapLabels } from '@/shared/i18n/map-labels';
 import { ThemeService } from '@/shared/theme.service';
 import { SiteTitleStrategy } from '@/shared/title-strategy';
 
@@ -44,6 +46,8 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => void inject(ThemeService)),
     // Eager too: applies the saved language right after hydration, on every page.
     provideAppInitializer(() => void inject(LanguageService)),
+    // Map buttons and aria names follow the language toggle.
+    provideMapLabels(siteMapLabels),
     { provide: TitleStrategy, useClass: SiteTitleStrategy },
   ],
 };

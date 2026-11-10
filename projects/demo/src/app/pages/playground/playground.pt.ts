@@ -1,5 +1,7 @@
 import { Pipe, type PipeTransform } from '@angular/core';
 
+import { API_REFERENCE_PT } from '../docs/api-reference.data.pt';
+
 /**
  * pt-BR glossary for the playground data (block specs, control labels, style presets and
  * example scenes), keyed by the English text. The data files stay English because their
@@ -221,9 +223,12 @@ export const PLAYGROUND_PT: Record<string, string> = {
   'Two increasing numbers, e.g. [100, 750].': 'Dois números crescentes, por exemplo [100, 750].',
 };
 
-/** The pt-BR text of a playground string, or the string itself (English or untranslated). */
+/**
+ * The pt-BR text of a playground string, or the string itself (English or untranslated).
+ * Control hints borrowed from the API reference (`describeControls`) use its glossary.
+ */
 export function playgroundText(text: string, pt: boolean): string {
-  return pt ? (PLAYGROUND_PT[text] ?? text) : text;
+  return pt ? (PLAYGROUND_PT[text] ?? API_REFERENCE_PT[text] ?? text) : text;
 }
 
 /** `{{ spec.label | pgText: pt() }}`: pure, so it re-runs only when the text or language changes. */

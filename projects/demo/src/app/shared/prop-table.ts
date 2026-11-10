@@ -18,7 +18,7 @@ export interface PropRow {
   standalone: true,
   imports: [ZardTableImports],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'prop-table block space-y-3 [.prop-table+&]:mt-8' },
+  host: { class: 'prop-table block space-y-3 [.prop-table+&]:mt-8', '[attr.title]': 'null' },
   template: `
     @if (i18n.isPt() ? (titlePt() ?? title()) : title(); as heading) {
       <h3 class="text-foreground font-semibold">{{ heading }}</h3>

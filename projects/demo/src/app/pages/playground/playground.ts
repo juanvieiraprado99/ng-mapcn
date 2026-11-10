@@ -90,7 +90,7 @@ interface ApiSection {
 }
 
 /** Reuses the API reference's input descriptions as the controls' hints. */
-function describeControls(spec: PlaygroundSpec): PlaygroundSpec {
+export function describeControls(spec: PlaygroundSpec): PlaygroundSpec {
   const section = (apiData.sections as ApiSection[]).find((s) => s.selector === spec.selector);
   if (!section) return spec;
   return {
@@ -538,7 +538,13 @@ const GALLERY_TILT_VIEW = { center: [-74.0134, 40.7061] as [number, number], zoo
         </ul>
 
         <div class="space-y-2">
-          <h3 class="text-sm font-medium">{{ activePreset().label }} snippet</h3>
+          <h3 class="text-sm font-medium">
+            @if (pt()) {
+              Código de {{ activePreset().label | pgText: true }}
+            } @else {
+              {{ activePreset().label }} snippet
+            }
+          </h3>
           <app-code-block [code]="gallerySnippet().template" lang="angular-html" />
           @if (gallerySnippet().provider; as provider) {
             <app-code-block [code]="provider" lang="angular-ts" />

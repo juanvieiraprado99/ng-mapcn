@@ -73,6 +73,10 @@ test.describe('language', () => {
     await page.goto('/blocks');
     await expect(page.locator('app-block-display h2').first()).toHaveText('Mapa de analytics');
     await expect(page.getByRole('tab', { name: 'Código' }).first()).toBeVisible();
+    await expect(page.locator('app-block-display iframe').first()).toHaveAttribute(
+      'title',
+      'Mapa de analytics',
+    );
 
     await page.goto('/playground');
     await expect(page.getByRole('heading', { name: 'Galeria de estilos' })).toBeVisible();
@@ -92,5 +96,34 @@ test.describe('language', () => {
     await expect(map).toContainText('Nível de zoom inicial do mapa.');
     await expect(map.getByRole('cell', { name: 'zoom', exact: true })).toBeVisible();
     await expect(page.locator('#mapcontextservice')).toContainText('Membro');
+  });
+
+  test('map controls, the theme toggle and the sections follow the language', async ({ page }) => {
+    await page.goto('/docs/components/controls');
+    await page.locator('app-language-toggle button').click();
+
+    const controls = page.locator('#basic-usage .ng-controls').first();
+    await expect(controls.getByRole('button', { name: 'Aproximar' })).toBeVisible();
+    await expect(controls.getByRole('button', { name: 'Tela cheia', exact: false })).toBeVisible();
+    await expect(page.locator('app-theme-toggle button')).toHaveAttribute(
+      'aria-label',
+      'Alternar tema',
+    );
+    // Section titles are inputs, not native tooltips.
+    await expect(page.locator('app-docs-page[title], app-example-section[title]')).toHaveCount(0);
+
+    await page.locator('app-language-toggle button').click();
+    await expect(controls.getByRole('button', { name: 'Zoom in' })).toBeVisible();
+  });
+
+  test('playground hints and block view titles are translated', async ({ page }) => {
+    await page.goto('/playground');
+    await page.locator('app-language-toggle button').click();
+    await page.getByRole('button', { name: 'Adicionar Rota' }).click();
+    await expect(page.getByText('Opacidade da linha.').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Código de Carto (padrão)' })).toBeVisible();
+
+    await page.goto('/view/analytics-map');
+    await expect(page).toHaveTitle('Mapa de analytics - ng-mapcn');
   });
 });

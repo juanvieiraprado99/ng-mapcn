@@ -13,7 +13,7 @@ import type { CodeLang } from './highlighter';
   standalone: true,
   imports: [ComponentPreviewComponent, DocsSectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block', '[attr.lang]': 'null' },
+  host: { class: 'block', '[attr.lang]': 'null', '[attr.title]': 'null' },
   template: `
     <app-docs-section [title]="title()" [titlePt]="titlePt()" [anchor]="sectionId()">
       <p><ng-content select="[description]" /></p>

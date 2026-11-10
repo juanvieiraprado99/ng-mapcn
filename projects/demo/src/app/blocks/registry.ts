@@ -13,7 +13,7 @@ export interface BlockMeta {
   name: string;
   title: string;
   description: string;
-  /** pt-BR texts for the gallery; the /view page titles stay English. */
+  /** pt-BR texts for the gallery and the /view tab title. */
   titlePt: string;
   descriptionPt: string;
   /** Height of the preview iframe and of the code viewer. */

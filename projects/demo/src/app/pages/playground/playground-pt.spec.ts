@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { API_REFERENCE_PT } from '../docs/api-reference.data.pt';
+import { describeControls } from './playground';
 import { PLAYGROUND_PT, playgroundText } from './playground.pt';
 import { PLAYGROUND_EXAMPLES } from './playground-examples';
 import type { Control } from './playground-schema';
@@ -26,7 +28,8 @@ function controlTexts(control: Control): string[] {
 describe('playground pt-BR glossary', () => {
   it('translates every displayed text of the specs, presets, map controls and examples', () => {
     const texts = [
-      ...PLAYGROUND_SPECS.flatMap((spec) => [
+      // As displayed: hints the specs leave out are borrowed from the API reference.
+      ...PLAYGROUND_SPECS.map(describeControls).flatMap((spec) => [
         spec.label,
         spec.description,
         ...spec.controls.flatMap(controlTexts),
@@ -40,7 +43,9 @@ describe('playground pt-BR glossary', () => {
       ...PLAYGROUND_EXAMPLES.flatMap((example) => [example.title, example.description]),
     ];
 
-    expect(texts.filter((text) => !(text in PLAYGROUND_PT))).toEqual([]);
+    expect(texts.filter((text) => !(text in PLAYGROUND_PT) && !(text in API_REFERENCE_PT))).toEqual(
+      [],
+    );
   });
 
   it('translates the JSON field validation messages', () => {
@@ -56,6 +61,7 @@ describe('playground pt-BR glossary', () => {
   it('falls back to the English text', () => {
     expect(playgroundText('Opacity', true)).toBe('Opacidade');
     expect(playgroundText('Opacity', false)).toBe('Opacity');
+    expect(playgroundText('Line opacity.', true)).toBe('Opacidade da linha.');
     expect(playgroundText('not in the glossary', true)).toBe('not in the glossary');
   });
 });
