@@ -31,10 +31,11 @@ const INSTALLATION = `## Installation
 
 \`\`\`bash
 npx ng-mapcn@latest init
-npx ng-mapcn@latest add marker route
+npx ng-mapcn@latest add controls marker-content marker-popup marker-tooltip route
+# or: pnpm dlx / yarn dlx / bunx ng-mapcn@latest <command>
 \`\`\`
 
-\`init\` (the same as \`ng add ng-mapcn\`) adds \`maplibre-gl\`, registers its CSS, appends the required \`.maplibregl-popup-*\` overrides and copies only the core \`<ng-map>\` into \`src/app/components/ui/map\` (customize with \`--path\`). \`add\` (the same as \`ng g ng-mapcn:add\`) copies the components you list and the files they depend on: the core is always included, existing files are skipped unless \`--overwrite\`, \`--all\` copies everything except \`draw\` (opt-in, it adds terra-draw: \`add draw\`), and \`list\` shows the items and the installed ones. \`marker-content\`, \`marker-popup\` and \`marker-tooltip\` depend on \`marker\`. Both install with the workspace's package manager (npm, pnpm, yarn or bun).
+\`init\` (the same as \`ng add ng-mapcn\`) adds \`maplibre-gl\`, registers its CSS, appends the required \`.maplibregl-popup-*\` overrides and copies only the core \`<ng-map>\` into \`src/app/components/ui/map\` (customize with \`--path\`). \`add\` (the same as \`ng g ng-mapcn:add\`) copies the components you list and the files they depend on: the core is always included, existing files are skipped unless \`--overwrite\`, \`--all\` copies everything except \`draw\` (opt-in, it adds terra-draw: \`add draw\`), and \`list\` shows the items and the installed ones. \`marker-content\`, \`marker-popup\` and \`marker-tooltip\` depend on \`marker\`. The items above are the ones the Quick start below uses. Both install with the workspace's package manager (npm, pnpm, yarn or bun).
 
 ### npm package
 
