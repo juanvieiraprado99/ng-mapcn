@@ -14,7 +14,7 @@ export interface RegistryExport {
 }
 
 export interface Registry {
-  version: number;
+  version: string;
   items: Record<string, RegistryItem>;
   exports: RegistryExport[];
 }

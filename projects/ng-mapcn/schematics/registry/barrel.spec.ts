@@ -4,7 +4,7 @@ import { BARREL_HEADER, renderBarrel } from './barrel';
 import type { Registry } from './types';
 
 const registry: Registry = {
-  version: 1,
+  version: '1',
   items: {},
   exports: [
     { line: "export * from './a';", file: 'a.ts' },

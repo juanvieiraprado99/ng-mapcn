@@ -28,26 +28,31 @@ export function add(options: AddOptions): Rule {
     const resolution = resolve(registry, options.components ?? [], { all: options.all });
 
     let created = 0;
+    let overwritten = 0;
     let skipped = 0;
+    let unchanged = 0;
     for (const file of resolution.files) {
       const target = joinPath(path, file);
       const content = readFileSync(join(__dirname, 'files', file));
-      if (!tree.exists(target)) {
+      const existing = tree.exists(target) ? tree.read(target) : null;
+      if (!existing) {
         tree.create(target, content);
         created++;
+      } else if (existing.equals(content)) {
+        unchanged++;
       } else if (options.overwrite) {
         tree.overwrite(target, content);
-        created++;
+        overwritten++;
       } else {
-        context.logger.info(`skipped ${target} (exists)`);
+        context.logger.info(`skipped ${target} (exists, differs; use --overwrite to replace)`);
         skipped++;
       }
     }
 
     const barrel = renderBarrel(registry, (f) => tree.exists(joinPath(path, f)));
     const barrelPath = joinPath(path, 'index.ts');
-    if (tree.exists(barrelPath)) tree.overwrite(barrelPath, barrel);
-    else tree.create(barrelPath, barrel);
+    if (!tree.exists(barrelPath)) tree.create(barrelPath, barrel);
+    else if (tree.read(barrelPath)?.toString() !== barrel) tree.overwrite(barrelPath, barrel);
 
     const added = addDependenciesWithReport(resolution.dependencies);
     added.rule(tree, context);
@@ -62,7 +67,9 @@ export function add(options: AddOptions): Rule {
     }
 
     const names = resolution.items.join(', ');
-    context.logger.info(`Installed: ${names}. Created ${created}, skipped ${skipped} file(s).`);
+    context.logger.info(
+      `Installed: ${names}. Created ${created}, overwritten ${overwritten}, skipped ${skipped}, unchanged ${unchanged} file(s).`,
+    );
     if (added.names().length) {
       context.logger.info(
         `Added dependencies: ${added

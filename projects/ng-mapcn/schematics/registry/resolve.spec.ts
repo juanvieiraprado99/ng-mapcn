@@ -8,7 +8,7 @@ function item(name: string, over: Partial<RegistryItem> = {}): RegistryItem {
 }
 
 const registry: Registry = {
-  version: 1,
+  version: '1',
   items: {
     core: item('core', { files: ['utils/a.ts'] }),
     route: item('route', { files: ['utils/a.ts', 'route/r.ts'], registryDependencies: ['core'] }),

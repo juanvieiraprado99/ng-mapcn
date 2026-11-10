@@ -19,7 +19,7 @@ rmSync(filesDir, { recursive: true, force: true });
 mkdirSync(filesDir, { recursive: true });
 
 const isSpec = (src) => src.endsWith('.spec.ts');
-const isTesting = (src) => /[\/]testing([\/]|$)/.test(src);
+const isTesting = (src) => /[\\/]testing([\\/]|$)/.test(src);
 
 cpSync(paths.libDir, filesDir, {
   recursive: true,

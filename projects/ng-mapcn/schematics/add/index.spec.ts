@@ -23,12 +23,15 @@ const pkgTree = (pkg: object = { name: 'app', dependencies: { 'maplibre-gl': '^6
 describe('add schematic', () => {
   let runner: SchematicTestRunner;
   let warnings: string[];
+  let infos: string[];
 
   beforeEach(() => {
     runner = new SchematicTestRunner('ng-mapcn', COLLECTION);
     warnings = [];
+    infos = [];
     runner.logger.subscribe((entry) => {
       if (entry.level === 'warn') warnings.push(entry.message);
+      if (entry.level === 'info') infos.push(entry.message);
     });
   });
 
@@ -66,6 +69,41 @@ describe('add schematic', () => {
     const result = await run({ components: ['marker'] }, tree);
 
     expect(result.readContent(`${DEFAULT_PATH}/utils/map-utils.ts`)).toBe('// mine');
+  });
+
+  it('logs one skipped line for a customized file and none for untouched ones', async () => {
+    let tree = await run();
+    infos.length = 0;
+    tree = await run({ components: ['marker'] }, tree);
+    expect(infos.filter((m) => m.startsWith('skipped'))).toEqual([]);
+
+    tree.overwrite(`${DEFAULT_PATH}/utils/map-utils.ts`, '// mine');
+    infos.length = 0;
+    await run({ components: ['marker'] }, tree);
+    const skipped = infos.filter((m) => m.startsWith('skipped'));
+    expect(skipped).toEqual([
+      `skipped ${DEFAULT_PATH}/utils/map-utils.ts (exists, differs; use --overwrite to replace)`,
+    ]);
+    expect(
+      infos.some((m) => /Created 0, overwritten 0, skipped 1, unchanged \d+ file\(s\)/.test(m)),
+    ).toBe(true);
+  });
+
+  it('does not touch index.ts when the barrel is identical', async () => {
+    const first = await run({ components: ['marker'] });
+    const second = await run({ components: ['marker'] }, first);
+
+    expect(second.actions.filter((a) => a.kind === 'o' && a.path.endsWith('/index.ts'))).toEqual(
+      [],
+    );
+  });
+
+  it('counts overwritten files separately', async () => {
+    const tree = pkgTree();
+    tree.create(`${DEFAULT_PATH}/utils/map-utils.ts`, '// mine');
+    await run({ components: ['marker'], overwrite: true }, tree);
+
+    expect(infos.some((m) => /overwritten 1,/.test(m))).toBe(true);
   });
 
   it('overwrite replaces existing files', async () => {
