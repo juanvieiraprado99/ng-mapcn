@@ -36,7 +36,7 @@ ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map componen
 | `21.x`   | `^21.2.9`  | `^5.16.0`   | n/a              |
 | `18.x`   | `^18.2.14` | `^5.16.0`   | n/a              |
 
-Node.js `^22.22.3 || ^24.15.0 || >=26.0.0`. The commands below use the `@beta` tag so you always get the newest 22.x prerelease.
+Node.js `^22.22.3 || ^24.15.0 || >=26.0.0`. The `npx ng-mapcn@latest` commands below always run the newest published CLI; the regular npm package install uses the `@beta` tag to get the newest 22.x prerelease.
 
 ## Quick start
 
@@ -48,7 +48,7 @@ Copy-paste (recommended, shadcn-style):
 npx ng-mapcn@latest init
 ```
 
-`init` installs with your workspace's package manager (npm, pnpm, yarn or bun), so run it as `npx`, `pnpm dlx`, `yarn dlx` or `bunx` as you prefer. It is the same as `ng add ng-mapcn`.
+`init` installs with your workspace's package manager (npm, pnpm, yarn or bun), so run it as `npx`, `pnpm dlx`, `yarn dlx` (Yarn 2+ only) or `bunx` as you prefer. It is the same as `ng add ng-mapcn`.
 
 This will:
 
@@ -58,13 +58,17 @@ This will:
 4. Append the required `.maplibregl-popup-*` CSS overrides to your global stylesheet
 5. Copy only the core (`<ng-map>`, its services, providers and styles) to `src/app/components/ui/map` (customize with `--path`)
 
+A fresh Angular app exceeds the default 1 MB initial bundle budget once `maplibre-gl` is used (about 1.4 MB). Lazy-load the route that holds the map, or wrap the map in `@defer`, so `maplibre-gl` stays out of the initial bundle, before you raise `budgets` in `angular.json`.
+
 Then add the components you need:
 
 ```bash
-npx ng-mapcn@latest add marker route
+npx ng-mapcn@latest add marker-popup controls
 ```
 
-`add` copies the items and the files they depend on (the core is always included), skips files that already exist and logs them (pass `--overwrite` to replace them), regenerates the `index.ts` barrel from what is on disk and adds the npm packages the items need. Names accept `marker`, `map-marker`, `Marker` or `marker,route`; an unknown name fails and lists the valid ones. `--all` copies every item except `draw`. `npx ng-mapcn@latest list` shows the items and marks the installed ones. The Angular CLI equivalents are `ng add ng-mapcn` and `ng g ng-mapcn:add marker route`.
+The component in step 2 needs `marker-popup` (which brings `marker`); `controls` is for `<ng-map-controls />`. Add only what your templates import.
+
+`add` copies the items and the files they depend on (the core is always included), skips files that already exist and differ from the source, logging each one (pass `--overwrite` to replace them, including customized core or shared files such as `map.component.ts`), regenerates the `index.ts` barrel on every run (hand edits to it are lost) from what is on disk and adds the npm packages the items need. Names accept `marker`, `map-marker`, `Marker` or `marker,route`; an unknown name fails and lists the valid ones. `--all` copies every item except `draw`. `npx ng-mapcn@latest list` shows the items and marks the installed ones. The Angular CLI equivalents are `ng add ng-mapcn` and `ng g ng-mapcn:add marker route`.
 
 Dependencies point one way: `marker-content`, `marker-popup` and `marker-tooltip` depend on `marker`, so `add marker-popup` also copies `marker`, but `add marker` alone does not copy the popup or tooltip.
 

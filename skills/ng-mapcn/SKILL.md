@@ -1,6 +1,6 @@
 ---
 name: ng-mapcn
-description: Use when building or editing interactive maps in an Angular 22+ app with ng-mapcn (MapLibre GL v6, mapcn port) - adding <ng-map>, markers, popups, tooltips, routes, GeoJSON layers, arcs, clusters, heatmaps, symbol labels and icons, raster/vector tile sources (PMTiles), image overlays, 3D buildings (fill-extrusion), terrain and hillshade, draw tools (points/lines/polygons), map controls, theme-aware basemaps, unit-testing components that render maps (MapLibre fake, `ng-mapcn/testing`, component harnesses), or installing via `ng add ng-mapcn`.
+description: Use when building or editing interactive maps in an Angular 22+ app with ng-mapcn (MapLibre GL v6, mapcn port) - adding <ng-map>, markers, popups, tooltips, routes, GeoJSON layers, arcs, clusters, heatmaps, symbol labels and icons, raster/vector tile sources (PMTiles), image overlays, 3D buildings (fill-extrusion), terrain and hillshade, draw tools (points/lines/polygons), map controls, theme-aware basemaps, unit-testing components that render maps (MapLibre fake, `ng-mapcn/testing`, component harnesses), or installing via `npx ng-mapcn init` / `npx ng-mapcn add <component>` or `ng add ng-mapcn`.
 ---
 
 # ng-mapcn

@@ -53,6 +53,10 @@
 { "glob": "maplibre-gl-shared.mjs", "input": "node_modules/maplibre-gl/dist", "output": "/" }
 ```
 
+## Bundle budget exceeded
+
+A fresh Angular app exceeds the default 1 MB initial budget once `maplibre-gl` is used (about 1.4 MB). Lazy-load the route that holds the map (`loadComponent`) or wrap `<ng-map>` in `@defer` so `maplibre-gl` stays out of the initial bundle. Raise `budgets` in `angular.json` only after that.
+
 ## Keyboard and accessibility
 
 - Popups close on Escape from inside the card (`ng-map-popup` and `ng-marker-popup`). The event is stopped, so a host dialog or overlay does not also close. `ng-marker-popup` returns focus to its marker.

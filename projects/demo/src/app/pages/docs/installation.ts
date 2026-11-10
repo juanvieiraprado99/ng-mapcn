@@ -63,23 +63,34 @@ export class MyMapComponent {}`;
           <code [class]="code">--path</code> to change the target folder (default
           <code [class]="code">src/app/components/ui/map</code>).
         </p>
+        <app-docs-note>
+          <strong>Bundle budget:</strong> a fresh Angular app exceeds the default 1 MB initial
+          budget once <code [class]="code">maplibre-gl</code> is used (about 1.4 MB). Lazy-load the
+          route that holds the map, or use <code [class]="code">&#64;defer</code>, to keep it out
+          of the initial bundle before you raise <code [class]="code">budgets</code> in
+          <code [class]="code">angular.json</code>.
+        </app-docs-note>
         <p>Alternatively, install it as a regular npm package:</p>
         <app-install-command packages="ng-mapcn maplibre-gl" />
       </app-docs-section>
 
       <app-docs-section title="Add components" anchor="add-components">
         <p>Then copy the components you need, one command for as many as you want:</p>
-        <app-install-command cli="add marker route" />
+        <app-install-command cli="add marker-popup controls" />
         <p>
           Each item brings the files it depends on, and the core is always included. Files that
-          already exist are skipped (and logged), so your edits are safe; pass
-          <code [class]="code">--overwrite</code> to replace them. Pass
+          already exist and differ from the source are skipped (and logged), so your edits are safe; pass
+          <code [class]="code">--overwrite</code> to replace them (this also replaces customized
+          core or shared files in the closure, such as
+          <code [class]="code">map.component.ts</code>). The
+          <code [class]="code">index.ts</code> barrel is regenerated on every
+          <code [class]="code">add</code>, so hand edits to it are lost. Pass
           <code [class]="code">--all</code> to copy every item except
           <code [class]="code">draw</code>, which is opt-in because it adds
           <code [class]="code">terra-draw</code>. Run
           <code [class]="code">npx ng-mapcn@latest list</code> to see the items and which ones are
           already installed. The Angular CLI equivalent is
-          <code [class]="code">ng g ng-mapcn:add marker route</code>.
+          <code [class]="code">ng g ng-mapcn:add marker-popup controls</code>.
         </p>
         <p>
           Dependencies point one way: <code [class]="code">marker-popup</code> pulls in
