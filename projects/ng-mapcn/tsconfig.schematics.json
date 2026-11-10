@@ -4,6 +4,7 @@
     "moduleResolution": "node16",
     "target": "es2022",
     "lib": ["es2022"],
+    "types": ["node"],
     "declaration": false,
     "sourceMap": false,
     "strict": true,
