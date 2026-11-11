@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 // Runs against the compiled collection: `npm run test:schematics` builds it first.
 const COLLECTION = join(process.cwd(), 'dist', 'ng-mapcn', 'schematics', 'collection.json');
 const MAPLIBRE_CSS = 'node_modules/maplibre-gl/dist/maplibre-gl.css';
-const DEFAULT_PATH = 'src/app/components/ui/map';
+const DEFAULT_PATH = 'src/app/shared/components/map';
 
 interface Workspace {
   pkg?: object | null;
@@ -282,7 +282,7 @@ describe('ng-add schematic', () => {
       expect(
         tree
           .readContent('src/styles.scss')
-          .startsWith("@use './app/components/ui/map/styles/index' as *;\n"),
+          .startsWith("@use './app/shared/components/map/styles/index' as *;\n"),
       ).toBe(true);
     });
 
@@ -350,6 +350,44 @@ describe('ng-add schematic', () => {
       expect(tree.exists(`${DEFAULT_PATH}/index.ts`)).toBe(false);
     });
 
+    it('saves ng-mapcn.json with the path, alias and project', async () => {
+      const tree = await run();
+
+      expect(readJson(tree, 'ng-mapcn.json')).toEqual({
+        path: DEFAULT_PATH,
+        alias: '@/shared/components/map',
+        project: 'app',
+      });
+    });
+
+    it('maps the alias in tsconfig.json', async () => {
+      const base = createTree();
+      base.create('tsconfig.json', '{\n  "compilerOptions": {}\n}\n');
+      const tree = await run({}, base);
+
+      expect(readJson(tree, 'tsconfig.json').compilerOptions.paths).toEqual({
+        '@/*': ['./src/app/*'],
+      });
+    });
+
+    it('maps a custom alias to a custom path', async () => {
+      const base = createTree();
+      base.create('tsconfig.json', '{ "compilerOptions": {} }');
+      const tree = await run({ path: 'libs/maps', alias: '@maps' }, base);
+
+      expect(readJson(tree, 'tsconfig.json').compilerOptions.paths).toEqual({
+        '@maps': ['./libs/maps'],
+        '@maps/*': ['./libs/maps/*'],
+      });
+      expect(readJson(tree, 'ng-mapcn.json')).toMatchObject({ path: 'libs/maps', alias: '@maps' });
+    });
+
+    it('rejects an alias with a wildcard or quotes', async () => {
+      for (const alias of ['@maps/*', "it's", './maps']) {
+        await expect(run({ alias })).rejects.toThrow(/--alias/);
+      }
+    });
+
     it('schedules a node-package install task', async () => {
       await run();
 
@@ -357,23 +395,172 @@ describe('ng-add schematic', () => {
     });
   });
 
-  describe('draw option', () => {
-    it('leaves draw and terra-draw out by default', async () => {
+  describe('component selection', () => {
+    it('copies core only by default', async () => {
       const tree = await run();
 
+      expect(tree.exists(`${DEFAULT_PATH}/components/map/map.component.ts`)).toBe(true);
+      expect(tree.files.some((f) => f.includes('/components/map-marker/'))).toBe(false);
+      expect(tree.readContent(`${DEFAULT_PATH}/index.ts`)).not.toContain('map-marker');
       expect(tree.exists(`${DEFAULT_PATH}/draw/map-draw.component.ts`)).toBe(false);
       expect(readJson(tree, 'package.json').dependencies['terra-draw']).toBeUndefined();
     });
 
-    it('copies the draw sources and adds terra-draw with --draw', async () => {
-      const tree = await run({ draw: true });
+    it('copies every component except draw with --all', async () => {
+      const tree = await run({ all: true });
 
-      expect(tree.exists(`${DEFAULT_PATH}/draw/map-draw.component.ts`)).toBe(true);
       expect(tree.exists(`${DEFAULT_PATH}/components/map/map.component.ts`)).toBe(true);
-      const deps = readJson(tree, 'package.json').dependencies;
-      expect(deps['terra-draw']).toBe('^1.37.0');
-      expect(deps['terra-draw-maplibre-gl-adapter']).toBe('^1.5.0');
-      expect(deps['maplibre-gl']).toBe('^6.11.2');
+      expect(tree.exists(`${DEFAULT_PATH}/components/map-marker/map-marker.component.ts`)).toBe(
+        true,
+      );
+      expect(tree.readContent(`${DEFAULT_PATH}/index.ts`)).toContain('map-marker');
+      expect(tree.exists(`${DEFAULT_PATH}/draw/map-draw.component.ts`)).toBe(false);
+    });
+  });
+
+  describe('saved config, earlier copies and project choice', () => {
+    const LEGACY_PATH = 'src/app/components/ui/map';
+    const runBare = (options: object, tree: Tree) =>
+      runner.runSchematic('ng-add', { skipInstall: true, ...options }, tree);
+
+    it('a rerun without --path/--alias keeps the saved folder and alias', async () => {
+      const base = createTree();
+      base.create('ng-mapcn.json', JSON.stringify({ path: 'libs/maps', alias: '@maps' }));
+      const tree = await runBare({}, base);
+
+      expect(tree.exists('libs/maps/components/map/map.component.ts')).toBe(true);
+      expect(tree.files.some((f) => f.startsWith(`/${DEFAULT_PATH}/`))).toBe(false);
+      expect(readJson(tree, 'ng-mapcn.json')).toMatchObject({ path: 'libs/maps', alias: '@maps' });
+    });
+
+    it('keeps a saved alias whose path is spelled differently (./, trailing slash)', async () => {
+      const base = createTree();
+      base.create('ng-mapcn.json', JSON.stringify({ path: './src/app/maps/', alias: '@maps' }));
+      const tree = await runBare({}, base);
+
+      expect(readJson(tree, 'ng-mapcn.json')).toMatchObject({
+        path: 'src/app/maps',
+        alias: '@maps',
+      });
+    });
+
+    it('blank answers (Enter at the prompts) count as not given', async () => {
+      const tree = await runBare({ path: '', alias: ' ' }, createTree());
+
+      expect(readJson(tree, 'ng-mapcn.json')).toMatchObject({
+        path: DEFAULT_PATH,
+        alias: '@/shared/components/map',
+      });
+    });
+
+    it('adopts the folder an earlier ng add copied to, without a second copy or @use', async () => {
+      const base = createTree({
+        styles: {
+          path: 'src/styles.scss',
+          content: "@use './app/components/ui/map/styles/index' as *;\nbody { margin: 0; }\n",
+        },
+      });
+      base.create(`${LEGACY_PATH}/components/map/map.component.ts`, '// old copy');
+      const tree = await runBare({}, base);
+
+      expect(readJson(tree, 'ng-mapcn.json')).toMatchObject({
+        path: LEGACY_PATH,
+        alias: '@/components/ui/map',
+      });
+      expect(tree.files.some((f) => f.startsWith(`/${DEFAULT_PATH}/`))).toBe(false);
+      expect(count(tree.readContent('src/styles.scss'), '@use')).toBe(1);
+    });
+
+    const workspaceWith = (projects: Record<string, object>) =>
+      createTree({ angularJson: { version: 1, projects } });
+    const build = { builder: '@angular/build:application', options: { styles: [] } };
+
+    it('picks the application, not the first project, and defaults the folder inside it', async () => {
+      const base = workspaceWith({
+        ui: { projectType: 'library', root: 'projects/ui', architect: { build } },
+        web: {
+          projectType: 'application',
+          root: 'projects/web',
+          sourceRoot: 'projects/web/src',
+          architect: { build },
+        },
+      });
+      const tree = await runBare({}, base);
+      const json = readJson(tree, 'angular.json');
+
+      expect(json.projects.web.architect.build.options.styles).toContain(MAPLIBRE_CSS);
+      expect(json.projects.ui.architect.build.options.styles).not.toContain(MAPLIBRE_CSS);
+      expect(readJson(tree, 'ng-mapcn.json')).toMatchObject({
+        project: 'web',
+        path: 'projects/web/src/app/shared/components/map',
+      });
+      expect(warnings).toEqual(
+        expect.not.arrayContaining([expect.stringContaining('Several applications')]),
+      );
+    });
+
+    it('warns when several applications make the choice a guess', async () => {
+      await runBare(
+        {},
+        workspaceWith({
+          a: { projectType: 'application', root: '', architect: { build } },
+          b: { projectType: 'application', root: 'projects/b', architect: { build } },
+        }),
+      );
+
+      expect(
+        warnings.some((w) => w.includes('Several applications') && w.includes('--project')),
+      ).toBe(true);
+    });
+
+    it('another --project gets its own folder and alias, not the saved project ones', async () => {
+      const base = workspaceWith({
+        a: { projectType: 'application', root: 'projects/a', architect: { build } },
+        b: { projectType: 'application', root: 'projects/b', architect: { build } },
+      });
+      base.create(
+        'ng-mapcn.json',
+        JSON.stringify({ path: 'projects/a/src/app/maps', alias: '@a/maps', project: 'a' }),
+      );
+      const tree = await runBare({ project: 'b' }, base);
+
+      expect(readJson(tree, 'ng-mapcn.json')).toEqual({
+        path: 'projects/b/src/app/shared/components/map',
+        alias: '@/shared/components/map',
+        project: 'b',
+      });
+      expect(tree.exists('projects/b/src/app/shared/components/map/index.ts')).toBe(true);
+    });
+
+    it('an unknown --project is an error listing the projects', async () => {
+      await expect(
+        runBare(
+          { project: 'myap' },
+          workspaceWith({ myapp: { projectType: 'application', root: '', architect: { build } } }),
+        ),
+      ).rejects.toThrow(/Project "myap" not found in angular\.json\. Projects: myapp\./);
+    });
+
+    it('an invalid ng-mapcn.json is an error and is not overwritten', async () => {
+      const base = createTree();
+      base.create('ng-mapcn.json', '{ "path": "libs/maps", }');
+      await expect(runBare({}, base)).rejects.toThrow(/ng-mapcn\.json is not valid JSON/);
+    });
+
+    it('uses the project saved in ng-mapcn.json on a rerun', async () => {
+      const base = workspaceWith({
+        a: { projectType: 'application', root: '', architect: { build } },
+        b: { projectType: 'application', root: 'projects/b', architect: { build } },
+      });
+      base.create(
+        'ng-mapcn.json',
+        JSON.stringify({ path: 'src/maps', alias: '@maps', project: 'b' }),
+      );
+      const tree = await runBare({}, base);
+
+      expect(readJson(tree, 'angular.json').projects.b.architect.build.options.styles).toContain(
+        MAPLIBRE_CSS,
+      );
     });
   });
 

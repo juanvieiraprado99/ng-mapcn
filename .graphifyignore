@@ -7,7 +7,7 @@ test-results/
 node_modules/
 
 # Generated mirror of src/lib (would duplicate every node)
-projects/ng-mapcn/schematics/map/files/
+projects/ng-mapcn/schematics/add/files/
 
 # Docs site output and lockfile noise
 docs/

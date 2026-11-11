@@ -6,10 +6,10 @@
       "factory": "./ng-add/index#ngAdd",
       "schema": "./ng-add/schema.json"
     },
-    "map": {
-      "description": "Copies the ng-mapcn map component sources into your project.",
-      "factory": "./map/index#map",
-      "schema": "./map/schema.json"
+    "add": {
+      "description": "Copies ng-mapcn components and the files they depend on into your project.",
+      "factory": "./add/index#add",
+      "schema": "./add/schema.json"
     }
   }
 }

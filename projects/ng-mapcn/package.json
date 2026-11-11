@@ -42,6 +42,18 @@
     "@angular/cdk": {
       "optional": true
     },
+    "@angular/common": {
+      "optional": true
+    },
+    "@angular/core": {
+      "optional": true
+    },
+    "maplibre-gl": {
+      "optional": true
+    },
+    "rxjs": {
+      "optional": true
+    },
     "terra-draw": {
       "optional": true
     },
@@ -52,6 +64,9 @@
   "dependencies": {
     "tslib": "^2.3.0",
     "@types/geojson": "^7946.0.16"
+  },
+  "bin": {
+    "ng-mapcn": "bin/ng-mapcn.mjs"
   },
   "schematics": "./schematics/collection.json",
   "ng-add": {

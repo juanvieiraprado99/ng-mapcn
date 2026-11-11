@@ -6,19 +6,26 @@
   "properties": {
     "project": {
       "type": "string",
-      "description": "The name of the project to add ng-mapcn to.",
-      "$default": {
-        "$source": "projectName"
-      }
+      "description": "The project to set up. Defaults to the one saved in ng-mapcn.json, else the only application (the first of several, with a warning). No $default from the current folder, so a rerun keeps the saved project."
     },
     "path": {
       "type": "string",
-      "description": "Directory (relative to the workspace root) where the map components are copied.",
-      "default": "src/app/components/ui/map"
+      "description": "Directory (relative to the workspace root) where the map components are copied. Defaults to the folder saved in ng-mapcn.json, else <sourceRoot>/app/shared/components/map. No schema default, so a saved folder is never overridden.",
+      "x-prompt": "Where should the map components be copied? (Enter: the saved folder, else <sourceRoot>/app/shared/components/map)"
     },
-    "draw": {
+    "alias": {
+      "type": "string",
+      "description": "Import alias for the copied components, added to tsconfig paths. Defaults to the one saved in ng-mapcn.json, else @/shared/components/map.",
+      "x-prompt": "Import alias for them? (Enter: the saved alias, else @/shared/components/map)"
+    },
+    "all": {
       "type": "boolean",
-      "description": "Also copy the optional draw component (ng-mapcn/draw) and add its terra-draw dependencies.",
+      "description": "Also copy every component (except draw) instead of only the core map.",
+      "default": false
+    },
+    "skipInstall": {
+      "type": "boolean",
+      "description": "Do not install packages after copying.",
       "default": false
     }
   },

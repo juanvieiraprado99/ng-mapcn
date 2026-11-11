@@ -46,9 +46,10 @@ import {
 } from '../../utils/bounds';
 import { getViewport, type MapViewport } from '../../utils/map-utils';
 
-/** Worker file `ng add` copies to the build output root (`angular.json` assets). */
+/** Worker file `npx ng-mapcn init` (or `ng add`) copies to the build output root (`angular.json` assets). */
 const MAPLIBRE_WORKER_FILE = 'maplibre-gl-worker.mjs';
 
+/** Renders a MapLibre GL map and provides the map context to every child component. */
 @Component({
   selector: 'ng-map',
   templateUrl: './map.component.html',
@@ -261,7 +262,7 @@ export class MapComponent {
 
     // MapLibre v6 defaults to a worker next to its own module (`import.meta.url`), which bundlers
     // do not resolve: under `ng serve` that points into Vite's prebundled deps and the worker fails
-    // to load. Use the copy `ng add` registers as an asset at the app root (resolved against
+    // to load. Use the copy `npx ng-mapcn init` (or `ng add`) registers as an asset at the app root (resolved against
     // <base href>), unless the app already called setWorkerUrl() (CDN, deployUrl).
     if (!getWorkerUrl()) {
       setWorkerUrl(new URL(MAPLIBRE_WORKER_FILE, this.document.baseURI).href);

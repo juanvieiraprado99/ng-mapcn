@@ -5,6 +5,7 @@ import { DocsImports } from '../../shared/docs';
 import { type PropRow, PropTableComponent } from '../../shared/prop-table';
 import {
   ANGULAR_JSON_TEST,
+  COPY_PASTE_SETUP,
   EVENTS_SPEC,
   FAKE_TIMERS_SPEC,
   FIRST_SPEC,
@@ -70,6 +71,25 @@ import {
           <code [class]="code">ng-mapcn/testing*</code> entry points, so the fake stays a single
           module instance shared by the library, the helpers and your specs.
         </app-docs-note>
+      </app-docs-section>
+
+      <app-docs-section title="Copy-paste components" anchor="copy-paste-components">
+        <p>
+          <code [class]="code">npx ng-mapcn@latest init</code> and
+          <code [class]="code">add</code> copy the components, not the testing files: install the
+          package as a dev dependency (<code [class]="code">npm i -D ng-mapcn</code>) for the fake,
+          the helpers and the harnesses. Your copied <code [class]="code">&lt;ng-map&gt;</code> is
+          a different class from the package's, with its own
+          <code [class]="code">MapContextService</code>, so tell the helpers which classes to use
+          once, in the setup file:
+        </p>
+        <app-code-block [code]="copyPasteSetup" filename="src/testing/setup.ts" />
+        <p>
+          Then the specs on this page work as shown, importing the components from your alias. The
+          harnesses find elements by their DOM selectors, so they need no setup. Without this line,
+          <code [class]="code">renderMap()</code> fails with a message that points here. With the
+          npm package, skip it.
+        </p>
       </app-docs-section>
 
       <app-docs-section title="Jest setup">
@@ -317,10 +337,11 @@ import {
             the Jest setup is documented but not tested.
           </li>
           <li>
-            <strong>Copy-paste users.</strong> <code [class]="code">ng add ng-mapcn</code> copies
-            the component sources but not the testing files. Install the
-            <code [class]="code">ng-mapcn</code> package as a dev dependency to get the fake, the
-            helpers and the harnesses.
+            <strong>Copy-paste users.</strong> <code [class]="code">init</code> and
+            <code [class]="code">add</code> do not copy the testing files: install the
+            <code [class]="code">ng-mapcn</code> package as a dev dependency and point the helpers
+            at your classes (see
+            <a href="/docs/testing#copy-paste-components" class="underline">Copy-paste components</a>).
           </li>
           <li>
             <strong>The controls harness uses CSS <code [class]="code">:has()</code>.</strong> It
@@ -356,6 +377,7 @@ import {
 })
 export class TestingComponent {
   readonly vitestSetup = VITEST_SETUP;
+  readonly copyPasteSetup = COPY_PASTE_SETUP;
   readonly vitestConfig = VITEST_CONFIG;
   readonly angularJsonTest = ANGULAR_JSON_TEST;
   readonly jestConfig = JEST_CONFIG;

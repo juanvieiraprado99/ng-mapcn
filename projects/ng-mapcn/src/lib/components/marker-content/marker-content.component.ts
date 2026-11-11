@@ -16,6 +16,7 @@ import { applyClassName } from '../../utils/class-name';
 import { renderPortal } from '../../utils/portal';
 import { MarkerContextService } from '../map-marker/marker-context.service';
 
+/** Projects custom content into the marker element. */
 @Component({
   selector: 'ng-marker-content',
   template: '<ng-template #tpl><ng-content /></ng-template>',

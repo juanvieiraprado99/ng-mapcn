@@ -13,7 +13,19 @@ import {
   type WorkspaceDefinition,
 } from '@schematics/angular/utility';
 
+import {
+  given,
+  hasLegacyCopy,
+  initTarget,
+  LEGACY_PATH,
+  normalizeAlias,
+  pickProject,
+  type ProjectInfo,
+  readConfig,
+  writeConfig,
+} from '../utils/config';
 import { dirnamePath, joinPath, normalizeTargetPath, relativePath } from '../utils/path';
+import { ensureAlias } from '../utils/tsconfig';
 
 // v6.4.1+ fixes GHSA-jrc7-96c5-q579 (attribution XSS); the copied sources are written against v6.
 const MAPLIBRE_VERSION = '^6.11.2';
@@ -57,23 +69,64 @@ const PASSTHROUGH_CSS = `
 
 interface NgAddOptions {
   project?: string;
-  path: string;
-  draw?: boolean;
+  path?: string;
+  alias?: string;
+  all?: boolean;
+  skipInstall?: boolean;
 }
 
 export function ngAdd(options: NgAddOptions): Rule {
-  const path = normalizeTargetPath(options.path);
   return async (tree: Tree, context: SchematicContext) => {
+    const saved = readConfig(tree);
     const workspace = await readWorkspaceOrWarn(tree, context);
-    const projectName = workspace ? resolveProjectName(workspace, options.project) : undefined;
+    const infos = workspace ? projectInfos(workspace) : {};
+    const choice = workspace
+      ? pickProject(infos, given(options.project), saved?.project)
+      : { name: undefined };
+    if (choice.warning) context.logger.warn(choice.warning);
+    const projectName = choice.name;
     const project = projectName ? workspace?.projects.get(projectName) : undefined;
+
+    // Blank options (Enter at a prompt) fall back to the saved config (for its own project), an
+    // earlier copy, or the project's default folder; the alias follows the folder.
+    const target = initTarget({
+      saved,
+      legacyExists: hasLegacyCopy(tree),
+      projectName,
+      project: projectName ? infos[projectName] : undefined,
+    });
+    const explicitPath = given(options.path);
+    const path = normalizeTargetPath(explicitPath ?? target.path);
+    if (!explicitPath && target.legacy) {
+      context.logger.info(
+        `Found the copy an earlier version made in ${LEGACY_PATH}: keeping it there.`,
+      );
+    }
+    const alias = normalizeAlias(given(options.alias) ?? target.aliasFor(path));
     return chain([
       addMaplibreDependency(),
       projectName ? registerBuildOptions(projectName) : noop(),
       appendGlobalStyles(path, project),
-      schematic('map', { path, draw: options.draw }),
-      installDependencies(),
+      schematic('add', { path, all: options.all, components: [], skipInstall: true }),
+      addImportAlias(path, alias, project),
+      (t: Tree) => writeConfig(t, { path, alias, project: projectName }),
+      options.skipInstall ? noop() : installDependencies(),
+      (_t: Tree, ctx: SchematicContext) => {
+        ctx.logger.info(`Import the map from "${alias}":`);
+        ctx.logger.info(`  import { MapComponent } from '${alias}';`);
+      },
     ]);
+  };
+}
+
+/** Maps the alias to the copy folder in tsconfig (also in the project tsconfigs that set paths). */
+function addImportAlias(path: string, alias: string, project?: ProjectDefinition): Rule {
+  return (tree: Tree, context: SchematicContext) => {
+    const projectTsconfigs = ['build', 'test']
+      .map((target) => project?.targets.get(target)?.options?.['tsConfig'])
+      .filter((file): file is string => typeof file === 'string');
+    ensureAlias(tree, context, { path, alias, projectTsconfigs });
+    return tree;
   };
 }
 
@@ -98,13 +151,17 @@ async function readWorkspaceOrWarn(
   }
 }
 
-/** The requested project, else the first one (the CLI passes the default project as `project`). */
-function resolveProjectName(
-  workspace: WorkspaceDefinition,
-  requested?: string,
-): string | undefined {
-  if (requested) return requested;
-  return workspace.projects.keys().next().value;
+/** angular.json projects in the shape {@link pickProject} reads. */
+function projectInfos(workspace: WorkspaceDefinition): Record<string, ProjectInfo> {
+  const infos: Record<string, ProjectInfo> = {};
+  for (const [name, project] of workspace.projects) {
+    infos[name] = {
+      projectType: project.extensions['projectType'] as string | undefined,
+      root: project.root,
+      sourceRoot: project.sourceRoot,
+    };
+  }
+  return infos;
 }
 
 function noop(): Rule {

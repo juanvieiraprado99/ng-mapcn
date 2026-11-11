@@ -30,6 +30,7 @@ type ScaleSystem = 'metric' | 'imperial';
 /** Mercator pixels shrink to nothing at the poles; clamp so the reading stays finite. */
 const MAX_LATITUDE = 85;
 
+/** Draws a scale bar that updates as the map moves. */
 @Component({
   selector: 'ng-map-scale',
   templateUrl: './map-scale.component.html',

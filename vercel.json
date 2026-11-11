@@ -3,6 +3,18 @@
   "installCommand": "npm ci",
   "buildCommand": "node scripts/vercel-build.mjs",
   "outputDirectory": "dist/demo/browser",
+  "redirects": [
+    {
+      "source": "/docs/components/tile-sources",
+      "destination": "/docs/components/raster-source",
+      "permanent": true
+    },
+    {
+      "source": "/docs/components/3d",
+      "destination": "/docs/components/fill-extrusion",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

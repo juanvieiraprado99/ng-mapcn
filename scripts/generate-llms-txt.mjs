@@ -23,17 +23,19 @@ const api = JSON.parse(
 
 const publicDir = join(root, 'projects', 'demo', 'public');
 
-const INTRO = `> Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via \`ng add\` (you own the code).`;
+const INTRO = `> Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via \`npx ng-mapcn init\` / \`add\` (you own the code).`;
 
 const INSTALLATION = `## Installation
 
 ### Copy-paste (recommended, shadcn-style)
 
 \`\`\`bash
-ng add ng-mapcn
+npx ng-mapcn@latest init
+npx ng-mapcn@latest add controls marker-content marker-popup marker-tooltip route
+# or: pnpm dlx / yarn dlx / bunx ng-mapcn@latest <command>
 \`\`\`
 
-Adds \`maplibre-gl\`, registers its CSS, appends the required \`.maplibregl-popup-*\` overrides and copies the component sources into \`src/app/components/ui/map\` (customize with \`--path\`). \`ng add\` installs with the workspace's package manager (npm, pnpm, yarn or bun).
+\`init\` (the same as \`ng add ng-mapcn\`) adds \`maplibre-gl\`, registers its CSS, appends the required \`.maplibregl-popup-*\` overrides and copies only the core \`<ng-map>\` into \`src/app/shared/components/map\`, maps the import alias \`@/shared/components/map\` in \`tsconfig.json\` \`paths\` (\`"@/*": ["./src/app/*"]\` when absent, never \`baseUrl\`) and saves both in \`ng-mapcn.json\`. It asks for the folder and the alias first (\`--path\`, \`--alias\`, or \`--yes\` for the defaults); a rerun keeps the saved ones, a multi-project workspace gets its application (\`--project\` when there are several), and a copy from 22.0.0-beta.9 or earlier in \`src/app/components/ui/map\` is adopted instead of copied again. Import the copied components from the alias (\`import { MapComponent } from '@/shared/components/map'\`) instead of \`'ng-mapcn'\`; the examples below use \`'ng-mapcn'\` (npm package), so swap the specifier in a copy-paste app. \`add\` (the same as \`ng g ng-mapcn:add\`) copies the components you list, into the folder saved in \`ng-mapcn.json\`, and the files they depend on: the core is always included, existing files are skipped unless \`--overwrite\`, \`--all\` copies everything except \`draw\` (opt-in, it adds terra-draw: \`add draw\`), and \`list\` shows the items and the installed ones. \`marker-content\`, \`marker-popup\` and \`marker-tooltip\` depend on \`marker\`. The items above are the ones the Quick start below uses. Both install with the workspace's package manager (npm, pnpm, yarn or bun).
 
 ### npm package
 
@@ -41,6 +43,8 @@ Adds \`maplibre-gl\`, registers its CSS, appends the required \`.maplibregl-popu
 npm install ng-mapcn maplibre-gl
 # or: pnpm add / yarn add / bun add ng-mapcn maplibre-gl
 \`\`\`
+
+Always install \`maplibre-gl\` with it: every peer dependency of \`ng-mapcn\` is optional (so \`npx ng-mapcn\` does not download Angular and MapLibre), so npm does not add it, and the build fails with \`Cannot find module 'maplibre-gl'\` without it. npm still checks the versions of the peers that are installed.
 
 \`\`\`scss
 // global styles.scss
@@ -98,7 +102,7 @@ const FEATURES = `## Key Features
 - **Signals-first** — standalone components, \`input()\`/\`output()\`, \`effect()\`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
 - **SSR-safe** — the map is created in \`afterNextRender\`; nothing touches \`document\` on the server
-- **Copy-paste distribution** — \`ng add ng-mapcn\` copies the sources into your project (shadcn-style)`;
+- **Copy-paste distribution** — \`npx ng-mapcn add <components>\` copies the sources into your project (shadcn-style)`;
 
 const TECH_STACK = `## Tech Stack
 
@@ -124,6 +128,9 @@ const componentList = api.sections
 const DOCS_COMPONENT_PAGES = [
   { label: 'Map', slug: 'map' },
   { label: 'Controls', slug: 'controls' },
+  { label: 'Scale', slug: 'scale' },
+  { label: 'Style Switcher', slug: 'style-switcher' },
+  { label: 'Minimap', slug: 'minimap' },
   { label: 'Legend', slug: 'legend' },
   { label: 'Markers', slug: 'markers' },
   { label: 'Popups', slug: 'popups' },
@@ -133,8 +140,11 @@ const DOCS_COMPONENT_PAGES = [
   { label: 'Clusters', slug: 'clusters' },
   { label: 'Heatmap', slug: 'heatmap' },
   { label: 'Symbols', slug: 'symbols' },
-  { label: 'Tile Sources', slug: 'tile-sources' },
-  { label: '3D Buildings & Terrain', slug: '3d' },
+  { label: 'Raster Tiles', slug: 'raster-source' },
+  { label: 'Vector Tiles', slug: 'vector-source' },
+  { label: 'Image Overlay', slug: 'image-overlay' },
+  { label: '3D Buildings', slug: 'fill-extrusion' },
+  { label: 'Terrain', slug: 'terrain' },
   { label: 'Draw', slug: 'draw' },
   { label: 'Advanced', slug: 'advanced' },
 ];
@@ -151,7 +161,7 @@ Version: ${pkg.version} · License: ${pkg.license ?? 'MIT'} · npm: https://www.
 
 - [Home](${SITE_URL}/): live examples — trails, arcs, fly-to, delivery, analytics, EV charging.
 - [Documentation](${SITE_URL}/docs): introduction, features and supported basemaps.
-- [Installation](${SITE_URL}/docs/installation): \`ng add\` (copy-paste) or npm package.
+- [Installation](${SITE_URL}/docs/installation): \`npx ng-mapcn init\` / \`add\` (copy-paste) or npm package.
 - [Map Styles](${SITE_URL}/docs/basemaps): a working example per provider (Carto, OpenFreeMap, OpenStreetMap, MapTiler, Stadia).
 - [Testing your maps](${SITE_URL}/docs/testing): unit-test components that render \`ng-map\` without WebGL (MapLibre fake, helpers, CDK harnesses; Vitest first-class).
 - [API Reference](${SITE_URL}/docs/api-reference): every component with inputs and outputs.
@@ -277,7 +287,7 @@ Unit-test components that render \`ng-map\` in jsdom, without WebGL. \`maplibre-
 - **Vitest** (first-class): a setup file with \`vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'))\` and \`configureFakeMapLibre({ spy: vi.fn })\`, plus \`server: { deps: { inline: [/ng-mapcn/] } }\` in the Vitest config (without it the real \`maplibre-gl\` is loaded and the mock has no effect).
 - **Jest**: \`moduleNameMapper: { '^maplibre-gl$': 'ng-mapcn/testing/maplibre' }\` and \`configureFakeMapLibre({ spy: jest.fn })\`. Documented, not tested by ng-mapcn.
 - **Karma/Jasmine**: not supported (they cannot mock an ES module).
-- \`ng add\` does not copy the testing files: copy-paste users depend on the npm package for the fake.
+- \`init\` and \`add\` do not copy the testing files: copy-paste users install the npm package as a dev dependency and call \`configureMapTesting({ mapComponent: MapComponent, mapContext: MapContextService })\` in the setup file, both imported from their alias (\`@/shared/components/map\`), so \`renderMap()\` renders their copied \`<ng-map>\` (without it, it throws a message that says so). The harnesses need no setup.
 - \`ng-mapcn/testing/harness\` imports \`@angular/cdk/testing\`, an optional peer: install \`@angular/cdk\` to use it.
 - Stable: \`fakeRegistry\`, the fake's getters and \`structuralCalls()\`. The fake's raw \`calls\` strings are not.
 - Change host values after rendering with \`update(fixture, props)\` (it calls \`markForCheck()\`) or signals in \`hostProps\`: in zoneless apps (the Angular default) a direct \`fixture.componentInstance.x = ...\` needs \`fixture.changeDetectorRef.markForCheck()\`, or the dev-mode check throws NG0100.

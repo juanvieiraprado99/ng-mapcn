@@ -3,12 +3,14 @@ import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { gotoAndWaitForMap, mapCall } from './map-helpers';
 
-// Docs page examples, in template order.
+// Each docs page's first example.
 const RASTER = 0;
-const IMAGE = 1;
-const PMTILES = 2;
+const IMAGE = 0;
+const PMTILES = 0;
 
-const PAGE = '/docs/components/tile-sources';
+const RASTER_PAGE = '/docs/components/raster-source';
+const IMAGE_PAGE = '/docs/components/image-overlay';
+const PMTILES_PAGE = '/docs/components/vector-source';
 
 const sourceType = (page: Page, index: number, id: string) =>
   mapCall(page, index, (map, source: string) => map.getSource(source)?.type, id);
@@ -17,7 +19,7 @@ test.describe('tile sources', () => {
   test('raster source: adds the source and a raster layer, then loads its tiles', async ({
     page,
   }) => {
-    await gotoAndWaitForMap(page, PAGE, RASTER);
+    await gotoAndWaitForMap(page, RASTER_PAGE, RASTER);
 
     expect(await sourceType(page, RASTER, 'tiles')).toBe('raster');
     const layer = await mapCall(page, RASTER, (map) => {
@@ -36,7 +38,7 @@ test.describe('tile sources', () => {
   test('raster source: opacity and visibility are reconciled on the same layer', async ({
     page,
   }) => {
-    await gotoAndWaitForMap(page, PAGE, RASTER);
+    await gotoAndWaitForMap(page, RASTER_PAGE, RASTER);
     const opacity = () =>
       mapCall(page, RASTER, (map) => map.getPaintProperty('raster-layer-tiles', 'raster-opacity'));
     expect(await opacity()).toBe(0.7);
@@ -62,7 +64,7 @@ test.describe('tile sources', () => {
   });
 
   test('image overlay: setCoordinates moves the live source', async ({ page }) => {
-    await gotoAndWaitForMap(page, PAGE, IMAGE);
+    await gotoAndWaitForMap(page, IMAGE_PAGE, IMAGE);
     expect(await sourceType(page, IMAGE, 'compass')).toBe('image');
 
     const coordinates = () =>
@@ -83,7 +85,7 @@ test.describe('tile sources', () => {
   test('vector source over PMTiles: the archive is read and the buildings are drawn', async ({
     page,
   }) => {
-    await gotoAndWaitForMap(page, PAGE, PMTILES);
+    await gotoAndWaitForMap(page, PMTILES_PAGE, PMTILES);
 
     expect(await sourceType(page, PMTILES, 'florence')).toBe('vector');
     await expect
@@ -102,7 +104,7 @@ test.describe('tile sources', () => {
   test('vector source: hovering a building sets its feature-state from the tile feature ids', async ({
     page,
   }) => {
-    await gotoAndWaitForMap(page, PAGE, PMTILES);
+    await gotoAndWaitForMap(page, PMTILES_PAGE, PMTILES);
     await expect
       .poll(() =>
         mapCall(
@@ -140,7 +142,7 @@ test.describe('tile sources', () => {
   });
 
   test('a theme switch re-adds the sources and the layers that wait for them', async ({ page }) => {
-    await gotoAndWaitForMap(page, PAGE, PMTILES);
+    await gotoAndWaitForMap(page, PMTILES_PAGE, PMTILES);
     await expect
       .poll(() => mapCall(page, PMTILES, (map) => !!map.getLayer('florence-fill')))
       .toBe(true);
@@ -170,7 +172,7 @@ test.describe('tile sources', () => {
   });
 
   test('the raster and image sources survive a theme switch', async ({ page }) => {
-    await gotoAndWaitForMap(page, PAGE, RASTER);
+    await gotoAndWaitForMap(page, RASTER_PAGE, RASTER);
     await page.locator('app-theme-toggle button').click();
 
     await expect

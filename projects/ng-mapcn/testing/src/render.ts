@@ -1,4 +1,10 @@
-import { Component, type EnvironmentProviders, type Provider } from '@angular/core';
+import {
+  Component,
+  type EnvironmentProviders,
+  type Provider,
+  type ProviderToken,
+  type Type,
+} from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { MapComponent, MapContextService } from 'ng-mapcn';
 import { type FakeMap, fakeRegistry } from 'ng-mapcn/testing/maplibre';
@@ -24,7 +30,19 @@ const elementSize = { width: 0, height: 0 };
 type LayoutKey = 'offsetWidth' | 'offsetHeight';
 let layoutPatch: Record<LayoutKey, PropertyDescriptor | undefined> | null = null;
 
-export interface MapTestingConfig {
+/**
+ * The map classes the helpers render and read. The npm package's by default; an app that copied the
+ * sources with `npx ng-mapcn init` passes its own (`configureMapTesting({ mapComponent, mapContext })`
+ * in the test setup file), since its `<ng-map>` is a different class with its own context service.
+ */
+export interface MapClasses {
+  /** The `<ng-map>` component class, e.g. the copied `MapComponent` from `@/shared/components/map`. */
+  mapComponent?: Type<unknown> | null;
+  /** The `MapContextService` class that `mapComponent` provides. Required with `mapComponent`. */
+  mapContext?: ProviderToken<unknown> | null;
+}
+
+export interface MapTestingConfig extends MapClasses {
   /**
    * Advances the runner's fake clock by `ms`, used by `loadMap()` / `reloadStyle()` to wait out the
    * style debounce. Vitest: `(ms) => vi.advanceTimersByTime(ms)`; Jest:
@@ -34,12 +52,50 @@ export interface MapTestingConfig {
   advanceTimers?: ((ms: number) => void) | null;
 }
 
-const config: MapTestingConfig = { advanceTimers: null };
+const config: MapTestingConfig = { advanceTimers: null, mapComponent: null, mapContext: null };
 
-/** Configures the helpers. Only the keys passed change; `resetMapTesting()` does not undo it. */
+/**
+ * Configures the helpers. Only the keys passed change; `resetMapTesting()` does not undo it.
+ * `mapComponent` and `mapContext` go together; `null` for both goes back to the package's classes.
+ */
 export function configureMapTesting(options: MapTestingConfig): void {
   if ('advanceTimers' in options) config.advanceTimers = options.advanceTimers ?? null;
+  if ('mapComponent' in options || 'mapContext' in options) {
+    const pair = classPair(options);
+    config.mapComponent = pair?.component ?? null;
+    config.mapContext = pair?.context ?? null;
+  }
 }
+
+interface ResolvedClasses {
+  component: Type<unknown>;
+  context: ProviderToken<unknown>;
+}
+
+/** Both classes of `classes`, or null when neither is set. Throws when only one is. */
+function classPair(classes: MapClasses): ResolvedClasses | null {
+  const component = classes.mapComponent ?? null;
+  const context = classes.mapContext ?? null;
+  if (!component && !context) return null;
+  if (!component || !context) {
+    throw new Error(
+      'Pass mapComponent and mapContext together: the <ng-map> class and the MapContextService ' +
+        'it provides (for copied sources, both from your alias, e.g. @/shared/components/map).',
+    );
+  }
+  return { component, context };
+}
+
+/** The classes passed to the call, else the configured ones, else the npm package's. */
+function resolveClasses(classes: MapClasses = {}): ResolvedClasses {
+  return (
+    classPair(classes) ??
+    classPair(config) ?? { component: MapComponent, context: MapContextService }
+  );
+}
+
+/** The classes each `renderMap()` fixture was rendered with, for `getFakeMap()` and `loadMap()`. */
+const fixtureClasses = new WeakMap<ComponentFixture<unknown>, ResolvedClasses>();
 
 /**
  * Sets the container size the map sees. jsdom has no layout, so `<ng-map>` would wait forever for
@@ -89,7 +145,7 @@ export function resetMapTesting(): void {
   fakeRegistry.reset();
 }
 
-export interface RenderMapOptions {
+export interface RenderMapOptions extends MapClasses {
   /** Standalone components/directives the template uses besides `MapComponent`. */
   imports?: unknown[];
   /** Test providers, including environment ones such as `provideZonelessChangeDetection()`. */
@@ -104,12 +160,16 @@ export interface RenderMapResult {
   fixture: ComponentFixture<any>;
   /** The fake map of the first `<ng-map>`, or `undefined` if none was created (zero size, error). */
   map: FakeMap | undefined;
-  /** The `MapContextService` of the first `<ng-map>`. */
+  /**
+   * The `MapContextService` of the first `<ng-map>` (typed as the package's; with copied sources it
+   * is your copy, which has the same shape).
+   */
   ctx: MapContextService;
 }
 
 /**
- * Renders `template` inside a standalone host that imports `MapComponent` and runs change detection
+ * Renders `template` inside a standalone host that imports `MapComponent` (the package's, or the
+ * `mapComponent` passed or configured for copied sources) and runs change detection
  * until the map exists and projected children are attached. The map is not loaded yet: call
  * `loadMap()`. Patches the layout getters (see `setMapSize`): call `resetMapTesting()` in
  * `afterEach`.
@@ -118,6 +178,7 @@ export async function renderMap(
   template: string,
   opts: RenderMapOptions = {},
 ): Promise<RenderMapResult> {
+  const classes = resolveClasses(opts);
   setMapSize(opts.size === undefined ? { width: 400, height: 300 } : opts.size);
   patchLayout();
 
@@ -126,25 +187,58 @@ export async function renderMap(
     providers: opts.providers ?? [],
   });
   TestBed.overrideComponent(MapTestHostComponent, {
-    set: { template, imports: [MapComponent, ...((opts.imports ?? []) as any[])] },
+    set: { template, imports: [classes.component, ...((opts.imports ?? []) as any[])] },
   });
 
-  const fixture = TestBed.createComponent(MapTestHostComponent);
-  Object.assign(fixture.componentInstance as object, opts.hostProps ?? {});
-  fixture.detectChanges();
-  await fixture.whenStable();
-  // The map is created after the first pass; projected children are attached on the next one.
-  fixture.detectChanges();
-  await fixture.whenStable();
+  let fixture: ComponentFixture<MapTestHostComponent>;
+  try {
+    fixture = TestBed.createComponent(MapTestHostComponent);
+    fixtureClasses.set(fixture, classes);
+    Object.assign(fixture.componentInstance as object, opts.hostProps ?? {});
+    fixture.detectChanges();
+    await fixture.whenStable();
+    // The map is created after the first pass; projected children are attached on the next one.
+    fixture.detectChanges();
+    await fixture.whenStable();
+  } catch (error) {
+    throw explainCopiedSources(error, classes);
+  }
 
   const ctx = mapContext(fixture);
   return { fixture, map: (ctx.map() as unknown as FakeMap | null) ?? undefined, ctx };
 }
 
+/**
+ * Children copied by `npx ng-mapcn init` inject their own `MapContextService`, which the package's
+ * `<ng-map>` does not provide (NG0201). Points at the fix instead of the bare DI error.
+ */
+function explainCopiedSources(error: unknown, classes: ResolvedClasses): unknown {
+  const message = error instanceof Error ? error.message : String(error);
+  if (classes.component !== MapComponent || !/NG0201/.test(message)) return error;
+  if (!/MapContext/.test(message)) return error;
+  return new Error(
+    'A child of <ng-map> could not find its MapContextService: it looks copied by ' +
+      'npx ng-mapcn init, but renderMap() used the npm package MapComponent. Call ' +
+      'configureMapTesting({ mapComponent: MapComponent, mapContext: MapContextService }) in the ' +
+      'test setup file, with both classes imported from your alias (e.g. @/shared/components/map).',
+    { cause: error },
+  );
+}
+
 function mapContext(fixture: ComponentFixture<unknown>): MapContextService {
-  const host = fixture.debugElement.query((el) => el.componentInstance instanceof MapComponent);
-  if (!host) throw new Error('No <ng-map> found in the fixture.');
-  return host.injector.get(MapContextService);
+  const { component, context } = fixtureClasses.get(fixture) ?? resolveClasses();
+  const host = fixture.debugElement.query((el) => el.componentInstance instanceof component);
+  if (!host) {
+    const other = fixture.debugElement.query((el) => el.name === 'ng-map');
+    throw new Error(
+      other
+        ? 'The <ng-map> in the fixture is not the configured map class. With sources copied by ' +
+            'npx ng-mapcn init, call configureMapTesting({ mapComponent, mapContext }) with the ' +
+            'classes from your alias (or pass them to renderMap()).'
+        : 'No <ng-map> found in the fixture.',
+    );
+  }
+  return host.injector.get(context) as MapContextService;
 }
 
 /** The fake map created by the first `<ng-map>` of `fixture`. Throws if there is none yet. */

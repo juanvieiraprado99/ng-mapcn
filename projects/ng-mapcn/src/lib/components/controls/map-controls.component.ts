@@ -21,6 +21,7 @@ import { MapContextService } from '../../services/map-context.service';
 import { classTokens } from '../../utils/class-name';
 import { type MapControlPosition, mountMapControl } from '../../utils/map-control';
 
+/** Adds zoom, compass, locate and fullscreen buttons to the map. */
 @Component({
   selector: 'ng-map-controls',
   templateUrl: './map-controls.component.html',

@@ -233,13 +233,16 @@ export const nextMilestones: RoadmapMilestone[] = [
   {
     id: 'per-component-install',
     title: 'Per-component install, shadcn-style',
-    status: 'planned',
+    status: 'ongoing',
     description:
-      'Copy only what you use: pick components and let the schematic resolve the files they depend on.',
-    goals: ['Schematics', 'Registry'],
+      'Copy only what you use: npx ng-mapcn init sets up the core, npx ng-mapcn add <components> copies the rest and resolves the files they depend on.',
+    goals: ['Schematics', 'Registry', 'CLI'],
     deliverables: [
-      todo('ng g ng-mapcn:map --components=marker,route with dependency resolution'),
-      todo('Registry manifest mapping each component to its files'),
+      done('npx ng-mapcn init / add with dependency resolution'),
+      done('Registry manifest mapping each component to its files'),
+      done('init asks for the folder and the import alias, saved in ng-mapcn.json'),
+      todo('init asks which components to install (multi-select)'),
+      done('npx downloads only the package (optional peers): 2 MB instead of 80 MB'),
       todo('Block schematics: add a gallery block to your app in one command'),
     ],
   },

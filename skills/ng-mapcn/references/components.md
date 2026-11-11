@@ -1,6 +1,6 @@
 # ng-mapcn API reference
 
-All components are standalone, `OnPush`, and use signal inputs/outputs. Everything below is exported from `ng-mapcn` (or from the folder `ng add` copied into your app). Coordinates are `[longitude, latitude]`.
+All components are standalone, `OnPush`, and use signal inputs/outputs. Everything below is exported from `ng-mapcn` (or from the folder `init`/`add` copied into your app; each component is an `add` item, e.g. `ng-map-marker` is `marker`). Coordinates are `[longitude, latitude]`.
 
 Contents: [ng-map](#ng-map) | [ng-map-controls](#ng-map-controls) | [ng-map-scale](#ng-map-scale) | [ng-map-legend](#ng-map-legend) | [ng-map-style-switcher](#ng-map-style-switcher) | [ng-map-minimap](#ng-map-minimap) | [ng-map-marker](#ng-map-marker) | [Marker children](#marker-children) | [ng-map-popup](#ng-map-popup) | [ng-map-route](#ng-map-route) | [Route playback](#route-playback) | [ng-route-playback-control](#ng-route-playback-control) | [ng-map-geojson](#ng-map-geojson) | [ng-map-arc](#ng-map-arc) | [ng-map-cluster-layer](#ng-map-cluster-layer) | [ng-map-heatmap](#ng-map-heatmap) | [ng-map-symbol-layer](#ng-map-symbol-layer) | [ng-map-raster-source](#ng-map-raster-source) | [ng-map-vector-source](#ng-map-vector-source) | [ng-map-image-overlay](#ng-map-image-overlay) | [ng-map-fill-extrusion](#ng-map-fill-extrusion) | [ng-map-terrain](#ng-map-terrain) | [ng-map-draw](#ng-map-draw) | [Services](#services) | [Providers and styles](#providers-and-styles) | [Utils and types](#utils-and-types)
 
@@ -231,7 +231,7 @@ Class `MapPopupComponent`. Standalone popup at coordinates, opened on creation (
 
 Keyboard and a11y: the card is a non-modal `role="dialog"` named by `ariaLabel` (default "Map popup", `labels.popup`). `focusAfterOpen` moves focus into the popup. Escape inside the card closes it (writes `open = false`, emits `popupClose`) and calls `stopPropagation()` so a host dialog does not also close. With `[closeButton]="true"` the X is a button named by the `closePopup` label.
 
-Hover popups: set `[closeOnClick]="false"` and `className="ng-popup-passthrough"`. The popup sits next to the hovered point; if it captured the pointer, moving the cursor into it would fire the layer's `mouseleave` and close it. The rule `.maplibregl-popup:has(.ng-popup-passthrough)` (and its `.maplibregl-popup-content`) gets `pointer-events: none`. It ships in the library's `_utilities.scss`, and `ng add` appends it to a plain `styles.css`. It needs `:has()` (Chrome 105, Safari 15.4, Firefox 121).
+Hover popups: set `[closeOnClick]="false"` and `className="ng-popup-passthrough"`. The popup sits next to the hovered point; if it captured the pointer, moving the cursor into it would fire the layer's `mouseleave` and close it. The rule `.maplibregl-popup:has(.ng-popup-passthrough)` (and its `.maplibregl-popup-content`) gets `pointer-events: none`. It ships in the library's `_utilities.scss`, and `init` appends it to a plain `styles.css`. It needs `:has()` (Chrome 105, Safari 15.4, Firefox 121).
 
 | Output       | Payload                                      |
 | ------------ | -------------------------------------------- |
@@ -573,7 +573,7 @@ No outputs. Also exported: `defaultTerrainTiles`, `TerrainEncoding`.
 
 ## ng-map-draw
 
-Class `MapDrawComponent`, from the optional **`'ng-mapcn/draw'`** entry point (copy-paste: `<path>/draw`, via `ng add ng-mapcn --draw`). Built on `terra-draw` + `terra-draw-maplibre-gl-adapter` (optional peer dependencies; install them). The core `'ng-mapcn'` entry never imports them.
+Class `MapDrawComponent`, from the optional **`'ng-mapcn/draw'`** entry point (copy-paste: `'@/shared/components/map/draw'`, via `npx ng-mapcn@latest add draw`). Built on `terra-draw` + `terra-draw-maplibre-gl-adapter` (optional peer dependencies; install them). The core `'ng-mapcn'` entry never imports them.
 
 | Input      | Type                                                   | Default       | Notes                                                                                                                                          |
 | ---------- | ------------------------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |

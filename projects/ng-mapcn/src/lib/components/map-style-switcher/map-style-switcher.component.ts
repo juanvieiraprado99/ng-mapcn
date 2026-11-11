@@ -31,6 +31,7 @@ export interface MapStyleOption {
   styles: MapStylesConfig;
 }
 
+/** Lets the user switch between several map base styles. */
 @Component({
   selector: 'ng-map-style-switcher',
   templateUrl: './map-style-switcher.component.html',

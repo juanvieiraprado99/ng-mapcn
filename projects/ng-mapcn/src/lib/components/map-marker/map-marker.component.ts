@@ -33,6 +33,7 @@ const ARROWS: Record<string, [number, number]> = {
   ArrowRight: [1, 0],
 };
 
+/** Places a marker on the map at a longitude/latitude with projected custom content. */
 @Component({
   selector: 'ng-map-marker',
   template: '<ng-content />',

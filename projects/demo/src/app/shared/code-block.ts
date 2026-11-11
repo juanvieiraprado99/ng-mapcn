@@ -1,7 +1,14 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+  booleanAttribute,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
 
 import { CodeCopyButtonComponent } from './code-copy-button';
 import { CodeSurfaceComponent } from './code-surface';
+import { toCopyPasteImports } from './copy-paste-imports';
 import type { CodeLang } from './highlighter';
 
 /** mapcn `CodeBlock`: a highlighted snippet with line numbers and a copy button. */
@@ -21,16 +28,16 @@ import type { CodeLang } from './highlighter';
         >
           <span class="text-muted-foreground truncate font-mono text-xs">{{ name }}</span>
           @if (showCopyButton()) {
-            <app-code-copy-button [text]="code()" />
+            <app-code-copy-button [text]="shownCode()" />
           }
         </div>
       } @else if (showCopyButton()) {
         <div class="absolute top-2 right-2 z-10">
-          <app-code-copy-button [text]="code()" />
+          <app-code-copy-button [text]="shownCode()" />
         </div>
       }
       <app-code-surface
-        [code]="code()"
+        [code]="shownCode()"
         [lang]="lang()"
         [class]="showLineNumbers() ? 'overflow-auto' : 'no-line-numbers overflow-auto pl-4'"
       />
@@ -44,4 +51,10 @@ export class CodeBlockComponent {
   readonly filename = input<string>();
   readonly showCopyButton = input(true);
   readonly showLineNumbers = input(true);
+  /** Show `ng-mapcn` imports as the copy-paste alias (see `toCopyPasteImports`). */
+  readonly rewriteImports = input(true, { transform: booleanAttribute });
+
+  protected readonly shownCode = computed(() =>
+    this.rewriteImports() ? toCopyPasteImports(this.code()) : this.code(),
+  );
 }

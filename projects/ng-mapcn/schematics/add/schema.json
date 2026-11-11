@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "ng-mapcn-add",
+  "title": "ng-mapcn add schema",
+  "type": "object",
+  "properties": {
+    "components": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Components to copy (e.g. marker route). Their dependencies are copied too.",
+      "$default": { "$source": "argv" }
+    },
+    "all": {
+      "type": "boolean",
+      "description": "Copy every component (except the opt-in draw).",
+      "default": false
+    },
+    "overwrite": {
+      "type": "boolean",
+      "description": "Overwrite files that already exist.",
+      "default": false
+    },
+    "path": {
+      "type": "string",
+      "description": "Directory (relative to the workspace root) where the components are copied. Defaults to the path saved in ng-mapcn.json by init."
+    },
+    "skipInstall": {
+      "type": "boolean",
+      "description": "Do not install the npm dependencies that were added.",
+      "default": false
+    }
+  },
+  "required": []
+}

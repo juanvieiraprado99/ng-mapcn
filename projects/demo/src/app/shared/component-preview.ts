@@ -1,9 +1,17 @@
-import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+import {
+  booleanAttribute,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 
 import { ZardButtonComponent } from '@/shared/components/button';
 
 import { CodeCopyButtonComponent } from './code-copy-button';
 import { CodeSurfaceComponent } from './code-surface';
+import { toCopyPasteImports } from './copy-paste-imports';
 import type { CodeLang } from './highlighter';
 
 let nextId = 0;
@@ -27,11 +35,11 @@ let nextId = 0;
       @if (code()) {
         <div class="relative w-full overflow-hidden border-t">
           <div class="absolute top-2 right-2 z-10">
-            <app-code-copy-button [text]="code()" />
+            <app-code-copy-button [text]="shownCode()" />
           </div>
           <app-code-surface
             [id]="codeId"
-            [code]="code()"
+            [code]="shownCode()"
             [lang]="lang()"
             [class]="expanded() ? 'max-h-[420px] overflow-auto' : 'max-h-32 overflow-hidden'"
           />
@@ -64,7 +72,12 @@ export class ComponentPreviewComponent {
   readonly lang = input<CodeLang>();
   /** Height of the preview panel. The expanded code block caps separately. */
   readonly height = input('420px');
+  /** Show `ng-mapcn` imports as the copy-paste alias (see `toCopyPasteImports`). */
+  readonly rewriteImports = input(true, { transform: booleanAttribute });
 
+  protected readonly shownCode = computed(() =>
+    this.rewriteImports() ? toCopyPasteImports(this.code()) : this.code(),
+  );
   protected readonly codeId = `component-preview-code-${nextId++}`;
   protected readonly expanded = signal(false);
 }

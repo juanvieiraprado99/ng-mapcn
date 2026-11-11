@@ -19,7 +19,7 @@ Report them privately through GitHub's private vulnerability reporting:
 Please include:
 
 - The affected version of `ng-mapcn`.
-- How you installed it: the `ng add` copy-paste sources or the npm package.
+- How you installed it: the copy-paste sources (`ng-mapcn init` / `add`) or the npm package.
 - Steps to reproduce, ideally with a minimal example.
 - The impact you expect (what an attacker could do).
 
@@ -31,4 +31,4 @@ What to expect:
 
 ## Scope
 
-When you run `ng add ng-mapcn`, the component sources are copied into your project and become your code. Fixes ship in new releases of the package, so they must be re-applied or re-copied into your project. Vulnerabilities in `maplibre-gl` itself should be reported to the [MapLibre project](https://github.com/maplibre/maplibre-gl-js).
+When you run `npx ng-mapcn init` or `add` (or `ng add ng-mapcn`), the component sources are copied into your project and become your code. Fixes ship in new releases of the package, so they must be re-applied or re-copied into your project. Vulnerabilities in `maplibre-gl` itself should be reported to the [MapLibre project](https://github.com/maplibre/maplibre-gl-js).

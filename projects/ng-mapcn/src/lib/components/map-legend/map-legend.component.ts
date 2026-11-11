@@ -42,6 +42,7 @@ export type MapLegendSection =
 /** Minimum gap (px) kept between two visible gradient labels. */
 const LABEL_GAP = 4;
 
+/** Shows a legend panel that explains the colors or symbols used on the map. */
 @Component({
   selector: 'ng-map-legend',
   templateUrl: './map-legend.component.html',

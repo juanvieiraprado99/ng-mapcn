@@ -24,10 +24,8 @@ mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, 'package.json'), JSON.stringify({ type: 'commonjs' }, null, 2) + '\n');
 cpSync(join(schematicsSrc, 'collection.json'), join(outDir, 'collection.json'));
 cpSync(join(schematicsSrc, 'ng-add', 'schema.json'), join(outDir, 'ng-add', 'schema.json'));
-cpSync(join(schematicsSrc, 'map', 'schema.json'), join(outDir, 'map', 'schema.json'));
-cpSync(join(schematicsSrc, 'map', 'files'), join(outDir, 'map', 'files'), { recursive: true });
-cpSync(join(schematicsSrc, 'map', 'draw-files'), join(outDir, 'map', 'draw-files'), {
-  recursive: true,
-});
+cpSync(join(schematicsSrc, 'registry.json'), join(outDir, 'registry.json'));
+cpSync(join(schematicsSrc, 'add', 'files'), join(outDir, 'add', 'files'), { recursive: true });
+cpSync(join(schematicsSrc, 'add', 'schema.json'), join(outDir, 'add', 'schema.json'));
 
 console.log(`Schematics built to ${outDir}`);

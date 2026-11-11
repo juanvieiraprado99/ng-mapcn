@@ -1,4 +1,10 @@
-import { provideZonelessChangeDetection } from '@angular/core';
+import {
+  Component,
+  inject,
+  Injectable,
+  provideZonelessChangeDetection,
+  signal,
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MapRouteComponent } from 'ng-mapcn';
 import { fakeRegistry } from 'ng-mapcn/testing/maplibre';
@@ -238,5 +244,82 @@ describe('ng-mapcn/testing', () => {
     expect(Object.getOwnPropertyDescriptor(proto, 'offsetHeight')).toEqual(height);
     expect(document.createElement('div').offsetWidth).toBe(0);
     expect(fakeRegistry.maps).toHaveLength(0);
+  });
+});
+
+/** Stands in for sources copied by `npx ng-mapcn init`: same selector, other classes. */
+@Injectable()
+class CopiedMapContext {
+  readonly map = signal<unknown>(null);
+  readonly isLoaded = signal(false);
+}
+
+@Component({ selector: 'ng-map', providers: [CopiedMapContext], template: '<ng-content />' })
+class CopiedMapComponent {
+  constructor() {
+    inject(CopiedMapContext).map.set({ copied: true });
+  }
+}
+
+@Component({ selector: 'ng-map-copied-child', template: '' })
+class CopiedChildComponent {
+  readonly ctx = inject(CopiedMapContext);
+}
+
+describe('ng-mapcn/testing with copied sources', () => {
+  afterEach(() => {
+    configureMapTesting({ mapComponent: null, mapContext: null });
+    TestBed.resetTestingModule();
+    resetMapTesting();
+  });
+
+  it('renders the copied <ng-map> instead of the package one, per call', async () => {
+    const { fixture, map, ctx } = await renderMap('<ng-map />', {
+      mapComponent: CopiedMapComponent,
+      mapContext: CopiedMapContext,
+    });
+
+    expect(ctx).toBeInstanceOf(CopiedMapContext);
+    expect(map).toEqual({ copied: true });
+    expect(getFakeMap(fixture)).toBe(map);
+    // The package MapComponent is not in the host: it would also match `ng-map` (NG0300).
+    expect(fakeRegistry.maps).toHaveLength(0);
+  });
+
+  it('uses the classes set once with configureMapTesting', async () => {
+    configureMapTesting({ mapComponent: CopiedMapComponent, mapContext: CopiedMapContext });
+    const { fixture, ctx } = await renderMap('<ng-map />');
+
+    expect(ctx).toBeInstanceOf(CopiedMapContext);
+    expect(getFakeMap(fixture)).toEqual({ copied: true });
+  });
+
+  it('requires mapComponent and mapContext together', async () => {
+    await expect(renderMap('<ng-map />', { mapComponent: CopiedMapComponent })).rejects.toThrow(
+      /mapComponent and mapContext together/,
+    );
+    expect(() => configureMapTesting({ mapComponent: CopiedMapComponent })).toThrow(
+      /mapComponent and mapContext together/,
+    );
+  });
+
+  it('explains a copied child rendered under the package <ng-map>', async () => {
+    await expect(
+      renderMap('<ng-map><ng-map-copied-child /></ng-map>', { imports: [CopiedChildComponent] }),
+    ).rejects.toThrow(/configureMapTesting\(\{ mapComponent: MapComponent, mapContext/);
+  });
+
+  it('explains a copied <ng-map> the helpers were not told about', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection()],
+    });
+    @Component({ imports: [CopiedMapComponent], template: '<ng-map />' })
+    class Host {}
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+
+    expect(() => getFakeMap(fixture)).toThrow(
+      /configureMapTesting\(\{ mapComponent, mapContext \}\)/,
+    );
   });
 });

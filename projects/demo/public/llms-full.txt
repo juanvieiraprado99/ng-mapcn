@@ -1,18 +1,20 @@
 # ng-mapcn — full reference
 
-> Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `ng add` (you own the code).
+> Angular port of [mapcn](https://www.mapcn.dev) — composable MapLibre GL v6 map components in the spirit of shadcn/ui. Standalone, signals-first, OnPush, SSR-safe, theme-aware. Carto basemaps by default, so no API key is required. Distributed both as an npm package and as copy-paste sources via `npx ng-mapcn init` / `add` (you own the code).
 
-Version: 22.0.0-beta.8 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
+Version: 22.0.0-beta.9 · License: MIT · Docs: https://ng-mapcn.vercel.app · Repository: https://github.com/juanvieiraprado99/ng-mapcn
 
 ## Installation
 
 ### Copy-paste (recommended, shadcn-style)
 
 ```bash
-ng add ng-mapcn
+npx ng-mapcn@latest init
+npx ng-mapcn@latest add controls marker-content marker-popup marker-tooltip route
+# or: pnpm dlx / yarn dlx / bunx ng-mapcn@latest <command>
 ```
 
-Adds `maplibre-gl`, registers its CSS, appends the required `.maplibregl-popup-*` overrides and copies the component sources into `src/app/components/ui/map` (customize with `--path`). `ng add` installs with the workspace's package manager (npm, pnpm, yarn or bun).
+`init` (the same as `ng add ng-mapcn`) adds `maplibre-gl`, registers its CSS, appends the required `.maplibregl-popup-*` overrides and copies only the core `<ng-map>` into `src/app/shared/components/map`, maps the import alias `@/shared/components/map` in `tsconfig.json` `paths` (`"@/*": ["./src/app/*"]` when absent, never `baseUrl`) and saves both in `ng-mapcn.json`. It asks for the folder and the alias first (`--path`, `--alias`, or `--yes` for the defaults); a rerun keeps the saved ones, a multi-project workspace gets its application (`--project` when there are several), and a copy from 22.0.0-beta.9 or earlier in `src/app/components/ui/map` is adopted instead of copied again. Import the copied components from the alias (`import { MapComponent } from '@/shared/components/map'`) instead of `'ng-mapcn'`; the examples below use `'ng-mapcn'` (npm package), so swap the specifier in a copy-paste app. `add` (the same as `ng g ng-mapcn:add`) copies the components you list, into the folder saved in `ng-mapcn.json`, and the files they depend on: the core is always included, existing files are skipped unless `--overwrite`, `--all` copies everything except `draw` (opt-in, it adds terra-draw: `add draw`), and `list` shows the items and the installed ones. `marker-content`, `marker-popup` and `marker-tooltip` depend on `marker`. The items above are the ones the Quick start below uses. Both install with the workspace's package manager (npm, pnpm, yarn or bun).
 
 ### npm package
 
@@ -20,6 +22,8 @@ Adds `maplibre-gl`, registers its CSS, appends the required `.maplibregl-popup-*
 npm install ng-mapcn maplibre-gl
 # or: pnpm add / yarn add / bun add ng-mapcn maplibre-gl
 ```
+
+Always install `maplibre-gl` with it: every peer dependency of `ng-mapcn` is optional (so `npx ng-mapcn` does not download Angular and MapLibre), so npm does not add it, and the build fails with `Cannot find module 'maplibre-gl'` without it. npm still checks the versions of the peers that are installed.
 
 ```scss
 // global styles.scss
@@ -826,7 +830,7 @@ Unit-test components that render `ng-map` in jsdom, without WebGL. `maplibre-gl`
 - **Vitest** (first-class): a setup file with `vi.mock('maplibre-gl', () => import('ng-mapcn/testing/maplibre'))` and `configureFakeMapLibre({ spy: vi.fn })`, plus `server: { deps: { inline: [/ng-mapcn/] } }` in the Vitest config (without it the real `maplibre-gl` is loaded and the mock has no effect).
 - **Jest**: `moduleNameMapper: { '^maplibre-gl$': 'ng-mapcn/testing/maplibre' }` and `configureFakeMapLibre({ spy: jest.fn })`. Documented, not tested by ng-mapcn.
 - **Karma/Jasmine**: not supported (they cannot mock an ES module).
-- `ng add` does not copy the testing files: copy-paste users depend on the npm package for the fake.
+- `init` and `add` do not copy the testing files: copy-paste users install the npm package as a dev dependency and call `configureMapTesting({ mapComponent: MapComponent, mapContext: MapContextService })` in the setup file, both imported from their alias (`@/shared/components/map`), so `renderMap()` renders their copied `<ng-map>` (without it, it throws a message that says so). The harnesses need no setup.
 - `ng-mapcn/testing/harness` imports `@angular/cdk/testing`, an optional peer: install `@angular/cdk` to use it.
 - Stable: `fakeRegistry`, the fake's getters and `structuralCalls()`. The fake's raw `calls` strings are not.
 - Change host values after rendering with `update(fixture, props)` (it calls `markForCheck()`) or signals in `hostProps`: in zoneless apps (the Angular default) a direct `fixture.componentInstance.x = ...` needs `fixture.changeDetectorRef.markForCheck()`, or the dev-mode check throws NG0100.
@@ -875,7 +879,7 @@ Helpers that render a template with <ng-map> and drive the fake from ng-mapcn/te
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `renderMap` | `(template: string, options?: RenderMapOptions): Promise<RenderMapResult>` | — | Renders template in a standalone host that imports MapComponent, then runs change detection until the map exists. Options: imports, providers (environment providers such as provideZonelessChangeDetection() too), hostProps (assigned before the first change detection) and size (default 400x300, null for zero). Returns { fixture, map, ctx }. Once per test. The map is not loaded yet: call loadMap(). Patches the layout getters: call resetMapTesting() in afterEach. |
+| `renderMap` | `(template: string, options?: RenderMapOptions): Promise<RenderMapResult>` | — | Renders template in a standalone host that imports MapComponent, then runs change detection until the map exists. Options: imports, providers (environment providers such as provideZonelessChangeDetection() too), hostProps (assigned before the first change detection), size (default 400x300, null for zero) and mapComponent + mapContext (the copied classes, overriding configureMapTesting for this call). Returns { fixture, map, ctx }. Once per test. The map is not loaded yet: call loadMap(). Patches the layout getters: call resetMapTesting() in afterEach. |
 | `loadMap` | `(fixture, map?): Promise<void>` | — | Fires load and styledata, waits out the 100 ms style debounce (with configureMapTesting({ advanceTimers }) or a real timer), then runs change detection so layer components add their sources and layers. Throws a clear error when fake timers are installed without advanceTimers, instead of hanging. |
 | `reloadStyle` | `(fixture, map?): Promise<void>` | — | Simulates the style requested by setStyle (a theme or styles change) arriving: every source and layer is dropped, style.load and styledata fire, then the components re-add everything. Without a pending setStyle it only fires styledata. Throws like loadMap() on fake timers without advanceTimers. |
 | `update` | `(fixture, props): void` | — | Assigns host properties, marks the host for check and runs change detection, so it works with and without zone.js. |
@@ -883,7 +887,7 @@ Helpers that render a template with <ng-map> and drive the fake from ng-mapcn/te
 | `fireMapEvent` | `(map, event, payload?, layerId?): void` | — | Fires a map event, like MapLibre would. With a layer id it reaches handlers registered with map.on(event, layerId, handler). Run change detection afterwards if the handlers update the view. |
 | `structuralCalls` | `(map): string[]` | — | The source and layer operations recorded on the map, in order, as 'addSource:<id>', 'addLayer:<id>', 'removeLayer:<id>' and 'removeSource:<id>'. Stable format. |
 | `setMapSize` | `(size: { width, height } \| null): void` | — | Sets the container size the map sees (jsdom has no layout). renderMap() patches offsetWidth and offsetHeight to read it live, so it can change after rendering. null means zero size. |
-| `configureMapTesting` | `(options: { advanceTimers?: ((ms: number) => void) \| null }): void` | — | advanceTimers advances the runner fake clock by ms; loadMap() and reloadStyle() use it to wait out the style debounce. Vitest: (ms) => vi.advanceTimersByTime(ms). Set it only while fake timers are installed and reset it to null afterwards. Without it the helpers wait on a real timer, and throw if fake timers are installed: @sinonjs/fake-timers (Vitest, Jest) by its tag, any other library because setTimeout is no longer the one in place when ng-mapcn/testing was imported (zone.js patching does not count), confirmed with a 0 ms probe so a spy or wrapper that still runs on real time is not reported. Without zone.js, an untagged library installed before the import cannot be detected. |
+| `configureMapTesting` | `(options: { advanceTimers?: ((ms: number) => void) \| null; mapComponent?: Type<unknown> \| null; mapContext?: ProviderToken<unknown> \| null }): void` | — | mapComponent and mapContext (together) point renderMap(), getFakeMap() and loadMap() at the MapComponent and MapContextService copied by npx ng-mapcn init, imported from your alias; set them once in the test setup file, null for both goes back to the npm package classes. advanceTimers advances the runner fake clock by ms; loadMap() and reloadStyle() use it to wait out the style debounce. Vitest: (ms) => vi.advanceTimersByTime(ms). Set it only while fake timers are installed and reset it to null afterwards. Without it the helpers wait on a real timer, and throw if fake timers are installed: @sinonjs/fake-timers (Vitest, Jest) by its tag, any other library because setTimeout is no longer the one in place when ng-mapcn/testing was imported (zone.js patching does not count), confirmed with a 0 ms probe so a spy or wrapper that still runs on real time is not reported. Without zone.js, an untagged library installed before the import cannot be detected. |
 | `resetMapTesting` | `(): void` | — | Restores the HTMLElement offset getters and clears fakeRegistry. Call it in afterEach. |
 | `MAP_TEST_SELECTORS` | `{ map, loader, marker, popup, popupCard, tooltip, popupClose, controls, controlGroup }` | — | The stable DOM contract of a rendered map, as CSS selectors: 'ng-map', '.ng-map-loader', '.maplibregl-marker', '.maplibregl-popup' (an open popup or tooltip), '.ng-popup-card' (the role=dialog card), '.ng-tooltip-pill', '.ng-popup-close', '.ng-controls', '.ng-control-group'. The same with the fake and the real MapLibre (the repository's e2e suite checks it in Chromium), so reuse it in Playwright or Cypress tests. The harnesses are built on it. It lives here, not in ng-mapcn/testing/harness, so it needs no @angular/cdk. A selector changes only in a major release. Type of its keys: MapTestSelector. |
 
@@ -938,7 +942,7 @@ The map is created in `afterNextRender` (browser-only, after hydration) and ever
 - **Signals-first** — standalone components, `input()`/`output()`, `effect()`-based reconciliation, OnPush
 - **Theme-aware** — swaps the basemap at runtime, layers survive the style change
 - **SSR-safe** — the map is created in `afterNextRender`; nothing touches `document` on the server
-- **Copy-paste distribution** — `ng add ng-mapcn` copies the sources into your project (shadcn-style)
+- **Copy-paste distribution** — `npx ng-mapcn add <components>` copies the sources into your project (shadcn-style)
 
 ## Tech Stack
 

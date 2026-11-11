@@ -636,7 +636,7 @@
           "name": "renderMap",
           "type": "(template: string, options?: RenderMapOptions): Promise<RenderMapResult>",
           "default": "",
-          "description": "Renders template in a standalone host that imports MapComponent, then runs change detection until the map exists. Options: imports, providers (environment providers such as provideZonelessChangeDetection() too), hostProps (assigned before the first change detection) and size (default 400x300, null for zero). Returns { fixture, map, ctx }. Once per test. The map is not loaded yet: call loadMap(). Patches the layout getters: call resetMapTesting() in afterEach."
+          "description": "Renders template in a standalone host that imports MapComponent, then runs change detection until the map exists. Options: imports, providers (environment providers such as provideZonelessChangeDetection() too), hostProps (assigned before the first change detection), size (default 400x300, null for zero) and mapComponent + mapContext (the copied classes, overriding configureMapTesting for this call). Returns { fixture, map, ctx }. Once per test. The map is not loaded yet: call loadMap(). Patches the layout getters: call resetMapTesting() in afterEach."
         },
         {
           "name": "loadMap",
@@ -682,9 +682,9 @@
         },
         {
           "name": "configureMapTesting",
-          "type": "(options: { advanceTimers?: ((ms: number) => void) | null }): void",
+          "type": "(options: { advanceTimers?: ((ms: number) => void) | null; mapComponent?: Type<unknown> | null; mapContext?: ProviderToken<unknown> | null }): void",
           "default": "",
-          "description": "advanceTimers advances the runner fake clock by ms; loadMap() and reloadStyle() use it to wait out the style debounce. Vitest: (ms) => vi.advanceTimersByTime(ms). Set it only while fake timers are installed and reset it to null afterwards. Without it the helpers wait on a real timer, and throw if fake timers are installed: @sinonjs/fake-timers (Vitest, Jest) by its tag, any other library because setTimeout is no longer the one in place when ng-mapcn/testing was imported (zone.js patching does not count), confirmed with a 0 ms probe so a spy or wrapper that still runs on real time is not reported. Without zone.js, an untagged library installed before the import cannot be detected."
+          "description": "mapComponent and mapContext (together) point renderMap(), getFakeMap() and loadMap() at the MapComponent and MapContextService copied by npx ng-mapcn init, imported from your alias; set them once in the test setup file, null for both goes back to the npm package classes. advanceTimers advances the runner fake clock by ms; loadMap() and reloadStyle() use it to wait out the style debounce. Vitest: (ms) => vi.advanceTimersByTime(ms). Set it only while fake timers are installed and reset it to null afterwards. Without it the helpers wait on a real timer, and throw if fake timers are installed: @sinonjs/fake-timers (Vitest, Jest) by its tag, any other library because setTimeout is no longer the one in place when ng-mapcn/testing was imported (zone.js patching does not count), confirmed with a 0 ms probe so a spy or wrapper that still runs on real time is not reported. Without zone.js, an untagged library installed before the import cannot be detected."
         },
         {
           "name": "resetMapTesting",

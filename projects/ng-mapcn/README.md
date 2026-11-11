@@ -13,7 +13,7 @@
   <a href="https://bundlephobia.com/package/ng-mapcn"><img src="https://img.shields.io/bundlephobia/minzip/ng-mapcn" alt="bundle size" /></a>
 </p>
 
-ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map components for Angular. It is built for Angular apps that need theme-aware maps (markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, symbol labels and icons, raster/vector tile sources, image overlays, 3D buildings and terrain, draw tools) without API keys or a paid tile provider. It is an Angular port of the [mapcn](https://mapcn.dev) API, with MapLibre GL as the rendering engine and the copy-paste ownership model of [shadcn/ui](https://ui.shadcn.com): `ng add ng-mapcn` copies the sources into your project so you own the code.
+ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map components for Angular. It is built for Angular apps that need theme-aware maps (markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, symbol labels and icons, raster/vector tile sources, image overlays, 3D buildings and terrain, draw tools) without API keys or a paid tile provider. It is an Angular port of the [mapcn](https://mapcn.dev) API, with MapLibre GL as the rendering engine and the copy-paste ownership model of [shadcn/ui](https://ui.shadcn.com): `npx ng-mapcn init` and `npx ng-mapcn add` copy the sources into your project, one component at a time, so you own the code.
 
 **[Docs](https://ng-mapcn.vercel.app/docs)** · **[Blocks gallery](https://ng-mapcn.vercel.app/blocks)** · **[Playground](https://ng-mapcn.vercel.app/playground)** · **[Installation](https://ng-mapcn.vercel.app/docs/installation)** · **[Testing](https://ng-mapcn.vercel.app/docs/testing)** · **[API reference](https://ng-mapcn.vercel.app/docs/api-reference)**
 
@@ -23,7 +23,7 @@ ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map componen
 - **Theme-aware**: follows the `dark`/`light` class or `data-theme` attribute on `<html>` (or `prefers-color-scheme`) and swaps the basemap at runtime
 - **Composable**: declare markers, popups, routes, GeoJSON, arcs, clusters, heatmaps, symbol labels and icons, tile sources (raster, vector, PMTiles), image overlays, 3D buildings and terrain as children of `<ng-map>`
 - **Signals-first**: standalone components, signal inputs/outputs, `effect()`-based reconciliation
-- **Copy-paste distribution**: `ng add ng-mapcn` copies the sources into your project (shadcn-style). Also usable as a regular npm package.
+- **Copy-paste distribution**: `npx ng-mapcn add marker route` copies only the components you pick, with the files they depend on (shadcn-style). Also usable as a regular npm package.
 - **SSR-safe**: nothing touches `window` or MapLibre during server render
 - **Testable**: a MapLibre fake and Angular CDK harnesses (`ng-mapcn/testing`) let you [unit-test maps in jsdom](#testing-your-maps) without WebGL
 - **AI-ready**: an [agent skill](#ai-agent-skill) (`npx skills add juanvieiraprado99/ng-mapcn`) plus [`llms.txt`](https://ng-mapcn.vercel.app/llms.txt) teach coding agents the real API
@@ -36,7 +36,7 @@ ng-mapcn is a set of composable [MapLibre GL](https://maplibre.org) map componen
 | `21.x`   | `^21.2.9`  | `^5.16.0`   | n/a              |
 | `18.x`   | `^18.2.14` | `^5.16.0`   | n/a              |
 
-Node.js `^22.22.3 || ^24.15.0 || >=26.0.0`. The commands below use the `@beta` tag so you always get the newest 22.x prerelease.
+Node.js `^22.22.3 || ^24.15.0 || >=26.0.0`. The `npx ng-mapcn@latest` commands below always run the newest published CLI; the regular npm package install uses the `@beta` tag to get the newest 22.x prerelease.
 
 ## Quick start
 
@@ -45,22 +45,49 @@ Node.js `^22.22.3 || ^24.15.0 || >=26.0.0`. The commands below use the `@beta` t
 Copy-paste (recommended, shadcn-style):
 
 ```bash
-ng add ng-mapcn@beta
+npx ng-mapcn@latest init
 ```
 
-`ng add` installs with your workspace's package manager (npm, pnpm, yarn or bun), so run it as `npx ng add`, `pnpm ng add`, `yarn ng add` or `bunx ng add` as you prefer.
+`init` installs with your workspace's package manager (npm, pnpm, yarn or bun), so run it as `npx`, `pnpm dlx`, `yarn dlx` (Yarn 2+ only) or `bunx` as you prefer. It is the same as `ng add ng-mapcn`.
 
-This will:
+It asks two questions (Enter keeps the default; `--yes` skips them, `--path` / `--alias` answer them up front):
+
+```text
+? Where should the map components be copied? (src/app/shared/components/map)
+? Import alias for them? (@/shared/components/map)
+```
+
+Then it will:
 
 1. Add `maplibre-gl` to your dependencies (and `@types/geojson` to your dev dependencies)
 2. Register `maplibre-gl/dist/maplibre-gl.css` in `angular.json`
 3. Register MapLibre's worker files as build assets (see [MapLibre worker](#maplibre-worker))
 4. Append the required `.maplibregl-popup-*` CSS overrides to your global stylesheet
-5. Copy the component sources to `src/app/components/ui/map` (customize with `--path`)
+5. Copy only the core (`<ng-map>`, its services, providers and styles) to `src/app/shared/components/map`
+6. Map the import alias in `tsconfig.json` compilerOptions `paths`: `"@/*": ["./src/app/*"]` when the app has no `@/*` yet (an existing one that covers the folder is kept; otherwise exact `"<alias>"` / `"<alias>/*"` entries), never `baseUrl`
+7. Save the folder, the alias and the project in `ng-mapcn.json` at the workspace root, where `add` and `list` read them (running `init` again keeps them)
 
-If your app already depends on an older `maplibre-gl`, `ng add` keeps your version and warns: update it to `^6.11.2`.
+In a workspace with several projects, `init` sets up the application and copies into its `src/app`; with more than one application it takes the first and says so (pass `--project <name>`). Upgrading from 22.0.0-beta.9 or earlier, where `ng add` copied everything to `src/app/components/ui/map` without `ng-mapcn.json`: `add` keeps using that folder and `init` adopts it instead of making a second copy.
 
-Drawing (`ng-map-draw`) is opt-in so apps that do not draw never install [terra-draw](https://terradraw.dev): run `ng add ng-mapcn@beta --draw` to also copy the draw sources to `<path>/draw` (import from there) and add `terra-draw` and `terra-draw-maplibre-gl-adapter` to your dependencies.
+You then import the components from the alias, `import { MapComponent } from '@/shared/components/map';`, like shadcn's `@/components/ui/...`. Every example in these docs uses it; with the npm package, import from `'ng-mapcn'` instead.
+
+A fresh Angular app exceeds the default 1 MB initial bundle budget once `maplibre-gl` is used (about 1.4 MB). Lazy-load the route that holds the map, or wrap the map in `@defer`, so `maplibre-gl` stays out of the initial bundle, before you raise `budgets` in `angular.json`.
+
+Then add the components you need:
+
+```bash
+npx ng-mapcn@latest add marker-popup controls
+```
+
+The component in step 2 needs `marker-popup` (which brings `marker`); `controls` is for `<ng-map-controls />`. Add only what your templates import.
+
+`add` copies the items, into the folder saved in `ng-mapcn.json`, and the files they depend on (the core is always included), keeps files that already exist and differ from the source (line endings aside) and lists them at the end, since the components it just copied may need their newer version (pass `--overwrite` to replace them, including customized core or shared files such as `map.component.ts`), regenerates the `index.ts` barrel from what is on disk (an `index.ts` without the generated header, such as one you wrote or one from an earlier copy, is kept and `add` lists the exports to add to it) and adds the npm packages the items need. Names accept `marker`, `map-marker`, `Marker` or `marker,route`; an unknown name fails and lists the valid ones. `--all` copies every item except `draw`. `npx ng-mapcn@latest list` shows the items and marks the installed ones. The Angular CLI equivalents are `ng add ng-mapcn` and `ng g ng-mapcn:add marker-popup controls`.
+
+Dependencies point one way: `marker-content`, `marker-popup` and `marker-tooltip` depend on `marker`, so `add marker-popup` also copies `marker`, but `add marker` alone does not copy the popup or tooltip.
+
+If your app already depends on an older `maplibre-gl`, `init` keeps your version and warns: update it to `^6.11.2`.
+
+Drawing (`ng-map-draw`) is opt-in so apps that do not draw never install [terra-draw](https://terradraw.dev): run `npx ng-mapcn@latest add draw` to copy the draw sources to `<folder>/draw` (import from `'@/shared/components/map/draw'`) and add `terra-draw` and `terra-draw-maplibre-gl-adapter` to your dependencies.
 
 Or as a regular npm package:
 
@@ -68,6 +95,8 @@ Or as a regular npm package:
 npm install ng-mapcn@beta maplibre-gl
 # or: pnpm add / yarn add / bun add ng-mapcn@beta maplibre-gl
 ```
+
+`maplibre-gl` must be in the install command: every peer dependency of `ng-mapcn` is marked optional, so npm does not add it for you (this keeps `npx ng-mapcn` from downloading Angular and MapLibre just to run the CLI). npm still checks the version of the peers your app has, and `@angular/core`, `@angular/common` and `rxjs` are already in every Angular app. Without `maplibre-gl` the build fails with `Cannot find module 'maplibre-gl'`: install it (`^6.11.2`).
 
 To draw with `ng-map-draw`, also install its optional peer dependencies and import from the `ng-mapcn/draw` entry point (the core `ng-mapcn` entry never loads terra-draw):
 
@@ -104,7 +133,7 @@ The popup overrides are **required**. MapLibre injects its own popup chrome, whi
 
 #### MapLibre worker
 
-MapLibre GL v6 ships as ES modules and loads its web worker from `maplibre-gl-worker.mjs` next to the bundle that imports it, and that worker imports `maplibre-gl-shared.mjs`. Angular's builder does not emit these files on its own, so copy both to the output root (`ng add` does this for you):
+MapLibre GL v6 ships as ES modules and loads its web worker from `maplibre-gl-worker.mjs` next to the bundle that imports it, and that worker imports `maplibre-gl-shared.mjs`. Angular's builder does not emit these files on its own, so copy both to the output root (`init` does this for you):
 
 ```jsonc
 // angular.json → projects.<app>.architect.build.options.assets
@@ -116,11 +145,11 @@ Bundlers cannot resolve MapLibre's default worker location (`import.meta.url`); 
 
 ### 2. Add a map
 
-A complete standalone component (with `ng add`, import from `./components/ui/map` instead of `'ng-mapcn'`):
+A complete standalone component (with the npm package, import from `'ng-mapcn'` instead of `'@/shared/components/map'`):
 
 ```ts
 import { Component } from '@angular/core';
-import { MapComponent, MapMarkerComponent, MarkerPopupComponent } from 'ng-mapcn';
+import { MapComponent, MapMarkerComponent, MarkerPopupComponent } from '@/shared/components/map';
 
 @Component({
   selector: 'app-map',
@@ -186,7 +215,7 @@ Without a `theme` input, the map watches the `dark`/`light` class (or a `data-th
 Any MapLibre-compatible style works. Set it per map with `styles`, or once for the whole app with `provideMapStyles()`:
 
 ```ts
-import { provideMapStyles } from 'ng-mapcn';
+import { provideMapStyles } from '@/shared/components/map';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -207,7 +236,7 @@ Precedence: `ng-map-style-switcher` selection → `[styles]` → `[blank]` → `
 Control tooltips, the loader and the popup close button are English by default. Override them app-wide with `provideMapLabels()` (static value, signal or factory; missing keys keep the English default), or per component with the `labels` input on `ng-map`, `ng-map-controls`, `ng-map-scale`, `ng-map-legend`, `ng-map-style-switcher`, `ng-map-minimap`, `ng-route-playback-control`, `ng-map-marker`, `ng-map-popup` and `ng-marker-popup`:
 
 ```ts
-import { provideMapLabels } from 'ng-mapcn';
+import { provideMapLabels } from '@/shared/components/map';
 
 provideMapLabels({
   zoomIn: 'Aproximar',
@@ -316,7 +345,7 @@ expect(structuralCalls(getFakeMap(fixture))).toEqual(['addSource:trip', 'addLaye
 - `ng-mapcn/testing`: `renderMap`, `loadMap`, `reloadStyle`, `getFakeMap`, `fireMapEvent`, `structuralCalls` and friends, plus `MAP_TEST_SELECTORS`, the stable DOM selectors of a rendered map for your own Playwright or Cypress tests.
 - `ng-mapcn/testing/harness`: Angular CDK component harnesses (`NgMapHarness`, `NgMapMarkerHarness`, `NgMapPopupHarness`, `NgMapControlsHarness`). `@angular/cdk` is an optional peer dependency, only needed for this entry point. `NgMapMarkerHarness.isPopupOpen()` reads the marker's `aria-expanded` (or, when the marker content is its own button, that button's, mirrored from `<ng-marker-popup #info>` with `[attr.aria-expanded]="info.isOpen()"`), so it reports that marker's own popup.
 - Vitest is supported first-class. Jest works by mapping `maplibre-gl` to the fake with `moduleNameMapper`, but ng-mapcn's own tests do not cover it. Karma/Jasmine are not supported (they cannot mock an ES module).
-- `ng add` does not copy the testing files: install the `ng-mapcn` package to use them.
+- `init` and `add` do not copy the testing files: install the `ng-mapcn` package as a dev dependency, and point the helpers at your copied classes once in the setup file: `configureMapTesting({ mapComponent: MapComponent, mapContext: MapContextService })`, both imported from your alias (`@/shared/components/map`). The harnesses need no setup.
 - Change host values after rendering with `update()` (it marks the host for check, as zoneless apps need) or signals, call `renderMap()` once per test, and pair fake timers with `configureMapTesting({ advanceTimers })` (otherwise `loadMap()` throws).
 
 Setup for Vitest and Jest, fake timers, the harnesses and the limitations: [Testing your maps](https://ng-mapcn.vercel.app/docs/testing).

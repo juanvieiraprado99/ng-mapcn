@@ -1,83 +1,10 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import {
-  type ImageOverlayCoordinates,
-  MapComponent,
-  MapImageOverlayComponent,
-  MapRasterSourceComponent,
-  MapVectorSourceComponent,
-} from 'ng-mapcn';
+import { afterNextRender, ChangeDetectionStrategy, Component } from '@angular/core';
+import { MapComponent, MapVectorSourceComponent } from 'ng-mapcn';
 
 import { BuildingsLayerComponent, registerPmtilesProtocol } from '../../../blocks/pmtiles/pmtiles';
 import { CodeBlockComponent } from '../../../shared/code-block';
 import { DocsImports } from '../../../shared/docs';
 import { ExampleSectionComponent } from '../../../shared/example-section';
-
-const RASTER_CODE = `import { Component, signal } from '@angular/core';
-import { MapComponent, MapRasterSourceComponent } from 'ng-mapcn';
-
-@Component({
-  selector: 'app-raster-map',
-  standalone: true,
-  imports: [MapComponent, MapRasterSourceComponent],
-  template: \`
-    <input type="range" min="0" max="1" step="0.05" [value]="opacity()"
-      (input)="opacity.set(+$any($event.target).value)" />
-    <button (click)="visible.set(!visible())">Toggle</button>
-    <ng-map [center]="[10, 50]" [zoom]="3.5">
-      <ng-map-raster-source
-        id="tiles"
-        [tiles]="['https://tile.openstreetmap.org/{z}/{x}/{y}.png']"
-        [tileSize]="256"
-        [maxzoom]="19"
-        attribution="&copy; OpenStreetMap contributors"
-        [opacity]="opacity()"
-        [visible]="visible()"
-      />
-    </ng-map>
-  \`,
-})
-export class RasterMapComponent {
-  readonly opacity = signal(0.7);
-  readonly visible = signal(true);
-}`;
-
-const IMAGE_CODE = `import { Component, signal } from '@angular/core';
-import {
-  type ImageOverlayCoordinates,
-  MapComponent,
-  MapImageOverlayComponent,
-} from 'ng-mapcn';
-
-@Component({
-  selector: 'app-image-overlay-map',
-  standalone: true,
-  imports: [MapComponent, MapImageOverlayComponent],
-  template: \`
-    <button (click)="shift()">Move east</button>
-    <ng-map [center]="[-74, 24]" [zoom]="4.5">
-      <!-- Corners are [lng, lat], clockwise from the top-left. -->
-      <ng-map-image-overlay
-        id="chart"
-        url="/assets/sea-chart.png"
-        [coordinates]="corners()"
-        [opacity]="0.8"
-      />
-    </ng-map>
-  \`,
-})
-export class ImageOverlayMapComponent {
-  readonly corners = signal<ImageOverlayCoordinates>([
-    [-80, 28],
-    [-68, 28],
-    [-68, 20],
-    [-80, 20],
-  ]);
-
-  shift() {
-    // A new array: only the changed coordinates are pushed to the live image source.
-    this.corners.update((c) => c.map(([lng, lat]) => [lng + 2, lat]) as unknown as ImageOverlayCoordinates);
-  }
-}`;
 
 const PMTILES_CODE = `import { Component, afterNextRender } from '@angular/core';
 import { addProtocol } from 'maplibre-gl';
@@ -165,14 +92,7 @@ const TILEJSON_CODE = `<!-- URL templates -->
 <ng-map-vector-source id="roads" [tiles]="['https://tiles.example.com/roads/{z}/{x}/{y}.mvt']" [maxzoom]="14" />
 
 <!-- A TileJSON document: zoom range, bounds and attribution come from it -->
-<ng-map-vector-source id="roads" url="https://tiles.example.com/roads.json" />
-
-<!-- WMS served as raster tiles -->
-<ng-map-raster-source
-  id="wms"
-  [tiles]="['https://geo.example.com/wms?service=WMS&request=GetMap&layers=land&bbox={bbox-epsg-3857}&width=256&height=256&srs=EPSG:3857&format=image/png&transparent=true']"
-  [tileSize]="256"
-/>`;
+<ng-map-vector-source id="roads" url="https://tiles.example.com/roads.json" />`;
 
 const REGISTRY_CODE = `import { effect, inject } from '@angular/core';
 import { MapContextService } from 'ng-mapcn';
@@ -188,99 +108,25 @@ effect(() => {
 });`;
 
 @Component({
-  selector: 'app-tile-sources-page',
+  selector: 'app-vector-source-page',
   standalone: true,
   imports: [
     DocsImports,
     CodeBlockComponent,
     ExampleSectionComponent,
     MapComponent,
-    MapRasterSourceComponent,
-    MapImageOverlayComponent,
     MapVectorSourceComponent,
     BuildingsLayerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-docs-page
-      title="Tile Sources"
-      description="Raster tiles, vector tiles (including PMTiles) and georeferenced images as declarative sources."
+      title="Vector Tiles"
+      description="Vector tiles, including PMTiles archives, as a declarative source your layers draw from."
     >
       <app-example-section
-        title="Raster tiles"
-        sectionId="raster-tiles"
-        [code]="rasterCode"
-      >
-        <span description>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-raster-source</code>
-          adds a raster tile source and the layer that draws it (XYZ, TMS or WMS templates).
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">opacity</code> and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">visible</code> are
-          reconciled on the existing layer.
-        </span>
-        <div after-description class="mb-3 flex flex-wrap items-center gap-4 text-sm">
-          <label class="flex items-center gap-2">
-            Opacity: {{ opacity() }}
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              [value]="opacity()"
-              (input)="opacity.set(+$any($event.target).value)"
-            />
-          </label>
-          <button
-            type="button"
-            class="border-border bg-background hover:bg-muted rounded-md border px-3 py-1"
-            (click)="visible.set(!visible())"
-          >
-            {{ visible() ? 'Hide' : 'Show' }}
-          </button>
-        </div>
-        <ng-map [center]="[10, 50]" [zoom]="3.5">
-          <ng-map-raster-source
-            id="tiles"
-            [tiles]="osmTiles"
-            [tileSize]="256"
-            [maxzoom]="19"
-            attribution="&copy; OpenStreetMap contributors"
-            [opacity]="opacity()"
-            [visible]="visible()"
-          />
-        </ng-map>
-      </app-example-section>
-
-      <app-example-section title="Image overlay" sectionId="image-overlay" [code]="imageCode">
-        <span description>
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">ng-map-image-overlay</code>
-          pins an image to four corner coordinates. Changing
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">coordinates</code>
-          moves the live image source (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">setCoordinates</code>)
-          without re-creating it.
-        </span>
-        <div after-description class="mb-3 flex gap-2">
-          <button
-            type="button"
-            class="border-border bg-background hover:bg-muted rounded-md border px-3 py-1 text-sm"
-            (click)="shift()"
-          >
-            Move east
-          </button>
-        </div>
-        <ng-map [center]="[-74, 24]" [zoom]="4.5">
-          <ng-map-image-overlay
-            id="compass"
-            url="/compass.png"
-            [coordinates]="corners()"
-            [opacity]="0.85"
-          />
-        </ng-map>
-      </app-example-section>
-
-      <app-example-section
-        title="Vector tiles from PMTiles"
-        sectionId="vector-tiles-pmtiles"
+        title="Basic Usage"
+        sectionId="basic-usage"
         [code]="pmtilesCode"
       >
         <span description>
@@ -338,11 +184,10 @@ effect(() => {
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> input
           (auto-generated when omitted), so layers can reference it as
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">source: 'florence'</code>.
-          Raster layers are named
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">raster-layer-&lt;id&gt;</code>
-          and image layers
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">image-layer-&lt;id&gt;</code>.
-          Each source component announces its source in
+          Each source component (vector,
+          <a class="underline" href="/docs/components/raster-source">raster</a> and
+          <a class="underline" href="/docs/components/image-overlay">image</a>) announces its
+          source in
           <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">MapContextService</code>
           while it exists on the map: it disappears when a theme switch removes the style and comes
           back once the source is re-added, so a consumer re-runs by itself.
@@ -350,60 +195,31 @@ effect(() => {
         <app-code-block [code]="registryCode" />
       </app-docs-section>
 
-      <app-docs-section title="URLs, TileJSON and WMS" anchor="urls-tilejson-wms">
+      <app-docs-section title="URLs and TileJSON" anchor="urls-tilejson">
         <p>
-          Give <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tiles</code> (URL
-          templates) or <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">url</code>
-          (a TileJSON document). Both are updated in place with
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">setTiles</code> /
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">setUrl</code>.
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tileSize</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">minzoom</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">maxzoom</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">scheme</code>,
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">attribution</code> and
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code> are
-          read when the source is created. The mode (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">url</code> or <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tiles</code>) is fixed at creation too: switching between them later is ignored. Change the
-          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> to rebuild it
-          with new ones.
+          Give <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tiles</code> (URL templates) or <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">url</code> (a TileJSON document). Both are
+          updated in place with <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">setTiles</code> / <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">setUrl</code>. <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tileSize</code>,
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">minzoom</code>, <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">maxzoom</code>, <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">bounds</code>, <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">scheme</code>,
+          <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">attribution</code> and <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">promoteId</code> are read when the source is created, and
+          so is the mode (<code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">url</code> or <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">tiles</code>): switching between them later is
+          ignored. Change the <code class="bg-muted rounded-md px-1.5 py-0.5 font-mono text-sm">id</code> to rebuild it with new ones.
         </p>
         <app-code-block [code]="tileJsonCode" />
       </app-docs-section>
     </app-docs-page>
   `,
 })
-export class TileSourcesPageComponent {
-  readonly rasterCode = RASTER_CODE;
-  readonly imageCode = IMAGE_CODE;
+export class VectorSourcePageComponent {
   readonly pmtilesCode = PMTILES_CODE;
   readonly protocolCode = PROTOCOL_CODE;
   readonly layerCode = LAYER_CODE;
   readonly registryCode = REGISTRY_CODE;
   readonly tileJsonCode = TILEJSON_CODE;
 
-  readonly osmTiles = ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'];
   readonly archiveUrl =
     'pmtiles://https://pmtiles.io/protomaps%28vector%29ODbL_firenze.pmtiles';
 
-  readonly opacity = signal(0.7);
-  readonly visible = signal(true);
-
-  readonly corners = signal<ImageOverlayCoordinates>([
-    [-80, 28],
-    [-68, 28],
-    [-68, 20],
-    [-80, 20],
-  ]);
-
   constructor() {
     afterNextRender(() => registerPmtilesProtocol());
-  }
-
-  shift(): void {
-    this.corners.update(
-      (corners) =>
-        corners.map(([lng, lat]) => [lng + 2, lat] as const) as unknown as ImageOverlayCoordinates,
-    );
   }
 }

@@ -1,11 +1,11 @@
 import { expect, test } from './fixtures';
 import { gotoAndWaitForMap, mapCall } from './map-helpers';
 
-const CONTROLS_URL = '/docs/components/controls';
+const MINIMAP_URL = '/docs/components/minimap';
 
-// Docs page examples, in template order: 3 = default minimap, 4 = blank + zoomOffset 3.
-const MINIMAP = 3;
-const MINIMAP_BLANK = 4;
+// Docs page examples, in template order: 0 = default minimap, 1 = blank + zoomOffset 3.
+const MINIMAP = 0;
+const MINIMAP_BLANK = 1;
 
 const center = (page: Parameters<typeof mapCall>[0], index: number) =>
   mapCall(page, index, (map) => {
@@ -15,7 +15,7 @@ const center = (page: Parameters<typeof mapCall>[0], index: number) =>
 
 test.describe('minimap', () => {
   test('renders its own canvas next to the main one', async ({ page }) => {
-    await gotoAndWaitForMap(page, CONTROLS_URL, MINIMAP);
+    await gotoAndWaitForMap(page, MINIMAP_URL, MINIMAP);
     const map = page.locator('ng-map').nth(MINIMAP);
     await expect(map.locator('canvas.maplibregl-canvas')).toHaveCount(2);
     await expect(map.locator('.ng-minimap-map')).toBeVisible();
@@ -23,7 +23,7 @@ test.describe('minimap', () => {
   });
 
   test('clicking the minimap recenters the main map', async ({ page }) => {
-    await gotoAndWaitForMap(page, CONTROLS_URL, MINIMAP);
+    await gotoAndWaitForMap(page, MINIMAP_URL, MINIMAP);
     const minimap = page.locator('ng-map').nth(MINIMAP).locator('.ng-minimap-map');
     await expect(minimap.locator('canvas.maplibregl-canvas').first()).toBeVisible();
 
@@ -46,7 +46,7 @@ test.describe('minimap', () => {
   });
 
   test('the toggle collapses and expands the minimap', async ({ page }) => {
-    await gotoAndWaitForMap(page, CONTROLS_URL, MINIMAP);
+    await gotoAndWaitForMap(page, MINIMAP_URL, MINIMAP);
     const map = page.locator('ng-map').nth(MINIMAP);
     const toggle = map.locator('button.ng-minimap-toggle');
     const body = map.locator('.ng-minimap-map');
@@ -77,7 +77,7 @@ test.describe('minimap', () => {
     test(`the ${name} minimap follows the main map: clicking its center keeps the main center`, async ({
       page,
     }) => {
-      await gotoAndWaitForMap(page, CONTROLS_URL, index);
+      await gotoAndWaitForMap(page, MINIMAP_URL, index);
       const map = page.locator('ng-map').nth(index);
       await expect(map.locator('canvas.maplibregl-canvas')).toHaveCount(2);
       const start = await center(page, index);
