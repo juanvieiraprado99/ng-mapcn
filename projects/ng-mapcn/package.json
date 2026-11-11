@@ -42,6 +42,18 @@
     "@angular/cdk": {
       "optional": true
     },
+    "@angular/common": {
+      "optional": true
+    },
+    "@angular/core": {
+      "optional": true
+    },
+    "maplibre-gl": {
+      "optional": true
+    },
+    "rxjs": {
+      "optional": true
+    },
     "terra-draw": {
       "optional": true
     },

@@ -164,6 +164,7 @@ Releases are automated with [release-please](https://github.com/googleapis/relea
 
 - On every push to `main`, release-please opens or updates a release PR built from the `feat`, `fix` and `perf` commits that touch `projects/ng-mapcn`.
 - Merging the release PR bumps the version on the `-beta.N` line, updates `projects/ng-mapcn/CHANGELOG.md`, tags `vX.Y.Z`, creates the GitHub release and publishes `ng-mapcn` to npm through [Trusted Publishing](https://docs.npmjs.com/trusted-publishers) (OIDC, with provenance, no token).
+- Peer dependencies are all marked optional (`peerDependenciesMeta`), so `npx ng-mapcn` installs only the package (about 2 MB) instead of Angular and MapLibre (about 80 MB). Every npm install command in the docs must therefore list `maplibre-gl`; a new peer must be optional too.
 - npm dist-tags: every prerelease is published to `beta`. While no stable version of that major exists (today: no stable 22.x), the prerelease also moves `latest`, so `npm i ng-mapcn` installs the newest beta. Once a stable version of a major exists, prereleases only go to `beta` and stable versions go to `latest`.
 - To leave the beta line, land a commit with the footer `Release-As: 22.0.0`, then set `"prerelease": false` for the 22.x line in `release-please-config.json`.
 - The docs site redeploys automatically on every push to `main`, including when a release PR is merged.

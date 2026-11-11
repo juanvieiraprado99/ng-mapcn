@@ -44,6 +44,8 @@ npm install ng-mapcn maplibre-gl
 # or: pnpm add / yarn add / bun add ng-mapcn maplibre-gl
 \`\`\`
 
+Always install \`maplibre-gl\` with it: every peer dependency of \`ng-mapcn\` is optional (so \`npx ng-mapcn\` does not download Angular and MapLibre), so npm does not add it, and the build fails with \`Cannot find module 'maplibre-gl'\` without it. npm still checks the versions of the peers that are installed.
+
 \`\`\`scss
 // global styles.scss
 @use 'ng-mapcn/src/lib/styles/index' as *;  // tokens + utilities

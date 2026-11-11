@@ -96,6 +96,8 @@ npm install ng-mapcn@beta maplibre-gl
 # or: pnpm add / yarn add / bun add ng-mapcn@beta maplibre-gl
 ```
 
+`maplibre-gl` must be in the install command: every peer dependency of `ng-mapcn` is marked optional, so npm does not add it for you (this keeps `npx ng-mapcn` from downloading Angular and MapLibre just to run the CLI). npm still checks the version of the peers your app has, and `@angular/core`, `@angular/common` and `rxjs` are already in every Angular app. Without `maplibre-gl` the build fails with `Cannot find module 'maplibre-gl'`: install it (`^6.11.2`).
+
 To draw with `ng-map-draw`, also install its optional peer dependencies and import from the `ng-mapcn/draw` entry point (the core `ng-mapcn` entry never loads terra-draw):
 
 ```bash

@@ -113,6 +113,18 @@ export class MyMapComponent {}`;
           <code [class]="code">ng-mapcn</code> instead of the alias:
         </p>
         <app-install-command packages="ng-mapcn maplibre-gl" />
+        <app-docs-note>
+          <strong>Install maplibre-gl with it.</strong> Every peer dependency of
+          <code [class]="code">ng-mapcn</code> is marked optional, so npm does not add it for you
+          (this keeps <code [class]="code">npx ng-mapcn</code> from downloading Angular and
+          MapLibre just to run the CLI). npm still checks the version of the peers your app has,
+          and <code [class]="code">&#64;angular/core</code>,
+          <code [class]="code">&#64;angular/common</code> and <code [class]="code">rxjs</code> are
+          already in every Angular app. Without <code [class]="code">maplibre-gl</code> the build
+          fails with <code [class]="code">Cannot find module 'maplibre-gl'</code>: install it
+          (<code [class]="code">^6.11.2</code>). The copy-paste <code [class]="code">init</code>
+          adds it for you.
+        </app-docs-note>
       </app-docs-section>
 
       <app-docs-section title="Add components" anchor="add-components">

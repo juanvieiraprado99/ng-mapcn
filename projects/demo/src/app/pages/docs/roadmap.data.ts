@@ -242,7 +242,7 @@ export const nextMilestones: RoadmapMilestone[] = [
       done('Registry manifest mapping each component to its files'),
       done('init asks for the folder and the import alias, saved in ng-mapcn.json'),
       todo('init asks which components to install (multi-select)'),
-      todo('Standalone CLI package, so npx does not download the library peers'),
+      done('npx downloads only the package (optional peers): 2 MB instead of 80 MB'),
       todo('Block schematics: add a gallery block to your app in one command'),
     ],
   },
