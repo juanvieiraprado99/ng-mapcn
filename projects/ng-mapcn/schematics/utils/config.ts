@@ -18,6 +18,7 @@ export {
   defaultAliasFor,
   defaultPathFor,
   initTarget,
+  LEGACY_ADOPTED,
   LEGACY_PATH,
   type NgMapcnConfig,
   NgMapcnError,
@@ -61,8 +62,10 @@ export function writeConfig(tree: Tree, config: NgMapcnConfig): void {
     null,
     2,
   )}\n`;
-  if (!tree.exists(CONFIG_FILE)) tree.create(CONFIG_FILE, content);
-  else if (tree.read(CONFIG_FILE)?.toString() !== content) tree.overwrite(CONFIG_FILE, content);
+  const existing = tree.read(CONFIG_FILE)?.toString();
+  if (existing === undefined) tree.create(CONFIG_FILE, content);
+  // Line endings aside (a CRLF checkout), an unchanged config is not rewritten.
+  else if (existing.replace(/\r\n/g, '\n') !== content) tree.overwrite(CONFIG_FILE, content);
 }
 
 /** A blank option (an empty answer to a prompt) counts as not given. */

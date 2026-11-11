@@ -25,6 +25,22 @@ export const NOT_INITIALIZED =
   `${CONFIG_FILE} not found. Run "npx ng-mapcn@latest init" (or "ng add ng-mapcn") first, ` +
   'or pass --path <dir>.';
 
+/** Printed when `add` uses an earlier copy because ng-mapcn.json does not exist yet. */
+export const LEGACY_ADOPTED =
+  `Using the copy in ${LEGACY_PATH}, made by an earlier version. Run "npx ng-mapcn@latest init" ` +
+  `(or "ng add ng-mapcn") to save it in ${CONFIG_FILE} and map an import alias for it.`;
+
+/** A workspace-relative path in one spelling: POSIX separators, no leading `./`, no trailing `/`. */
+export function samePath(a: string, b: string): boolean {
+  const clean = (p: string) =>
+    p
+      .trim()
+      .replace(/\\/g, '/')
+      .replace(/^(\.\/)+/, '')
+      .replace(/\/+$/, '');
+  return clean(a) === clean(b);
+}
+
 /** What the defaults need to know about an angular.json project. */
 export interface ProjectInfo {
   projectType?: string;
@@ -150,7 +166,9 @@ export function initTarget(options: {
   const { saved, legacyExists, projectName, project } = options;
   const savedApplies = !!saved && (!saved.project || !projectName || saved.project === projectName);
   const aliasFor = (path: string) =>
-    savedApplies && saved && saved.path === path ? saved.alias : defaultAliasFor(path, project);
+    savedApplies && saved && samePath(saved.path, path)
+      ? saved.alias
+      : defaultAliasFor(path, project);
   if (savedApplies && saved)
     return { path: saved.path, alias: saved.alias, legacy: false, aliasFor };
   if (!saved && legacyExists) {

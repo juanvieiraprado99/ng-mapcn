@@ -433,6 +433,17 @@ describe('ng-add schematic', () => {
       expect(readJson(tree, 'ng-mapcn.json')).toMatchObject({ path: 'libs/maps', alias: '@maps' });
     });
 
+    it('keeps a saved alias whose path is spelled differently (./, trailing slash)', async () => {
+      const base = createTree();
+      base.create('ng-mapcn.json', JSON.stringify({ path: './src/app/maps/', alias: '@maps' }));
+      const tree = await runBare({}, base);
+
+      expect(readJson(tree, 'ng-mapcn.json')).toMatchObject({
+        path: 'src/app/maps',
+        alias: '@maps',
+      });
+    });
+
     it('blank answers (Enter at the prompts) count as not given', async () => {
       const tree = await runBare({ path: '', alias: ' ' }, createTree());
 

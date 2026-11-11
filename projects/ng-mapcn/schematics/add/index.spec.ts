@@ -214,6 +214,27 @@ describe('add schematic', () => {
     expect(result.exists('libs/maps/index.ts')).toBe(false);
   });
 
+  it('keeps an index.ts without the generated header and lists the exports it misses', async () => {
+    const tree = pkgTree();
+    tree.create(`${DEFAULT_PATH}/index.ts`, "export * from './my-layer';\n");
+    const result = await run({ components: ['scale'] }, tree);
+
+    expect(result.readContent(`${DEFAULT_PATH}/index.ts`)).toBe("export * from './my-layer';\n");
+    const note = warnings.find((w) => w.includes(`Kept ${DEFAULT_PATH}/index.ts`));
+    expect(note).toContain("export * from './components/map-scale/map-scale.component';");
+  });
+
+  it('leaves a generated index.ts checked out with CRLF alone', async () => {
+    const first = await run({ components: ['scale'] });
+    const index = `${DEFAULT_PATH}/index.ts`;
+    const crlf = first.readContent(index).replace(/\n/g, '\r\n');
+    first.overwrite(index, crlf);
+    const second = await run({ components: ['scale'] }, first);
+
+    // Not rewritten to LF: the content is the same barrel.
+    expect(second.readContent(index)).toBe(crlf);
+  });
+
   it('without --path, ng-mapcn.json or an earlier copy, asks to run init first', async () => {
     await expect(
       run({ components: ['marker'] }, pkgTree(undefined, { init: false })),

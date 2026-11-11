@@ -130,7 +130,9 @@ export class MyMapComponent {}`;
           core or shared files in the closure, such as
           <code [class]="code">map.component.ts</code>). The
           <code [class]="code">index.ts</code> barrel is regenerated on every
-          <code [class]="code">add</code>, so hand edits to it are lost. Pass
+          <code [class]="code">add</code>; one without its generated header (yours, or from an
+          earlier copy) is kept, and <code [class]="code">add</code> lists the exports to add to
+          it. Pass
           <code [class]="code">--all</code> to copy every item except
           <code [class]="code">draw</code>, which is opt-in because it adds
           <code [class]="code">terra-draw</code>. Run

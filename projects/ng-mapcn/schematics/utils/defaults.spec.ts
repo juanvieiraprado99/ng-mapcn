@@ -135,6 +135,16 @@ describe('initTarget', () => {
     ).toBe(saved.path);
   });
 
+  it('matches the saved folder however it is spelled', () => {
+    const target = initTarget({
+      saved: { path: './src/app/maps/', alias: '@maps' },
+      legacyExists: false,
+      projectName: undefined,
+      project: undefined,
+    });
+    expect(target.aliasFor('src/app/maps')).toBe('@maps');
+  });
+
   it('falls back to the project default folder', () => {
     expect(
       initTarget({ saved: null, legacyExists: false, projectName: 'b', project: projectB }),

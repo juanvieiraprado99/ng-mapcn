@@ -271,6 +271,17 @@ describe('main', { timeout: 60_000 }, () => {
     expect(readFileSync(join(cwd, 'ng-mapcn.json'), 'utf8')).toBe(broken);
   });
 
+  it('init rejects components and --overwrite, which only add takes', async () => {
+    const cwd = workspace('init-items');
+    const items = await run(cwd, ['init', 'marker', 'route', '--skip-install']);
+    expect(items.code).toBe(1);
+    expect(items.err).toContain('npx ng-mapcn@latest add marker route');
+    const overwrite = await run(cwd, ['init', '--overwrite', '--skip-install']);
+    expect(overwrite.code).toBe(1);
+    expect(overwrite.err).toContain('--overwrite');
+    expect(existsSync(join(cwd, 'ng-mapcn.json'))).toBe(false);
+  });
+
   it('init rejects an unknown --project, listing the projects', async () => {
     const { code, err } = await run(workspace('bad-project'), [
       'init',

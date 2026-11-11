@@ -152,6 +152,42 @@ describe('ensureAlias', () => {
     });
   });
 
+  it('adds "<alias>/*" when only the exact alias key exists (subpaths like /draw)', () => {
+    const tree = Tree.empty();
+    tree.create(
+      'tsconfig.json',
+      JSON.stringify({ compilerOptions: { paths: { [ALIAS]: [`./${PATH}`] } } }),
+    );
+    const { ctx } = context();
+    expect(ensureAlias(tree, ctx, { path: PATH, alias: ALIAS })['tsconfig.json']).toBe('wildcard');
+    expect(pathsOf(tree)).toEqual({ [ALIAS]: [`./${PATH}`], '@/*': ['./src/app/*'] });
+  });
+
+  it('edits the intermediate tsconfig of the extends chain that sets paths', () => {
+    const tree = Tree.empty();
+    tree.create('tsconfig.json', '{ "compilerOptions": {} }');
+    tree.create(
+      'projects/admin/tsconfig.json',
+      JSON.stringify({
+        extends: '../../tsconfig.json',
+        compilerOptions: { paths: { '~/*': ['./src/*'] } },
+      }),
+    );
+    tree.create('projects/admin/tsconfig.app.json', JSON.stringify({ extends: './tsconfig.json' }));
+    const { ctx } = context();
+    const changes = ensureAlias(tree, ctx, {
+      path: 'projects/admin/src/app/shared/components/map',
+      alias: ALIAS,
+      projectTsconfigs: ['projects/admin/tsconfig.app.json'],
+    });
+
+    expect(Object.keys(changes)).toEqual(['tsconfig.json', 'projects/admin/tsconfig.json']);
+    expect(pathsOf(tree, 'projects/admin/tsconfig.json')).toEqual({
+      '~/*': ['./src/*'],
+      '@/*': ['./src/app/*'],
+    });
+  });
+
   it('warns and changes nothing without a tsconfig.json', () => {
     const tree = Tree.empty();
     const { ctx, logs } = context();

@@ -286,6 +286,15 @@ export async function main(argv, env = {}) {
     );
     return 1;
   }
+  if (command === 'init' && (items.length || options.overwrite)) {
+    err(
+      items.length
+        ? `init copies only the core. Run it, then add the components: ` +
+            `npx ng-mapcn@latest add ${items.join(' ')}`
+        : 'init does not take --overwrite: it only copies the core. Use it with add.',
+    );
+    return 1;
+  }
   let config;
   try {
     config = readConfig(cwd, defaults);
@@ -326,10 +335,7 @@ export async function main(argv, env = {}) {
       err(defaults.NOT_INITIALIZED);
       return 1;
     }
-    err(
-      `Using the copy in ${legacy}, made by an earlier version. Run "npx ng-mapcn@latest init" ` +
-        `to save it in ${defaults.CONFIG_FILE} and map an import alias for it.`,
-    );
+    err(defaults.LEGACY_ADOPTED);
   }
   const target = options.path ?? config?.path ?? legacy;
 

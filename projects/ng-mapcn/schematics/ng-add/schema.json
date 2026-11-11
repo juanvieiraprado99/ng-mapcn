@@ -6,10 +6,7 @@
   "properties": {
     "project": {
       "type": "string",
-      "description": "The name of the project to add ng-mapcn to.",
-      "$default": {
-        "$source": "projectName"
-      }
+      "description": "The project to set up. Defaults to the one saved in ng-mapcn.json, else the only application (the first of several, with a warning). No $default from the current folder, so a rerun keeps the saved project."
     },
     "path": {
       "type": "string",

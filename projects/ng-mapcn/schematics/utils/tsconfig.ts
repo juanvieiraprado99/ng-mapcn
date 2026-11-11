@@ -24,11 +24,11 @@ export function ensureAlias(
 ): Record<string, AliasChange> {
   const changes: Record<string, AliasChange> = {};
   const files = ['tsconfig.json'];
+  // The `paths` a project build sees come from the nearest file of its extends chain that sets
+  // them (its own tsconfig or an intermediate one): edit that file too.
   for (const candidate of options.projectTsconfigs ?? []) {
-    const file = joinPath(candidate);
-    if (file !== 'tsconfig.json' && !files.includes(file) && ownPaths(tree, file)) {
-      files.push(file);
-    }
+    const owner = extendsChain(tree, joinPath(candidate)).find((file) => ownPaths(tree, file));
+    if (owner && owner !== 'tsconfig.json' && !files.includes(owner)) files.push(owner);
   }
   if (!tree.exists('tsconfig.json')) {
     context.logger.warn(
@@ -52,6 +52,30 @@ export function ensureAlias(
   return changes;
 }
 
+/**
+ * `file` and the tsconfigs it extends through relative `extends` (a string or, since TS 5, an
+ * array where later entries win), nearest first: the order TypeScript lets them override.
+ */
+function extendsChain(tree: Tree, file: string, seen = new Set<string>()): string[] {
+  if (seen.has(file) || !tree.exists(file)) return [];
+  seen.add(file);
+  let extended: unknown;
+  try {
+    extended = new JSONFile(tree, file).get(['extends']);
+  } catch {
+    return [file];
+  }
+  const parents = (Array.isArray(extended) ? extended : [extended])
+    .filter((entry): entry is string => typeof entry === 'string' && entry.startsWith('.'))
+    .reverse();
+  const chain = [file];
+  for (const parent of parents) {
+    const target = normalizeDots(joinPath(dirnamePath(file), parent));
+    chain.push(...extendsChain(tree, target.endsWith('.json') ? target : `${target}.json`, seen));
+  }
+  return chain;
+}
+
 function ownPaths(tree: Tree, file: string): Paths | undefined {
   if (!tree.exists(file)) return undefined;
   try {
@@ -71,7 +95,13 @@ function ensureAliasIn(tree: Tree, file: string, path: string, alias: string): A
   // own folder.
   const base = normalizeDots(baseUrlDir(tree, file) ?? dirnamePath(file));
 
-  if (resolvesTo(paths, base, alias, path)) return 'present';
+  // Present only if subpaths resolve too (`<alias>/draw`): an exact key alone is not enough.
+  if (
+    resolvesTo(paths, base, alias, path) &&
+    resolvesTo(paths, base, `${alias}/draw`, `${path}/draw`)
+  ) {
+    return 'present';
+  }
 
   // `./x` relative to the folder the targets are resolved from.
   const toTarget = (workspacePath: string) => relativePath(base, workspacePath);
