@@ -227,3 +227,56 @@ test.describe('keyboard: markers', () => {
     await expect(readout).toContainText('clicks: 2');
   });
 });
+
+test.describe('keyboard: docs widgets', () => {
+  test('the package-manager radio group moves with the arrow keys and is remembered', async ({
+    page,
+  }) => {
+    await gotoAndWaitForMap(page, '/docs/components/scale', 0);
+    const group = page.getByRole('radiogroup', { name: 'Package manager' }).first();
+    const pnpm = group.getByRole('radio', { name: 'pnpm', exact: true });
+    await expect(pnpm).toHaveAttribute('aria-checked', 'true');
+    await expect(pnpm).not.toHaveAttribute('jsaction');
+
+    await pnpm.focus();
+    await page.keyboard.press('ArrowRight');
+    const npm = group.getByRole('radio', { name: 'npm', exact: true });
+    await expect(npm).toHaveAttribute('aria-checked', 'true');
+    await expect(npm).toBeFocused();
+    await expect(page.locator('[data-testid="example-install"] code').first()).toHaveText(
+      'npx ng-mapcn@latest add scale',
+    );
+
+    // One choice for the site, kept across pages.
+    await gotoAndWaitForMap(page, '/docs/components/minimap', 0);
+    await expect(
+      page.getByRole('radiogroup', { name: 'Package manager' }).first().getByRole('radio', {
+        name: 'npm',
+        exact: true,
+      }),
+    ).toHaveAttribute('aria-checked', 'true');
+  });
+
+  test('block tabs follow the tabs pattern: arrows move, focus follows, panels are labelled', async ({
+    page,
+  }) => {
+    await page.goto('/blocks');
+    const tablist = page.getByRole('tablist').first();
+    const preview = tablist.getByRole('tab', { name: 'Preview' });
+    // Hydrated: Angular removes the event-replay jsaction attributes then.
+    await expect(preview).not.toHaveAttribute('jsaction');
+    await preview.focus();
+    await page.keyboard.press('ArrowRight');
+
+    const code = tablist.getByRole('tab', { name: 'Code' });
+    await expect(code).toHaveAttribute('aria-selected', 'true');
+    await expect(code).toBeFocused();
+    const panel = page.locator(`#${await code.getAttribute('aria-controls')}`);
+    await expect(panel).toBeVisible();
+    await expect(panel).toHaveAttribute('role', 'tabpanel');
+
+    await page.keyboard.press('Home');
+    await expect(preview).toHaveAttribute('aria-selected', 'true');
+    await expect(preview).toBeFocused();
+  });
+});

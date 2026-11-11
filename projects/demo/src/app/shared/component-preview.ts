@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import {
+  booleanAttribute,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 
 import { ZardButtonComponent } from '@/shared/components/button';
 
@@ -66,7 +73,7 @@ export class ComponentPreviewComponent {
   /** Height of the preview panel. The expanded code block caps separately. */
   readonly height = input('420px');
   /** Show `ng-mapcn` imports as the copy-paste alias (see `toCopyPasteImports`). */
-  readonly rewriteImports = input(true);
+  readonly rewriteImports = input(true, { transform: booleanAttribute });
 
   protected readonly shownCode = computed(() =>
     this.rewriteImports() ? toCopyPasteImports(this.code()) : this.code(),

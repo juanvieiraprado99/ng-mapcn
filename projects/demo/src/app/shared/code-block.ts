@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import {
+  booleanAttribute,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
 
 import { CodeCopyButtonComponent } from './code-copy-button';
 import { CodeSurfaceComponent } from './code-surface';
@@ -46,7 +52,7 @@ export class CodeBlockComponent {
   readonly showCopyButton = input(true);
   readonly showLineNumbers = input(true);
   /** Show `ng-mapcn` imports as the copy-paste alias (see `toCopyPasteImports`). */
-  readonly rewriteImports = input(true);
+  readonly rewriteImports = input(true, { transform: booleanAttribute });
 
   protected readonly shownCode = computed(() =>
     this.rewriteImports() ? toCopyPasteImports(this.code()) : this.code(),

@@ -1,10 +1,19 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCheck, lucideMaximize, lucideTerminal } from '@ng-icons/lucide';
 
 import { blockInstallCommands, blockUsage } from '@/blocks/block-usage';
 import { type BlockMeta, zardDocsUrl } from '@/blocks/registry';
+import { injectCopyToClipboard } from '@/shared/clipboard';
 import { CodeBlockComponent } from '@/shared/code-block';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSeparatorComponent } from '@/shared/components/separator';
@@ -61,16 +70,21 @@ const TAB_TRIGGER =
       <div class="flex items-center justify-between">
         <div
           role="tablist"
+          [attr.aria-label]="block().title"
           class="bg-muted text-muted-foreground inline-flex h-8 w-fit items-center justify-center rounded-lg p-[3px]"
         >
           @for (tab of tabs(); track tab.id) {
             <button
               type="button"
               role="tab"
+              [id]="tabId(tab.id)"
               [class]="trigger"
               [attr.aria-selected]="active() === tab.id"
+              [attr.aria-controls]="panelId(tab.id)"
+              [attr.tabindex]="active() === tab.id ? 0 : -1"
               [attr.data-state]="active() === tab.id ? 'active' : 'inactive'"
               (click)="select(tab.id)"
+              (keydown)="onTabKeydown($event)"
             >
               {{ tab.label }}
             </button>
@@ -85,9 +99,9 @@ const TAB_TRIGGER =
             type="button"
             class="font-mono text-xs"
             [attr.aria-label]="'Copy install command: ' + command()"
-            (click)="copyCommand()"
+            (click)="clipboard.copy(command())"
           >
-            <ng-icon [name]="copied() ? 'lucideCheck' : 'lucideTerminal'" size="16" />
+            <ng-icon [name]="clipboard.copied() ? 'lucideCheck' : 'lucideTerminal'" size="16" />
             {{ command() }}
           </button>
           <z-separator zOrientation="vertical" class="h-4! self-center!" />
@@ -107,7 +121,13 @@ const TAB_TRIGGER =
 
       <!-- The preview stays mounted while the code is shown, so the iframe
            does not reload every time the tab flips back. -->
-      <div class="mt-3" [hidden]="active() !== 'preview'">
+      <div
+        class="mt-3"
+        role="tabpanel"
+        [id]="panelId('preview')"
+        [attr.aria-labelledby]="tabId('preview')"
+        [hidden]="active() !== 'preview'"
+      >
         <div class="relative h-(--block-preview-height) w-full overflow-hidden rounded-xl border">
           <iframe
             [src]="frameUrl()"
@@ -118,14 +138,27 @@ const TAB_TRIGGER =
         </div>
       </div>
 
-      @if (codeOpened()) {
-        <div class="mt-3" [hidden]="active() !== 'code'">
+      <!-- The panel always exists (aria-controls points at it); the viewer loads on first open. -->
+      <div
+        class="mt-3"
+        role="tabpanel"
+        [id]="panelId('code')"
+        [attr.aria-labelledby]="tabId('code')"
+        [hidden]="active() !== 'code'"
+      >
+        @if (codeOpened()) {
           <app-block-code-viewer [block]="block()" />
-        </div>
-      }
+        }
+      </div>
 
       @if (usage(); as snippet) {
-        <div class="mt-3" [hidden]="active() !== 'usage'">
+        <div
+          class="mt-3"
+          role="tabpanel"
+          [id]="panelId('usage')"
+          [attr.aria-labelledby]="tabId('usage')"
+          [hidden]="active() !== 'usage'"
+        >
           <p class="text-muted-foreground mb-2 text-sm">
             In an app set up with <code class="font-mono">npx ng-mapcn@latest init</code>, add what
             the block uses:
@@ -156,7 +189,8 @@ export class BlockDisplayComponent {
   ]);
   protected readonly active = signal<Tab>('preview');
   protected readonly codeOpened = signal(false);
-  protected readonly copied = signal(false);
+  protected readonly clipboard = injectCopyToClipboard();
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   /** Block sources, loaded once (lazy chunk) to derive the usage snippet. */
   private readonly sources = signal<Record<string, string> | null>(null);
   /** `null` until the sources load, and for a block whose entry component cannot be read. */
@@ -185,14 +219,39 @@ export class BlockDisplayComponent {
 
   protected readonly docsUrl = zardDocsUrl;
 
+  protected tabId(tab: Tab): string {
+    return `${this.block().name}-tab-${tab}`;
+  }
+
+  protected panelId(tab: Tab): string {
+    return `${this.block().name}-panel-${tab}`;
+  }
+
   protected select(tab: Tab): void {
     this.active.set(tab);
     if (tab === 'code') this.codeOpened.set(true);
   }
 
-  protected async copyCommand(): Promise<void> {
-    await navigator.clipboard.writeText(this.command());
-    this.copied.set(true);
-    setTimeout(() => this.copied.set(false), 2000);
+  /** WAI-ARIA tabs: arrows, Home and End move to (and activate) a tab; focus follows. */
+  protected onTabKeydown(event: KeyboardEvent): void {
+    const tabs = this.tabs();
+    const index = tabs.findIndex((tab) => tab.id === this.active());
+    const next =
+      event.key === 'ArrowRight'
+        ? (index + 1) % tabs.length
+        : event.key === 'ArrowLeft'
+          ? (index - 1 + tabs.length) % tabs.length
+          : event.key === 'Home'
+            ? 0
+            : event.key === 'End'
+              ? tabs.length - 1
+              : -1;
+    if (next === -1) return;
+    event.preventDefault();
+    const id = tabs[next].id;
+    this.select(id);
+    queueMicrotask(() =>
+      this.host.nativeElement.querySelector<HTMLElement>(`#${this.tabId(id)}`)?.focus(),
+    );
   }
 }
