@@ -67,9 +67,9 @@ function ownPaths(tree: Tree, file: string): Paths | undefined {
 function ensureAliasIn(tree: Tree, file: string, path: string, alias: string): AliasChange {
   const json = new JSONFile(tree, file);
   const paths = ownPaths(tree, file) ?? {};
-  const baseUrl = json.get(['compilerOptions', 'baseUrl']);
-  // `paths` targets are relative to `baseUrl` when set, else to the tsconfig's folder.
-  const base = joinPath(dirnamePath(file), typeof baseUrl === 'string' ? baseUrl : '');
+  // `paths` targets are relative to `baseUrl` (own or inherited) when set, else to the tsconfig's
+  // own folder.
+  const base = normalizeDots(baseUrlDir(tree, file) ?? dirnamePath(file));
 
   if (resolvesTo(paths, base, alias, path)) return 'present';
 
@@ -91,6 +91,34 @@ function ensureAliasIn(tree: Tree, file: string, path: string, alias: string): A
   json.modify(['compilerOptions', 'paths', alias], [toTarget(path)]);
   json.modify(['compilerOptions', 'paths', `${alias}/*`], [`${toTarget(path)}/*`]);
   return 'exact';
+}
+
+/**
+ * The workspace folder `baseUrl` points to for `file`: its own, else the one it inherits through
+ * relative `extends` (a string or, since TS 5, an array where later entries win). The inherited
+ * `baseUrl` stays relative to the tsconfig that declares it. Undefined when none is set.
+ */
+function baseUrlDir(tree: Tree, file: string, seen = new Set<string>()): string | undefined {
+  if (seen.has(file) || !tree.exists(file)) return undefined;
+  seen.add(file);
+  let json: JSONFile;
+  try {
+    json = new JSONFile(tree, file);
+  } catch {
+    return undefined;
+  }
+  const own = json.get(['compilerOptions', 'baseUrl']);
+  if (typeof own === 'string') return joinPath(dirnamePath(file), own);
+  const extended = json.get(['extends']);
+  const parents = (Array.isArray(extended) ? extended : [extended]).filter(
+    (entry): entry is string => typeof entry === 'string' && entry.startsWith('.'),
+  );
+  for (const parent of parents.reverse()) {
+    const target = normalizeDots(joinPath(dirnamePath(file), parent));
+    const resolved = baseUrlDir(tree, target.endsWith('.json') ? target : `${target}.json`, seen);
+    if (resolved !== undefined) return resolved;
+  }
+  return undefined;
 }
 
 /** Whether `paths` (targets relative to `base`) maps `alias` to the folder `path`. */

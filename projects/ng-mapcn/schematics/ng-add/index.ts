@@ -14,9 +14,9 @@ import {
 } from '@schematics/angular/utility';
 
 import {
-  defaultAliasFor,
-  defaultTarget,
   given,
+  hasLegacyCopy,
+  initTarget,
   LEGACY_PATH,
   normalizeAlias,
   pickProject,
@@ -79,30 +79,30 @@ export function ngAdd(options: NgAddOptions): Rule {
   return async (tree: Tree, context: SchematicContext) => {
     const saved = readConfig(tree);
     const workspace = await readWorkspaceOrWarn(tree, context);
+    const infos = workspace ? projectInfos(workspace) : {};
     const choice = workspace
-      ? pickProject(projectInfos(workspace), given(options.project), saved?.project)
+      ? pickProject(infos, given(options.project), saved?.project)
       : { name: undefined };
     if (choice.warning) context.logger.warn(choice.warning);
     const projectName = choice.name;
     const project = projectName ? workspace?.projects.get(projectName) : undefined;
 
-    // Blank options (Enter at a prompt) fall back to the saved config, an earlier copy, the default.
+    // Blank options (Enter at a prompt) fall back to the saved config (for its own project), an
+    // earlier copy, or the project's default folder; the alias follows the folder.
+    const target = initTarget({
+      saved,
+      legacyExists: hasLegacyCopy(tree),
+      projectName,
+      project: projectName ? infos[projectName] : undefined,
+    });
     const explicitPath = given(options.path);
-    const info: ProjectInfo | undefined = project && {
-      projectType: project.extensions['projectType'] as string | undefined,
-      root: project.root,
-      sourceRoot: project.sourceRoot,
-    };
-    const fallback = defaultTarget(tree, info);
-    const path = normalizeTargetPath(explicitPath ?? fallback.path);
-    if (!explicitPath && fallback.legacy) {
+    const path = normalizeTargetPath(explicitPath ?? target.path);
+    if (!explicitPath && target.legacy) {
       context.logger.info(
         `Found the copy an earlier version made in ${LEGACY_PATH}: keeping it there.`,
       );
     }
-    // The saved alias only fits the saved folder; else derive it from the folder (`@/...`).
-    const savedAlias = saved && saved.path === path ? saved.alias : undefined;
-    const alias = normalizeAlias(given(options.alias) ?? savedAlias ?? defaultAliasFor(path, info));
+    const alias = normalizeAlias(given(options.alias) ?? target.aliasFor(path));
     return chain([
       addMaplibreDependency(),
       projectName ? registerBuildOptions(projectName) : noop(),

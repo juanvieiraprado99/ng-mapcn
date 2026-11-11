@@ -5,6 +5,8 @@ import {
   DEFAULT_PATH,
   defaultAliasFor,
   defaultPathFor,
+  initTarget,
+  LEGACY_PATH,
   parseConfig,
   pickProject,
 } from './defaults';
@@ -25,9 +27,15 @@ describe('parseConfig', () => {
     });
   });
 
-  it('rejects invalid JSON, a missing or blank path', () => {
-    for (const text of ['{', '[]', 'null', '{"alias":"@maps"}', '{"path":"  "}', '{"path":3}']) {
-      expect(parseConfig(text)).toBeNull();
+  it('throws on invalid JSON (a hand edit left a trailing comma), saying what to fix', () => {
+    expect(() => parseConfig('{ "path": "libs/maps", }')).toThrow(
+      /ng-mapcn\.json is not valid JSON/,
+    );
+  });
+
+  it('throws without a usable path', () => {
+    for (const text of ['[]', 'null', '{"alias":"@maps"}', '{"path":"  "}', '{"path":3}']) {
+      expect(() => parseConfig(text)).toThrow(/needs a "path"/);
     }
   });
 });
@@ -35,6 +43,12 @@ describe('parseConfig', () => {
 describe('pickProject', () => {
   const app = { projectType: 'application' };
   const lib = { projectType: 'library' };
+
+  it('throws on a requested project that does not exist, listing the projects', () => {
+    expect(() => pickProject({ myapp: app }, 'myap')).toThrow(
+      'Project "myap" not found in angular.json. Projects: myapp.',
+    );
+  });
 
   it('prefers the requested project, then the saved one if it still exists', () => {
     expect(pickProject({ a: app, b: app }, 'b')).toEqual({ name: 'b' });
@@ -84,5 +98,49 @@ describe('defaultAliasFor', () => {
   it('falls back to the default alias outside the app folder', () => {
     expect(defaultAliasFor('libs/maps')).toBe(DEFAULT_ALIAS);
     expect(defaultAliasFor('src/app')).toBe(DEFAULT_ALIAS);
+  });
+});
+
+describe('initTarget', () => {
+  const saved = { path: 'projects/a/src/app/maps', alias: '@a/maps', project: 'a' };
+  const projectB = { root: 'projects/b' };
+
+  it('keeps the saved folder and alias for the saved project', () => {
+    const target = initTarget({
+      saved,
+      legacyExists: false,
+      projectName: 'a',
+      project: { root: 'projects/a' },
+    });
+    expect(target).toMatchObject({ path: saved.path, alias: '@a/maps', legacy: false });
+    expect(target.aliasFor(saved.path)).toBe('@a/maps');
+  });
+
+  it('gives another project its own default folder and alias', () => {
+    const target = initTarget({ saved, legacyExists: false, projectName: 'b', project: projectB });
+    expect(target).toMatchObject({
+      path: 'projects/b/src/app/shared/components/map',
+      alias: '@/shared/components/map',
+      legacy: false,
+    });
+    expect(target.aliasFor(saved.path)).not.toBe('@a/maps');
+  });
+
+  it('adopts an earlier copy only without a saved config', () => {
+    expect(
+      initTarget({ saved: null, legacyExists: true, projectName: 'x', project: undefined }),
+    ).toMatchObject({ path: LEGACY_PATH, alias: '@/components/ui/map', legacy: true });
+    expect(
+      initTarget({ saved, legacyExists: true, projectName: 'a', project: undefined }).path,
+    ).toBe(saved.path);
+  });
+
+  it('falls back to the project default folder', () => {
+    expect(
+      initTarget({ saved: null, legacyExists: false, projectName: 'b', project: projectB }),
+    ).toMatchObject({
+      path: 'projects/b/src/app/shared/components/map',
+      alias: '@/shared/components/map',
+    });
   });
 });

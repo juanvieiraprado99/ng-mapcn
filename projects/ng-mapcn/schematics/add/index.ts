@@ -6,7 +6,7 @@ import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 
 import { renderBarrel } from '../registry/barrel';
 import { readRegistry, resolve } from '../registry/resolve';
-import { defaultTarget, given, LEGACY_PATH } from '../utils/config';
+import { addTarget, given, LEGACY_PATH } from '../utils/config';
 import { joinPath, normalizeTargetPath } from '../utils/path';
 
 export interface AddOptions {
@@ -25,10 +25,11 @@ export interface AddOptions {
  */
 export function add(options: AddOptions): Rule {
   return (tree: Tree, context: SchematicContext) => {
-    const fallback = defaultTarget(tree);
+    // Without --path: the saved folder, an earlier copy, or an error asking to run init first.
     const explicit = given(options.path);
-    const path = normalizeTargetPath(explicit ?? fallback.path);
-    if (!explicit && fallback.legacy) {
+    const target = explicit ? { path: explicit, legacy: false } : addTarget(tree);
+    const path = normalizeTargetPath(target.path);
+    if (target.legacy) {
       context.logger.warn(
         `Using the copy in ${LEGACY_PATH}, made by an earlier version. Run "npx ng-mapcn init" ` +
           'to save it in ng-mapcn.json and map an import alias for it.',
@@ -149,9 +150,4 @@ export function addDependenciesWithReport(deps: Record<string, string>): Depende
     return tree;
   };
   return { rule, names: () => added };
-}
-
-/** Rule form of {@link addDependenciesWithReport}, for reuse by `ng-add`. */
-export function addDependencies(deps: Record<string, string>): Rule {
-  return addDependenciesWithReport(deps).rule;
 }

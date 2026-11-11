@@ -80,16 +80,61 @@ export function loadDefaults(collection) {
   return createRequire(collection)('./utils/defaults.js');
 }
 
-/** `ng-mapcn.json` written by `init`, parsed with the schematics' rules, or null. */
+/**
+ * `ng-mapcn.json` written by `init`, parsed with the schematics' rules, or null when there is
+ * none. An invalid file throws `NgMapcnError` (with what to fix) instead of counting as missing.
+ */
 export function readConfig(cwd, defaults) {
   const file = join(cwd, defaults.CONFIG_FILE);
   return existsSync(file) ? defaults.parseConfig(readFileSync(file, 'utf8')) : null;
 }
 
-/** angular.json projects, or {} when it cannot be read as plain JSON. */
+/**
+ * Removes comments and trailing commas from JSONC (angular.json allows both), leaving strings
+ * untouched.
+ */
+export function stripJsonc(text) {
+  // Copies `source` outside strings through `onChar(source, i)`, which returns the text to emit
+  // and the index of the last character it consumed.
+  const pass = (source, onChar) => {
+    let out = '';
+    for (let i = 0; i < source.length; i++) {
+      if (source[i] === '"') {
+        let j = i + 1;
+        while (j < source.length && source[j] !== '"') j += source[j] === '\\' ? 2 : 1;
+        out += source.slice(i, j + 1);
+        i = j;
+      } else {
+        const [emit, last] = onChar(source, i);
+        out += emit;
+        i = last;
+      }
+    }
+    return out;
+  };
+  const withoutComments = pass(text, (s, i) => {
+    if (s[i] === '/' && s[i + 1] === '/') {
+      const end = s.indexOf('\n', i);
+      return ['\n', end === -1 ? s.length : end];
+    }
+    if (s[i] === '/' && s[i + 1] === '*') {
+      const end = s.indexOf('*/', i + 2);
+      return [' ', end === -1 ? s.length : end + 1];
+    }
+    return [s[i], i];
+  });
+  return pass(withoutComments, (s, i) => {
+    if (s[i] !== ',') return [s[i], i];
+    let j = i + 1;
+    while (j < s.length && /\s/.test(s[j])) j++;
+    return [s[j] === '}' || s[j] === ']' ? '' : ',', i];
+  });
+}
+
+/** angular.json projects (comments allowed), or {} when it cannot be read. */
 function readProjects(cwd) {
   try {
-    return readJson(join(cwd, 'angular.json')).projects ?? {};
+    return JSON.parse(stripJsonc(readFileSync(join(cwd, 'angular.json'), 'utf8'))).projects ?? {};
   } catch {
     return {};
   }
@@ -166,10 +211,11 @@ export function resolveDevkit(cwd) {
   const addDir = (dir) => {
     if (dir && !nodeModulesDirs.includes(dir)) nodeModulesDirs.push(dir);
   };
+  let cliDir;
   try {
     const cliPkg = req.resolve('@angular/cli/package.json');
     cliReq = createRequire(cliPkg);
-    addDir(nodeModulesRootOf(cliPkg));
+    cliDir = nodeModulesRootOf(cliPkg);
   } catch {
     // @angular/cli is not a direct dependency: resolve from the workspace.
   }
@@ -177,7 +223,10 @@ export function resolveDevkit(cwd) {
   const marker = `${sep}node_modules${sep}@angular-devkit${sep}`;
   const at = toolsPath.lastIndexOf(marker);
   if (at === -1) throw new Error('Unexpected @angular-devkit/schematics location');
+  // First the folder of the devkit the NodeWorkflow below comes from, so the bundled schematics
+  // load that same copy (not another version hoisted elsewhere); then @angular/cli's folder.
   addDir(toolsPath.slice(0, at + `${sep}node_modules`.length));
+  addDir(cliDir);
   try {
     addDir(nodeModulesRootOf(cliReq.resolve('@schematics/angular/package.json')));
   } catch {
@@ -237,37 +286,44 @@ export async function main(argv, env = {}) {
     );
     return 1;
   }
-  const config = readConfig(cwd, defaults);
+  let config;
+  try {
+    config = readConfig(cwd, defaults);
+  } catch (e) {
+    err(e?.message ?? String(e));
+    return 1;
+  }
   // A copy an earlier version of `ng add` made, before ng-mapcn.json existed: adopt it.
-  const legacy =
-    !config && existsSync(join(cwd, defaults.LEGACY_PATH, defaults.CORE_MARKER))
-      ? defaults.LEGACY_PATH
-      : undefined;
+  const legacyExists = existsSync(join(cwd, defaults.LEGACY_PATH, defaults.CORE_MARKER));
+  const legacy = !config && legacyExists ? defaults.LEGACY_PATH : undefined;
 
   if (command === 'init') {
-    // Same project and folder the schematic would pick, so the questions show the real defaults.
+    // Same project, folder and alias the schematic would pick, so the questions show them.
     const projects = readProjects(cwd);
-    const choice = defaults.pickProject(projects, options.project, config?.project);
+    let choice;
+    try {
+      choice = defaults.pickProject(projects, options.project, config?.project);
+    } catch (e) {
+      err(e?.message ?? String(e));
+      return 1;
+    }
     if (choice.warning) err(choice.warning);
     if (choice.name) options.project = choice.name;
     if (!options.yes && options.path === undefined && options.alias === undefined) {
       const ask = env.ask === undefined ? terminalAsk() : env.ask;
       if (ask) {
-        const project = projects[choice.name];
-        const fallbacks = {
-          path: config?.path ?? legacy ?? defaults.defaultPathFor(project),
-          // The saved alias goes with the saved folder; another folder gets its own `@/...`.
-          aliasFor: (path) =>
-            config && config.path === path ? config.alias : defaults.defaultAliasFor(path, project),
-        };
+        const fallbacks = defaults.initTarget({
+          saved: config,
+          legacyExists,
+          projectName: choice.name,
+          project: projects[choice.name],
+        });
         Object.assign(options, await askInitOptions(ask, fallbacks));
       }
     }
   } else if (options.path === undefined && !config) {
     if (!legacy) {
-      err(
-        `${defaults.CONFIG_FILE} not found. Run "npx ng-mapcn@latest init" first, or pass --path <dir>.`,
-      );
+      err(defaults.NOT_INITIALIZED);
       return 1;
     }
     err(

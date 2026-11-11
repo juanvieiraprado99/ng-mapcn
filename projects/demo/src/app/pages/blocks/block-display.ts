@@ -178,7 +178,7 @@ export class BlockDisplayComponent {
   );
   /** `ng-mapcn add` for the map items the block uses, then zard-cli for its UI (one per line). */
   protected readonly installCommands = computed(() =>
-    blockInstallCommands(this.block(), this.sources() ?? {}).join('\n'),
+    blockInstallCommands(this.block()).join('\n'),
   );
   /** The header button: the ng-mapcn command (the zard one is in the Usage tab). */
   protected readonly command = computed(() => this.installCommands().split('\n')[0]);

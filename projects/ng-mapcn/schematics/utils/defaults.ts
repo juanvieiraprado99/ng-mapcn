@@ -1,6 +1,7 @@
 /**
- * Copy-paste defaults shared by the schematics and the CLI (bin/cli.mjs loads the compiled copy
- * from dist, so both read the same values). No imports: the CLI requires it before the devkit.
+ * Copy-paste defaults and rules shared by the schematics and the CLI (bin/cli.mjs loads the
+ * compiled copy from dist, so both decide the same way). No imports: the CLI requires it before
+ * the devkit.
  */
 
 /** Workspace-root file that remembers where `init` copied the components. */
@@ -11,6 +12,18 @@ export const DEFAULT_ALIAS = '@/shared/components/map';
 export const LEGACY_PATH = 'src/app/components/ui/map';
 /** A file every copy has: its presence marks a folder as an ng-mapcn copy. */
 export const CORE_MARKER = 'components/map/map.component.ts';
+
+/** A problem the user has to fix by hand (bad ng-mapcn.json, unknown project, no init yet). */
+export class NgMapcnError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NgMapcnError';
+  }
+}
+
+export const NOT_INITIALIZED =
+  `${CONFIG_FILE} not found. Run "npx ng-mapcn@latest init" (or "ng add ng-mapcn") first, ` +
+  'or pass --path <dir>.';
 
 /** What the defaults need to know about an angular.json project. */
 export interface ProjectInfo {
@@ -26,17 +39,24 @@ export interface ProjectChoice {
 }
 
 /**
- * The project `init` sets up: the requested one, else the one saved in ng-mapcn.json (if it still
- * exists), else the only application, else the first application with a warning (several apps),
- * else the first project.
+ * The project `init` sets up: the requested one (it must exist), else the one saved in
+ * ng-mapcn.json (if it still exists), else the only application, else the first application with
+ * a warning (several apps), else the first project.
  */
 export function pickProject(
   projects: Record<string, ProjectInfo>,
   requested?: string,
   saved?: string,
 ): ProjectChoice {
-  if (requested) return { name: requested };
   const names = Object.keys(projects);
+  if (requested) {
+    if (!names.includes(requested)) {
+      throw new NgMapcnError(
+        `Project "${requested}" not found in angular.json. Projects: ${names.join(', ') || 'none'}.`,
+      );
+    }
+    return { name: requested };
+  }
   if (saved && names.includes(saved)) return { name: saved };
   const apps = names.filter((name) => projects[name].projectType === 'application');
   if (apps.length === 1) return { name: apps[0] };
@@ -83,21 +103,59 @@ export interface NgMapcnConfig {
 
 /**
  * Parses ng-mapcn.json. A config needs `path`; `alias` falls back to the default (a hand-written
- * file with only `path` still works), `project` is optional. Null when it is not valid.
+ * file with only `path` still works), `project` is optional. Throws {@link NgMapcnError} when the
+ * file is not valid, so a typo never silently drops the user's folder or alias.
  */
-export function parseConfig(text: string): NgMapcnConfig | null {
+export function parseConfig(text: string): NgMapcnConfig {
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
-  } catch {
-    return null;
+  } catch (error) {
+    throw new NgMapcnError(
+      `${CONFIG_FILE} is not valid JSON (${(error as Error).message}). Fix it or delete it and ` +
+        'run init again.',
+    );
   }
-  if (!parsed || typeof parsed !== 'object') return null;
-  const { path, alias, project } = parsed as Record<string, unknown>;
-  if (typeof path !== 'string' || !path.trim()) return null;
+  const record = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+  const { path, alias, project } = (record ?? {}) as Record<string, unknown>;
+  if (typeof path !== 'string' || !path.trim()) {
+    throw new NgMapcnError(`${CONFIG_FILE} needs a "path": the folder the components are in.`);
+  }
   return {
     path,
     alias: typeof alias === 'string' && alias.trim() ? alias : DEFAULT_ALIAS,
     ...(typeof project === 'string' && project ? { project } : {}),
   };
+}
+
+/** Folder and alias `init` would use with no `--path`/`--alias`. */
+export interface InitTarget {
+  path: string;
+  alias: string;
+  /** The folder is an earlier copy (LEGACY_PATH) being adopted. */
+  legacy: boolean;
+}
+
+/**
+ * The folder and alias for `init` when none is given: the saved ones while the project is the
+ * saved one (another project gets its own defaults), else an earlier copy in LEGACY_PATH, else
+ * `<sourceRoot>/app/shared/components/map`. `aliasFor` gives the alias for another folder.
+ */
+export function initTarget(options: {
+  saved: NgMapcnConfig | null;
+  legacyExists: boolean;
+  projectName: string | undefined;
+  project: ProjectInfo | undefined;
+}): InitTarget & { aliasFor(path: string): string } {
+  const { saved, legacyExists, projectName, project } = options;
+  const savedApplies = !!saved && (!saved.project || !projectName || saved.project === projectName);
+  const aliasFor = (path: string) =>
+    savedApplies && saved && saved.path === path ? saved.alias : defaultAliasFor(path, project);
+  if (savedApplies && saved)
+    return { path: saved.path, alias: saved.alias, legacy: false, aliasFor };
+  if (!saved && legacyExists) {
+    return { path: LEGACY_PATH, alias: aliasFor(LEGACY_PATH), legacy: true, aliasFor };
+  }
+  const path = defaultPathFor(project);
+  return { path, alias: aliasFor(path), legacy: false, aliasFor };
 }

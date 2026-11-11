@@ -15,6 +15,11 @@ export interface BlockMeta {
   description: string;
   /** Height of the preview iframe and of the code viewer. */
   iframeHeight: string;
+  /**
+   * ng-mapcn items the block's files use (`npx ng-mapcn add ...`). Static so the install command is
+   * right in the prerendered HTML; block-usage.spec.ts checks it against the sources.
+   */
+  mapcn: string[];
   /** zard/ui components used by the block (installed with zard-cli). */
   zard: ZardComponentName[];
   files: BlockFile[];
@@ -31,6 +36,7 @@ export const BLOCKS: BlockMeta[] = [
     description:
       'Real-time analytics overview with a world map, breakdown cards, and device stats.',
     iframeHeight: '940px',
+    mapcn: ['controls', 'geojson', 'marker-content', 'marker-tooltip'],
     zard: ['card', 'chart'],
     files: [
       { path: 'analytics-map/analytics-map.ts' },
@@ -45,6 +51,7 @@ export const BLOCKS: BlockMeta[] = [
     description:
       'World choropleth map shading countries by a metric, with a hover tooltip and legend.',
     iframeHeight: '720px',
+    mapcn: ['controls', 'geojson', 'popup'],
     zard: [],
     files: [
       { path: 'choropleth/choropleth.ts' },
@@ -57,6 +64,7 @@ export const BLOCKS: BlockMeta[] = [
     title: 'Analytics Card',
     description: 'Compact analytics card with a headline metric over a world map.',
     iframeHeight: '600px',
+    mapcn: ['geojson', 'marker-content'],
     zard: ['card', 'badge'],
     files: [{ path: 'analytics-card/analytics-card.ts' }, { path: 'analytics-card/data.ts' }],
   },
@@ -65,6 +73,7 @@ export const BLOCKS: BlockMeta[] = [
     title: 'Delivery Tracker',
     description: 'Live order tracking with route progress, courier position, and order details.',
     iframeHeight: '720px',
+    mapcn: ['marker-content', 'route'],
     zard: ['card', 'badge', 'button'],
     files: [
       { path: 'delivery-tracker/delivery-tracker.ts' },
@@ -78,6 +87,7 @@ export const BLOCKS: BlockMeta[] = [
     description:
       'Status-page style map of edge network locations with live health, latency, and uptime.',
     iframeHeight: '720px',
+    mapcn: ['controls', 'geojson', 'marker-content', 'marker-tooltip'],
     zard: [],
     files: [
       { path: 'uptime-monitor/uptime-monitor.ts' },
@@ -92,6 +102,7 @@ export const BLOCKS: BlockMeta[] = [
     description:
       'Globe-projected heatmap visualizing earthquake density with zoom-dependent styling.',
     iframeHeight: '800px',
+    mapcn: ['heatmap'],
     zard: [],
     files: [{ path: 'heatmap/heatmap.ts' }],
   },
@@ -101,6 +112,7 @@ export const BLOCKS: BlockMeta[] = [
     description:
       'Vector tiles from a single PMTiles archive: a source component, a layer that waits for it, and hover highlighting.',
     iframeHeight: '720px',
+    mapcn: ['vector-source'],
     zard: [],
     files: [{ path: 'pmtiles/pmtiles.ts' }],
   },
@@ -110,6 +122,7 @@ export const BLOCKS: BlockMeta[] = [
     description:
       '3D buildings colored by height, with optional terrain and hillshade, on the Carto basemap.',
     iframeHeight: '720px',
+    mapcn: ['fill-extrusion', 'terrain'],
     zard: [],
     files: [{ path: 'city-3d/city-3d.ts' }],
   },
@@ -119,6 +132,7 @@ export const BLOCKS: BlockMeta[] = [
     description:
       'Draw and edit points, lines and polygons with a toolbar and a live readout of the shapes.',
     iframeHeight: '720px',
+    mapcn: ['draw'],
     zard: [],
     files: [{ path: 'draw/draw.ts' }],
   },
@@ -127,6 +141,7 @@ export const BLOCKS: BlockMeta[] = [
     title: 'Logistics Network',
     description: 'Domestic logistics map with a sidebar of stats.',
     iframeHeight: '800px',
+    mapcn: ['arc', 'controls', 'marker-content', 'marker-tooltip'],
     zard: ['sidebar', 'separator'],
     files: [
       { path: 'logistics-network/logistics-network.ts' },
@@ -140,6 +155,7 @@ export const BLOCKS: BlockMeta[] = [
     title: 'Store Locator',
     description: 'Searchable store list synced with map markers.',
     iframeHeight: '800px',
+    mapcn: ['controls', 'marker-content', 'marker-tooltip', 'popup'],
     zard: ['input', 'sidebar'],
     files: [
       { path: 'store-locator/store-locator.ts' },
@@ -178,6 +194,13 @@ export const BLOCK_COMPONENTS: Record<string, () => Promise<Type<unknown>>> = {
 /** Where zard/ui documents a component. */
 export function zardDocsUrl(component: ZardComponentName): string {
   return `https://zardui.com/docs/components/${component}`;
+}
+
+/** ng-mapcn command that copies the map items a block uses. */
+export function mapcnInstallCommand(block: BlockMeta): string {
+  return block.mapcn.length
+    ? `npx ng-mapcn@latest add ${block.mapcn.join(' ')}`
+    : 'npx ng-mapcn@latest init';
 }
 
 /** zard-cli command that installs a block's UI components. */

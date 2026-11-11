@@ -15,7 +15,7 @@ import { join, sep } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 
 // @ts-expect-error plain ESM module without type declarations
-import { askInitOptions, main, parseArgs, resolveDevkit, UsageError } from './cli.mjs';
+import { askInitOptions, main, parseArgs, resolveDevkit, stripJsonc, UsageError } from './cli.mjs';
 
 // Runs against the compiled collection: `npm run test:schematics` builds it first.
 const ROOT = process.cwd();
@@ -259,6 +259,55 @@ describe('main', { timeout: 60_000 }, () => {
     expect(existsSync(join(cwd, TARGET))).toBe(false);
   });
 
+  it('an invalid ng-mapcn.json is reported, not taken for a missing one, and not overwritten', async () => {
+    const cwd = workspace('bad-config');
+    const broken = '{ "path": "libs/maps", }';
+    writeFileSync(join(cwd, 'ng-mapcn.json'), broken);
+    for (const argv of [['add', 'marker'], ['list'], ['init', '--yes', '--skip-install']]) {
+      const { code, err } = await run(cwd, argv);
+      expect(code).toBe(1);
+      expect(err).toContain('ng-mapcn.json is not valid JSON');
+    }
+    expect(readFileSync(join(cwd, 'ng-mapcn.json'), 'utf8')).toBe(broken);
+  });
+
+  it('init rejects an unknown --project, listing the projects', async () => {
+    const { code, err } = await run(workspace('bad-project'), [
+      'init',
+      '--project',
+      'nope',
+      '--skip-install',
+    ]);
+    expect(code).toBe(1);
+    expect(err).toContain('Project "nope" not found in angular.json. Projects: app.');
+  });
+
+  it('init reads an angular.json with comments to offer the app folder', async () => {
+    const cwd = workspace('jsonc');
+    const build = { builder: '@angular/build:application', options: { styles: [] } };
+    const json = JSON.stringify(
+      {
+        version: 1,
+        projects: {
+          web: { projectType: 'application', root: 'projects/web', architect: { build } },
+        },
+      },
+      null,
+      2,
+    );
+    writeFileSync(
+      join(cwd, 'angular.json'),
+      `// workspace\n${json.replace('"version": 1,', '"version": 1, /* v1 */')}\n`,
+    );
+    const fallbacks: string[] = [];
+    const ask: Ask = async (_q, fallback) => {
+      fallbacks.push(fallback);
+      return fallback;
+    };
+    expect((await run(cwd, ['init', '--skip-install'], ask)).code).toBe(0);
+    expect(fallbacks[0]).toBe('projects/web/src/app/shared/components/map');
+  });
+
   it('add and list without ng-mapcn.json ask to run init first', async () => {
     const cwd = workspace('no-config');
     for (const argv of [['add', 'marker'], ['list']]) {
@@ -336,6 +385,22 @@ describe('main', { timeout: 60_000 }, () => {
     const { code, err } = await run(cwd, ['add', 'nope', '--skip-install']);
     expect(code).toBe(1);
     expect(err).toMatch(/Unknown component/);
+  });
+});
+
+describe('stripJsonc', () => {
+  it('drops comments and trailing commas but keeps them inside strings', () => {
+    const text = `{
+  // line
+  "a": "x // not a comment, }", /* block */
+  "b": [1, 2, /* c */ ],
+  "c": { "d": "\\"q\\"", },
+}`;
+    expect(JSON.parse(stripJsonc(text))).toEqual({
+      a: 'x // not a comment, }',
+      b: [1, 2],
+      c: { d: '"q"' },
+    });
   });
 });
 

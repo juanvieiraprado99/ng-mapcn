@@ -128,6 +128,30 @@ describe('ensureAlias', () => {
     });
   });
 
+  it('resolves a project tsconfig against the baseUrl it inherits through extends', () => {
+    const tree = Tree.empty();
+    tree.create('tsconfig.json', JSON.stringify({ compilerOptions: { baseUrl: './' } }));
+    tree.create(
+      'projects/web/tsconfig.app.json',
+      JSON.stringify({
+        extends: ['../../tsconfig.json'],
+        compilerOptions: { paths: { '~/*': ['x/*'] } },
+      }),
+    );
+    const { ctx } = context();
+    ensureAlias(tree, ctx, {
+      path: 'projects/web/src/app/shared/components/map',
+      alias: ALIAS,
+      projectTsconfigs: ['projects/web/tsconfig.app.json'],
+    });
+
+    // Targets are relative to the inherited baseUrl (the workspace root), not to projects/web.
+    expect(pathsOf(tree, 'projects/web/tsconfig.app.json')).toEqual({
+      '~/*': ['x/*'],
+      '@/*': ['./projects/web/src/app/*'],
+    });
+  });
+
   it('warns and changes nothing without a tsconfig.json', () => {
     const tree = Tree.empty();
     const { ctx, logs } = context();

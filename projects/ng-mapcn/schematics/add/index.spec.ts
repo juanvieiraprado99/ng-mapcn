@@ -15,9 +15,19 @@ const DEFAULT_PATH = 'src/app/shared/components/map';
 const LEGACY_PATH = 'src/app/components/ui/map';
 const registry = JSON.parse(readFileSync(join(DIST, 'registry.json'), 'utf8')) as Registry;
 
-const pkgTree = (pkg: object = { name: 'app', dependencies: { 'maplibre-gl': '^6.11.2' } }) => {
+/** A workspace where init ran (ng-mapcn.json saved with the default folder), unless `init: false`. */
+const pkgTree = (
+  pkg: object = { name: 'app', dependencies: { 'maplibre-gl': '^6.11.2' } },
+  { init = true } = {},
+) => {
   const tree = Tree.empty();
   tree.create('package.json', JSON.stringify(pkg, null, 2));
+  if (init) {
+    tree.create(
+      'ng-mapcn.json',
+      JSON.stringify({ path: DEFAULT_PATH, alias: '@/shared/components/map' }),
+    );
+  }
   return tree;
 };
 
@@ -104,7 +114,7 @@ describe('add schematic', () => {
   });
 
   it('adopts the folder an earlier version copied to when there is no ng-mapcn.json', async () => {
-    const tree = pkgTree();
+    const tree = pkgTree(undefined, { init: false });
     tree.create(`${LEGACY_PATH}/components/map/map.component.ts`, '// old copy');
     const result = await run({ components: ['scale'] }, tree);
 
@@ -188,7 +198,7 @@ describe('add schematic', () => {
 
   it('copies to the folder saved in ng-mapcn.json when no path is given', async () => {
     const tree = pkgTree();
-    tree.create('ng-mapcn.json', JSON.stringify({ path: 'libs/maps', alias: '@maps' }));
+    tree.overwrite('ng-mapcn.json', JSON.stringify({ path: 'libs/maps', alias: '@maps' }));
     const result = await run({ components: ['scale'] }, tree);
 
     expect(result.exists('libs/maps/components/map-scale/map-scale.component.ts')).toBe(true);
@@ -197,11 +207,25 @@ describe('add schematic', () => {
 
   it('an explicit path wins over ng-mapcn.json', async () => {
     const tree = pkgTree();
-    tree.create('ng-mapcn.json', JSON.stringify({ path: 'libs/maps', alias: '@maps' }));
+    tree.overwrite('ng-mapcn.json', JSON.stringify({ path: 'libs/maps', alias: '@maps' }));
     const result = await run({ components: ['scale'], path: 'libs/other' }, tree);
 
     expect(result.exists('libs/other/index.ts')).toBe(true);
     expect(result.exists('libs/maps/index.ts')).toBe(false);
+  });
+
+  it('without --path, ng-mapcn.json or an earlier copy, asks to run init first', async () => {
+    await expect(
+      run({ components: ['marker'] }, pkgTree(undefined, { init: false })),
+    ).rejects.toThrow(/ng-mapcn\.json not found\. Run "npx ng-mapcn@latest init"/);
+  });
+
+  it('an invalid ng-mapcn.json is an error, never a silent default', async () => {
+    const tree = pkgTree();
+    tree.overwrite('ng-mapcn.json', '{ "path": "libs/maps", }');
+    await expect(run({ components: ['marker'] }, tree)).rejects.toThrow(
+      /ng-mapcn\.json is not valid JSON/,
+    );
   });
 
   it('rejects invalid paths', async () => {
@@ -258,7 +282,7 @@ describe('add schematic', () => {
     });
 
     it('still copies the sources without a package.json', async () => {
-      const tree = await run({ components: ['draw'] }, Tree.empty());
+      const tree = await run({ components: ['draw'], path: DEFAULT_PATH }, Tree.empty());
 
       expect(tree.exists(`${DEFAULT_PATH}/draw/map-draw.component.ts`)).toBe(true);
     });

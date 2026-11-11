@@ -502,6 +502,40 @@ describe('ng-add schematic', () => {
       ).toBe(true);
     });
 
+    it('another --project gets its own folder and alias, not the saved project ones', async () => {
+      const base = workspaceWith({
+        a: { projectType: 'application', root: 'projects/a', architect: { build } },
+        b: { projectType: 'application', root: 'projects/b', architect: { build } },
+      });
+      base.create(
+        'ng-mapcn.json',
+        JSON.stringify({ path: 'projects/a/src/app/maps', alias: '@a/maps', project: 'a' }),
+      );
+      const tree = await runBare({ project: 'b' }, base);
+
+      expect(readJson(tree, 'ng-mapcn.json')).toEqual({
+        path: 'projects/b/src/app/shared/components/map',
+        alias: '@/shared/components/map',
+        project: 'b',
+      });
+      expect(tree.exists('projects/b/src/app/shared/components/map/index.ts')).toBe(true);
+    });
+
+    it('an unknown --project is an error listing the projects', async () => {
+      await expect(
+        runBare(
+          { project: 'myap' },
+          workspaceWith({ myapp: { projectType: 'application', root: '', architect: { build } } }),
+        ),
+      ).rejects.toThrow(/Project "myap" not found in angular\.json\. Projects: myapp\./);
+    });
+
+    it('an invalid ng-mapcn.json is an error and is not overwritten', async () => {
+      const base = createTree();
+      base.create('ng-mapcn.json', '{ "path": "libs/maps", }');
+      await expect(runBare({}, base)).rejects.toThrow(/ng-mapcn\.json is not valid JSON/);
+    });
+
     it('uses the project saved in ng-mapcn.json on a rerun', async () => {
       const base = workspaceWith({
         a: { projectType: 'application', root: '', architect: { build } },
