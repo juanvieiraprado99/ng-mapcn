@@ -29,7 +29,8 @@ function render() {
   return { fixture, root, highlighted };
 }
 
-describe('CodeSurfaceComponent', () => {
+// Above the 15 s highlight wait in render(), which a cold Shiki load can need.
+describe('CodeSurfaceComponent', { timeout: 20_000 }, () => {
   afterEach(() => {
     TestBed.resetTestingModule();
   });
